@@ -8,10 +8,11 @@ using System.Threading.Tasks;
 namespace Benchmark.Design
 {
     internal class CommandDesign1
-    {
+    {// Task.Run
         internal const int N = 1000_000;
 
         private static object obj = new();
+        private static object obj2 = new();
         private static int objCount = 0;
 
         internal static async Task Test()
@@ -21,14 +22,24 @@ namespace Benchmark.Design
             sw.Restart();
             await TestCommand();
             sw.Stop();
-
             Console.WriteLine($"count: {objCount}");
             Console.WriteLine($"time: {sw.ElapsedMilliseconds} ms");
 
             sw.Restart();
             await TestCommandParallel();
             sw.Stop();
+            Console.WriteLine($"count: {objCount}");
+            Console.WriteLine($"time: {sw.ElapsedMilliseconds} ms");
 
+            sw.Restart();
+            await TestCommandTwoWay();
+            sw.Stop();
+            Console.WriteLine($"count: {objCount}");
+            Console.WriteLine($"time: {sw.ElapsedMilliseconds} ms");
+
+            sw.Restart();
+            await TestCommandTwoWayParallel();
+            sw.Stop();
             Console.WriteLine($"count: {objCount}");
             Console.WriteLine($"time: {sw.ElapsedMilliseconds} ms");
         }
@@ -56,10 +67,44 @@ namespace Benchmark.Design
                     Command(1);
                 }
             });
+        }
+
+        internal static async Task TestCommandTwoWay()
+        {
+            for (var i = 0; i < N; i++)
+            {
+                var result = await Task.Run(() =>
+                {
+                    lock (obj)
+                    {
+                        Command(1);
+                        return objCount;
+                    }
+                });
+            }
+        }
+
+        internal static async Task TestCommandTwoWayParallel()
+        {
+            Parallel.For(0, N, x =>
+            {
+                lock (obj)
+                {
+                    Command(1);
+                    return objCount;
+                }
+            });
 
             for (var i = 0; i < N; i++)
             {
-
+                var result = await Task.Run(() =>
+                {
+                    lock (obj)
+                    {
+                        Command(1);
+                        return objCount;
+                    }
+                });
             }
         }
 

@@ -24,6 +24,7 @@ namespace Benchmark
         public static async Task Main(string[] args)
         {
             await Benchmark.Design.CommandDesign1.Test();
+            await Benchmark.Design.CommandDesign2.Test();
 
             // DebugRun<Clone.CloneBenchmark>();
 
