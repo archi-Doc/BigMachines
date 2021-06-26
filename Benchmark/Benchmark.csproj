@@ -14,8 +14,4 @@
     <ProjectReference Include="..\BigMachines\BigMachines.csproj" />
   </ItemGroup>
 
-  <ItemGroup>
-    <Folder Include="Design\" />
-  </ItemGroup>
-
 </Project>

@@ -9,6 +9,7 @@ using System.Diagnostics;
 using System.Linq;
 using System.Linq.Expressions;
 using System.Reflection;
+using System.Threading.Tasks;
 using BenchmarkDotNet.Attributes;
 using BenchmarkDotNet.Running;
 
@@ -20,8 +21,10 @@ namespace Benchmark
     {
         public static Stopwatch Stopwatch { get; } = new();
 
-        public static void Main(string[] args)
+        public static async Task Main(string[] args)
         {
+            await Benchmark.Design.CommandDesign1.Test();
+
             // DebugRun<Clone.CloneBenchmark>();
 
             var switcher = new BenchmarkSwitcher(new[]
