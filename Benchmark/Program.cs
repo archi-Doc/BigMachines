@@ -24,11 +24,12 @@ namespace Benchmark
 
         public static async Task Main(string[] args)
         {
-            /*await Benchmark.Design.CommandDesign1.Test();
-            await Benchmark.Design.CommandDesign2.Test();
-            await Benchmark.Design.CommandDesign3.Test();*/
+            // await Benchmark.Design.CommandDesign1.Test();
+            // await Benchmark.Design.CommandDesign2.Test();
+            await Benchmark.Design.CommandDesign3.Test();
+            await Benchmark.Design.CommandDesign4.Test();
 
-            var cp = new CommandPost();
+            /*var cp = new CommandPost();
             cp.Open(x =>
             {
                 if (x.Message is int i)
@@ -38,7 +39,7 @@ namespace Benchmark
             });
 
             cp.Send(1, 2);
-            var result = await cp.SendTwoWay<int, int>(1, 3, 1000);
+            var result = await cp.SendTwoWay<int, int>(1, 3, 1000);*/
 
             // DebugRun<Clone.CloneBenchmark>();
 

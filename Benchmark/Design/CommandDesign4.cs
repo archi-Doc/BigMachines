@@ -9,7 +9,7 @@ using System.Threading.Tasks;
 
 namespace Benchmark.Design
 {
-    internal class CommandDesign3
+    internal class CommandDesign4
     {// Task.Run
         internal class Command
         {
@@ -26,8 +26,9 @@ namespace Benchmark.Design
 
         // private static object obj = new();
         private static ConcurrentQueue<Command> concurrentQueue = new();
-        // private static ManualResetEvent manualEvent = new(false); // Just slow
-        private static bool EventFlag = false;
+        private static ManualResetEvent manualEvent = new(false); // Just slow
+        private static AutoResetEvent autoEvent = new(false); // Just slow
+        // private static bool EventFlag = false;
 
         internal static async Task Test()
         {
@@ -38,27 +39,27 @@ namespace Benchmark.Design
             t.Priority = ThreadPriority.AboveNormal;
             t.Start(cts.Token);
 
-            Start("Flag");
+            Start("Event");
             await TestCommand();
             Stop();
 
-            Start("Flag Parallel");
+            Start("Event Parallel");
             await TestCommandParallel();
             Stop();
 
-            Start("Flag TwoWay");
+            Start("Event TwoWay");
             await TestCommandTwoWay();
             Stop();
 
-            Start("Flag TwoWay response");
+            Start("Event TwoWay response");
             await SendTwoWay();
             Stop2();
 
-            Start("Flag TwoWay response");
+            Start("Event TwoWay response");
             await SendTwoWay();
             Stop2();
 
-            Start("Flag TwoWay response");
+            Start("Event TwoWay response");
             await SendTwoWay();
             Stop2();
 
@@ -116,8 +117,8 @@ namespace Benchmark.Design
         {
             concurrentQueue.Enqueue(new Command(false));
 
-            EventFlag = true;
-            // manualEvent.Set();
+            // EventFlag = true;
+            manualEvent.Set();
 
             return;
         }
@@ -127,8 +128,8 @@ namespace Benchmark.Design
             var c = new Command(false);
             concurrentQueue.Enqueue(c);
 
-            EventFlag = true;
-            // manualEvent.Set();
+            // EventFlag = true;
+            manualEvent.Set();
 
             while (true)
             {
@@ -137,7 +138,7 @@ namespace Benchmark.Design
                     return;
                 }
 
-                await Task.Delay(MillisecondInterval);
+                autoEvent.WaitOne(1);
             }
         }
 
@@ -150,28 +151,26 @@ namespace Benchmark.Design
                 {
                     break;
                 }
-                /*else if (!manualEvent.WaitOne(1))
-                {
-                    continue;
-                }
-                else
+                else if (manualEvent.WaitOne(1))
                 {
                     manualEvent.Reset();
-                }*/
-                else if (!EventFlag)
+                }
+                /*else if (!EventFlag)
                 {// manualEvent.WaitOne();
-                    Thread.Sleep(5);
+                    Thread.Sleep(1);
                     continue;
                 }
                 else
                 {
                     EventFlag = false;
-                }
+                }*/
 
                 while (concurrentQueue.TryDequeue(out var command))
                 {
                     command.Flag = true;
                 }
+
+                autoEvent.Set();
             }
         }
     }
