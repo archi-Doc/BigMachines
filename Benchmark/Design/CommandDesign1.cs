@@ -19,29 +19,31 @@ namespace Benchmark.Design
         {
             var sw = new Stopwatch();
 
-            sw.Restart();
+            Start("Task.Run");
             await TestCommand();
-            sw.Stop();
-            Console.WriteLine($"count: {objCount}");
-            Console.WriteLine($"time: {sw.ElapsedMilliseconds} ms");
+            Stop();
 
-            sw.Restart();
+            Start("Parallel.For");
             await TestCommandParallel();
-            sw.Stop();
-            Console.WriteLine($"count: {objCount}");
-            Console.WriteLine($"time: {sw.ElapsedMilliseconds} ms");
+            Stop();
 
-            sw.Restart();
+            /*Start("Task.Run");
             await TestCommandTwoWay();
-            sw.Stop();
-            Console.WriteLine($"count: {objCount}");
-            Console.WriteLine($"time: {sw.ElapsedMilliseconds} ms");
+            Stop();*/
 
-            sw.Restart();
-            await TestCommandTwoWayParallel();
-            sw.Stop();
-            Console.WriteLine($"count: {objCount}");
-            Console.WriteLine($"time: {sw.ElapsedMilliseconds} ms");
+            void Start(string name)
+            {
+                Console.WriteLine(name);
+                sw.Restart();
+            }
+
+            void Stop()
+            {
+                sw.Stop();
+                Console.WriteLine($"count: {objCount}");
+                Console.WriteLine($"time: {sw.ElapsedMilliseconds} ms");
+                Console.WriteLine();
+            }
         }
 
         internal static async Task TestCommand()
@@ -71,30 +73,6 @@ namespace Benchmark.Design
 
         internal static async Task TestCommandTwoWay()
         {
-            for (var i = 0; i < N; i++)
-            {
-                var result = await Task.Run(() =>
-                {
-                    lock (obj)
-                    {
-                        Command(1);
-                        return objCount;
-                    }
-                });
-            }
-        }
-
-        internal static async Task TestCommandTwoWayParallel()
-        {
-            Parallel.For(0, N, x =>
-            {
-                lock (obj)
-                {
-                    Command(1);
-                    return objCount;
-                }
-            });
-
             for (var i = 0; i < N; i++)
             {
                 var result = await Task.Run(() =>

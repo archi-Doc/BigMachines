@@ -8,7 +8,7 @@ using System.Threading.Tasks;
 
 namespace Benchmark.Design
 {
-    internal class CommandDesign2
+    internal class CommandDesign3
     {// Task.Run
         internal const int N = 1000_000;
 
@@ -23,7 +23,9 @@ namespace Benchmark.Design
             var sw = new Stopwatch();
             var cts = new CancellationTokenSource();
 
-            var t = Task.Run(() => ReceiveAction(cts.Token));
+            var t = new Thread(ReceiveAction); // Task.Run(() => ReceiveAction(cts.Token));
+            t.Priority = ThreadPriority.AboveNormal;
+            t.Start(cts.Token);
 
             Start("lock + flag");
             await TestCommand();
@@ -38,7 +40,7 @@ namespace Benchmark.Design
             Stop();
 
             cts.Cancel();
-            await t;
+            t.Join();
 
             void Start(string name)
             {

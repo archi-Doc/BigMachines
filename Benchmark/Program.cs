@@ -25,6 +25,7 @@ namespace Benchmark
         {
             await Benchmark.Design.CommandDesign1.Test();
             await Benchmark.Design.CommandDesign2.Test();
+            await Benchmark.Design.CommandDesign3.Test();
 
             // DebugRun<Clone.CloneBenchmark>();
 
