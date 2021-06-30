@@ -135,6 +135,13 @@ namespace BigMachines
             return new Channel(this, method);
         }
 
+        /// <summary>
+        /// Send a message to the receiver.<br/>
+        /// Caution! TMessage must be serializable by Tinyhand because the message will be cloned and passed to the receiver.
+        /// </summary>
+        /// <typeparam name="TMessage">The type of a message.</typeparam>
+        /// <param name="id">id.</param>
+        /// <param name="message">The message to send.<br/>Must be serializable by Tinyhand because the message will be cloned and passed to the receiver.</param>
         public void Send<TMessage>(int id, TMessage message)
         {
             var m = new Command(CommandType.CommandAndForget, id, TinyhandSerializer.Clone(message));
