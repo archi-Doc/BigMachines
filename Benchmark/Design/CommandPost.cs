@@ -7,10 +7,10 @@ using System.Threading.Tasks;
 using Arc.Threading;
 using Tinyhand;
 
-namespace BigMachines
+namespace BigMachines.Obsolete
 {
     /// <summary>
-    /// CommandPost is dependency-free pub/sub service.<br/>
+    /// CommandPost is a class for dependency-free pub/sub service.<br/>
     /// It's easy to use.<br/>
     /// 1. Open a channel (register a subscriber) : .<br/>
     /// 2. Send a message (publish) : "/>.
@@ -23,29 +23,29 @@ namespace BigMachines
         {
             CommandAndForget,
             RequireResponse,
-            Responded,
+            ResponseCompleted,
         }
 
         public delegate void CommandFunc(Command command);
 
         /// <summary>
-        /// Channel class manages the relationship between CommandPost and registered method.<br/>
-        /// You need to call <see cref="Channel.Dispose()"/> when the Channel is no longer necessary.
+        /// Operation class to receive a message.<br/>
+        /// You need to call <see cref="Operation.Dispose()"/> when the Operation is no longer necessary.
         /// </summary>
-        public class Channel : IDisposable
-        {   
-            public Channel(CommandPost commandPost, CommandFunc method)
+        public class Operation : IDisposable
+        {
+            public Operation(CommandPost commandPost, CommandFunc method)
             {
                 this.CommandPost = commandPost;
                 this.Method = method;
                 lock (this.CommandPost.cs)
                 {
-                    if (this.CommandPost.primaryChannel != null)
+                    if (this.CommandPost.primaryOperation != null)
                     {
-                        throw new InvalidOperationException("Dispose the previous channel.");
+                        throw new InvalidOperationException("Dispose the previous operation.");
                     }
 
-                    this.CommandPost.primaryChannel = this;
+                    this.CommandPost.primaryOperation = this;
                 }
             }
 
@@ -53,7 +53,7 @@ namespace BigMachines
             {
                 lock (this.CommandPost.cs)
                 {
-                    this.CommandPost.primaryChannel = null;
+                    this.CommandPost.primaryOperation = null;
                 }
 
                 this.CommandPost = null!;
@@ -83,32 +83,33 @@ namespace BigMachines
             public object? Response { get; set; }
         }
 
-        public CommandPost(ThreadCoreBase parent, int millisecondInterval = 10)
+        public CommandPost(int millisecondInterval = 5)
         {
             lock (cs)
             {
                 this.MillisecondInterval = millisecondInterval;
-                this.Core = new(parent, this.MainLoop);
-                this.Core.Thread.Priority = ThreadPriority.AboveNormal;
+                this.mainThread = new Thread(this.MainLoop);
+                this.mainThread.Priority = ThreadPriority.AboveNormal;
+                this.mainThread.Start(this.cancellationTokenSource.Token);
             }
         }
 
         /// <summary>
         /// Open a channel to receive a message.
         /// </summary>
-        public Channel Open(CommandFunc method)
+        public Operation Open(CommandFunc method)
         {
-            return new Channel(this, method);
+            return new Operation(this, method);
         }
 
         public void Send<TMessage>(int id, TMessage message)
         {
             var m = new Command(CommandType.CommandAndForget, id, TinyhandSerializer.Clone(message));
             this.concurrentQueue.Enqueue(m);
-            this.commandAdded.Set();
+            this.mainFlag = true;
         }
 
-        public TResult? SendTwoWay<TMessage, TResult>(int id, TMessage message, int millisecondTimeout = 100)
+        public async Task<TResult> SendTwoWay<TMessage, TResult>(int id, TMessage message, int millisecondTimeout, CancellationToken cancellationToken = default)
         {
             if (millisecondTimeout < 0 || millisecondTimeout > MaxMillisecondTimeout)
             {
@@ -117,46 +118,47 @@ namespace BigMachines
 
             var m = new Command(CommandType.RequireResponse, id, TinyhandSerializer.Clone(message));
             this.concurrentQueue.Enqueue(m);
-            this.commandAdded.Set();
+            this.mainFlag = true;
 
-            try
+            int wait = 1;
+            int total = 0;
+            while (m.Type != CommandType.ResponseCompleted)
             {
-                while (true)
-                {
-                    this.commandResponded.Wait(this.MillisecondInterval, this.Core.CancellationToken);
-                    if (m.Type == CommandType.Responded)
-                    {
-                        this.commandResponded.Reset();
-                        return (TResult)m.Response!;
-                    }
+                await Task.Delay(wait, cancellationToken).ConfigureAwait(false);
+                total += wait;
+                wait++;
+
+                if (total > millisecondTimeout)
+                {// Timeout
+                    throw new OperationCanceledException();
                 }
             }
-            catch
-            {
-                return default;
-            }
+
+            return (TResult)m.Response!;
         }
 
         public int MillisecondInterval { get; }
 
-        public ThreadCore Core { get; }
-
         private void MainLoop(object? parameter)
         {
-            var core = (ThreadCore)parameter!;
-            while (!core.IsTerminated)
+            var cancellationToken = (CancellationToken)parameter!;
+            while (true)
             {
-                try
-                {
-                    this.commandAdded.Wait(MillisecondInterval, core.CancellationToken);
-                }
-                catch
+                if (cancellationToken.IsCancellationRequested)
                 {
                     break;
                 }
+                else if (!this.mainFlag)
+                {
+                    Thread.Sleep(this.MillisecondInterval);
+                    continue;
+                }
+                else
+                {
+                    this.mainFlag = false;
+                }
 
-                this.commandAdded.Reset();
-                var method = this.primaryChannel?.Method;
+                var method = this.primaryOperation?.Method;
                 while (this.concurrentQueue.TryDequeue(out var command))
                 {
                     if (method != null)
@@ -165,20 +167,19 @@ namespace BigMachines
                         method(command);
                         if (type == CommandType.RequireResponse)
                         {
-                            command.Type = CommandType.Responded;
+                            command.Type = CommandType.ResponseCompleted;
                         }
-
-                        this.commandResponded.Set();
                     }
                 }
             }
         }
 
         private object cs = new();
-        private ManualResetEventSlim commandAdded = new(false);
-        private ManualResetEventSlim commandResponded = new(false);
+        private CancellationTokenSource cancellationTokenSource = new();
+        private Thread mainThread;
+        private bool mainFlag;
+        private Operation? primaryOperation;
         private ConcurrentQueue<Command> concurrentQueue = new();
-        private Channel? primaryChannel;
 
         #region IDisposable Support
         private bool disposed = false; // To detect redundant calls.
@@ -209,7 +210,7 @@ namespace BigMachines
                 if (disposing)
                 {
                     // free managed resources.
-                    this.primaryChannel?.Dispose();
+                    this.primaryOperation?.Dispose();
                 }
 
                 // free native resources here if there are any.
