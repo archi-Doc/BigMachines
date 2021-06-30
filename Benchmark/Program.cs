@@ -12,6 +12,7 @@ using System.Reflection;
 using System.Threading.Tasks;
 using BenchmarkDotNet.Attributes;
 using BenchmarkDotNet.Running;
+using Arc.Threading;
 using BigMachines;
 
 #pragma warning disable SA1401 // Fields should be private
@@ -26,12 +27,12 @@ namespace Benchmark
         {
             // await Benchmark.Design.CommandDesign1.Test();
             // await Benchmark.Design.CommandDesign2.Test();
-            await Benchmark.Design.CommandDesign3.Test();
+            /*await Benchmark.Design.CommandDesign3.Test();
             await Benchmark.Design.CommandDesign4.Test();
             await Benchmark.Design.CommandDesign5.Test();
-            await Benchmark.Design.CommandDesign6.Test();
+            await Benchmark.Design.CommandDesign6.Test();*/
 
-            /*var cp = new CommandPost();
+            var cp = new CommandPost(ThreadCore.Root);
             cp.Open(x =>
             {
                 if (x.Message is int i)
@@ -41,7 +42,7 @@ namespace Benchmark
             });
 
             cp.Send(1, 2);
-            var result = await cp.SendTwoWay<int, int>(1, 3, 1000);*/
+            var result = cp.SendTwoWay<int, int>(1, 3);
 
             // DebugRun<Clone.CloneBenchmark>();
 

@@ -19,13 +19,31 @@ namespace BigMachines
     {
         public const int MaxMillisecondTimeout = 3_000;
 
+        /// <summary>
+        /// Command type.
+        /// </summary>
         public enum CommandType
         {
+            /// <summary>
+            /// One-way command.
+            /// </summary>
             CommandAndForget,
+
+            /// <summary>
+            /// Two-way command which requires a response
+            /// </summary>
             RequireResponse,
+
+            /// <summary>
+            /// Responded. Used internally.
+            /// </summary>
             Responded,
         }
 
+        /// <summary>
+        /// Defines the type of delegate used to receive and process commands.
+        /// </summary>
+        /// <param name="command">Command.</param>
         public delegate void CommandFunc(Command command);
 
         /// <summary>
@@ -33,7 +51,12 @@ namespace BigMachines
         /// You need to call <see cref="Channel.Dispose()"/> when the Channel is no longer necessary.
         /// </summary>
         public class Channel : IDisposable
-        {   
+        {
+            /// <summary>
+            /// Initializes a new instance of the <see cref="Channel"/> class.
+            /// </summary>
+            /// <param name="commandPost">CommandPost.</param>
+            /// <param name="method">The method to receive and process commands.</param>
             public Channel(CommandPost commandPost, CommandFunc method)
             {
                 this.CommandPost = commandPost;
@@ -49,6 +72,7 @@ namespace BigMachines
                 }
             }
 
+            /// <inheritdoc/>
             public void Dispose()
             {
                 lock (this.CommandPost.cs)
@@ -65,6 +89,9 @@ namespace BigMachines
             public CommandFunc Method { get; private set; }
         }
 
+        /// <summary>
+        /// Command class which contains command information.
+        /// </summary>
         public class Command
         {
             public Command(CommandType type, int id, object? message)
@@ -83,9 +110,14 @@ namespace BigMachines
             public object? Response { get; set; }
         }
 
+        /// <summary>
+        /// Initializes a new instance of the <see cref="CommandPost"/> class.
+        /// </summary>
+        /// <param name="parent">The parent.</param>
+        /// <param name="millisecondInterval">The number of milliseconds to wait for each interval.</param>
         public CommandPost(ThreadCoreBase parent, int millisecondInterval = 10)
         {
-            lock (cs)
+            lock (this.cs)
             {
                 this.MillisecondInterval = millisecondInterval;
                 this.Core = new(parent, this.MainLoop);
@@ -96,6 +128,8 @@ namespace BigMachines
         /// <summary>
         /// Open a channel to receive a message.
         /// </summary>
+        /// <param name="method">The method to receive and process commands.</param>
+        /// <returns>Channel.</returns>
         public Channel Open(CommandFunc method)
         {
             return new Channel(this, method);
@@ -148,7 +182,7 @@ namespace BigMachines
             {
                 try
                 {
-                    this.commandAdded.Wait(MillisecondInterval, core.CancellationToken);
+                    this.commandAdded.Wait(this.MillisecondInterval, core.CancellationToken);
                 }
                 catch
                 {
@@ -180,8 +214,10 @@ namespace BigMachines
         private ConcurrentQueue<Command> concurrentQueue = new();
         private Channel? primaryChannel;
 
+#pragma warning disable SA1124 // Do not use regions
         #region IDisposable Support
         private bool disposed = false; // To detect redundant calls.
+#pragma warning restore SA1124 // Do not use regions
 
         /// <summary>
         /// Finalizes an instance of the <see cref="CommandPost"/> class.
