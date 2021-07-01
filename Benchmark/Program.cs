@@ -32,7 +32,7 @@ namespace Benchmark
             await Benchmark.Design.CommandDesign5.Test();
             await Benchmark.Design.CommandDesign6.Test();*/
 
-            var cp = new CommandPost(ThreadCore.Root);
+            var cp = new CommandPost<int>(ThreadCore.Root);
             cp.Open(x =>
             {
                 if (x.Message is int i)
@@ -44,10 +44,11 @@ namespace Benchmark
             cp.Send(1, 2);
             var result = cp.SendTwoWay<int, int>(1, 3);
 
-            // DebugRun<Clone.CloneBenchmark>();
+            DebugRun<Design.ConcurrentQueueBenchmark>();
 
             var switcher = new BenchmarkSwitcher(new[]
             {
+                typeof(Design.ConcurrentQueueBenchmark),
                 typeof(Test.TestBenchmark),
             });
             switcher.Run(args);

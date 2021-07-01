@@ -15,7 +15,9 @@ namespace BigMachines
     /// 1. Open a channel (register a subscriber) : .<br/>
     /// 2. Send a message (publish) : "/>.
     /// </summary>
-    public class CommandPost : IDisposable
+    /// <typeparam name="TIdentifier">The type of an identifier.</typeparam>
+    public class CommandPost<TIdentifier> : IDisposable
+        where TIdentifier : notnull
     {
         public const int MaxMillisecondTimeout = 3_000;
 
@@ -57,7 +59,7 @@ namespace BigMachines
             /// </summary>
             /// <param name="commandPost">CommandPost.</param>
             /// <param name="method">The method to receive and process commands.</param>
-            public Channel(CommandPost commandPost, CommandFunc method)
+            public Channel(CommandPost<TIdentifier> commandPost, CommandFunc method)
             {
                 this.CommandPost = commandPost;
                 this.Method = method;
@@ -84,7 +86,7 @@ namespace BigMachines
                 this.Method = null!;
             }
 
-            public CommandPost CommandPost { get; private set; }
+            public CommandPost<TIdentifier> CommandPost { get; private set; }
 
             public CommandFunc Method { get; private set; }
         }
@@ -94,16 +96,16 @@ namespace BigMachines
         /// </summary>
         public class Command
         {
-            public Command(CommandType type, int id, object? message)
+            public Command(CommandType type, TIdentifier identifier, object? message)
             {
                 this.Type = type;
-                this.Id = id;
+                this.Identifier = identifier;
                 this.Message = message;
             }
 
             public CommandType Type { get; internal set; }
 
-            public int Id { get; }
+            public TIdentifier Identifier { get; }
 
             public object? Message { get; }
 
@@ -111,7 +113,7 @@ namespace BigMachines
         }
 
         /// <summary>
-        /// Initializes a new instance of the <see cref="CommandPost"/> class.
+        /// Initializes a new instance of the <see cref="CommandPost{TIdentifier}"/> class.
         /// </summary>
         /// <param name="parent">The parent.</param>
         /// <param name="millisecondInterval">The number of milliseconds to wait for each interval.</param>
@@ -140,23 +142,23 @@ namespace BigMachines
         /// Caution! TMessage must be serializable by Tinyhand because the message will be cloned and passed to the receiver.
         /// </summary>
         /// <typeparam name="TMessage">The type of a message.</typeparam>
-        /// <param name="id">id.</param>
+        /// <param name="identifier">The identifier of a message.</param>
         /// <param name="message">The message to send.<br/>Must be serializable by Tinyhand because the message will be cloned and passed to the receiver.</param>
-        public void Send<TMessage>(int id, TMessage message)
+        public void Send<TMessage>(TIdentifier identifier, TMessage message)
         {
-            var m = new Command(CommandType.CommandAndForget, id, TinyhandSerializer.Clone(message));
+            var m = new Command(CommandType.CommandAndForget, identifier, TinyhandSerializer.Clone(message));
             this.concurrentQueue.Enqueue(m);
             this.commandAdded.Set();
         }
 
-        public TResult? SendTwoWay<TMessage, TResult>(int id, TMessage message, int millisecondTimeout = 100)
+        public TResult? SendTwoWay<TMessage, TResult>(TIdentifier identifier, TMessage message, int millisecondTimeout = 100)
         {
             if (millisecondTimeout < 0 || millisecondTimeout > MaxMillisecondTimeout)
             {
                 millisecondTimeout = MaxMillisecondTimeout;
             }
 
-            var m = new Command(CommandType.RequireResponse, id, TinyhandSerializer.Clone(message));
+            var m = new Command(CommandType.RequireResponse, identifier, TinyhandSerializer.Clone(message));
             this.concurrentQueue.Enqueue(m);
             this.commandAdded.Set();
 
@@ -227,7 +229,7 @@ namespace BigMachines
 #pragma warning restore SA1124 // Do not use regions
 
         /// <summary>
-        /// Finalizes an instance of the <see cref="CommandPost"/> class.
+        /// Finalizes an instance of the <see cref="CommandPost{TIdentifier}"/> class.
         /// </summary>
         ~CommandPost()
         {
