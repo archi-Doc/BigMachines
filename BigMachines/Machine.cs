@@ -6,6 +6,7 @@ using System.Collections.Generic;
 using System.Threading.Tasks;
 using Arc.Threading;
 
+#pragma warning disable SA1009 // Closing parenthesis should be spaced correctly
 #pragma warning disable SA1602 // Enumeration items should be documented
 
 namespace BigMachines
@@ -21,14 +22,19 @@ namespace BigMachines
 
         public CommandPost CommandPost { get; }
 
-        public void Send<TMessage>(TIdentifier idenfitier, TMessage message)
+        public ManMachineInterface<TIdentifier, TState>? GetMachine<TState>(TIdentifier identifier)
         {
-            this.CommandPost.Send<KeyValuePair<TIdentifier, TMessage>>(0, new KeyValuePair<TIdentifier, TMessage>(idenfitier, message));
-        }
+            if (this.identificationToMachine.TryGetValue(identifier, out var machine))
+            {
+                if (machine.GetStateType() != typeof(TState))
+                {
+                    throw new InvalidOperationException();
+                }
 
-        public TResponse? SendTwoWay<TMessage, TResponse>(TIdentifier idenfitier, TMessage message)
-        {
-            return this.CommandPost.SendTwoWay<KeyValuePair<TIdentifier, TMessage>, TResponse>(0, new KeyValuePair<TIdentifier, TMessage>(idenfitier, message));
+                return new ManMachineInterface<TIdentifier, TState>(this, identifier);
+            }
+
+            return null;
         }
 
         private void Distributor(CommandPost.Command command)
@@ -43,7 +49,32 @@ namespace BigMachines
             }
         }
 
-        private ConcurrentDictionary<TIdentifier, Machine<TIdentifier>> identificationToMachine = new();
+        private ConcurrentDictionary<TIdentifier, MachineBase<TIdentifier>> identificationToMachine = new();
+        private ConcurrentDictionary<TIdentifier, Type> identificationToStateType = new();
+    }
+
+    public class ManMachineInterface<TIdentifier, TState>
+        where TIdentifier : notnull
+    {
+        public BigMachine<TIdentifier> BigMachine { get; }
+
+        public TIdentifier Identifier { get; }
+
+        internal ManMachineInterface(BigMachine<TIdentifier> bigMachine, TIdentifier identifier)
+        {
+            this.BigMachine = bigMachine;
+            this.Identifier = identifier;
+        }
+
+        public void Send<TMessage>(TIdentifier idenfitier, TMessage message)
+        {
+            this.BigMachine.CommandPost.Send<KeyValuePair<TIdentifier, TMessage>>(0, new KeyValuePair<TIdentifier, TMessage>(idenfitier, message));
+        }
+
+        public TResponse? SendTwoWay<TMessage, TResponse>(TIdentifier idenfitier, TMessage message)
+        {
+            return this.BigMachine.CommandPost.SendTwoWay<KeyValuePair<TIdentifier, TMessage>, TResponse>(0, new KeyValuePair<TIdentifier, TMessage>(idenfitier, message));
+        }
     }
 
     /*public interface IMachine<TIdentification>
@@ -60,41 +91,56 @@ namespace BigMachines
         }
     }
 
-    public enum StateMethodType
-    {
-        Run,
-        CanEnter,
-        CanExit,
-    }
-
-    public enum StateMethodInput
+    public enum StateInput
     {
         CanEnter,
         Run,
         CanExit,
     }
 
-    public enum StateMethodResult
+    public enum StateResult
     {
         Continue,
         Terminate,
         Deny,
     }
 
-    public class Machine<TIdentifier>
+    public abstract class MachineBase<TIdentifier>
         where TIdentifier : notnull
     {
-        public BigMachine<TIdentifier> BigMachine { get; }
-
-        public TIdentifier Identifier { get; }
-
-        public TState CurrentState { get; protected set; }
-
-        public Machine(BigMachine<TIdentifier> bigMachine, TIdentifier identifier)
+        public MachineBase(BigMachine<TIdentifier> bigMachine, TIdentifier identifier)
         {
             this.BigMachine = bigMachine;
             this.Identifier = identifier;
         }
+
+        public BigMachine<TIdentifier> BigMachine { get; }
+
+        public TIdentifier Identifier { get; }
+
+        public virtual Type GetStateType() => throw new InvalidOperationException();
+
+        internal void ProcessCommand(CommandPost.Command command)
+        {
+        }
+    }
+
+    public class Machine<TIdentifier, TState> : MachineBase<TIdentifier>
+        where TIdentifier : notnull
+    {
+        public Machine(BigMachine<TIdentifier> bigMachine, TIdentifier identifier)
+            : base(bigMachine, identifier)
+        {
+            this.CurrentState = default!;
+        }
+
+        // public BigMachine<TIdentifier> BigMachine { get; }
+
+        // public TIdentifier Identifier { get; }
+
+        public TState CurrentState { get; protected set; }
+
+        // public virtual Type GetStateType() => throw new InvalidOperationException();
 
         public void Run()
         {
@@ -104,37 +150,19 @@ namespace BigMachines
             }
         }
 
-        internal virtual void ProcessCommand(CommandPost.Command command)
+        internal void SetTimeout(int millisecondToWait)
         {
-            return;
         }
+
+        protected virtual bool ChangeState(TState state) => false;
 
         protected virtual void RunInternal()
         {
         }
     }
 
-    public interface InitialToIdentification<TIdentification>
-        where TIdentification : notnull
+    public partial class TestMachine : Machine<int, TestMachine.State>
     {
-        TIdentification GetIdentification();
-    }
-
-    public class TestMachine : Machine<TestMachine.Initial, TestMachine.Identification, TestMachine.State>
-    {
-        public class Initial : InitialToIdentification<Identification>
-        {
-            public Identification GetIdentification()
-            {
-                throw new NotImplementedException();
-            }
-        }
-
-        public class Identification
-        {
-            public int Id { get; set; }
-        }
-
         public enum State
         {
             Initial,
@@ -142,9 +170,9 @@ namespace BigMachines
             Last,
         }
 
-        public TestMachine(Initial initialCondition)
+        public TestMachine(BigMachine<int> bigMachine, int identifier)
+            : base(bigMachine, identifier)
         {
-            this.InitialCondition = initialCondition;
         }
 
         protected override void RunInternal()
@@ -156,93 +184,59 @@ namespace BigMachines
                     break;
 
                 case State.First:
-                    this.First(StateMethodInput.Run);
+                    this.First(StateInput.Run);
                     break;
             }
         }
 
-        [StateMethod(StateMethodType.CanEnter)]
-        protected StateMethodResult Initial()
+        protected StateResult Initial()
         {// lock(this)
-            this.Wait(44);
-            this.ChangeState(to);
-            return StateMethodResult.Continue;
+            this.SetTimeout(44);
+            this.ChangeState(TestMachine.State.First);
+            return StateResult.Continue;
         }
 
         [StateMethod]
-        protected StateMethodResult First(StateMethodInput input)
+        protected StateResult First(StateInput input)
         {
-            if (input == StateMethodInput.CanEnter)
+            if (input == StateInput.CanEnter)
             {
-                return StateMethodResult.Terminate;
+                return StateResult.Terminate;
             }
 
-            this.Wait(44);
-            this.ChangeState(to);
-            return StateMethodResult.Continue;
+            this.SetTimeout(44);
+            this.ChangeState(State.First);
+            return StateResult.Continue;
         }
 
-        protected StateMethodResult ChangeState(TestMachine.State state)
+        protected override bool ChangeState(TestMachine.State state)
         {
             if (this.CurrentState == state)
             {
-                return StateMethodResult.Continue;
+                return true;
             }
 
             bool canExit = true;
             if (this.CurrentState == State.First)
             {
-                canExit = this.First(StateMethodInput.CanExit) != StateMethodResult.Deny;
+                canExit = this.First(StateInput.CanExit) != StateResult.Deny;
             }
 
             bool canEnter = state switch
             {
-                State.First => this.First(StateMethodInput.CanEnter) != StateMethodResult.Deny,
+                State.First => this.First(StateInput.CanEnter) != StateResult.Deny,
                 _ => true,
             };
 
             if (canExit && canEnter)
             {
                 this.CurrentState = state;
-                return StateMethodResult.Continue;
+                return true;
             }
             else
             {
-                return StateMethodResult.Terminate;
+                return false;
             }
         }
     }
-
-    /*public class TestMachine : Machine<TestState>
-    {
-        public enum State
-        {
-            Initial,
-            First,
-            Last,
-        }
-
-        Dictionary<State, Func<State, StateResult>> info;
-
-        public TestMachine()
-        {
-            info = new();
-            info.Add(State.Initial, this.Initial);
-        }
-
-        [AttributeUsage(AttributeTargets.Method, AllowMultiple = false, Inherited = true)]
-        public class StateAttribute : Attribute
-        {
-            public StateAttribute(TestState state)
-            {
-            }
-        }
-
-        public StateResult Initial(State previous)
-        {
-            return this.Wait(44);
-            this.ChangeState(from);
-            return StateResult.Continue;
-        }
-    }*/
 }
