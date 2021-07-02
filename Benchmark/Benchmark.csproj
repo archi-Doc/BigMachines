@@ -8,14 +8,11 @@
 
   <ItemGroup>
     <PackageReference Include="BenchmarkDotNet" Version="0.13.0" />
+    <PackageReference Include="Tinyhand" Version="0.15.1" />
   </ItemGroup>
 
   <ItemGroup>
     <ProjectReference Include="..\BigMachines\BigMachines.csproj" />
-  </ItemGroup>
-
-  <ItemGroup>
-    <Folder Include="Design\" />
   </ItemGroup>
 
 </Project>

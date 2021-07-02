@@ -9,8 +9,11 @@ using System.Diagnostics;
 using System.Linq;
 using System.Linq.Expressions;
 using System.Reflection;
+using System.Threading.Tasks;
 using BenchmarkDotNet.Attributes;
 using BenchmarkDotNet.Running;
+using Arc.Threading;
+using BigMachines;
 
 #pragma warning disable SA1401 // Fields should be private
 
@@ -20,12 +23,32 @@ namespace Benchmark
     {
         public static Stopwatch Stopwatch { get; } = new();
 
-        public static void Main(string[] args)
+        public static async Task Main(string[] args)
         {
-            // DebugRun<Clone.CloneBenchmark>();
+            // await Benchmark.Design.CommandDesign1.Test();
+            // await Benchmark.Design.CommandDesign2.Test();
+            /*await Benchmark.Design.CommandDesign3.Test();
+            await Benchmark.Design.CommandDesign4.Test();
+            await Benchmark.Design.CommandDesign5.Test();
+            await Benchmark.Design.CommandDesign6.Test();*/
+
+            var cp = new CommandPost<int>(ThreadCore.Root);
+            cp.Open(x =>
+            {
+                if (x.Message is int i)
+                {
+                    x.Response = i + 2;
+                }
+            });
+
+            cp.Send(1, 2);
+            var result = cp.SendTwoWay<int, int>(1, 3);
+
+            DebugRun<Design.ConcurrentQueueBenchmark>();
 
             var switcher = new BenchmarkSwitcher(new[]
             {
+                typeof(Design.ConcurrentQueueBenchmark),
                 typeof(Test.TestBenchmark),
             });
             switcher.Run(args);
