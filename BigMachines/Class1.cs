@@ -2,7 +2,8 @@
 
 namespace BigMachines
 {
-    public class Class1
+    public partial class Class1
     {
+        public int Test1() => 1;
     }
 }
