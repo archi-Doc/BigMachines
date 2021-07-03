@@ -13,6 +13,7 @@ using Tinyhand;
 
 namespace BigMachines
 {
+    [TinyhandObject]
     public abstract class Machine<TIdentifier, TState> : MachineBase<TIdentifier>
         where TIdentifier : notnull
         where TState : struct
@@ -23,6 +24,7 @@ namespace BigMachines
             this.CurrentState = default!;
         }
 
+        [Key(1)]
         public TState CurrentState { get; protected set; }
 
         protected virtual bool ChangeStateInternal(TState state) => false;

@@ -12,7 +12,8 @@ using Tinyhand;
 
 namespace BigMachines
 {
-    public abstract partial class MachineBase<TIdentifier>
+    [TinyhandObject]
+    public abstract class MachineBase<TIdentifier>
         where TIdentifier : notnull
     {
         public MachineBase(BigMachine<TIdentifier> bigMachine, TIdentifier identifier)
@@ -21,9 +22,11 @@ namespace BigMachines
             this.Identifier = identifier;
         }
 
+        [IgnoreMember]
         public BigMachine<TIdentifier> BigMachine { get; }
 
-        public TIdentifier Identifier { get; }
+        [Key(0)]
+        public TIdentifier Identifier { get; protected set; }
 
         // public virtual Type GetStateType() => throw new NotImplementedException();
         internal void ProcessCommand(CommandPost<TIdentifier>.Command command) => throw new NotImplementedException();

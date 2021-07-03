@@ -33,7 +33,7 @@ namespace BigMachines
         {
         }
 
-        [Key(0)]
+        [Key(2)]
         public int Dummy { get; set; }
 
         [StateMethod]
