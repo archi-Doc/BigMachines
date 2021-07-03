@@ -18,7 +18,7 @@ namespace BigMachines
         public BigMachine(ThreadCoreBase parent)
         {
             this.CommandPost = new(parent);
-            this.CommandPost.Open(this.Distributor);
+            this.CommandPost.Open(this.DistributeCommand);
         }
 
         public CommandPost<TIdentifier> CommandPost { get; }
@@ -38,10 +38,9 @@ namespace BigMachines
             return null;
         }
 
-        private void Distributor(CommandPost<TIdentifier>.Command command)
+        private void DistributeCommand(CommandPost<TIdentifier>.Command command)
         {
-            var id = default(TIdentifier)!;
-            if (this.identificationToMachine.TryGetValue(id, out var machine))
+            if (this.identificationToMachine.TryGetValue(command.Identifier, out var machine))
             {
                 lock (machine)
                 {

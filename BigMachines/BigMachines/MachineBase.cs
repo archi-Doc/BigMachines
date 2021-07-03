@@ -22,13 +22,15 @@ namespace BigMachines
             this.Identifier = identifier;
         }
 
-        [IgnoreMember]
         public BigMachine<TIdentifier> BigMachine { get; }
 
         [Key(0)]
         public TIdentifier Identifier { get; protected set; }
 
+        protected bool IsSerializable => false;
+
         // public virtual Type GetStateType() => throw new NotImplementedException();
+
         internal void ProcessCommand(CommandPost<TIdentifier>.Command command) => throw new NotImplementedException();
 
         protected void SetTimeout(int millisecond)

@@ -5,13 +5,14 @@ using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Threading.Tasks;
 using Arc.Threading;
+using BigMachines;
 using Tinyhand;
 
 #pragma warning disable SA1009 // Closing parenthesis should be spaced correctly
 #pragma warning disable SA1124 // Do not use regions
 #pragma warning disable SA1602 // Enumeration items should be documented
 
-namespace BigMachines
+namespace Sandbox
 {
     [TinyhandObject]
     public partial class TestMachine : Machine<int, TestMachine.State>
@@ -21,11 +22,6 @@ namespace BigMachines
             Initial,
             First,
             Last,
-        }
-
-        public TestMachine()
-            : base(default!, default)
-        {
         }
 
         public TestMachine(BigMachine<int> bigMachine, int identifier)
