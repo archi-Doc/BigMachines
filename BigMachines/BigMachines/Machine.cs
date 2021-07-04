@@ -18,11 +18,13 @@ namespace BigMachines
         where TIdentifier : notnull
         where TState : struct
     {
-        public Machine(BigMachine<TIdentifier> bigMachine)
+        protected Machine(BigMachine<TIdentifier> bigMachine)
             : base(bigMachine)
         {
             this.CurrentState = default!;
         }
+
+        internal override Machine<TIdentifier, TState> NewInstance(BigMachine<TIdentifier> bigMachine) => default!;
 
         [Key(1)]
         public TState CurrentState { get; protected set; }

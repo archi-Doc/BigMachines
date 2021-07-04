@@ -30,7 +30,14 @@ namespace BigMachines
 
         // public virtual Type GetStateType() => throw new NotImplementedException();
 
+        internal virtual MachineBase<TIdentifier> NewInstance(BigMachine<TIdentifier> bigMachine) => default!;
+
         internal void ProcessCommand(CommandPost<TIdentifier>.Command command) => throw new NotImplementedException();
+
+        internal void InitializeAndIsolate(TIdentifier identifier, object? parameter)
+        {
+            this.Identifier = TinyhandSerializer.Clone(identifier);
+        }
 
         protected void SetTimeout(int millisecond)
         {

@@ -19,7 +19,15 @@ namespace Sandbox
 
             var bigMachine = new BigMachine<int>(ThreadCore.Root);
             var machine = new TestMachine(bigMachine);
-            bigMachine.Add(machine);
+            bigMachine.TryAdd<TestMachine>(3, null);
+            bigMachine.TryAdd<TestMachine>(1, null);
+            bigMachine.AddMachine<TestMachine>(3, null);
+            bigMachine.GetMachine<TestMachine, TestMachine.State>(33);
+            var mmi = bigMachine.GetMachine<TestMachine>(33);
+            if (mmi != null)
+            {
+                mmi.Value
+            }
 
             ThreadCore.Root.Terminate();
             ThreadCore.Root.WaitForTermination(2000);

@@ -24,6 +24,7 @@ namespace BigMachines
         public CommandPost<TIdentifier> CommandPost { get; }
 
         public ManMachineInterface<TIdentifier, TState>? GetMachine<TState>(TIdentifier identifier)
+            where TState : struct
         {
             if (this.identificationToStateType.TryGetValue(identifier, out var type))
             {
@@ -36,6 +37,86 @@ namespace BigMachines
             }
 
             return null;
+        }
+
+        public ManMachineInterface<TIdentifier, TState>? GetOrAdd<TState>(TIdentifier identifier, Func<TMachine> func)
+            where TState : struct
+            where TMachine : new()
+        {
+            if (this.identificationToStateType.TryGetValue(identifier, out var type))
+            {
+                if (type != typeof(TState))
+                {
+                    throw new InvalidOperationException();
+                }
+
+                return new ManMachineInterface<TIdentifier, TState>(this, identifier);
+            }
+            else
+            {
+                var machine = new TMachine(this);
+
+            }
+
+            return null;
+        }
+
+        /*public ManMachineInterface<TIdentifier, TState>? AddMachine<TState>(TIdentifier identifier, bool createNew = false, object? parameter = null)
+        {
+            if (this.identificationToStateType.TryGetValue(identifier, out var type))
+            {
+                if (type != typeof(TState))
+                {
+                    throw new InvalidOperationException();
+                }
+
+                return new ManMachineInterface<TIdentifier, TState>(this, identifier);
+            }
+
+            return null;
+        }*/
+
+        public ManMachineInterface<TIdentifier, TState>? GetMachine<TMachine, TState>(TIdentifier identifier)
+            where TMachine : Machine<TIdentifier, TState>
+            where TState : struct
+        {
+            if (this.identificationToStateType.TryGetValue(identifier, out var type))
+            {
+                if (type != typeof(TState))
+                {
+                    throw new InvalidOperationException();
+                }
+
+                return new ManMachineInterface<TIdentifier, TState>(this, identifier);
+            }
+
+            return null;
+        }
+
+        public void Add(MachineBase<TIdentifier> machine, TIdentifier identifier, object? parameter)
+        {
+            machine.InitializeAndIsolate(identifier, parameter);
+        }
+
+        public ManMachineInterface<TIdentifier, TState> AddMachine<TMachine, TState>(TIdentifier identifier, object? parameter)
+            where TMachine : Machine<TIdentifier, TState>
+        {
+            return default!;
+        }
+
+        public bool TryAdd<TMachine>(TIdentifier identifier, object? parameter)
+        where TMachine : MachineBase<TIdentifier>
+        {
+            var newlyAdded = false;
+            this.identificationToMachine.GetOrAdd(identifier, x =>
+            {
+                newlyAdded = true;
+                var machine = MachineBase<TIdentifier>.NewInstance(this);
+                machine.InitializeAndIsolate(x, parameter);
+                return machine;
+            });
+
+            return newlyAdded;
         }
 
         private void DistributeCommand(CommandPost<TIdentifier>.Command command)

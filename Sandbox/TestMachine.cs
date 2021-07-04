@@ -24,6 +24,10 @@ namespace Sandbox
             Last,
         }
 
+        public class Interface : ManMachineInterface<int, TestMachine.State>
+        {
+        }
+
         public TestMachine(BigMachine<int> bigMachine)
             : base(bigMachine)
         {
