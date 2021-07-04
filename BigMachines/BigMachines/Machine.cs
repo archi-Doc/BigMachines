@@ -18,8 +18,8 @@ namespace BigMachines
         where TIdentifier : notnull
         where TState : struct
     {
-        public Machine(BigMachine<TIdentifier> bigMachine, TIdentifier identifier)
-            : base(bigMachine, identifier)
+        public Machine(BigMachine<TIdentifier> bigMachine)
+            : base(bigMachine)
         {
             this.CurrentState = default!;
         }

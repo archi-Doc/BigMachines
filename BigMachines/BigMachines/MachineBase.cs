@@ -16,16 +16,15 @@ namespace BigMachines
     public abstract class MachineBase<TIdentifier>
         where TIdentifier : notnull
     {
-        public MachineBase(BigMachine<TIdentifier> bigMachine, TIdentifier identifier)
+        public MachineBase(BigMachine<TIdentifier> bigMachine)
         {
             this.BigMachine = bigMachine;
-            this.Identifier = identifier;
         }
 
         public BigMachine<TIdentifier> BigMachine { get; }
 
         [Key(0)]
-        public TIdentifier Identifier { get; protected set; }
+        public TIdentifier Identifier { get; protected set; } = default!;
 
         protected bool IsSerializable => false;
 

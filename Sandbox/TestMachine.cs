@@ -14,7 +14,7 @@ using Tinyhand;
 
 namespace Sandbox
 {
-    [TinyhandObject]
+    [TinyhandObject(UseServiceProvider = true)]
     public partial class TestMachine : Machine<int, TestMachine.State>
     {
         public enum State
@@ -24,8 +24,8 @@ namespace Sandbox
             Last,
         }
 
-        public TestMachine(BigMachine<int> bigMachine, int identifier)
-            : base(bigMachine, identifier)
+        public TestMachine(BigMachine<int> bigMachine)
+            : base(bigMachine)
         {
         }
 
