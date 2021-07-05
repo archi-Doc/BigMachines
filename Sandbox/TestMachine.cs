@@ -18,20 +18,34 @@ namespace Sandbox
     public partial class TestMachine : Machine<int, TestMachine.State>
     {
         public enum State
-        {
+        {// Generated
             Initial,
             First,
             Last,
         }
 
         public class Interface : ManMachineInterface<int, TestMachine.State>
-        {
+        {// Generated
+            public Interface(BigMachine<int> bigMachine, int identifier)
+                : base(bigMachine, identifier)
+            {
+            }
         }
 
         public TestMachine(BigMachine<int> bigMachine)
             : base(bigMachine)
         {
         }
+
+        protected override void InitializeAndIsolate(int identifier, object? parameter)
+        {// Generated
+            this.Identifier = identifier;
+            this.@interface = new(this.BigMachine, identifier);
+        }
+
+        private Interface? @interface; // Generated
+
+        protected override ManMachineInterface? GetInterface() => this.@interface;
 
         [Key(2)]
         public int Dummy { get; set; }
@@ -68,7 +82,19 @@ namespace Sandbox
             };
         }
 
-        protected override bool ChangeStateInternal(TestMachine.State state)
+        protected override void ProcessCommand(CommandPost<int>.Command command)
+        {
+            if (command.Message is State state)
+            {
+                command.Response = this.ChangeStateInternal(state);
+            }
+            else
+            {
+
+            }
+        }
+
+        protected override bool ChangeStateInternal(State state)
         {// Generated
             if (this.CurrentState == state)
             {

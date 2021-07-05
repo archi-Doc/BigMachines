@@ -17,16 +17,21 @@ namespace Sandbox
 
             var machine = container.Resolve<TestMachine>();*/
 
+            BigMachine<int>.InterfaceTypeToFunc[typeof(TestMachine.Interface)] = x => new TestMachine(x);
+
             var bigMachine = new BigMachine<int>(ThreadCore.Root);
             var machine = new TestMachine(bigMachine);
-            bigMachine.TryAdd<TestMachine>(3, null);
-            bigMachine.TryAdd<TestMachine>(1, null);
-            bigMachine.AddMachine<TestMachine>(3, null);
-            bigMachine.GetMachine<TestMachine, TestMachine.State>(33);
-            var mmi = bigMachine.GetMachine<TestMachine>(33);
-            if (mmi != null)
+            var testMachine = bigMachine.TryGet<TestMachine.Interface>(3);
+            testMachine = bigMachine.Create<TestMachine.Interface>(3, null);
+            testMachine = bigMachine.Create<TestMachine.Interface>(3, null);
+            testMachine = bigMachine.Create<TestMachine.Interface>(3, null, true);
+            var testMachine2 = bigMachine.TryGet<ManMachineInterface>(3);
+            if (testMachine != null)
             {
-                mmi.Value
+                var b = testMachine.ChangeStateTwoWay(TestMachine.State.First);
+                if (testMachine.GetCurrentState() == TestMachine.State.First)
+                {
+                }
             }
 
             ThreadCore.Root.Terminate();

@@ -26,18 +26,15 @@ namespace BigMachines
         [Key(0)]
         public TIdentifier Identifier { get; protected set; } = default!;
 
-        protected bool IsSerializable => false;
+        public bool IsSerializable => false;
 
-        // public virtual Type GetStateType() => throw new NotImplementedException();
+        protected internal virtual ManMachineInterface? GetInterface() => throw new NotImplementedException();
 
-        internal virtual MachineBase<TIdentifier> NewInstance(BigMachine<TIdentifier> bigMachine) => default!;
+        protected internal virtual void InitializeAndIsolate(TIdentifier identifier, object? parameter) => throw new NotImplementedException();
 
-        internal void ProcessCommand(CommandPost<TIdentifier>.Command command) => throw new NotImplementedException();
+        protected internal virtual StateResult RunInternal() => StateResult.Terminate;
 
-        internal void InitializeAndIsolate(TIdentifier identifier, object? parameter)
-        {
-            this.Identifier = TinyhandSerializer.Clone(identifier);
-        }
+        protected internal virtual void ProcessCommand(CommandPost<TIdentifier>.Command command) => throw new NotImplementedException();
 
         protected void SetTimeout(int millisecond)
         {

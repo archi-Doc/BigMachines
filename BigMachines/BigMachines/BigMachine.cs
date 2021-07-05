@@ -5,6 +5,7 @@ using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Threading.Tasks;
 using Arc.Threading;
+using Tinyhand;
 
 #pragma warning disable SA1009 // Closing parenthesis should be spaced correctly
 #pragma warning disable SA1124 // Do not use regions
@@ -21,9 +22,11 @@ namespace BigMachines
             this.CommandPost.Open(this.DistributeCommand);
         }
 
+        public static Dictionary<Type, Func<BigMachine<TIdentifier>, MachineBase<TIdentifier>>?> InterfaceTypeToFunc { get; } = new();
+
         public CommandPost<TIdentifier> CommandPost { get; }
 
-        public ManMachineInterface<TIdentifier, TState>? GetMachine<TState>(TIdentifier identifier)
+        /*public ManMachineInterface<TIdentifier, TState>? GetMachine<TState>(TIdentifier identifier)
             where TState : struct
         {
             if (this.identificationToStateType.TryGetValue(identifier, out var type))
@@ -59,7 +62,7 @@ namespace BigMachines
             }
 
             return null;
-        }
+        }*/
 
         /*public ManMachineInterface<TIdentifier, TState>? AddMachine<TState>(TIdentifier identifier, bool createNew = false, object? parameter = null)
         {
@@ -76,7 +79,45 @@ namespace BigMachines
             return null;
         }*/
 
-        public ManMachineInterface<TIdentifier, TState>? GetMachine<TMachine, TState>(TIdentifier identifier)
+        public TMachineInterface? TryGet<TMachineInterface>(TIdentifier identifier)
+            where TMachineInterface : ManMachineInterface
+        {
+            if (this.IdentificationToMachine.TryGetValue(identifier, out var machine))
+            {
+                return (TMachineInterface?)machine.GetInterface();
+            }
+
+            return null;
+        }
+
+        public TMachineInterface? Create<TMachineInterface>(TIdentifier identifier, object? parameter = null, bool createNew = false)
+            where TMachineInterface : ManMachineInterface
+        {
+            if (!createNew && this.IdentificationToMachine.TryGetValue(identifier, out var machine))
+            {
+                return (TMachineInterface?)machine.GetInterface();
+            }
+
+            if (InterfaceTypeToFunc.TryGetValue(typeof(TMachineInterface), out var func))
+            {
+                if (func == null)
+                {
+                    throw new InvalidOperationException("Requires IServiceProvider.");
+                }
+                else
+                {
+                    machine = func(this);
+                    var clone = TinyhandSerializer.Clone(identifier);
+                    machine.InitializeAndIsolate(clone, parameter);
+                    this.IdentificationToMachine.TryAdd(clone, machine);
+                    return (TMachineInterface?)machine.GetInterface();
+                }
+            }
+
+            throw new InvalidOperationException("Not registered.");
+        }
+
+        /*public ManMachineInterface<TIdentifier, TState>? GetMachine<TMachine, TState>(TIdentifier identifier)
             where TMachine : Machine<TIdentifier, TState>
             where TState : struct
         {
@@ -117,11 +158,11 @@ namespace BigMachines
             });
 
             return newlyAdded;
-        }
+        }*/
 
         private void DistributeCommand(CommandPost<TIdentifier>.Command command)
         {
-            if (this.identificationToMachine.TryGetValue(command.Identifier, out var machine))
+            if (this.IdentificationToMachine.TryGetValue(command.Identifier, out var machine))
             {
                 lock (machine)
                 {
@@ -130,8 +171,9 @@ namespace BigMachines
             }
         }
 
-        private ConcurrentDictionary<TIdentifier, MachineBase<TIdentifier>> identificationToMachine = new();
-        private ConcurrentDictionary<TIdentifier, Type> identificationToStateType = new();
+        internal ConcurrentDictionary<TIdentifier, MachineBase<TIdentifier>> IdentificationToMachine { get; } = new();
+
+        internal ConcurrentDictionary<TIdentifier, Type> IdentificationToStateType { get; } = new();
 
         #region IDisposable Support
         private bool disposed = false; // To detect redundant calls.

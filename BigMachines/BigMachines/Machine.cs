@@ -24,13 +24,9 @@ namespace BigMachines
             this.CurrentState = default!;
         }
 
-        internal override Machine<TIdentifier, TState> NewInstance(BigMachine<TIdentifier> bigMachine) => default!;
-
         [Key(1)]
         public TState CurrentState { get; protected set; }
 
-        protected virtual bool ChangeStateInternal(TState state) => false;
-
-        protected virtual StateResult RunInternal() => StateResult.Terminate;
+        protected internal virtual bool ChangeStateInternal(TState state) => false;
     }
 }
