@@ -34,18 +34,22 @@ namespace Sandbox
 
         public TestMachine(BigMachine<int> bigMachine)
             : base(bigMachine)
-        {
+        {// Custom
         }
 
-        protected override void InitializeAndIsolate(int identifier, object? parameter)
+        protected override void CreateInterface(int identifier)
         {// Generated
-            this.Identifier = identifier;
-            this.@interface = new(this.BigMachine, identifier);
+            if (this.InterfaceInstance != null)
+            {
+                this.Identifier = identifier;
+                this.InterfaceInstance = new Interface(this.BigMachine, identifier);
+            }
+            // this.@interface = new(this.BigMachine, identifier);
         }
 
-        private Interface? @interface; // Generated
+        // private Interface? @interface; // Generated
 
-        protected override ManMachineInterface? GetInterface() => this.@interface;
+        // protected override ManMachineInterface? GetInterface() => this.@interface ?? this.@interface = new(this.BigMachine, this.Identifier);
 
         [Key(2)]
         public int Dummy { get; set; }
@@ -71,6 +75,13 @@ namespace Sandbox
             return StateResult.Continue;
         }
 
+        protected override void ProcessCommand(CommandPost<int>.Command command)
+        {// Custom
+            if (command.Message is int x)
+            {
+            }
+        }
+
         protected override StateResult RunInternal()
         {// Generated
             return this.CurrentState switch
@@ -80,18 +91,6 @@ namespace Sandbox
                 // State.Last => this.Last(),
                 _ => StateResult.Terminate,
             };
-        }
-
-        protected override void ProcessCommand(CommandPost<int>.Command command)
-        {
-            if (command.Message is State state)
-            {
-                command.Response = this.ChangeStateInternal(state);
-            }
-            else
-            {
-
-            }
         }
 
         protected override bool ChangeStateInternal(State state)

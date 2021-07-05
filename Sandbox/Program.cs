@@ -2,6 +2,7 @@
 using Arc.Threading;
 using BigMachines;
 using DryIoc;
+using Tinyhand;
 
 namespace Sandbox
 {
@@ -33,6 +34,8 @@ namespace Sandbox
                 {
                 }
             }
+
+            var bb = bigMachine.Serialize();
 
             ThreadCore.Root.Terminate();
             ThreadCore.Root.WaitForTermination(2000);

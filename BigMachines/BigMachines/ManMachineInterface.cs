@@ -7,7 +7,6 @@ namespace BigMachines
 {
     public abstract class ManMachineInterface
     {
-        public static object? NewInstance() => throw new NotImplementedException();
     }
 
     public abstract class ManMachineInterface<TIdentifier, TState> : ManMachineInterface

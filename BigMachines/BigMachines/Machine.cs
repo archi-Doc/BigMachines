@@ -28,5 +28,17 @@ namespace BigMachines
         public TState CurrentState { get; protected set; }
 
         protected internal virtual bool ChangeStateInternal(TState state) => false;
+
+        protected internal override void DistributeCommand(CommandPost<TIdentifier>.Command command)
+        {
+            if (command.Message is TState state)
+            {
+                command.Response = this.ChangeStateInternal(state);
+            }
+            else
+            {
+                this.ProcessCommand(command);
+            }
+        }
     }
 }

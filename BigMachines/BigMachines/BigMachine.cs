@@ -3,6 +3,7 @@
 using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
+using System.Linq;
 using System.Threading.Tasks;
 using Arc.Threading;
 using Tinyhand;
@@ -84,7 +85,7 @@ namespace BigMachines
         {
             if (this.IdentificationToMachine.TryGetValue(identifier, out var machine))
             {
-                return (TMachineInterface?)machine.GetInterface();
+                return (TMachineInterface?)machine.InterfaceInstance;
             }
 
             return null;
@@ -95,7 +96,7 @@ namespace BigMachines
         {
             if (!createNew && this.IdentificationToMachine.TryGetValue(identifier, out var machine))
             {
-                return (TMachineInterface?)machine.GetInterface();
+                return (TMachineInterface?)machine.InterfaceInstance;
             }
 
             if (InterfaceTypeToFunc.TryGetValue(typeof(TMachineInterface), out var func))
@@ -108,13 +109,31 @@ namespace BigMachines
                 {
                     machine = func(this);
                     var clone = TinyhandSerializer.Clone(identifier);
-                    machine.InitializeAndIsolate(clone, parameter);
-                    this.IdentificationToMachine.TryAdd(clone, machine);
-                    return (TMachineInterface?)machine.GetInterface();
+                    machine.CreateInterface(clone);
+                    machine.InitializeAndIsolate(parameter);
+                    this.IdentificationToMachine[clone] = machine;
+                    return (TMachineInterface?)machine.InterfaceInstance;
                 }
             }
 
             throw new InvalidOperationException("Not registered.");
+        }
+
+        public byte[] Serialize()
+        {
+            var w = default(Tinyhand.IO.TinyhandWriter);
+            var array = this.IdentificationToMachine.ToArray();
+
+            //foreach (var machine in this.IdentificationToMachine.Values.Where(a => a.IsSerializable))
+            foreach (var machine in this.IdentificationToMachine.Values)
+            {
+                lock (machine)
+                {
+                    TinyhandSerializer.Serialize(machine.GetType(), ref w, machine);
+                }
+            }
+
+            return w.FlushAndGetArray();
         }
 
         /*public ManMachineInterface<TIdentifier, TState>? GetMachine<TMachine, TState>(TIdentifier identifier)
@@ -166,7 +185,7 @@ namespace BigMachines
             {
                 lock (machine)
                 {
-                    machine.ProcessCommand(command);
+                    machine.DistributeCommand(command);
                 }
             }
         }

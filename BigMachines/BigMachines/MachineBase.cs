@@ -26,15 +26,32 @@ namespace BigMachines
         [Key(0)]
         public TIdentifier Identifier { get; protected set; } = default!;
 
-        public bool IsSerializable => false;
+        [IgnoreMember]
+        public bool IsSerializable { get; protected set; } = false;
 
-        protected internal virtual ManMachineInterface? GetInterface() => throw new NotImplementedException();
+        protected internal ManMachineInterface? InterfaceInstance { get; set; }
 
-        protected internal virtual void InitializeAndIsolate(TIdentifier identifier, object? parameter) => throw new NotImplementedException();
+        protected internal virtual void ProcessCommand(CommandPost<TIdentifier>.Command command)
+        {// Custom
+        }
 
-        protected internal virtual StateResult RunInternal() => StateResult.Terminate;
+        protected internal virtual void InitializeAndIsolate(object? parameter)
+        {// Custom
+        }
 
-        protected internal virtual void ProcessCommand(CommandPost<TIdentifier>.Command command) => throw new NotImplementedException();
+        protected internal virtual void CreateInterface(TIdentifier identifier)
+        {// Generated
+            throw new NotImplementedException();
+        }
+
+        protected internal virtual StateResult RunInternal()
+        {// Generated
+            return StateResult.Terminate;
+        }
+
+        protected internal virtual void DistributeCommand(CommandPost<TIdentifier>.Command command)
+        {// Implemented in Machine<TIdentifier, TState>
+        }
 
         protected void SetTimeout(int millisecond)
         {
