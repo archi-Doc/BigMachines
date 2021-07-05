@@ -123,17 +123,28 @@ namespace BigMachines
         {
             var w = default(Tinyhand.IO.TinyhandWriter);
             var array = this.IdentificationToMachine.ToArray();
+            var options = TinyhandSerializer.DefaultOptions;
 
-            //foreach (var machine in this.IdentificationToMachine.Values.Where(a => a.IsSerializable))
+            // foreach (var machine in this.IdentificationToMachine.Values.Where(a => a.IsSerializable))
             foreach (var machine in this.IdentificationToMachine.Values)
             {
+                // if (machine is ITinyhandSerialize serialize)
                 lock (machine)
                 {
-                    TinyhandSerializer.Serialize(machine.GetType(), ref w, machine);
+                    TinyhandSerializer.Serialize(ref w, machine);
                 }
             }
 
             return w.FlushAndGetArray();
+        }
+
+        public void Deserialize(byte[] byteArray)
+        {
+            var r = new Tinyhand.IO.TinyhandReader(byteArray);
+            while (!r.End)
+            {
+                var machine = TinyhandSerializer.Deserialize<MachineBase<TIdentifier>>(ref r);
+            }
         }
 
         /*public ManMachineInterface<TIdentifier, TState>? GetMachine<TMachine, TState>(TIdentifier identifier)

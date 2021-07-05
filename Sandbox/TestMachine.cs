@@ -15,6 +15,7 @@ using Tinyhand;
 namespace Sandbox
 {
     [TinyhandObject(UseServiceProvider = true)]
+    [TinyhandUnionTo(0, typeof(MachineBase<>), typeof(TestMachine))]
     public partial class TestMachine : Machine<int, TestMachine.State>
     {
         public enum State
