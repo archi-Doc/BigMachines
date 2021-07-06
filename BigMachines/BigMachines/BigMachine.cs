@@ -1,6 +1,7 @@
 ﻿// Copyright (c) All contributors. All rights reserved. Licensed under the MIT license.
 
 using System;
+using System.Collections;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Linq;
@@ -17,9 +18,20 @@ namespace BigMachines
     public class BigMachine<TIdentifier> : IDisposable
         where TIdentifier : notnull
     {
-        public class MachineInformation
-        {
+        public class MachineInfo
+        {//// typeof(TestMachine.Interface) => Constructor, TypeId, typeof(TestMachine)
+            public MachineInfo(Type machineType, int typeId, Func<BigMachine<TIdentifier>, MachineBase<TIdentifier>>? constructor)
+            {
+                this.MachineType = machineType;
+                this.TypeId = typeId;
+                this.Constructor = constructor;
+            }
 
+            public Type MachineType { get; }
+
+            public int TypeId { get; }
+
+            public Func<BigMachine<TIdentifier>, MachineBase<TIdentifier>>? Constructor { get; }
         }
 
         public BigMachine(ThreadCoreBase parent, IServiceProvider? serviceProvider = null)
@@ -27,9 +39,17 @@ namespace BigMachines
             this.CommandPost = new(parent);
             this.CommandPost.Open(this.DistributeCommand);
             this.ServiceProvider = serviceProvider;
+
+            foreach (var x in InterfaceTypeToInfo.Values)
+            {
+                if (!this.typeIdToMachineInfo.Contains(x.TypeId))
+                {
+                    this.typeIdToMachineInfo.Add(x.TypeId, x);
+                }
+            }
         }
 
-        public static Dictionary<Type, Func<BigMachine<TIdentifier>, MachineBase<TIdentifier>>?> InterfaceTypeToFunc { get; } = new();
+        public static Dictionary<Type, MachineInfo> InterfaceTypeToInfo { get; } = new();
 
         public CommandPost<TIdentifier> CommandPost { get; }
 
@@ -102,25 +122,15 @@ namespace BigMachines
         public TMachineInterface? Create<TMachineInterface>(TIdentifier identifier, object? parameter = null, bool createNew = false)
             where TMachineInterface : ManMachineInterface
         {
-            if (!createNew && this.IdentificationToMachine.TryGetValue(identifier, out var machine))
+            MachineBase<TIdentifier>? machine = null;
+            if (!createNew && this.IdentificationToMachine.TryGetValue(identifier, out machine))
             {
                 return (TMachineInterface?)machine.InterfaceInstance;
             }
 
-            if (InterfaceTypeToFunc.TryGetValue(typeof(TMachineInterface), out var func))
+            if (InterfaceTypeToInfo.TryGetValue(typeof(TMachineInterface), out var info))
             {
-                if (this.ServiceProvider != null)
-                {
-                    machine = this.ServiceProvider.GetService(typeof());
-                }
-                else if (func != null)
-                {
-                    machine = func(this);
-                }
-                else
-                {
-                    throw new InvalidOperationException("Requires IServiceProvider.");
-                }
+                machine = this.CreateMachine(info);
 
                 var clone = TinyhandSerializer.Clone(identifier);
                 machine.CreateInterface(clone);
@@ -181,27 +191,21 @@ namespace BigMachines
                 }
 
                 var key = reader.ReadInt32();
-                MachineBase<TIdentifier>? machine = null;
-                switch (key)
+                var info = (MachineInfo?)this.typeIdToMachineInfo[key];
+                if (info != null)
                 {
-                    case 0:
-                        machine = InterfaceTypeToFunc.First().Value(this);
-                        break;
-
-                    case 1:
-                        machine = InterfaceTypeToFunc.First().Value(this);
-                        break;
-
-                    default:
-                        reader.Skip();
-                        break;
+                    var machine = this.CreateMachine(info);
+                    if (machine is ITinyhandSerialize serializer)
+                    {
+                        serializer.Deserialize(ref reader, options);
+                        machine.CreateInterface(machine.Identifier);
+                        this.IdentificationToMachine[machine.Identifier] = machine;
+                    }
                 }
-
-                if (machine is ITinyhandSerialize serializer)
+                else
                 {
-                    serializer.Deserialize(ref reader, options);
-                    machine.CreateInterface(machine.Identifier);
-                    this.IdentificationToMachine[machine.Identifier] = machine;
+                    reader.Skip();
+                    continue;
                 }
             }
         }
@@ -260,9 +264,33 @@ namespace BigMachines
             }
         }
 
+        private MachineBase<TIdentifier> CreateMachine(MachineInfo info)
+        {
+            MachineBase<TIdentifier>? machine = null;
+
+            if (this.ServiceProvider != null)
+            {
+                machine = this.ServiceProvider.GetService(info.MachineType) as MachineBase<TIdentifier>;
+            }
+
+            if (machine == null)
+            {
+                if (info.Constructor != null)
+                {
+                    machine = info.Constructor(this);
+                }
+                else
+                {
+                    throw new InvalidOperationException("Requires IServiceProvider.");
+                }
+            }
+
+            return machine;
+        }
+
         internal ConcurrentDictionary<TIdentifier, MachineBase<TIdentifier>> IdentificationToMachine { get; } = new();
 
-        internal ConcurrentDictionary<TIdentifier, Type> IdentificationToStateType { get; } = new();
+        private Hashtable typeIdToMachineInfo = new();
 
         #region IDisposable Support
         private bool disposed = false; // To detect redundant calls.
