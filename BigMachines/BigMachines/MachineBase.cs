@@ -27,6 +27,9 @@ namespace BigMachines
         public TIdentifier Identifier { get; protected set; } = default!;
 
         [IgnoreMember]
+        public bool IsTerminated { get; protected set; } = false;
+
+        [IgnoreMember]
         public bool IsSerializable { get; protected set; } = false;
 
         protected internal ManMachineInterface? InterfaceInstance { get; set; }

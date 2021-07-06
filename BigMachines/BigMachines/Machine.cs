@@ -31,7 +31,11 @@ namespace BigMachines
 
         protected internal override void DistributeCommand(CommandPost<TIdentifier>.Command command)
         {
-            if (command.Message is TState state)
+            if (this.IsTerminated)
+            {
+                return;
+            }
+            else if (command.Message is TState state)
             {
                 command.Response = this.ChangeStateInternal(state);
             }

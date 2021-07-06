@@ -27,7 +27,7 @@ namespace BigMachines
         {
             if (this.BigMachine.IdentificationToMachine.TryGetValue(this.Identifier, out var machine))
             {
-                if (machine is Machine<TIdentifier, TState> m)
+                if (machine is Machine<TIdentifier, TState> m && !m.IsTerminated)
                 {
                     return m.CurrentState;
                 }

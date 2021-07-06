@@ -15,7 +15,6 @@ using Tinyhand;
 namespace Sandbox
 {
     [TinyhandObject(UseServiceProvider = true)]
-    [TinyhandUnionTo(0, typeof(MachineBase<>), typeof(TestMachine))]
     public partial class TestMachine : Machine<int, TestMachine.State>
     {
         public enum State
@@ -40,7 +39,7 @@ namespace Sandbox
 
         protected override void CreateInterface(int identifier)
         {// Generated
-            if (this.InterfaceInstance != null)
+            if (this.InterfaceInstance == null && !this.IsTerminated)
             {
                 this.Identifier = identifier;
                 this.InterfaceInstance = new Interface(this.BigMachine, identifier);
@@ -85,6 +84,11 @@ namespace Sandbox
 
         protected override StateResult RunInternal()
         {// Generated
+            if (this.IsTerminated)
+            {
+                return StateResult.Terminate;
+            }
+
             return this.CurrentState switch
             {
                 State.Initial => this.Initial(),
@@ -96,7 +100,11 @@ namespace Sandbox
 
         protected override bool ChangeStateInternal(State state)
         {// Generated
-            if (this.CurrentState == state)
+            if (this.IsTerminated)
+            {
+                return false;
+            }
+            else if (this.CurrentState == state)
             {
                 return true;
             }

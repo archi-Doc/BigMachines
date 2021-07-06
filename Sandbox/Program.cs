@@ -18,6 +18,8 @@ namespace Sandbox
 
             var machine = container.Resolve<TestMachine>();*/
 
+            // typeof(TestMachine.Interface) => Constructor, TypeId, typeof(TestMachine)
+            // TypeId => 
             BigMachine<int>.InterfaceTypeToFunc[typeof(TestMachine.Interface)] = x => new TestMachine(x);
 
             var bigMachine = new BigMachine<int>(ThreadCore.Root);

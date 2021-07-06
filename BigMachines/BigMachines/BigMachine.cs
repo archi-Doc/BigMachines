@@ -17,15 +17,23 @@ namespace BigMachines
     public class BigMachine<TIdentifier> : IDisposable
         where TIdentifier : notnull
     {
-        public BigMachine(ThreadCoreBase parent)
+        public class MachineInformation
+        {
+
+        }
+
+        public BigMachine(ThreadCoreBase parent, IServiceProvider? serviceProvider = null)
         {
             this.CommandPost = new(parent);
             this.CommandPost.Open(this.DistributeCommand);
+            this.ServiceProvider = serviceProvider;
         }
 
         public static Dictionary<Type, Func<BigMachine<TIdentifier>, MachineBase<TIdentifier>>?> InterfaceTypeToFunc { get; } = new();
 
         public CommandPost<TIdentifier> CommandPost { get; }
+
+        public IServiceProvider? ServiceProvider { get; }
 
         /*public ManMachineInterface<TIdentifier, TState>? GetMachine<TState>(TIdentifier identifier)
             where TState : struct
@@ -101,19 +109,24 @@ namespace BigMachines
 
             if (InterfaceTypeToFunc.TryGetValue(typeof(TMachineInterface), out var func))
             {
-                if (func == null)
+                if (this.ServiceProvider != null)
                 {
-                    throw new InvalidOperationException("Requires IServiceProvider.");
+                    machine = this.ServiceProvider.GetService(typeof());
+                }
+                else if (func != null)
+                {
+                    machine = func(this);
                 }
                 else
                 {
-                    machine = func(this);
-                    var clone = TinyhandSerializer.Clone(identifier);
-                    machine.CreateInterface(clone);
-                    machine.InitializeAndIsolate(parameter);
-                    this.IdentificationToMachine[clone] = machine;
-                    return (TMachineInterface?)machine.InterfaceInstance;
+                    throw new InvalidOperationException("Requires IServiceProvider.");
                 }
+
+                var clone = TinyhandSerializer.Clone(identifier);
+                machine.CreateInterface(clone);
+                machine.InitializeAndIsolate(parameter);
+                this.IdentificationToMachine[clone] = machine;
+                return (TMachineInterface?)machine.InterfaceInstance;
             }
 
             throw new InvalidOperationException("Not registered.");
@@ -121,29 +134,75 @@ namespace BigMachines
 
         public byte[] Serialize()
         {
-            var w = default(Tinyhand.IO.TinyhandWriter);
+            var writer = default(Tinyhand.IO.TinyhandWriter);
             var array = this.IdentificationToMachine.ToArray();
             var options = TinyhandSerializer.DefaultOptions;
 
             // foreach (var machine in this.IdentificationToMachine.Values.Where(a => a.IsSerializable))
             foreach (var machine in this.IdentificationToMachine.Values)
             {
-                // if (machine is ITinyhandSerialize serialize)
-                lock (machine)
+                if (machine is ITinyhandSerialize serializer)
+                {
+                    writer.WriteArrayHeader(2); // Header
+                    writer.Write(0); // Id
+                    serializer.Serialize(ref writer, options); // Data
+                }
+
+                /*lock (machine)
                 {
                     TinyhandSerializer.Serialize(ref w, machine);
-                }
+                }*/
             }
 
-            return w.FlushAndGetArray();
+            return writer.FlushAndGetArray();
         }
 
         public void Deserialize(byte[] byteArray)
         {
-            var r = new Tinyhand.IO.TinyhandReader(byteArray);
-            while (!r.End)
+            var reader = new Tinyhand.IO.TinyhandReader(byteArray);
+            var options = TinyhandSerializer.DefaultOptions;
+
+            while (!reader.End)
             {
-                var machine = TinyhandSerializer.Deserialize<MachineBase<TIdentifier>>(ref r);
+                if (reader.TryReadNil())
+                {
+                    break;
+                }
+
+                if (reader.ReadArrayHeader() != 2)
+                {
+                    throw new TinyhandException("Invalid Union data was detected.");
+                }
+
+                if (reader.TryReadNil())
+                {
+                    reader.ReadNil();
+                    continue;
+                }
+
+                var key = reader.ReadInt32();
+                MachineBase<TIdentifier>? machine = null;
+                switch (key)
+                {
+                    case 0:
+                        machine = InterfaceTypeToFunc.First().Value(this);
+                        break;
+
+                    case 1:
+                        machine = InterfaceTypeToFunc.First().Value(this);
+                        break;
+
+                    default:
+                        reader.Skip();
+                        break;
+                }
+
+                if (machine is ITinyhandSerialize serializer)
+                {
+                    serializer.Deserialize(ref reader, options);
+                    machine.CreateInterface(machine.Identifier);
+                    this.IdentificationToMachine[machine.Identifier] = machine;
+                }
             }
         }
 
