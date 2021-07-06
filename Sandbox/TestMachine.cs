@@ -35,6 +35,7 @@ namespace Sandbox
         public TestMachine(BigMachine<int> bigMachine)
             : base(bigMachine)
         {// Custom
+            this.IsSerializable = true;
         }
 
         protected override void CreateInterface(int identifier)

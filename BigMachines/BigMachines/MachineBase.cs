@@ -32,6 +32,9 @@ namespace BigMachines
         [IgnoreMember]
         public bool IsSerializable { get; protected set; } = false;
 
+        [IgnoreMember]
+        public int TypeId { get; internal set; }
+
         protected internal ManMachineInterface? InterfaceInstance { get; set; }
 
         protected internal virtual void ProcessCommand(CommandPost<TIdentifier>.Command command)

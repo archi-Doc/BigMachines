@@ -7,6 +7,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 using Arc.Threading;
+using BigMachines.Internal;
 using Tinyhand;
 
 #pragma warning disable SA1009 // Closing parenthesis should be spaced correctly
@@ -19,7 +20,7 @@ namespace BigMachines
         where TIdentifier : notnull
     {
         public class MachineInfo
-        {//// typeof(TestMachine.Interface) => Constructor, TypeId, typeof(TestMachine)
+        {
             public MachineInfo(Type machineType, int typeId, Func<BigMachine<TIdentifier>, MachineBase<TIdentifier>>? constructor)
             {
                 this.MachineType = machineType;
@@ -49,6 +50,7 @@ namespace BigMachines
             }
         }
 
+        // public static Dictionary<Type, MachineInfo> InterfaceTypeToInfo { get; } = new();
         public static Dictionary<Type, MachineInfo> InterfaceTypeToInfo { get; } = new();
 
         public CommandPost<TIdentifier> CommandPost { get; }
@@ -145,23 +147,19 @@ namespace BigMachines
         public byte[] Serialize()
         {
             var writer = default(Tinyhand.IO.TinyhandWriter);
-            var array = this.IdentificationToMachine.ToArray();
             var options = TinyhandSerializer.DefaultOptions;
 
-            // foreach (var machine in this.IdentificationToMachine.Values.Where(a => a.IsSerializable))
-            foreach (var machine in this.IdentificationToMachine.Values)
+            foreach (var machine in this.IdentificationToMachine.Values.Where(a => a.IsSerializable))
             {
                 if (machine is ITinyhandSerialize serializer)
                 {
-                    writer.WriteArrayHeader(2); // Header
-                    writer.Write(0); // Id
-                    serializer.Serialize(ref writer, options); // Data
+                    lock (machine)
+                    {
+                        writer.WriteArrayHeader(2); // Header
+                        writer.Write(machine.TypeId); // Id
+                        serializer.Serialize(ref writer, options); // Data
+                    }
                 }
-
-                /*lock (machine)
-                {
-                    TinyhandSerializer.Serialize(ref w, machine);
-                }*/
             }
 
             return writer.FlushAndGetArray();
@@ -200,6 +198,11 @@ namespace BigMachines
                         serializer.Deserialize(ref reader, options);
                         machine.CreateInterface(machine.Identifier);
                         this.IdentificationToMachine[machine.Identifier] = machine;
+                    }
+                    else
+                    {
+                        reader.Skip();
+                        continue;
                     }
                 }
                 else
@@ -285,6 +288,7 @@ namespace BigMachines
                 }
             }
 
+            machine.TypeId = info.TypeId;
             return machine;
         }
 
