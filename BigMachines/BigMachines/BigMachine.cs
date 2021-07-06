@@ -115,7 +115,7 @@ namespace BigMachines
         {
             if (this.IdentificationToMachine.TryGetValue(identifier, out var machine))
             {
-                return (TMachineInterface?)machine.InterfaceInstance;
+                return machine.InterfaceInstance as TMachineInterface;
             }
 
             return null;
