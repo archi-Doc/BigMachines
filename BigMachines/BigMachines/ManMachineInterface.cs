@@ -36,6 +36,27 @@ namespace BigMachines
             return null;
         }
 
+        public MachineStatus? GetMachineStatus()
+        {
+            if (this.BigMachine.IdentificationToMachine.TryGetValue(this.Identifier, out var machine))
+            {
+                return machine.Status;
+            }
+
+            return null;
+        }
+
+        public bool SetMachineStatus(MachineStatus status)
+        {
+            if (this.BigMachine.IdentificationToMachine.TryGetValue(this.Identifier, out var machine))
+            {
+                machine.Status = status;
+                return true;
+            }
+
+            return false;
+        }
+
         public void Command<TMessage>(TIdentifier identifier, TMessage message)
         {
             this.BigMachine.CommandPost.Send(identifier, message);

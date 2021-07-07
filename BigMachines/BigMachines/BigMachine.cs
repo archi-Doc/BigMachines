@@ -5,6 +5,7 @@ using System.Collections;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Linq;
+using System.Threading;
 using System.Threading.Tasks;
 using Arc.Threading;
 using BigMachines.Internal;
@@ -37,6 +38,7 @@ namespace BigMachines
 
         public BigMachine(ThreadCoreBase parent, IServiceProvider? serviceProvider = null)
         {
+            this.Core = new ThreadCore(parent, this.MainLoop);
             this.CommandPost = new(parent);
             this.CommandPost.Open(this.DistributeCommand);
             this.ServiceProvider = serviceProvider;
@@ -53,62 +55,11 @@ namespace BigMachines
         // public static Dictionary<Type, MachineInfo> InterfaceTypeToInfo { get; } = new();
         public static Dictionary<Type, MachineInfo> InterfaceTypeToInfo { get; } = new();
 
+        public ThreadCore Core { get; }
+
         public CommandPost<TIdentifier> CommandPost { get; }
 
         public IServiceProvider? ServiceProvider { get; }
-
-        /*public ManMachineInterface<TIdentifier, TState>? GetMachine<TState>(TIdentifier identifier)
-            where TState : struct
-        {
-            if (this.identificationToStateType.TryGetValue(identifier, out var type))
-            {
-                if (type != typeof(TState))
-                {
-                    throw new InvalidOperationException();
-                }
-
-                return new ManMachineInterface<TIdentifier, TState>(this, identifier);
-            }
-
-            return null;
-        }
-
-        public ManMachineInterface<TIdentifier, TState>? GetOrAdd<TState>(TIdentifier identifier, Func<TMachine> func)
-            where TState : struct
-            where TMachine : new()
-        {
-            if (this.identificationToStateType.TryGetValue(identifier, out var type))
-            {
-                if (type != typeof(TState))
-                {
-                    throw new InvalidOperationException();
-                }
-
-                return new ManMachineInterface<TIdentifier, TState>(this, identifier);
-            }
-            else
-            {
-                var machine = new TMachine(this);
-
-            }
-
-            return null;
-        }*/
-
-        /*public ManMachineInterface<TIdentifier, TState>? AddMachine<TState>(TIdentifier identifier, bool createNew = false, object? parameter = null)
-        {
-            if (this.identificationToStateType.TryGetValue(identifier, out var type))
-            {
-                if (type != typeof(TState))
-                {
-                    throw new InvalidOperationException();
-                }
-
-                return new ManMachineInterface<TIdentifier, TState>(this, identifier);
-            }
-
-            return null;
-        }*/
 
         public TMachineInterface? TryGet<TMachineInterface>(TIdentifier identifier)
             where TMachineInterface : ManMachineInterface
@@ -121,11 +72,11 @@ namespace BigMachines
             return null;
         }
 
-        public TMachineInterface? TryCreate<TMachineInterface>(TIdentifier identifier, object? parameter = null, bool createNew = false)
+        public TMachineInterface? TryCreate<TMachineInterface>(TIdentifier identifier, object? parameter = null)
             where TMachineInterface : ManMachineInterface
         {
             MachineBase<TIdentifier>? machine = null;
-            if (!createNew && this.IdentificationToMachine.TryGetValue(identifier, out machine))
+            if (this.IdentificationToMachine.TryGetValue(identifier, out machine))
             {
                 return machine.InterfaceInstance as TMachineInterface;
             }
@@ -138,15 +89,7 @@ namespace BigMachines
                 machine.CreateInterface(clone);
                 machine.SetParameter(parameter);
 
-                if (!createNew)
-                {
-                    machine = this.IdentificationToMachine.GetOrAdd(clone, machine);
-                }
-                else
-                {
-                    this.IdentificationToMachine[clone] = machine;
-                }
-
+                machine = this.IdentificationToMachine.GetOrAdd(clone, machine);
                 return machine.InterfaceInstance as TMachineInterface;
             }
 
@@ -262,49 +205,6 @@ namespace BigMachines
             }
         }
 
-        /*public ManMachineInterface<TIdentifier, TState>? GetMachine<TMachine, TState>(TIdentifier identifier)
-            where TMachine : Machine<TIdentifier, TState>
-            where TState : struct
-        {
-            if (this.identificationToStateType.TryGetValue(identifier, out var type))
-            {
-                if (type != typeof(TState))
-                {
-                    throw new InvalidOperationException();
-                }
-
-                return new ManMachineInterface<TIdentifier, TState>(this, identifier);
-            }
-
-            return null;
-        }
-
-        public void Add(MachineBase<TIdentifier> machine, TIdentifier identifier, object? parameter)
-        {
-            machine.InitializeAndIsolate(identifier, parameter);
-        }
-
-        public ManMachineInterface<TIdentifier, TState> AddMachine<TMachine, TState>(TIdentifier identifier, object? parameter)
-            where TMachine : Machine<TIdentifier, TState>
-        {
-            return default!;
-        }
-
-        public bool TryAdd<TMachine>(TIdentifier identifier, object? parameter)
-        where TMachine : MachineBase<TIdentifier>
-        {
-            var newlyAdded = false;
-            this.identificationToMachine.GetOrAdd(identifier, x =>
-            {
-                newlyAdded = true;
-                var machine = MachineBase<TIdentifier>.NewInstance(this);
-                machine.InitializeAndIsolate(x, parameter);
-                return machine;
-            });
-
-            return newlyAdded;
-        }*/
-
         private bool RemoveMachine(TIdentifier identifier, MachineBase<TIdentifier> machine)
         {
             lock (machine)
@@ -348,6 +248,18 @@ namespace BigMachines
 
             machine.TypeId = info.TypeId;
             return machine;
+        }
+
+        private void MainLoop(object? parameter)
+        {
+            var core = (ThreadCore)parameter!;
+
+            while (!core.IsTerminated)
+            {
+                Thread.Sleep(100);
+            }
+
+            return;
         }
 
         internal ConcurrentDictionary<TIdentifier, MachineBase<TIdentifier>> IdentificationToMachine { get; } = new();

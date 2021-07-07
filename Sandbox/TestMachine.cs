@@ -41,14 +41,14 @@ namespace Sandbox
 
         protected override void CreateInterface(int identifier)
         {// Generated
-            if (this.InterfaceInstance == null && !this.IsTerminated)
+            if (this.InterfaceInstance == null)
             {
                 this.Identifier = identifier;
                 this.InterfaceInstance = new Interface(this.BigMachine, identifier);
             }
         }
 
-        [Key(2)]
+        [Key(3)]
         public int Dummy { get; set; }
 
         [StateMethod]
@@ -81,7 +81,7 @@ namespace Sandbox
 
         protected override StateResult RunInternal()
         {// Generated
-            if (this.IsTerminated)
+            if (this.Status == MachineStatus.Terminated)
             {
                 return StateResult.Terminate;
             }
@@ -97,7 +97,7 @@ namespace Sandbox
 
         protected override bool ChangeStateInternal(State state)
         {// Generated
-            if (this.IsTerminated)
+            if (this.Status == MachineStatus.Terminated)
             {
                 return false;
             }

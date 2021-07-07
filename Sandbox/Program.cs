@@ -31,7 +31,7 @@ namespace Sandbox
             var testMachine2 = bigMachine.TryGet<ManMachineInterface>(3);
             if (testMachine != null)
             {
-                var b = testMachine. .ChangeStateTwoWay(TestMachine.State.First);
+                var b = testMachine.ChangeStateTwoWay(TestMachine.State.First);
                 if (testMachine.GetCurrentState() == TestMachine.State.First)
                 {
                 }

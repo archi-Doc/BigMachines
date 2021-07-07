@@ -27,7 +27,7 @@ namespace BigMachines
         public TIdentifier Identifier { get; protected set; } = default!;
 
         [Key(1)]
-        public MachineStatus Status { get; internal set; } = MachineStatus.Running;
+        public MachineStatus Status { get; protected internal set; } = MachineStatus.Running;
 
         [IgnoreMember]
         public bool IsSerializable { get; protected set; } = false;
