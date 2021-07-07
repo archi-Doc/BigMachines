@@ -15,7 +15,7 @@ using Tinyhand;
 namespace Sandbox
 {
     [TinyhandObject(UseServiceProvider = true)]
-    [StateMachine(34)]
+    [StateMachine(0x34)]
     public partial class TestMachine : Machine<int, TestMachine.State>
     {
         public enum State
