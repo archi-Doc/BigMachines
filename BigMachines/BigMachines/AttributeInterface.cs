@@ -6,6 +6,17 @@ using System;
 
 namespace BigMachines
 {
+    [AttributeUsage(AttributeTargets.Class, AllowMultiple = false, Inherited = true)]
+    public class StateMachineAttribute : Attribute
+    {
+        public StateMachineAttribute(int typeId)
+        {
+            this.MachineTypeId = typeId;
+        }
+
+        public int MachineTypeId { get; }
+    }
+
     [AttributeUsage(AttributeTargets.Method, AllowMultiple = false, Inherited = true)]
     public class StateMethodAttribute : Attribute
     {
@@ -26,5 +37,12 @@ namespace BigMachines
         Continue,
         Terminate,
         Deny,
+    }
+
+    public enum MachineState
+    {
+        Running,
+        Suspended,
+        Terminated,
     }
 }

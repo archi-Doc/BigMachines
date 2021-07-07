@@ -36,18 +36,18 @@ namespace BigMachines
             return null;
         }
 
-        public void Send<TMessage>(TIdentifier identifier, TMessage message)
+        public void Command<TMessage>(TIdentifier identifier, TMessage message)
         {
             this.BigMachine.CommandPost.Send(identifier, message);
         }
 
-        public TResponse? SendTwoWay<TMessage, TResponse>(TIdentifier identifier, TMessage message, int millisecondTimeout = 100)
+        public TResponse? CommandTwoWay<TMessage, TResponse>(TIdentifier identifier, TMessage message, int millisecondTimeout = 100)
         {
             return this.BigMachine.CommandPost.SendTwoWay<TMessage, TResponse>(identifier, message, millisecondTimeout);
         }
 
-        public void ChangeState(TState state) => this.Send(this.Identifier, state);
+        public void ChangeState(TState state) => this.Command(this.Identifier, state);
 
-        public bool ChangeStateTwoWay(TState state, int millisecondTimeout = 100) => this.SendTwoWay<TState, bool>(this.Identifier, state, millisecondTimeout);
+        public bool ChangeStateTwoWay(TState state, int millisecondTimeout = 100) => this.CommandTwoWay<TState, bool>(this.Identifier, state, millisecondTimeout);
     }
 }

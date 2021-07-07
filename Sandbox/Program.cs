@@ -25,13 +25,13 @@ namespace Sandbox
             var bigMachine = new BigMachine<int>(ThreadCore.Root);
             var machine = new TestMachine(bigMachine);
             var testMachine = bigMachine.TryGet<TestMachine.Interface>(3);
-            testMachine = bigMachine.Create<TestMachine.Interface>(3, null);
-            testMachine = bigMachine.Create<TestMachine.Interface>(3, null);
-            testMachine = bigMachine.Create<TestMachine.Interface>(3, null, true);
+            testMachine = bigMachine.TryCreate<TestMachine.Interface>(3, null);
+            testMachine = bigMachine.TryCreate<TestMachine.Interface>(3, null);
+            testMachine = bigMachine.TryCreate<TestMachine.Interface>(3, null, true);
             var testMachine2 = bigMachine.TryGet<ManMachineInterface>(3);
             if (testMachine != null)
             {
-                var b = testMachine.ChangeStateTwoWay(TestMachine.State.First);
+                var b = testMachine. .ChangeStateTwoWay(TestMachine.State.First);
                 if (testMachine.GetCurrentState() == TestMachine.State.First)
                 {
                 }

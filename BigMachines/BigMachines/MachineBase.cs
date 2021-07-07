@@ -41,7 +41,7 @@ namespace BigMachines
         {// Custom
         }
 
-        protected internal virtual void InitializeAndIsolate(object? parameter)
+        protected internal virtual void SetParameter(object? parameter)
         {// Custom
         }
 

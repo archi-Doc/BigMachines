@@ -121,13 +121,13 @@ namespace BigMachines
             return null;
         }
 
-        public TMachineInterface? Create<TMachineInterface>(TIdentifier identifier, object? parameter = null, bool createNew = false)
+        public TMachineInterface? TryCreate<TMachineInterface>(TIdentifier identifier, object? parameter = null, bool createNew = false)
             where TMachineInterface : ManMachineInterface
         {
             MachineBase<TIdentifier>? machine = null;
             if (!createNew && this.IdentificationToMachine.TryGetValue(identifier, out machine))
             {
-                return (TMachineInterface?)machine.InterfaceInstance;
+                return machine.InterfaceInstance as TMachineInterface;
             }
 
             if (InterfaceTypeToInfo.TryGetValue(typeof(TMachineInterface), out var info))
@@ -136,12 +136,25 @@ namespace BigMachines
 
                 var clone = TinyhandSerializer.Clone(identifier);
                 machine.CreateInterface(clone);
-                machine.InitializeAndIsolate(parameter);
+                machine.SetParameter(parameter);
                 this.IdentificationToMachine[clone] = machine;
-                return (TMachineInterface?)machine.InterfaceInstance;
+                return machine.InterfaceInstance as TMachineInterface;
             }
 
             throw new InvalidOperationException("Not registered.");
+        }
+
+        public bool Remove(TIdentifier identifier)
+        {
+            if (this.IdentificationToMachine.TryGetValue(identifier, out var machine))
+            {
+                lock (machine)
+                {
+                    machine.
+                }
+            }
+
+            return false;
         }
 
         public byte[] Serialize()

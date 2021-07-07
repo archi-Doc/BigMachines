@@ -15,6 +15,7 @@ using Tinyhand;
 namespace Sandbox
 {
     [TinyhandObject(UseServiceProvider = true)]
+    [StateMachine(34)]
     public partial class TestMachine : Machine<int, TestMachine.State>
     {
         public enum State
@@ -45,12 +46,7 @@ namespace Sandbox
                 this.Identifier = identifier;
                 this.InterfaceInstance = new Interface(this.BigMachine, identifier);
             }
-            // this.@interface = new(this.BigMachine, identifier);
         }
-
-        // private Interface? @interface; // Generated
-
-        // protected override ManMachineInterface? GetInterface() => this.@interface ?? this.@interface = new(this.BigMachine, this.Identifier);
 
         [Key(2)]
         public int Dummy { get; set; }
