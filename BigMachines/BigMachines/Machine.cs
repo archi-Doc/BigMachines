@@ -24,14 +24,14 @@ namespace BigMachines
             this.CurrentState = default!;
         }
 
-        [Key(1)]
+        [Key(2)]
         public TState CurrentState { get; protected set; }
 
         protected internal virtual bool ChangeStateInternal(TState state) => false;
 
         protected internal override void DistributeCommand(CommandPost<TIdentifier>.Command command)
         {
-            if (this.IsTerminated)
+            if (this.Status == MachineStatus.Terminated)
             {
                 return;
             }

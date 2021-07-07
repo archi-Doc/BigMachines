@@ -39,10 +39,10 @@ namespace BigMachines
         Deny,
     }
 
-    public enum MachineState
+    public enum MachineStatus
     {
         Running,
-        Suspended,
+        Paused,
         Terminated,
     }
 }

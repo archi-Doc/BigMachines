@@ -137,8 +137,47 @@ namespace BigMachines
                 var clone = TinyhandSerializer.Clone(identifier);
                 machine.CreateInterface(clone);
                 machine.SetParameter(parameter);
-                this.IdentificationToMachine[clone] = machine;
+
+                if (!createNew)
+                {
+                    machine = this.IdentificationToMachine.GetOrAdd(clone, machine);
+                }
+                else
+                {
+                    this.IdentificationToMachine[clone] = machine;
+                }
+
                 return machine.InterfaceInstance as TMachineInterface;
+            }
+
+            throw new InvalidOperationException("Not registered.");
+        }
+
+        public TMachineInterface Create<TMachineInterface>(TIdentifier identifier, object? parameter = null)
+            where TMachineInterface : ManMachineInterface
+        {
+            if (InterfaceTypeToInfo.TryGetValue(typeof(TMachineInterface), out var info))
+            {
+                var machine = this.CreateMachine(info);
+
+                var clone = TinyhandSerializer.Clone(identifier);
+                machine.CreateInterface(clone);
+                machine.SetParameter(parameter);
+
+                this.IdentificationToMachine[clone] = machine;
+                MachineBase<TIdentifier>? machineToRemove = null;
+                this.IdentificationToMachine.AddOrUpdate(clone, x => machine, (i, m) =>
+                {
+                    machineToRemove = m;
+                    return machine;
+                });
+
+                if (machineToRemove != null)
+                {
+                    this.RemoveMachine(identifier, machineToRemove);
+                }
+
+                return (TMachineInterface)machine.InterfaceInstance!;
             }
 
             throw new InvalidOperationException("Not registered.");
@@ -148,10 +187,7 @@ namespace BigMachines
         {
             if (this.IdentificationToMachine.TryGetValue(identifier, out var machine))
             {
-                lock (machine)
-                {
-                    machine.
-                }
+                return this.RemoveMachine(identifier, machine);
             }
 
             return false;
@@ -268,6 +304,15 @@ namespace BigMachines
 
             return newlyAdded;
         }*/
+
+        private bool RemoveMachine(TIdentifier identifier, MachineBase<TIdentifier> machine)
+        {
+            lock (machine)
+            {
+                machine.Status = MachineStatus.Terminated;
+                return this.IdentificationToMachine.TryRemove(identifier, out _);
+            }
+        }
 
         private void DistributeCommand(CommandPost<TIdentifier>.Command command)
         {
