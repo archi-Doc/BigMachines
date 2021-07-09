@@ -20,7 +20,7 @@ namespace Sandbox
 
             // typeof(TestMachine.Interface) => Constructor, TypeId, typeof(TestMachine)
             // TypeId => 
-            BigMachine<int>.InterfaceTypeToInfo[typeof(TestMachine.Interface)] = new(typeof(TestMachine), 0, x => new TestMachine(x));
+            BigMachine<int>.StaticInfo[typeof(TestMachine.Interface)] = new(typeof(TestMachine), 0, x => new TestMachine(x));
 
             var bigMachine = new BigMachine<int>(ThreadCore.Root);
             var machine = new TestMachine(bigMachine);

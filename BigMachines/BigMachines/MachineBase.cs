@@ -16,12 +16,15 @@ namespace BigMachines
     public abstract class MachineBase<TIdentifier>
         where TIdentifier : notnull
     {
-        public MachineBase(BigMachine<TIdentifier> bigMachine)
+        public MachineBase(BigMachine<TIdentifier> bigMachine, BigMachine<TIdentifier>.MachineGroup group)
         {
             this.BigMachine = bigMachine;
+            this.Group = group;
         }
 
         public BigMachine<TIdentifier> BigMachine { get; }
+
+        public BigMachine<TIdentifier>.MachineGroup Group { get; }
 
         [Key(0)]
         public TIdentifier Identifier { get; protected set; } = default!;

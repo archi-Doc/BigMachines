@@ -15,17 +15,20 @@ namespace BigMachines
     {
         public BigMachine<TIdentifier> BigMachine { get; }
 
+        public BigMachine<TIdentifier>.MachineGroup Group { get; }
+
         public TIdentifier Identifier { get; }
 
-        public ManMachineInterface(BigMachine<TIdentifier> bigMachine, TIdentifier identifier)
+        public ManMachineInterface(BigMachine<TIdentifier> bigMachine, BigMachine<TIdentifier>.MachineGroup group, TIdentifier identifier)
         {
             this.BigMachine = bigMachine;
+            this.Group = group;
             this.Identifier = TinyhandSerializer.Clone(identifier);
         }
 
         public TState? GetCurrentState()
         {
-            if (this.BigMachine.IdentificationToMachine.TryGetValue(this.Identifier, out var machine))
+            if (this.Group.IdentificationToMachine.TryGetValue(this.Identifier, out var machine))
             {
                 if (machine is Machine<TIdentifier, TState> m && m.Status != MachineStatus.Terminated)
                 {
@@ -38,7 +41,7 @@ namespace BigMachines
 
         public MachineStatus? GetMachineStatus()
         {
-            if (this.BigMachine.IdentificationToMachine.TryGetValue(this.Identifier, out var machine))
+            if (this.Group.IdentificationToMachine.TryGetValue(this.Identifier, out var machine))
             {
                 return machine.Status;
             }
@@ -48,7 +51,7 @@ namespace BigMachines
 
         public bool SetMachineStatus(MachineStatus status)
         {
-            if (this.BigMachine.IdentificationToMachine.TryGetValue(this.Identifier, out var machine))
+            if (this.Group.IdentificationToMachine.TryGetValue(this.Identifier, out var machine))
             {
                 machine.Status = status;
                 return true;

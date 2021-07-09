@@ -5,6 +5,7 @@ using System.Collections;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Linq;
+using System.Runtime.CompilerServices;
 using System.Threading;
 using System.Threading.Tasks;
 using Arc.Threading;
@@ -20,9 +21,9 @@ namespace BigMachines
     public class BigMachine<TIdentifier> : IDisposable
         where TIdentifier : notnull
     {
-        public class MachineInfo
+        public class MachineGroup
         {
-            public MachineInfo(Type machineType, int typeId, Func<BigMachine<TIdentifier>, MachineBase<TIdentifier>>? constructor)
+            public MachineGroup(Type machineType, int typeId, Func<BigMachine<TIdentifier>, MachineBase<TIdentifier>>? constructor)
             {
                 this.MachineType = machineType;
                 this.TypeId = typeId;
@@ -34,6 +35,8 @@ namespace BigMachines
             public int TypeId { get; }
 
             public Func<BigMachine<TIdentifier>, MachineBase<TIdentifier>>? Constructor { get; }
+
+            internal ConcurrentDictionary<TIdentifier, MachineBase<TIdentifier>> IdentificationToMachine { get; } = new();
         }
 
         public BigMachine(ThreadCoreBase parent, IServiceProvider? serviceProvider = null)
@@ -43,17 +46,19 @@ namespace BigMachines
             this.CommandPost.Open(this.DistributeCommand);
             this.ServiceProvider = serviceProvider;
 
-            foreach (var x in InterfaceTypeToInfo.Values)
+            this.groupArray = StaticInfo.Values.ToArray();
+            foreach (var x in StaticInfo)
             {
-                if (!this.typeIdToMachineInfo.Contains(x.TypeId))
+                if (!this.typeIdToInfo.ContainsKey(x.Value.TypeId))
                 {
-                    this.typeIdToMachineInfo.Add(x.TypeId, x);
+                    this.typeIdToInfo.Add(x.Value.TypeId, x.Value);
                 }
+
+                this.interfaceTypeToGroup.TryAdd(x.Key, x.Value);
             }
         }
 
-        // public static Dictionary<Type, MachineInfo> InterfaceTypeToInfo { get; } = new();
-        public static Dictionary<Type, MachineInfo> InterfaceTypeToInfo { get; } = new();
+        public static Dictionary<Type, MachineGroup> StaticInfo { get; } = new(); // typeof(Machine.Interface), MachineGroup
 
         public ThreadCore Core { get; }
 
@@ -64,7 +69,9 @@ namespace BigMachines
         public TMachineInterface? TryGet<TMachineInterface>(TIdentifier identifier)
             where TMachineInterface : ManMachineInterface
         {
-            if (this.IdentificationToMachine.TryGetValue(identifier, out var machine))
+            this.GetMachineGroup(typeof(TMachineInterface), out var info);
+
+            if (info.IdentificationToMachine.TryGetValue(identifier, out var machine))
             {
                 return machine.InterfaceInstance as TMachineInterface;
             }
@@ -75,81 +82,84 @@ namespace BigMachines
         public TMachineInterface? TryCreate<TMachineInterface>(TIdentifier identifier, object? parameter = null)
             where TMachineInterface : ManMachineInterface
         {
+            this.GetMachineGroup(typeof(TMachineInterface), out var group);
+
             MachineBase<TIdentifier>? machine = null;
-            if (this.IdentificationToMachine.TryGetValue(identifier, out machine))
+            if (group.IdentificationToMachine.TryGetValue(identifier, out machine))
             {
                 return machine.InterfaceInstance as TMachineInterface;
             }
 
-            if (InterfaceTypeToInfo.TryGetValue(typeof(TMachineInterface), out var info))
-            {
-                machine = this.CreateMachine(info);
+            machine = this.CreateMachine(group);
 
-                var clone = TinyhandSerializer.Clone(identifier);
-                machine.CreateInterface(clone);
-                machine.SetParameter(parameter);
+            var clone = TinyhandSerializer.Clone(identifier);
+            machine.CreateInterface(clone);
+            machine.SetParameter(parameter);
 
-                machine = this.IdentificationToMachine.GetOrAdd(clone, machine);
-                return machine.InterfaceInstance as TMachineInterface;
-            }
-
-            throw new InvalidOperationException("Not registered.");
+            machine = group.IdentificationToMachine.GetOrAdd(clone, machine);
+            return machine.InterfaceInstance as TMachineInterface;
         }
 
         public TMachineInterface Create<TMachineInterface>(TIdentifier identifier, object? parameter = null)
             where TMachineInterface : ManMachineInterface
         {
-            if (InterfaceTypeToInfo.TryGetValue(typeof(TMachineInterface), out var info))
+            this.GetMachineGroup(typeof(TMachineInterface), out var group);
+
+            var machine = this.CreateMachine(group);
+
+            var clone = TinyhandSerializer.Clone(identifier);
+            machine.CreateInterface(clone);
+            machine.SetParameter(parameter);
+
+            MachineBase<TIdentifier>? machineToRemove = null;
+            group.IdentificationToMachine.AddOrUpdate(clone, x => machine, (i, m) =>
             {
-                var machine = this.CreateMachine(info);
+                machineToRemove = m;
+                return machine;
+            });
 
-                var clone = TinyhandSerializer.Clone(identifier);
-                machine.CreateInterface(clone);
-                machine.SetParameter(parameter);
-
-                this.IdentificationToMachine[clone] = machine;
-                MachineBase<TIdentifier>? machineToRemove = null;
-                this.IdentificationToMachine.AddOrUpdate(clone, x => machine, (i, m) =>
-                {
-                    machineToRemove = m;
-                    return machine;
-                });
-
-                if (machineToRemove != null)
-                {
-                    this.RemoveMachine(identifier, machineToRemove);
-                }
-
-                return (TMachineInterface)machine.InterfaceInstance!;
+            if (machineToRemove != null)
+            {
+                this.RemoveMachine(group, identifier, machineToRemove);
             }
 
-            throw new InvalidOperationException("Not registered.");
+            return (TMachineInterface)machine.InterfaceInstance!;
         }
 
-        public bool Remove(TIdentifier identifier)
+        public bool Remove<TMachineInterface>(TIdentifier identifier)
         {
-            if (this.IdentificationToMachine.TryGetValue(identifier, out var machine))
+            this.GetMachineGroup(typeof(TMachineInterface), out var group);
+
+            if (group.IdentificationToMachine.TryGetValue(identifier, out var machine))
             {
-                return this.RemoveMachine(identifier, machine);
+                return this.RemoveMachine(group, identifier, machine);
             }
 
             return false;
         }
 
-        public byte[] Serialize()
+        public byte[] Serialize(TinyhandSerializerOptions? options = null)
         {
+            options ??= TinyhandSerializer.DefaultOptions;
             var writer = default(Tinyhand.IO.TinyhandWriter);
-            var options = TinyhandSerializer.DefaultOptions;
 
-            foreach (var machine in this.IdentificationToMachine.Values.Where(a => a.IsSerializable))
+            foreach (var x in this.groupArray)
             {
-                if (machine is ITinyhandSerialize serializer)
+                SerializeGroup(ref writer, x);
+            }
+
+            void SerializeGroup(ref Tinyhand.IO.TinyhandWriter writer, MachineGroup info)
+            {
+                foreach (var machine in info.IdentificationToMachine.Values.Where(a => a.IsSerializable))
                 {
-                    lock (machine)
+                    if (machine is ITinyhandSerialize serializer)
                     {
-                        writer.WriteArrayHeader(2); // Header
-                        writer.Write(machine.TypeId); // Id
-                        serializer.Serialize(ref writer, options); // Data
+                        lock (machine)
+                        {
+                            writer.WriteArrayHeader(2); // Header
+                            writer.Write(machine.TypeId); // Id
+                            serializer.Serialize(ref writer, options!); // Data
+                        }
                     }
                 }
             }
@@ -181,15 +191,14 @@ namespace BigMachines
                 }
 
                 var key = reader.ReadInt32();
-                var info = (MachineInfo?)this.typeIdToMachineInfo[key];
-                if (info != null)
+                if (this.typeIdToInfo.TryGetValue(key, out var info))
                 {
                     var machine = this.CreateMachine(info);
                     if (machine is ITinyhandSerialize serializer)
                     {
                         serializer.Deserialize(ref reader, options);
                         machine.CreateInterface(machine.Identifier);
-                        this.IdentificationToMachine[machine.Identifier] = machine;
+                        info.IdentificationToMachine[machine.Identifier] = machine;
                     }
                     else
                     {
@@ -205,12 +214,12 @@ namespace BigMachines
             }
         }
 
-        private bool RemoveMachine(TIdentifier identifier, MachineBase<TIdentifier> machine)
+        private bool RemoveMachine(MachineGroup group, TIdentifier identifier, MachineBase<TIdentifier> machine)
         {
             lock (machine)
             {
                 machine.Status = MachineStatus.Terminated;
-                return this.IdentificationToMachine.TryRemove(identifier, out _);
+                return group.IdentificationToMachine.TryRemove(identifier, out _);
             }
         }
 
@@ -225,28 +234,28 @@ namespace BigMachines
             }
         }
 
-        private MachineBase<TIdentifier> CreateMachine(MachineInfo info)
+        private MachineBase<TIdentifier> CreateMachine(MachineGroup group)
         {
             MachineBase<TIdentifier>? machine = null;
 
             if (this.ServiceProvider != null)
             {
-                machine = this.ServiceProvider.GetService(info.MachineType) as MachineBase<TIdentifier>;
+                machine = this.ServiceProvider.GetService(group.MachineType) as MachineBase<TIdentifier>;
             }
 
             if (machine == null)
             {
-                if (info.Constructor != null)
+                if (group.Constructor != null)
                 {
-                    machine = info.Constructor(this);
+                    machine = group.Constructor(this);
                 }
                 else
                 {
-                    throw new InvalidOperationException("Requires IServiceProvider.");
+                    throw new InvalidOperationException("IServiceProvider is required to create an instance of class which does not have default constructor.");
                 }
             }
 
-            machine.TypeId = info.TypeId;
+            machine.TypeId = group.TypeId;
             return machine;
         }
 
@@ -262,9 +271,20 @@ namespace BigMachines
             return;
         }
 
-        internal ConcurrentDictionary<TIdentifier, MachineBase<TIdentifier>> IdentificationToMachine { get; } = new();
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        private void GetMachineGroup(Type interfaceType, out MachineGroup info)
+        {
+            if (!this.interfaceTypeToGroup.TryGetValue(interfaceType, out info!))
+            {
+                throw new InvalidOperationException($"Machine interface {interfaceType.FullName} is not registered.");
+            }
+        }
 
-        private Hashtable typeIdToMachineInfo = new();
+        private ThreadsafeTypeKeyHashTable<MachineGroup> interfaceTypeToGroup = new();
+
+        private MachineGroup[] groupArray;
+
+        private Dictionary<int, MachineGroup> typeIdToInfo = new();
 
         #region IDisposable Support
         private bool disposed = false; // To detect redundant calls.
