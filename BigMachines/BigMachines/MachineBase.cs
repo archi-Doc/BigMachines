@@ -59,7 +59,7 @@ namespace BigMachines
             throw new NotImplementedException();
         }
 
-        protected internal virtual StateResult RunInternal()
+        protected internal virtual StateResult RunInternal(object? message)
         {// Generated
             return StateResult.Terminate;
         }

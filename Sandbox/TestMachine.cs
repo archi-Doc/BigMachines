@@ -79,13 +79,8 @@ namespace Sandbox
             }
         }
 
-        protected override StateResult RunInternal()
+        protected override StateResult RunInternal(object? message)
         {// Generated
-            if (this.Status == MachineStatus.Terminated)
-            {
-                return StateResult.Terminate;
-            }
-
             return this.CurrentState switch
             {
                 State.Initial => this.Initial(),

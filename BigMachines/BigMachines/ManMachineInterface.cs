@@ -60,18 +60,14 @@ namespace BigMachines
             return false;
         }
 
-        public void Command<TMessage>(TIdentifier identifier, TMessage message)
-        {
-            this.BigMachine.CommandPost.Send(this.Group, identifier, message);
-        }
+        public void Run(TIdentifier identifier) => this.BigMachine.CommandPost.Send(CommandPost<TIdentifier>.CommandType.Run, this.Group, identifier, 0);
 
-        public TResponse? CommandTwoWay<TMessage, TResponse>(TIdentifier identifier, TMessage message, int millisecondTimeout = 100)
-        {
-            return this.BigMachine.CommandPost.SendTwoWay<TMessage, TResponse>(this.Group, identifier, message, millisecondTimeout);
-        }
+        public void Command<TMessage>(TMessage message) => this.BigMachine.CommandPost.Send(CommandPost<TIdentifier>.CommandType.Command, this.Group, this.Identifier, message);
 
-        public void ChangeState(TState state) => this.Command(this.Identifier, state);
+        public TResponse? CommandTwoWay<TMessage, TResponse>(TMessage message, int millisecondTimeout = 100) => this.BigMachine.CommandPost.SendTwoWay<TMessage, TResponse>(CommandPost<TIdentifier>.CommandType.CommandTwoWay, this.Group, this.Identifier, message, millisecondTimeout);
 
-        public bool ChangeStateTwoWay(TState state, int millisecondTimeout = 100) => this.CommandTwoWay<TState, bool>(this.Identifier, state, millisecondTimeout);
+        public void ChangeState(TState state) => this.BigMachine.CommandPost.Send(CommandPost<TIdentifier>.CommandType.State, this.Group, this.Identifier, state);
+
+        public bool ChangeStateTwoWay(TState state, int millisecondTimeout = 100) => this.BigMachine.CommandPost.SendTwoWay<TState, bool>(CommandPost<TIdentifier>.CommandType.StateTwoWay, this.Group, this.Identifier, state, millisecondTimeout);
     }
 }

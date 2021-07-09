@@ -30,12 +30,19 @@ namespace BigMachines
         protected internal virtual bool ChangeStateInternal(TState state) => false;
 
         protected internal override void DistributeCommand(CommandPost<TIdentifier>.Command command)
-        {
+        {// lock (machine)
             if (this.Status == MachineStatus.Terminated)
             {
                 return;
             }
-            else if (command.Message is TState state)
+            else if (command.Type == CommandPost<TIdentifier>.CommandType.Run ||
+                command.Type == CommandPost<TIdentifier>.CommandType.RunTwoWay)
+            {
+                command.Response = this.Run(command.Message);
+            }
+            else if ((command.Type == CommandPost<TIdentifier>.CommandType.State ||
+                command.Type == CommandPost<TIdentifier>.CommandType.StateTwoWay) &&
+                command.Message is TState state)
             {
                 command.Response = this.ChangeStateInternal(state);
             }
@@ -43,6 +50,16 @@ namespace BigMachines
             {
                 this.ProcessCommand(command);
             }
+        }
+
+        protected StateResult Run(object? message)
+        {
+            if (this.Status == MachineStatus.Terminated)
+            {
+                return StateResult.Terminate;
+            }
+
+            return this.RunInternal(message);
         }
     }
 }
