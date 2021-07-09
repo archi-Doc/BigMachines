@@ -21,9 +21,35 @@ namespace BigMachines
     public class BigMachine<TIdentifier> : IDisposable
         where TIdentifier : notnull
     {
-        public class MachineGroup
+        public class Group
         {
-            public MachineGroup(Type machineType, int typeId, Func<BigMachine<TIdentifier>, MachineBase<TIdentifier>>? constructor)
+            internal Group(BigMachine<TIdentifier> bigMachine, GroupInfo groupInfo)
+            {
+                this.BigMachine = bigMachine;
+                this.Info = groupInfo;
+            }
+
+            public TMachineInterface? TryGet<TMachineInterface>(TIdentifier identifier)
+                where TMachineInterface : ManMachineInterface
+            {
+                if (this.IdentificationToMachine.TryGetValue(identifier, out var machine))
+                {
+                    return machine.InterfaceInstance as TMachineInterface;
+                }
+
+                return null;
+            }
+
+            public BigMachine<TIdentifier> BigMachine { get; }
+
+            public GroupInfo Info { get; }
+
+            internal ConcurrentDictionary<TIdentifier, MachineBase<TIdentifier>> IdentificationToMachine { get; } = new();
+        }
+
+        public class GroupInfo
+        {
+            public GroupInfo(Type machineType, int typeId, Func<BigMachine<TIdentifier>, MachineBase<TIdentifier>>? constructor)
             {
                 this.MachineType = machineType;
                 this.TypeId = typeId;
@@ -35,8 +61,6 @@ namespace BigMachines
             public int TypeId { get; }
 
             public Func<BigMachine<TIdentifier>, MachineBase<TIdentifier>>? Constructor { get; }
-
-            internal ConcurrentDictionary<TIdentifier, MachineBase<TIdentifier>> IdentificationToMachine { get; } = new();
         }
 
         public BigMachine(ThreadCoreBase parent, IServiceProvider? serviceProvider = null)
@@ -46,19 +70,29 @@ namespace BigMachines
             this.CommandPost.Open(this.DistributeCommand);
             this.ServiceProvider = serviceProvider;
 
-            this.groupArray = StaticInfo.Values.ToArray();
+            this.groupArray = new Group[StaticInfo.Count];
+            var n = 0;
             foreach (var x in StaticInfo)
             {
-                if (!this.typeIdToInfo.ContainsKey(x.Value.TypeId))
+                this.groupArray[n] = new Group(this, x.Value);
+                this.interfaceTypeToGroup.TryAdd(x.Key, this.groupArray[n]);
+            }
+
+            foreach (var x in this.groupArray)
+            {
+                if (!this.TypeIdToGroup.ContainsKey(x.Info.TypeId))
                 {
-                    this.typeIdToInfo.Add(x.Value.TypeId, x.Value);
+                    this.TypeIdToGroup.Add(x.Info.TypeId, x);
                 }
 
-                this.interfaceTypeToGroup.TryAdd(x.Key, x.Value);
+                if (!this.MachineTypeToGroup.ContainsKey(x.Info.MachineType))
+                {
+                    this.MachineTypeToGroup.Add(x.Info.MachineType, x);
+                }
             }
         }
 
-        public static Dictionary<Type, MachineGroup> StaticInfo { get; } = new(); // typeof(Machine.Interface), MachineGroup
+        public static Dictionary<Type, GroupInfo> StaticInfo { get; } = new(); // typeof(Machine.Interface), MachineGroup
 
         public ThreadCore Core { get; }
 
@@ -69,14 +103,15 @@ namespace BigMachines
         public TMachineInterface? TryGet<TMachineInterface>(TIdentifier identifier)
             where TMachineInterface : ManMachineInterface
         {
-            this.GetMachineGroup(typeof(TMachineInterface), out var info);
+            this.GetMachineGroup(typeof(TMachineInterface), out var group);
+            return group.TryGet<TMachineInterface>(identifier);
+        }
 
-            if (info.IdentificationToMachine.TryGetValue(identifier, out var machine))
-            {
-                return machine.InterfaceInstance as TMachineInterface;
-            }
-
-            return null;
+        public Group GetGroup<TMachineInterface>()
+            where TMachineInterface : ManMachineInterface
+        {
+            this.GetMachineGroup(typeof(TMachineInterface), out var group);
+            return group;
         }
 
         public TMachineInterface? TryCreate<TMachineInterface>(TIdentifier identifier, object? parameter = null)
@@ -148,7 +183,7 @@ namespace BigMachines
                 SerializeGroup(ref writer, x);
             }
 
-            void SerializeGroup(ref Tinyhand.IO.TinyhandWriter writer, MachineGroup info)
+            void SerializeGroup(ref Tinyhand.IO.TinyhandWriter writer, Group info)
             {
                 foreach (var machine in info.IdentificationToMachine.Values.Where(a => a.IsSerializable))
                 {
@@ -191,14 +226,14 @@ namespace BigMachines
                 }
 
                 var key = reader.ReadInt32();
-                if (this.typeIdToInfo.TryGetValue(key, out var info))
+                if (this.TypeIdToGroup.TryGetValue(key, out var group))
                 {
-                    var machine = this.CreateMachine(info);
+                    var machine = this.CreateMachine(group);
                     if (machine is ITinyhandSerialize serializer)
                     {
                         serializer.Deserialize(ref reader, options);
                         machine.CreateInterface(machine.Identifier);
-                        info.IdentificationToMachine[machine.Identifier] = machine;
+                        group.IdentificationToMachine[machine.Identifier] = machine;
                     }
                     else
                     {
@@ -214,7 +249,11 @@ namespace BigMachines
             }
         }
 
-        private bool RemoveMachine(MachineGroup group, TIdentifier identifier, MachineBase<TIdentifier> machine)
+        internal Dictionary<int, Group> TypeIdToGroup { get; } = new();
+
+        internal Dictionary<Type, Group> MachineTypeToGroup { get; } = new();
+
+        private bool RemoveMachine(Group group, TIdentifier identifier, MachineBase<TIdentifier> machine)
         {
             lock (machine)
             {
@@ -225,7 +264,8 @@ namespace BigMachines
 
         private void DistributeCommand(CommandPost<TIdentifier>.Command command)
         {
-            if (this.IdentificationToMachine.TryGetValue(command.Identifier, out var machine))
+            if (command.Channel is Group group &&
+                group.IdentificationToMachine.TryGetValue(command.Identifier, out var machine))
             {
                 lock (machine)
                 {
@@ -234,28 +274,27 @@ namespace BigMachines
             }
         }
 
-        private MachineBase<TIdentifier> CreateMachine(MachineGroup group)
+        private MachineBase<TIdentifier> CreateMachine(Group group)
         {
             MachineBase<TIdentifier>? machine = null;
 
             if (this.ServiceProvider != null)
             {
-                machine = this.ServiceProvider.GetService(group.MachineType) as MachineBase<TIdentifier>;
+                machine = this.ServiceProvider.GetService(group.Info.MachineType) as MachineBase<TIdentifier>;
             }
 
             if (machine == null)
             {
-                if (group.Constructor != null)
+                if (group.Info.Constructor != null)
                 {
-                    machine = group.Constructor(this);
+                    machine = group.Info.Constructor(this);
                 }
                 else
                 {
-                    throw new InvalidOperationException("IServiceProvider is required to create an instance of class which does not have default constructor.");
+                    throw new InvalidOperationException("ServiceProvider is required to create an instance of class which does not have default constructor.");
                 }
             }
 
-            machine.TypeId = group.TypeId;
             return machine;
         }
 
@@ -272,7 +311,7 @@ namespace BigMachines
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        private void GetMachineGroup(Type interfaceType, out MachineGroup info)
+        private void GetMachineGroup(Type interfaceType, out Group info)
         {
             if (!this.interfaceTypeToGroup.TryGetValue(interfaceType, out info!))
             {
@@ -280,11 +319,9 @@ namespace BigMachines
             }
         }
 
-        private ThreadsafeTypeKeyHashTable<MachineGroup> interfaceTypeToGroup = new();
+        private ThreadsafeTypeKeyHashTable<Group> interfaceTypeToGroup = new();
 
-        private MachineGroup[] groupArray;
-
-        private Dictionary<int, MachineGroup> typeIdToInfo = new();
+        private Group[] groupArray;
 
         #region IDisposable Support
         private bool disposed = false; // To detect redundant calls.

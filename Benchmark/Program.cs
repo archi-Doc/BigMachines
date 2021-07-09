@@ -41,9 +41,6 @@ namespace Benchmark
                 }
             });
 
-            cp.Send(1, 2);
-            var result = cp.SendTwoWay<int, int>(1, 3);
-
             DebugRun<Design.ConcurrentQueueBenchmark>();
 
             var switcher = new BenchmarkSwitcher(new[]

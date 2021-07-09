@@ -96,14 +96,17 @@ namespace BigMachines
         /// </summary>
         public class Command
         {
-            public Command(CommandType type, TIdentifier identifier, object? message)
+            public Command(CommandType type, object? channel, TIdentifier identifier, object? message)
             {
                 this.Type = type;
+                this.Channel = channel;
                 this.Identifier = identifier;
                 this.Message = message;
             }
 
             public CommandType Type { get; internal set; }
+
+            public object? Channel { get; }
 
             public TIdentifier Identifier { get; }
 
@@ -142,23 +145,24 @@ namespace BigMachines
         /// Caution! TMessage must be serializable by Tinyhand because the message will be cloned and passed to the receiver.
         /// </summary>
         /// <typeparam name="TMessage">The type of a message.</typeparam>
+        /// <param name="channel">The channel to receive message.</param>
         /// <param name="identifier">The identifier of a message.</param>
         /// <param name="message">The message to send.<br/>Must be serializable by Tinyhand because the message will be cloned and passed to the receiver.</param>
-        public void Send<TMessage>(TIdentifier identifier, TMessage message)
+        public void Send<TMessage>(object? channel, TIdentifier identifier, TMessage message)
         {
-            var m = new Command(CommandType.CommandAndForget, identifier, TinyhandSerializer.Clone(message));
+            var m = new Command(CommandType.CommandAndForget, channel, identifier, TinyhandSerializer.Clone(message));
             this.concurrentQueue.Enqueue(m);
             this.commandAdded.Set();
         }
 
-        public TResult? SendTwoWay<TMessage, TResult>(TIdentifier identifier, TMessage message, int millisecondTimeout = 100)
+        public TResult? SendTwoWay<TMessage, TResult>(object? channel, TIdentifier identifier, TMessage message, int millisecondTimeout = 100)
         {
             if (millisecondTimeout < 0 || millisecondTimeout > MaxMillisecondTimeout)
             {
                 millisecondTimeout = MaxMillisecondTimeout;
             }
 
-            var m = new Command(CommandType.RequireResponse, identifier, TinyhandSerializer.Clone(message));
+            var m = new Command(CommandType.RequireResponse, channel, identifier, TinyhandSerializer.Clone(message));
             this.concurrentQueue.Enqueue(m);
             this.commandAdded.Set();
 

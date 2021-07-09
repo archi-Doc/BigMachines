@@ -16,15 +16,21 @@ namespace BigMachines
     public abstract class MachineBase<TIdentifier>
         where TIdentifier : notnull
     {
-        public MachineBase(BigMachine<TIdentifier> bigMachine, BigMachine<TIdentifier>.MachineGroup group)
+        public MachineBase(BigMachine<TIdentifier> bigMachine)
         {
             this.BigMachine = bigMachine;
+            if (!this.BigMachine.MachineTypeToGroup.TryGetValue(this.GetType(), out var group))
+            {
+                throw new InvalidOperationException($"Machine type {this.GetType().FullName} is not registered.");
+            }
+
             this.Group = group;
+            this.TypeId = group.Info.TypeId;
         }
 
         public BigMachine<TIdentifier> BigMachine { get; }
 
-        public BigMachine<TIdentifier>.MachineGroup Group { get; }
+        public BigMachine<TIdentifier>.Group Group { get; }
 
         [Key(0)]
         public TIdentifier Identifier { get; protected set; } = default!;

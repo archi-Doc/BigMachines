@@ -12,23 +12,20 @@ namespace Sandbox
         {
             Console.WriteLine("Hello World!");
 
-            /*var container = new Container();
-            container.RegisterDelegate<BigMachine<int>>(x => new BigMachine<int>(ThreadCore.Root), Reuse.Singleton);
-            container.Register<TestMachine>(Reuse.Singleton);
-
-            var machine = container.Resolve<TestMachine>();*/
-
-            // typeof(TestMachine.Interface) => Constructor, TypeId, typeof(TestMachine)
-            // TypeId => 
+            // typeof(TestMachine.Interface) => GroupInfo ( Constructor, TypeId, typeof(TestMachine) )
             BigMachine<int>.StaticInfo[typeof(TestMachine.Interface)] = new(typeof(TestMachine), 0, x => new TestMachine(x));
 
+            /*var container = new Container();
+            container.RegisterDelegate<BigMachine<int>>(x => new BigMachine<int>(ThreadCore.Root, container), Reuse.Singleton);
+            container.Register<TestMachine>(Reuse.Singleton);
+            var bigMachine = container.Resolve<BigMachine<int>>();*/
+            // var container_machine = container.Resolve<TestMachine>();
+
             var bigMachine = new BigMachine<int>(ThreadCore.Root);
-            var machine = new TestMachine(bigMachine);
             var testMachine = bigMachine.TryGet<TestMachine.Interface>(3);
             testMachine = bigMachine.TryCreate<TestMachine.Interface>(3, null);
             testMachine = bigMachine.TryCreate<TestMachine.Interface>(3, null);
-            testMachine = bigMachine.TryCreate<TestMachine.Interface>(3, null, true);
-            var testMachine2 = bigMachine.TryGet<ManMachineInterface>(3);
+            testMachine = bigMachine.TryCreate<TestMachine.Interface>(3, null);
             if (testMachine != null)
             {
                 var b = testMachine.ChangeStateTwoWay(TestMachine.State.First);
@@ -36,6 +33,8 @@ namespace Sandbox
                 {
                 }
             }
+
+            var testGroup = bigMachine.GetGroup<TestMachine.Interface>();
 
             var bb = bigMachine.Serialize();
             bigMachine.Deserialize(bb);

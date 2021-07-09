@@ -27,8 +27,8 @@ namespace Sandbox
 
         public class Interface : ManMachineInterface<int, TestMachine.State>
         {// Generated
-            public Interface(BigMachine<int> bigMachine, int identifier)
-                : base(bigMachine, identifier)
+            public Interface(BigMachine<int>.Group group, int identifier)
+                : base(group, identifier)
             {
             }
         }
@@ -44,7 +44,7 @@ namespace Sandbox
             if (this.InterfaceInstance == null)
             {
                 this.Identifier = identifier;
-                this.InterfaceInstance = new Interface(this.BigMachine, identifier);
+                this.InterfaceInstance = new Interface(this.Group, identifier);
             }
         }
 

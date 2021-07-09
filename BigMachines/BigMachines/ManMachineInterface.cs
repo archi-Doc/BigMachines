@@ -15,13 +15,13 @@ namespace BigMachines
     {
         public BigMachine<TIdentifier> BigMachine { get; }
 
-        public BigMachine<TIdentifier>.MachineGroup Group { get; }
+        public BigMachine<TIdentifier>.Group Group { get; }
 
         public TIdentifier Identifier { get; }
 
-        public ManMachineInterface(BigMachine<TIdentifier> bigMachine, BigMachine<TIdentifier>.MachineGroup group, TIdentifier identifier)
+        public ManMachineInterface(BigMachine<TIdentifier>.Group group, TIdentifier identifier)
         {
-            this.BigMachine = bigMachine;
+            this.BigMachine = group.BigMachine;
             this.Group = group;
             this.Identifier = TinyhandSerializer.Clone(identifier);
         }
@@ -62,12 +62,12 @@ namespace BigMachines
 
         public void Command<TMessage>(TIdentifier identifier, TMessage message)
         {
-            this.BigMachine.CommandPost.Send(identifier, message);
+            this.BigMachine.CommandPost.Send(this.Group, identifier, message);
         }
 
         public TResponse? CommandTwoWay<TMessage, TResponse>(TIdentifier identifier, TMessage message, int millisecondTimeout = 100)
         {
-            return this.BigMachine.CommandPost.SendTwoWay<TMessage, TResponse>(identifier, message, millisecondTimeout);
+            return this.BigMachine.CommandPost.SendTwoWay<TMessage, TResponse>(this.Group, identifier, message, millisecondTimeout);
         }
 
         public void ChangeState(TState state) => this.Command(this.Identifier, state);
