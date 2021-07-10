@@ -5,31 +5,69 @@ using Tinyhand;
 
 namespace BigMachines
 {
-    public struct ManMachineInterface<TIdentifier, TState> // maybe class
+    public abstract class ManMachineInterface
+    {
+    }
+
+    public abstract class ManMachineInterface<TIdentifier, TState> : ManMachineInterface
         where TIdentifier : notnull
+        where TState : struct
     {
         public BigMachine<TIdentifier> BigMachine { get; }
 
+        public BigMachine<TIdentifier>.Group Group { get; }
+
         public TIdentifier Identifier { get; }
 
-        internal ManMachineInterface(BigMachine<TIdentifier> bigMachine, TIdentifier identifier)
+        public ManMachineInterface(BigMachine<TIdentifier>.Group group, TIdentifier identifier)
         {
-            this.BigMachine = bigMachine;
+            this.BigMachine = group.BigMachine;
+            this.Group = group;
             this.Identifier = TinyhandSerializer.Clone(identifier);
         }
 
-        public void Send<TMessage>(TIdentifier identifier, TMessage message)
+        public TState? GetCurrentState()
         {
-            this.BigMachine.CommandPost.Send(identifier, message);
+            if (this.Group.IdentificationToMachine.TryGetValue(this.Identifier, out var machine))
+            {
+                if (machine is Machine<TIdentifier, TState> m && m.Status != MachineStatus.Terminated)
+                {
+                    return m.CurrentState;
+                }
+            }
+
+            return null;
         }
 
-        public TResponse? SendTwoWay<TMessage, TResponse>(TIdentifier identifier, TMessage message, int millisecondTimeout = 100)
+        public MachineStatus? GetMachineStatus()
         {
-            return this.BigMachine.CommandPost.SendTwoWay<TMessage, TResponse>(identifier, message, millisecondTimeout);
+            if (this.Group.IdentificationToMachine.TryGetValue(this.Identifier, out var machine))
+            {
+                return machine.Status;
+            }
+
+            return null;
         }
 
-        public void ChangeState(TIdentifier identifier, TState state) => this.Send(this.Identifier, state);
+        public bool SetMachineStatus(MachineStatus status)
+        {
+            if (this.Group.IdentificationToMachine.TryGetValue(this.Identifier, out var machine))
+            {
+                machine.Status = status;
+                return true;
+            }
 
-        public bool ChangeStateTwoWay(TIdentifier identifier, TState state, int millisecondTimeout = 100) => this.SendTwoWay<TState, bool>(this.Identifier, state, millisecondTimeout);
+            return false;
+        }
+
+        public void Run(TIdentifier identifier) => this.BigMachine.CommandPost.Send(CommandPost<TIdentifier>.CommandType.Run, this.Group, identifier, 0);
+
+        public void Command<TMessage>(TMessage message) => this.BigMachine.CommandPost.Send(CommandPost<TIdentifier>.CommandType.Command, this.Group, this.Identifier, message);
+
+        public TResponse? CommandTwoWay<TMessage, TResponse>(TMessage message, int millisecondTimeout = 100) => this.BigMachine.CommandPost.SendTwoWay<TMessage, TResponse>(CommandPost<TIdentifier>.CommandType.CommandTwoWay, this.Group, this.Identifier, message, millisecondTimeout);
+
+        public void ChangeState(TState state) => this.BigMachine.CommandPost.Send(CommandPost<TIdentifier>.CommandType.State, this.Group, this.Identifier, state);
+
+        public bool ChangeStateTwoWay(TState state, int millisecondTimeout = 100) => this.BigMachine.CommandPost.SendTwoWay<TState, bool>(CommandPost<TIdentifier>.CommandType.StateTwoWay, this.Group, this.Identifier, state, millisecondTimeout);
     }
 }

@@ -5,7 +5,7 @@ using Tinyhand;
 
 namespace XUnitTest
 {
-    [TinyhandGeneratorOption(AttachDebugger = false, GenerateToFile = true)]
+    [TinyhandGeneratorOption(AttachDebugger = false, GenerateToFile = false)]
     internal class GeneratorOption
     {
     }

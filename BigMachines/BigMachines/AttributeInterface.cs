@@ -6,6 +6,17 @@ using System;
 
 namespace BigMachines
 {
+    [AttributeUsage(AttributeTargets.Class, AllowMultiple = false, Inherited = true)]
+    public class StateMachineAttribute : Attribute
+    {
+        public StateMachineAttribute(int typeId)
+        {
+            this.MachineTypeId = typeId;
+        }
+
+        public int MachineTypeId { get; }
+    }
+
     [AttributeUsage(AttributeTargets.Method, AllowMultiple = false, Inherited = true)]
     public class StateMethodAttribute : Attribute
     {
@@ -26,5 +37,39 @@ namespace BigMachines
         Continue,
         Terminate,
         Deny,
+    }
+
+    public enum MachineStatus
+    {
+        Running,
+        Paused,
+        Terminated,
+    }
+
+    public enum RunType
+    {
+        RunManual,
+        RunTimer,
+        CanEnter,
+        CanExit,
+    }
+
+    public struct StateParameter
+    {
+        public StateParameter(RunType type, object? message)
+        {
+            this.RunType = type;
+            this.Message = message;
+        }
+
+        public StateParameter(RunType type)
+        {
+            this.RunType = type;
+            this.Message = null;
+        }
+
+        public RunType RunType { get; }
+
+        public object? Message { get; }
     }
 }

@@ -13,20 +13,43 @@ using Tinyhand;
 
 namespace BigMachines
 {
+    [TinyhandObject]
     public abstract class Machine<TIdentifier, TState> : MachineBase<TIdentifier>
         where TIdentifier : notnull
         where TState : struct
     {
-        public Machine(BigMachine<TIdentifier> bigMachine, TIdentifier identifier)
-            : base(bigMachine, identifier)
+        protected Machine(BigMachine<TIdentifier> bigMachine)
+            : base(bigMachine)
         {
             this.CurrentState = default!;
         }
 
+        [Key(2)]
         public TState CurrentState { get; protected set; }
 
-        protected virtual bool ChangeStateInternal(TState state) => false;
+        protected internal virtual bool ChangeStateInternal(TState state) => false;
 
-        protected virtual StateResult RunInternal() => StateResult.Terminate;
+        protected internal override void DistributeCommand(CommandPost<TIdentifier>.Command command)
+        {// lock (machine)
+            if (this.Status == MachineStatus.Terminated)
+            {// Terminated
+                return;
+            }
+            else if (command.Type == CommandPost<TIdentifier>.CommandType.Run ||
+                command.Type == CommandPost<TIdentifier>.CommandType.RunTwoWay)
+            {// Run
+                command.Response = this.RunInternal(new(RunType.RunManual, command.Message));
+            }
+            else if ((command.Type == CommandPost<TIdentifier>.CommandType.State ||
+                command.Type == CommandPost<TIdentifier>.CommandType.StateTwoWay) &&
+                command.Message is TState state)
+            {// ChangeState
+                command.Response = this.ChangeStateInternal(state);
+            }
+            else
+            {// Command
+                this.ProcessCommand(command);
+            }
+        }
     }
 }

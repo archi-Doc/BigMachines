@@ -12,21 +12,61 @@ using Tinyhand;
 
 namespace BigMachines
 {
-    public abstract partial class MachineBase<TIdentifier>
+    [TinyhandObject]
+    public abstract class MachineBase<TIdentifier>
         where TIdentifier : notnull
     {
-        public MachineBase(BigMachine<TIdentifier> bigMachine, TIdentifier identifier)
+        public MachineBase(BigMachine<TIdentifier> bigMachine)
         {
             this.BigMachine = bigMachine;
-            this.Identifier = identifier;
+            if (!this.BigMachine.MachineTypeToGroup.TryGetValue(this.GetType(), out var group))
+            {
+                throw new InvalidOperationException($"Machine type {this.GetType().FullName} is not registered.");
+            }
+
+            this.Group = group;
+            this.TypeId = group.Info.TypeId;
         }
 
         public BigMachine<TIdentifier> BigMachine { get; }
 
-        public TIdentifier Identifier { get; }
+        public BigMachine<TIdentifier>.Group Group { get; }
 
-        // public virtual Type GetStateType() => throw new NotImplementedException();
-        internal void ProcessCommand(CommandPost<TIdentifier>.Command command) => throw new NotImplementedException();
+        [Key(0)]
+        public TIdentifier Identifier { get; protected set; } = default!;
+
+        [Key(1)]
+        public MachineStatus Status { get; protected internal set; } = MachineStatus.Running;
+
+        [IgnoreMember]
+        public bool IsSerializable { get; protected set; } = false;
+
+        [IgnoreMember]
+        public int TypeId { get; internal set; }
+
+        protected internal ManMachineInterface? InterfaceInstance { get; set; }
+
+        protected internal virtual void ProcessCommand(CommandPost<TIdentifier>.Command command)
+        {// Custom
+        }
+
+        protected internal virtual void SetParameter(object? parameter)
+        {// Custom
+        }
+
+        protected internal virtual void CreateInterface(TIdentifier identifier)
+        {// Generated
+            throw new NotImplementedException();
+        }
+
+        protected internal virtual StateResult RunInternal(StateParameter parameter)
+        {// Generated
+            return StateResult.Terminate;
+        }
+
+        protected internal virtual void DistributeCommand(CommandPost<TIdentifier>.Command command)
+        {// Implemented in Machine<TIdentifier, TState>
+        }
 
         protected void SetTimeout(int millisecond)
         {
