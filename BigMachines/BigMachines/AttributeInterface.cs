@@ -45,4 +45,20 @@ namespace BigMachines
         Paused,
         Terminated,
     }
+
+    public enum RunType
+    {
+        Manual,
+        Internal,
+    }
+
+    public struct RunParameter
+    {
+        public RunParameter(RunType type)
+        {
+            this.RunType = type;
+        }
+
+        public RunType RunType { get; }
+    }
 }

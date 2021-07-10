@@ -32,22 +32,22 @@ namespace BigMachines
         protected internal override void DistributeCommand(CommandPost<TIdentifier>.Command command)
         {// lock (machine)
             if (this.Status == MachineStatus.Terminated)
-            {
+            {// Terminated
                 return;
             }
             else if (command.Type == CommandPost<TIdentifier>.CommandType.Run ||
                 command.Type == CommandPost<TIdentifier>.CommandType.RunTwoWay)
-            {
+            {// Run
                 command.Response = this.Run(command.Message);
             }
             else if ((command.Type == CommandPost<TIdentifier>.CommandType.State ||
                 command.Type == CommandPost<TIdentifier>.CommandType.StateTwoWay) &&
                 command.Message is TState state)
-            {
+            {// ChangeState
                 command.Response = this.ChangeStateInternal(state);
             }
             else
-            {
+            {// Command
                 this.ProcessCommand(command);
             }
         }
