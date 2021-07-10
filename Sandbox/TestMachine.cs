@@ -62,7 +62,7 @@ namespace Sandbox
         [StateMethod]
         protected StateResult First(StateParameter parameter)
         {
-            if (input == StateInput.CanEnter)
+            if (parameter.RunType == RunType.CanEnter)
             {
                 return StateResult.Terminate;
             }
@@ -104,12 +104,12 @@ namespace Sandbox
             bool canExit = true;
             if (this.CurrentState == State.First)
             {
-                canExit = this.First(StateInput.CanExit) != StateResult.Deny;
+                canExit = this.First(new StateParameter(RunType.CanExit)) != StateResult.Deny;
             }
 
             bool canEnter = state switch
             {
-                State.First => this.First(StateInput.CanEnter) != StateResult.Deny,
+                State.First => this.First(new StateParameter(RunType.CanEnter)) != StateResult.Deny,
                 _ => true,
             };
 

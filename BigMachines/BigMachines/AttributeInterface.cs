@@ -62,6 +62,12 @@ namespace BigMachines
             this.Message = message;
         }
 
+        public StateParameter(RunType type)
+        {
+            this.RunType = type;
+            this.Message = null;
+        }
+
         public RunType RunType { get; }
 
         public object? Message { get; }
