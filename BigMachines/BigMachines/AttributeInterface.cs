@@ -48,17 +48,22 @@ namespace BigMachines
 
     public enum RunType
     {
-        Manual,
-        Internal,
+        RunManual,
+        RunTimer,
+        CanEnter,
+        CanExit,
     }
 
-    public struct RunParameter
+    public struct StateParameter
     {
-        public RunParameter(RunType type)
+        public StateParameter(RunType type, object? message)
         {
             this.RunType = type;
+            this.Message = message;
         }
 
         public RunType RunType { get; }
+
+        public object? Message { get; }
     }
 }

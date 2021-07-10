@@ -52,7 +52,7 @@ namespace Sandbox
         public int Dummy { get; set; }
 
         [StateMethod]
-        protected StateResult Initial()
+        protected StateResult Initial(StateParameter parameter)
         {// lock(this)
             this.SetTimeout(44);
             this.ChangeStateInternal(TestMachine.State.First);
@@ -60,7 +60,7 @@ namespace Sandbox
         }
 
         [StateMethod]
-        protected StateResult First(StateInput input)
+        protected StateResult First(StateParameter parameter)
         {
             if (input == StateInput.CanEnter)
             {
@@ -79,12 +79,12 @@ namespace Sandbox
             }
         }
 
-        protected override StateResult RunInternal(object? message)
+        protected override StateResult RunInternal(StateParameter parameter)
         {// Generated
             return this.CurrentState switch
             {
-                State.Initial => this.Initial(),
-                State.First => this.First(StateInput.Run),
+                State.Initial => this.Initial(parameter),
+                State.First => this.First(parameter),
                 // State.Last => this.Last(),
                 _ => StateResult.Terminate,
             };

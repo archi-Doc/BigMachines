@@ -38,7 +38,7 @@ namespace BigMachines
             else if (command.Type == CommandPost<TIdentifier>.CommandType.Run ||
                 command.Type == CommandPost<TIdentifier>.CommandType.RunTwoWay)
             {// Run
-                command.Response = this.Run(command.Message);
+                command.Response = this.RunInternal(new(RunType.RunManual, command.Message));
             }
             else if ((command.Type == CommandPost<TIdentifier>.CommandType.State ||
                 command.Type == CommandPost<TIdentifier>.CommandType.StateTwoWay) &&
@@ -50,16 +50,6 @@ namespace BigMachines
             {// Command
                 this.ProcessCommand(command);
             }
-        }
-
-        protected StateResult Run(object? message)
-        {
-            if (this.Status == MachineStatus.Terminated)
-            {
-                return StateResult.Terminate;
-            }
-
-            return this.RunInternal(message);
         }
     }
 }
