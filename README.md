@@ -3,6 +3,8 @@
 
 - Very versatile and easy to use.
 
+- Running machines and issuing commands to each machine is designed to be lock-free.
+
 - Full serialization features integrated with [Tinyhand](https://github.com/archi-Doc/Tinyhand).
 
   

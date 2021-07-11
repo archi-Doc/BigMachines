@@ -249,6 +249,11 @@ namespace BigMachines
             }
         }
 
+        public void SetTimerInterval(double interval)
+        {
+
+        }
+
         internal Dictionary<int, Group> TypeIdToGroup { get; } = new();
 
         internal Dictionary<Type, Group> MachineTypeToGroup { get; } = new();
@@ -304,7 +309,7 @@ namespace BigMachines
 
             while (!core.IsTerminated)
             {
-                Thread.Sleep(100);
+                Thread.Sleep(TimeSpan.FromSeconds());
             }
 
             return;
