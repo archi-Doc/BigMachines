@@ -39,6 +39,8 @@ namespace Sandbox
             var bb = bigMachine.Serialize();
             bigMachine.Deserialize(bb);
 
+            ThreadCore.Root.Wait(10000, 10);
+
             ThreadCore.Root.Terminate();
             ThreadCore.Root.WaitForTermination(2000);
         }

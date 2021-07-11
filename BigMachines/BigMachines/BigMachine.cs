@@ -18,6 +18,13 @@ using Tinyhand;
 
 namespace BigMachines
 {
+    [TinyhandObject]
+    public partial class BigMachineStatus
+    {
+        [Key(0)]
+        public DateTime LastRun { get; internal protected set; }
+    }
+
     public class BigMachine<TIdentifier> : IDisposable
         where TIdentifier : notnull
     {
@@ -65,6 +72,7 @@ namespace BigMachines
 
         public BigMachine(ThreadCoreBase parent, IServiceProvider? serviceProvider = null)
         {
+            this.Status = new();
             this.Core = new ThreadCore(parent, this.MainLoop);
             this.CommandPost = new(parent);
             this.CommandPost.Open(this.DistributeCommand);
@@ -93,6 +101,8 @@ namespace BigMachines
         }
 
         public static Dictionary<Type, GroupInfo> StaticInfo { get; } = new(); // typeof(Machine.Interface), MachineGroup
+
+        public BigMachineStatus Status { get; }
 
         public ThreadCore Core { get; }
 
@@ -249,9 +259,9 @@ namespace BigMachines
             }
         }
 
-        public void SetTimerInterval(double interval)
+        public void SetTimerInterval(TimeSpan interval)
         {
-
+            this.timerInterval = interval;
         }
 
         internal Dictionary<int, Group> TypeIdToGroup { get; } = new();
@@ -274,7 +284,10 @@ namespace BigMachines
             {
                 lock (machine)
                 {
-                    machine.DistributeCommand(command);
+                    if (machine.DistributeCommand(command))
+                    {
+                        group.IdentificationToMachine.TryRemove(machine.Identifier, out _);
+                    }
                 }
             }
         }
@@ -309,7 +322,79 @@ namespace BigMachines
 
             while (!core.IsTerminated)
             {
-                Thread.Sleep(TimeSpan.FromSeconds());
+                if (!core.Wait(this.timerInterval, 10))
+                {// Terminated
+                    break;
+                }
+
+                var now = DateTime.UtcNow;
+                var elapsed = now - this.Status.LastRun;
+                if (elapsed.Ticks < 0)
+                {
+                    elapsed = default;
+                }
+
+                foreach (var x in this.groupArray)
+                {
+                    foreach (var y in x.IdentificationToMachine.Values)
+                    {
+                        if ((y.DefaultTimeout.Ticks > 0 && y.Timeout < elapsed) ||
+                            y.NextRun >= now)
+                        {
+                            lock (y)
+                            {
+                                if (TryRun(y))
+                                {
+                                    x.IdentificationToMachine.TryRemove(y.Identifier, out _);
+                                }
+                            }
+                        }
+                    }
+                }
+
+                this.Status.LastRun = now;
+
+                bool TryRun(MachineBase<TIdentifier> machine)
+                {// locked
+                    var runFlag = false;
+                    if (machine.DefaultTimeout.Ticks > 0)
+                    {// Timeout
+                        if (machine.Timeout > elapsed)
+                        {
+                            machine.Timeout -= elapsed;
+                        }
+                        else
+                        {
+                            machine.Timeout = machine.DefaultTimeout;
+                            runFlag = true;
+                        }
+                    }
+
+                    if (machine.NextRun >= now)
+                    {
+                        machine.NextRun = default;
+                        runFlag = true;
+                    }
+
+                    if (runFlag)
+                    {
+StateChangedLoop:
+                        machine.StateChanged = false;
+                        var result = machine.RunInternal(new(RunType.RunTimer));
+                        if (result == StateResult.Terminate)
+                        {
+                            return true;
+                        }
+                        else if (machine.StateChanged)
+                        {
+                            goto StateChangedLoop;
+                        }
+
+                        machine.LastRun = now;
+                    }
+
+                    return false;
+                }
             }
 
             return;
@@ -325,8 +410,8 @@ namespace BigMachines
         }
 
         private ThreadsafeTypeKeyHashTable<Group> interfaceTypeToGroup = new();
-
         private Group[] groupArray;
+        private TimeSpan timerInterval = TimeSpan.FromMilliseconds(500);
 
         #region IDisposable Support
         private bool disposed = false; // To detect redundant calls.
