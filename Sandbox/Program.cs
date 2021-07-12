@@ -50,8 +50,11 @@ namespace Sandbox
             var bb = bigMachine.Serialize();
             bigMachine.Deserialize(bb);
 
+            await Task.Delay(1000);
+            var testMachine2 = bigMachine.TryCreate<TestMachine.Interface>(4, null);
+
             await Task.Delay(2000);
-            testGroup.
+            var res = testGroup.CommandGroupTwoWay<int, int>(4);
             // var result = testMachine?.RunTwoWay(33);
 
             // testMachine?.Run();

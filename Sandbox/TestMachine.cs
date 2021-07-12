@@ -86,6 +86,8 @@ namespace Sandbox
         {// Custom
             if (command.Message is int x)
             {
+                Console.WriteLine($"command: {x}");
+                command.Response = x + 1;
             }
         }
 

@@ -2,6 +2,7 @@
 
 using System;
 using System.Collections.Concurrent;
+using System.Collections.Generic;
 using System.Threading;
 using System.Threading.Tasks;
 using Arc.Threading;
@@ -176,6 +177,18 @@ namespace BigMachines
             this.commandAdded.Set();
         }
 
+        public void SendGroup<TMessage>(CommandType commandType, object? channel, IEnumerable<TIdentifier> identifiers, TMessage message)
+        {
+            var messageClone = TinyhandSerializer.Clone(message);
+            foreach (var x in identifiers)
+            {
+                var m = new Command(commandType, channel, x, messageClone);
+                this.concurrentQueue.Enqueue(m);
+            }
+
+            this.commandAdded.Set();
+        }
+
         public TResult? SendTwoWay<TMessage, TResult>(CommandType commandType, object? channel, TIdentifier identifier, TMessage message, int millisecondTimeout = 100)
         {
             if (millisecondTimeout < 0 || millisecondTimeout > MaxMillisecondTimeout)
@@ -211,6 +224,69 @@ namespace BigMachines
             else
             {
                 return default;
+            }
+        }
+
+        public KeyValuePair<TIdentifier, TResult>[] SendGroupTwoWay<TMessage, TResult>(CommandType commandType, object? channel, IEnumerable<TIdentifier> identifiers, TMessage message, int millisecondTimeout = 100)
+        {
+            if (millisecondTimeout < 0 || millisecondTimeout > MaxMillisecondTimeout)
+            {
+                millisecondTimeout = MaxMillisecondTimeout;
+            }
+
+            var commandQueue = new Queue<Command>();
+            var messageClone = TinyhandSerializer.Clone(message);
+            foreach (var x in identifiers)
+            {
+                var m = new Command(commandType, channel, x, messageClone);
+                commandQueue.Enqueue(m);
+                this.concurrentQueue.Enqueue(m);
+            }
+
+            this.commandAdded.Set();
+            var responseList = new KeyValuePair<TIdentifier, TResult>[commandQueue.Count];
+            var responseNumber = 0;
+
+            if (commandType == CommandType.CommandTwoWay ||
+                commandType == CommandType.StateTwoWay ||
+                commandType == CommandType.RunTwoWay)
+            {
+                try
+                {
+                    while (commandQueue.Count > 0)
+                    {
+                        this.commandResponded.Wait(this.MillisecondInterval, this.Core.CancellationToken);
+                        var flag = false;
+                        while (commandQueue.TryPeek(out var c))
+                        {
+                            if (c.Type == CommandType.Responded)
+                            {
+                                flag = true;
+                                commandQueue.Dequeue();
+                                responseList[responseNumber++] = new(c.Identifier, (TResult)c.Response!);
+                            }
+                            else
+                            {
+                                break;
+                            }
+                        }
+
+                        if (flag)
+                        {
+                            this.commandResponded.Reset();
+                        }
+                    }
+
+                    return responseList;
+                }
+                catch
+                {
+                    return Array.Empty<KeyValuePair<TIdentifier, TResult>>();
+                }
+            }
+            else
+            {
+                return Array.Empty<KeyValuePair<TIdentifier, TResult>>();
             }
         }
 
