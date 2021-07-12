@@ -322,12 +322,17 @@ namespace BigMachines
 
             while (!core.IsTerminated)
             {
-                if (!core.Wait(this.timerInterval, 10))
+                if (!core.Wait(this.timerInterval, TimeSpan.FromMilliseconds(10)))
                 {// Terminated
                     break;
                 }
 
                 var now = DateTime.UtcNow;
+                if (this.Status.LastRun == default)
+                {
+                    this.Status.LastRun = now;
+                }
+
                 var elapsed = now - this.Status.LastRun;
                 if (elapsed.Ticks < 0)
                 {
@@ -338,13 +343,13 @@ namespace BigMachines
                 {
                     foreach (var y in x.IdentificationToMachine.Values)
                     {
-                        if ((y.DefaultTimeout.Ticks > 0 && y.Timeout < elapsed) ||
+                        if ((y.DefaultTimeout.Ticks > 0 && y.Timeout <= elapsed) ||
                             y.NextRun >= now)
-                        {
+                        {// Screening
                             lock (y)
                             {
                                 if (TryRun(y))
-                                {
+                                {// Terminated
                                     x.IdentificationToMachine.TryRemove(y.Identifier, out _);
                                 }
                             }
