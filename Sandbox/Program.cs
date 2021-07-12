@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Threading.Tasks;
 using Arc.Threading;
 using BigMachines;
 using DryIoc;
@@ -8,9 +9,19 @@ namespace Sandbox
 {
     class Program
     {
-        static void Main(string[] args)
+        static async Task Main(string[] args)
         {
-            Console.WriteLine("Hello World!");
+            AppDomain.CurrentDomain.ProcessExit += async (s, e) =>
+            {// Console window closing or process terminated.
+                ThreadCore.Root.Terminate(); // Send a termination signal to the root.
+                ThreadCore.Root.TerminationEvent.WaitOne(2000); // Wait until the termination process is complete (#1).
+            };
+
+            Console.CancelKeyPress += (s, e) =>
+            {// Ctrl+C pressed
+                e.Cancel = true;
+                ThreadCore.Root.Terminate(); // Send a termination signal to the root.
+            };
 
             // typeof(TestMachine.Interface) => GroupInfo ( Constructor, TypeId, typeof(TestMachine) )
             BigMachine<int>.StaticInfo[typeof(TestMachine.Interface)] = new(typeof(TestMachine), 0, x => new TestMachine(x));
@@ -39,12 +50,10 @@ namespace Sandbox
             var bb = bigMachine.Serialize();
             bigMachine.Deserialize(bb);
 
-            testMachine?.Run();
+            // testMachine?.Run();
 
-            ThreadCore.Root.Wait(10000, 10);
-
-            ThreadCore.Root.Terminate();
-            ThreadCore.Root.WaitForTermination(2000);
+            await ThreadCore.Root.WaitForTermination(-1); // Wait for the termination infinitely.
+            ThreadCore.Root.TerminationEvent.Set(); // The termination process is complete (#1).
         }
     }
 }

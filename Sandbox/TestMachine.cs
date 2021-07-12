@@ -37,7 +37,7 @@ namespace Sandbox
             : base(bigMachine)
         {// Custom
             this.IsSerializable = true;
-            // this.DefaultTimeout = TimeSpan.FromSeconds(1);
+            this.DefaultTimeout = TimeSpan.FromSeconds(1);
         }
 
         protected override void CreateInterface(int identifier)
@@ -57,7 +57,7 @@ namespace Sandbox
         {// lock(this)
             Console.WriteLine("TestMachine(Initial)");
 
-            this.SetTimeout(TimeSpan.FromSeconds(2));
+            this.SetTimeout(TimeSpan.FromSeconds(0.5));
             this.ChangeStateInternal(TestMachine.State.First);
             return StateResult.Continue;
         }
