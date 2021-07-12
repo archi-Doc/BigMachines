@@ -47,6 +47,13 @@ namespace BigMachines
                 return null;
             }
 
+            public void CommandGroup<TMessage>(TMessage message)
+            {
+            }
+            // this.BigMachine.CommandPost.Send(CommandPost<TIdentifier>.CommandType.Command, this.Group, this.Identifier, message);
+
+            public TResponse? CommandTwoWay<TMessage, TResponse>(TMessage message, int millisecondTimeout = 100) => this.BigMachine.CommandPost.SendTwoWay<TMessage, TResponse>(CommandPost<TIdentifier>.CommandType.CommandTwoWay, this.Group, this.Identifier, message, millisecondTimeout);
+
             public BigMachine<TIdentifier> BigMachine { get; }
 
             public GroupInfo Info { get; }

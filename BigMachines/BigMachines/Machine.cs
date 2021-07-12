@@ -40,6 +40,7 @@ namespace BigMachines
             {// Run
                 var result = this.RunInternal(new(RunType.RunManual, command.Message));
                 this.LastRun = DateTime.UtcNow;
+                command.Response = result;
                 if (result == StateResult.Terminate)
                 {
                     return true;

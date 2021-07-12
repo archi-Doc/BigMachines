@@ -50,6 +50,10 @@ namespace Sandbox
             var bb = bigMachine.Serialize();
             bigMachine.Deserialize(bb);
 
+            await Task.Delay(2000);
+            testGroup.
+            // var result = testMachine?.RunTwoWay(33);
+
             // testMachine?.Run();
 
             await ThreadCore.Root.WaitForTermination(-1); // Wait for the termination infinitely.

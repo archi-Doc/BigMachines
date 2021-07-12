@@ -72,6 +72,10 @@ namespace Sandbox
             }
 
             Console.WriteLine("TestMachine(First)");
+            if (parameter.Message != null)
+            {
+                return StateResult.Deny;
+            }
 
             // this.SetTimeout(44.5);
             // this.ChangeStateInternal(State.First);
