@@ -3,6 +3,7 @@
 using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
+using System.Threading;
 using System.Threading.Tasks;
 using Tinyhand;
 
@@ -41,8 +42,10 @@ namespace BigMachines
         [Key(3)]
         public TimeSpan DefaultTimeout { get; protected internal set; }
 
+#pragma warning disable SA1401
         [Key(4)]
-        public TimeSpan Timeout { get; protected internal set; }
+        internal long Timeout = long.MaxValue; // TimeSpan.Ticks (for interlocked)
+#pragma warning restore SA1401
 
         [Key(5)]
         public DateTime LastRun { get; protected internal set; }
@@ -85,9 +88,10 @@ namespace BigMachines
 
         protected void SetTimeout(TimeSpan timeSpan, bool absoluteDateTime = false)
         {
+            this.StateChanged = false;
             if (timeSpan.Ticks < 0)
             {
-                this.Timeout = TimeSpan.Zero;
+                Volatile.Write(ref this.Timeout, long.MaxValue);
                 this.NextRun = default;
                 return;
             }
@@ -98,7 +102,7 @@ namespace BigMachines
             }
             else
             {
-                this.Timeout = timeSpan;
+                Volatile.Write(ref this.Timeout, timeSpan.Ticks);
             }
         }
 

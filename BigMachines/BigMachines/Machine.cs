@@ -39,12 +39,11 @@ namespace BigMachines
                 command.Type == CommandPost<TIdentifier>.CommandType.RunTwoWay)
             {// Run
                 var result = this.RunInternal(new(RunType.RunManual, command.Message));
+                this.LastRun = DateTime.UtcNow;
                 if (result == StateResult.Terminate)
                 {
                     return true;
                 }
-
-                this.LastRun = DateTime.UtcNow;
             }
             else if ((command.Type == CommandPost<TIdentifier>.CommandType.State ||
                 command.Type == CommandPost<TIdentifier>.CommandType.StateTwoWay) &&

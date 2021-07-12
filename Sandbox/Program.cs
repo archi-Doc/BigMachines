@@ -28,7 +28,7 @@ namespace Sandbox
             testMachine = bigMachine.TryCreate<TestMachine.Interface>(3, null);
             if (testMachine != null)
             {
-                var b = testMachine.ChangeStateTwoWay(TestMachine.State.First);
+                // var b = testMachine.ChangeStateTwoWay(TestMachine.State.First);
                 if (testMachine.GetCurrentState() == TestMachine.State.First)
                 {
                 }
@@ -38,6 +38,8 @@ namespace Sandbox
 
             var bb = bigMachine.Serialize();
             bigMachine.Deserialize(bb);
+
+            testMachine?.Run();
 
             ThreadCore.Root.Wait(10000, 10);
 

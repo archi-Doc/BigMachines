@@ -313,6 +313,11 @@ namespace BigMachines
                 }
             }
 
+            if (machine.DefaultTimeout != TimeSpan.Zero && machine.Timeout == long.MaxValue)
+            {
+                Volatile.Write(ref machine.Timeout, 0);
+            }
+
             return machine;
         }
 
@@ -343,8 +348,8 @@ namespace BigMachines
                 {
                     foreach (var y in x.IdentificationToMachine.Values)
                     {
-                        if ((y.DefaultTimeout.Ticks > 0 && y.Timeout <= elapsed) ||
-                            y.NextRun >= now)
+                        Interlocked.Add(ref y.Timeout, -elapsed.Ticks);
+                        if (y.Timeout <= 0 || y.NextRun >= now)
                         {// Screening
                             lock (y)
                             {
@@ -362,17 +367,18 @@ namespace BigMachines
                 bool TryRun(MachineBase<TIdentifier> machine)
                 {// locked
                     var runFlag = false;
-                    if (machine.DefaultTimeout.Ticks > 0)
+                    if (machine.Timeout < 0)
                     {// Timeout
-                        if (machine.Timeout > elapsed)
+                        if (machine.DefaultTimeout <= TimeSpan.Zero)
                         {
-                            machine.Timeout -= elapsed;
+                            Volatile.Write(ref machine.Timeout, long.MinValue);
                         }
                         else
                         {
-                            machine.Timeout = machine.DefaultTimeout;
-                            runFlag = true;
+                            Volatile.Write(ref machine.Timeout, machine.DefaultTimeout.Ticks);
                         }
+
+                        runFlag = true;
                     }
 
                     if (machine.NextRun >= now)
