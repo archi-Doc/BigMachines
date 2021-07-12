@@ -18,10 +18,10 @@ using Tinyhand;
 
 namespace BigMachines
 {
-    [TinyhandObject]
+    // [TinyhandObject]
     public partial class BigMachineStatus
     {
-        [Key(0)]
+        // [Key(0)]
         public DateTime LastRun { get; internal protected set; }
     }
 
