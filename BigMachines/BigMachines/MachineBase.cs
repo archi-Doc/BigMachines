@@ -29,20 +29,39 @@ namespace BigMachines
             this.TypeId = group.Info.TypeId;
         }
 
+        /// <summary>
+        /// Gets a instance of <see cref="BigMachine"/>.
+        /// </summary>
         public BigMachine<TIdentifier> BigMachine { get; }
 
+        /// <summary>
+        /// Gets a instance of <see cref="BigMachine{TIdentifier}.Group"/>.
+        /// </summary>
         public BigMachine<TIdentifier>.Group Group { get; }
 
+        /// <summary>
+        /// Gets or sets the identifier of this machine.<br/>
+        /// TIdentifier type must have <see cref="TinyhandObjectAttribute"/>.
+        /// </summary>
         [Key(1)] // Key(0) is Machine.CurrentState
         public TIdentifier Identifier { get; protected set; } = default!;
 
+        /// <summary>
+        /// Gets or sets the status (running, paused, terminated) of this machine.
+        /// </summary>
         [Key(2)]
         public MachineStatus Status { get; protected internal set; } = MachineStatus.Running;
 
+        /// <summary>
+        /// Gets or sets the time interval at which the machine will run.
+        /// </summary>
         [Key(3)]
         public TimeSpan DefaultTimeout { get; protected internal set; }
 
 #pragma warning disable SA1401
+        /// <summary>
+        /// The time until the machine is executed.
+        /// </summary>
         [Key(4)]
         internal long Timeout = long.MaxValue; // TimeSpan.Ticks (for interlocked)
 #pragma warning restore SA1401
@@ -52,6 +71,14 @@ namespace BigMachines
 
         [Key(6)]
         public DateTime NextRun { get; protected internal set; }
+
+#pragma warning disable SA1401
+        [Key(7)]
+        internal long Lifespan = long.MaxValue; // TimeSpan.Ticks (for interlocked)
+#pragma warning restore SA1401
+
+        [Key(8)]
+        public DateTime TerminationDate { get; protected internal set; } = DateTime.MaxValue;
 
         [IgnoreMember]
         public bool IsSerializable { get; protected set; } = false;
@@ -64,11 +91,11 @@ namespace BigMachines
         protected internal bool StateChanged { get; set; }
 
         protected internal virtual void ProcessCommand(CommandPost<TIdentifier>.Command command)
-        {// Custom
+        {// Override
         }
 
         protected internal virtual void SetParameter(object? parameter)
-        {// Custom
+        {// Override
         }
 
         protected internal virtual void CreateInterface(TIdentifier identifier)
@@ -103,6 +130,25 @@ namespace BigMachines
             else
             {
                 Volatile.Write(ref this.Timeout, timeSpan.Ticks);
+            }
+        }
+
+        protected void SetLifespan(TimeSpan timeSpan, bool absoluteDateTime = false)
+        {
+            if (timeSpan.Ticks < 0)
+            {
+                Volatile.Write(ref this.Lifespan, long.MaxValue);
+                this.TerminationDate = DateTime.MaxValue;
+                return;
+            }
+
+            if (absoluteDateTime)
+            {
+                this.TerminationDate = DateTime.UtcNow + timeSpan;
+            }
+            else
+            {
+                Volatile.Write(ref this.Lifespan, timeSpan.Ticks);
             }
         }
 

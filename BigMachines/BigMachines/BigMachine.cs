@@ -349,7 +349,16 @@ namespace BigMachines
                     foreach (var y in x.IdentificationToMachine.Values)
                     {
                         Interlocked.Add(ref y.Timeout, -elapsed.Ticks);
-                        if (y.Timeout <= 0 || y.NextRun >= now)
+                        Interlocked.Add(ref y.Lifespan, -elapsed.Ticks);
+
+                        if (y.Lifespan <= 0 || y.TerminationDate <= now)
+                        {// Terminate
+                            lock (y)
+                            {
+                                x.IdentificationToMachine.TryRemove(y.Identifier, out _);
+                            }
+                        }
+                        else if (y.Timeout <= 0 || y.NextRun >= now)
                         {// Screening
                             lock (y)
                             {

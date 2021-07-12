@@ -38,6 +38,7 @@ namespace Sandbox
         {// Custom
             this.IsSerializable = true;
             this.DefaultTimeout = TimeSpan.FromSeconds(1);
+            // this.SetLifespan(TimeSpan.FromSeconds(5));
         }
 
         protected override void CreateInterface(int identifier)
