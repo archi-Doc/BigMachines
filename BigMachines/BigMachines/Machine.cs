@@ -24,21 +24,26 @@ namespace BigMachines
             this.CurrentState = default!;
         }
 
-        [Key(2)]
+        [Key(0)]
         public TState CurrentState { get; protected set; }
 
         protected internal virtual bool ChangeStateInternal(TState state) => false;
 
-        protected internal override void DistributeCommand(CommandPost<TIdentifier>.Command command)
+        protected internal override bool DistributeCommand(CommandPost<TIdentifier>.Command command)
         {// lock (machine)
             if (this.Status == MachineStatus.Terminated)
             {// Terminated
-                return;
+                return true;
             }
             else if (command.Type == CommandPost<TIdentifier>.CommandType.Run ||
                 command.Type == CommandPost<TIdentifier>.CommandType.RunTwoWay)
             {// Run
-                command.Response = this.RunInternal(new(RunType.RunManual, command.Message));
+                var result = this.RunInternal(new(RunType.RunManual, command.Message));
+                this.LastRun = DateTime.UtcNow;
+                if (result == StateResult.Terminate)
+                {
+                    return true;
+                }
             }
             else if ((command.Type == CommandPost<TIdentifier>.CommandType.State ||
                 command.Type == CommandPost<TIdentifier>.CommandType.StateTwoWay) &&
@@ -50,6 +55,8 @@ namespace BigMachines
             {// Command
                 this.ProcessCommand(command);
             }
+
+            return false;
         }
     }
 }

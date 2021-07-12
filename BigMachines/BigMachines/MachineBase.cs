@@ -3,6 +3,7 @@
 using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
+using System.Threading;
 using System.Threading.Tasks;
 using Tinyhand;
 
@@ -32,11 +33,25 @@ namespace BigMachines
 
         public BigMachine<TIdentifier>.Group Group { get; }
 
-        [Key(0)]
+        [Key(1)] // Key(0) is Machine.CurrentState
         public TIdentifier Identifier { get; protected set; } = default!;
 
-        [Key(1)]
+        [Key(2)]
         public MachineStatus Status { get; protected internal set; } = MachineStatus.Running;
+
+        [Key(3)]
+        public TimeSpan DefaultTimeout { get; protected internal set; }
+
+#pragma warning disable SA1401
+        [Key(4)]
+        internal long Timeout = long.MaxValue; // TimeSpan.Ticks (for interlocked)
+#pragma warning restore SA1401
+
+        [Key(5)]
+        public DateTime LastRun { get; protected internal set; }
+
+        [Key(6)]
+        public DateTime NextRun { get; protected internal set; }
 
         [IgnoreMember]
         public bool IsSerializable { get; protected set; } = false;
@@ -45,6 +60,8 @@ namespace BigMachines
         public int TypeId { get; internal set; }
 
         protected internal ManMachineInterface? InterfaceInstance { get; set; }
+
+        protected internal bool StateChanged { get; set; }
 
         protected internal virtual void ProcessCommand(CommandPost<TIdentifier>.Command command)
         {// Custom
@@ -64,12 +81,31 @@ namespace BigMachines
             return StateResult.Terminate;
         }
 
-        protected internal virtual void DistributeCommand(CommandPost<TIdentifier>.Command command)
+        protected internal virtual bool DistributeCommand(CommandPost<TIdentifier>.Command command)
         {// Implemented in Machine<TIdentifier, TState>
+            return true;
         }
 
-        protected void SetTimeout(int millisecond)
+        protected void SetTimeout(TimeSpan timeSpan, bool absoluteDateTime = false)
         {
+            this.StateChanged = false;
+            if (timeSpan.Ticks < 0)
+            {
+                Volatile.Write(ref this.Timeout, long.MaxValue);
+                this.NextRun = default;
+                return;
+            }
+
+            if (absoluteDateTime)
+            {
+                this.NextRun = DateTime.UtcNow + timeSpan;
+            }
+            else
+            {
+                Volatile.Write(ref this.Timeout, timeSpan.Ticks);
+            }
         }
+
+        protected void SetTimeout(double seconds, bool absoluteDateTime = false) => this.SetTimeout(TimeSpan.FromSeconds(seconds), absoluteDateTime);
     }
 }

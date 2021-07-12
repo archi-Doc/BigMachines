@@ -37,6 +37,7 @@ namespace Sandbox
             : base(bigMachine)
         {// Custom
             this.IsSerializable = true;
+            // this.DefaultTimeout = TimeSpan.FromSeconds(1);
         }
 
         protected override void CreateInterface(int identifier)
@@ -48,13 +49,15 @@ namespace Sandbox
             }
         }
 
-        [Key(3)]
+        [Key(10)]
         public int Dummy { get; set; }
 
         [StateMethod]
         protected StateResult Initial(StateParameter parameter)
         {// lock(this)
-            this.SetTimeout(44);
+            Console.WriteLine("TestMachine(Initial)");
+
+            this.SetTimeout(TimeSpan.FromSeconds(2));
             this.ChangeStateInternal(TestMachine.State.First);
             return StateResult.Continue;
         }
@@ -64,11 +67,13 @@ namespace Sandbox
         {
             if (parameter.RunType == RunType.CanEnter)
             {
-                return StateResult.Terminate;
+                return StateResult.Continue;
             }
 
-            this.SetTimeout(44);
-            this.ChangeStateInternal(State.First);
+            Console.WriteLine("TestMachine(First)");
+
+            // this.SetTimeout(44.5);
+            // this.ChangeStateInternal(State.First);
             return StateResult.Continue;
         }
 
@@ -116,6 +121,7 @@ namespace Sandbox
             if (canExit && canEnter)
             {
                 this.CurrentState = state;
+                this.StateChanged = true;
                 return true;
             }
             else
