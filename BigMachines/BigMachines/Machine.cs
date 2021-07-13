@@ -41,18 +41,13 @@ namespace BigMachines
         public TState CurrentState { get; protected set; }
 
         /// <summary>
-        /// Generated function which is called when the state changes.
+        /// Generated method which is called when the state changes.
         /// </summary>
         /// <param name="state">The next state.</param>
         /// <returns><see langword="true"/>: State changed. <see langword="false"/>: Not changed (same state or denied). </returns>
         protected internal virtual bool ChangeStateInternal(TState state) => false;
 
-        /// <summary>
-        /// Receivea a command and invoke the appropriate method.<br/>
-        /// Inside lock (machine) statement.
-        /// </summary>
-        /// <param name="command">Command</param>
-        /// <returns><see langword="true"/>: Terminated, <see langword="false"/>: Continue.</returns>
+        /// <inheritdoc/>
         protected internal override bool DistributeCommand(CommandPost<TIdentifier>.Command command)
         {// lock (machine)
             if (this.Status == MachineStatus.Terminated)
