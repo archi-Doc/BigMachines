@@ -43,9 +43,9 @@ namespace BigMachines
         public BigMachine<TIdentifier> BigMachine { get; }
 
         /// <summary>
-        /// Gets a instance of <see cref="BigMachine{TIdentifier}.Group"/>.
+        /// Gets a instance of <see cref="MachineGroup{TIdentifier}"/>.
         /// </summary>
-        public BigMachine<TIdentifier>.Group Group { get; }
+        public MachineGroup<TIdentifier> Group { get; }
 
         /// <summary>
         /// Gets or sets the identifier of this machine.<br/>
@@ -71,7 +71,7 @@ namespace BigMachines
         /// The time until the machine is executed.
         /// </summary>
         [Key(4)]
-        internal long Timeout = long.MaxValue; // TimeSpan.Ticks (for interlocked)
+        public long Timeout = long.MaxValue; // TimeSpan.Ticks (for interlocked)
 #pragma warning restore SA1401
 
         /// <summary>
@@ -91,7 +91,7 @@ namespace BigMachines
         /// The lifespan of this machine. When this value reaches 0, the machine is terminated.
         /// </summary>
         [Key(7)]
-        internal long Lifespan = long.MaxValue; // TimeSpan.Ticks (for interlocked)
+        public long Lifespan = long.MaxValue; // TimeSpan.Ticks (for interlocked)
 #pragma warning restore SA1401
 
         /// <summary>

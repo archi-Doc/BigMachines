@@ -14,6 +14,14 @@ using Tinyhand;
 
 namespace Sandbox
 {
+    public class TestGroup : MachineGroup<int>
+    {
+        internal TestGroup(BigMachine<int> bigMachine, MachineGroupInfo<int> groupInfo)
+            : base(bigMachine, groupInfo)
+        {
+        }
+    }
+
     [TinyhandObject(UseServiceProvider = true)]
     [StateMachine(0x34)]
     public partial class TestMachine : Machine<int, TestMachine.State>
@@ -27,7 +35,7 @@ namespace Sandbox
 
         public class Interface : ManMachineInterface<int, TestMachine.State>
         {// Generated
-            public Interface(BigMachine<int>.Group group, int identifier)
+            public Interface(MachineGroup<int> group, int identifier)
                 : base(group, identifier)
             {
             }

@@ -21,36 +21,6 @@ namespace BigMachines
     public class BigMachine<TIdentifier> : IDisposable
         where TIdentifier : notnull
     {
-        public class Group
-        {
-            internal Group(BigMachine<TIdentifier> bigMachine, MachineGroupInfo<TIdentifier> groupInfo)
-            {
-                this.BigMachine = bigMachine;
-                this.Info = groupInfo;
-            }
-
-            public TMachineInterface? TryGet<TMachineInterface>(TIdentifier identifier)
-                where TMachineInterface : ManMachineInterface
-            {
-                if (this.IdentificationToMachine.TryGetValue(identifier, out var machine))
-                {
-                    return machine.InterfaceInstance as TMachineInterface;
-                }
-
-                return null;
-            }
-
-            public void CommandGroup<TMessage>(TMessage message) => this.BigMachine.CommandPost.SendGroup(CommandPost<TIdentifier>.CommandType.Command, this, this.IdentificationToMachine.Keys, message);
-
-            public KeyValuePair<TIdentifier, TResponse>[] CommandGroupTwoWay<TMessage, TResponse>(TMessage message, int millisecondTimeout = 100) => this.BigMachine.CommandPost.SendGroupTwoWay<TMessage, TResponse>(CommandPost<TIdentifier>.CommandType.CommandTwoWay, this, this.IdentificationToMachine.Keys, message);
-
-            public BigMachine<TIdentifier> BigMachine { get; }
-
-            public MachineGroupInfo<TIdentifier> Info { get; }
-
-            internal ConcurrentDictionary<TIdentifier, MachineBase<TIdentifier>> IdentificationToMachine { get; } = new();
-        }
-
         public BigMachine(ThreadCoreBase parent, IServiceProvider? serviceProvider = null)
         {
             this.Status = new();
@@ -59,11 +29,11 @@ namespace BigMachines
             this.CommandPost.Open(this.DistributeCommand);
             this.ServiceProvider = serviceProvider;
 
-            this.groupArray = new Group[StaticInfo.Count];
+            this.groupArray = new MachineGroup<TIdentifier>[StaticInfo.Count];
             var n = 0;
             foreach (var x in StaticInfo)
             {
-                this.groupArray[n] = new Group(this, x.Value);
+                this.groupArray[n] = new MachineGroup<TIdentifier>(this, x.Value);
                 this.interfaceTypeToGroup.TryAdd(x.Key, this.groupArray[n]);
             }
 
@@ -98,7 +68,7 @@ namespace BigMachines
             return group.TryGet<TMachineInterface>(identifier);
         }
 
-        public Group GetGroup<TMachineInterface>()
+        public MachineGroup<TIdentifier> GetGroup<TMachineInterface>()
             where TMachineInterface : ManMachineInterface
         {
             this.GetMachineGroup(typeof(TMachineInterface), out var group);
@@ -111,7 +81,7 @@ namespace BigMachines
             this.GetMachineGroup(typeof(TMachineInterface), out var group);
 
             MachineBase<TIdentifier>? machine = null;
-            if (group.IdentificationToMachine.TryGetValue(identifier, out machine))
+            if (group.TryGetMachine(identifier, out machine))
             {
                 return machine.InterfaceInstance as TMachineInterface;
             }
@@ -122,7 +92,7 @@ namespace BigMachines
             machine.CreateInterface(clone);
             machine.SetParameter(parameter);
 
-            machine = group.IdentificationToMachine.GetOrAdd(clone, machine);
+            machine = group.GetOrAddMachine(clone, machine);
             return machine.InterfaceInstance as TMachineInterface;
         }
 
@@ -137,31 +107,14 @@ namespace BigMachines
             machine.CreateInterface(clone);
             machine.SetParameter(parameter);
 
-            MachineBase<TIdentifier>? machineToRemove = null;
-            group.IdentificationToMachine.AddOrUpdate(clone, x => machine, (i, m) =>
-            {
-                machineToRemove = m;
-                return machine;
-            });
-
-            if (machineToRemove != null)
-            {
-                this.RemoveMachine(group, identifier, machineToRemove);
-            }
-
+            group.AddMachine(identifier, machine);
             return (TMachineInterface)machine.InterfaceInstance!;
         }
 
         public bool Remove<TMachineInterface>(TIdentifier identifier)
         {
             this.GetMachineGroup(typeof(TMachineInterface), out var group);
-
-            if (group.IdentificationToMachine.TryGetValue(identifier, out var machine))
-            {
-                return this.RemoveMachine(group, identifier, machine);
-            }
-
-            return false;
+            return group.TryRemoveMachine(identifier);
         }
 
         public byte[] Serialize(TinyhandSerializerOptions? options = null)
@@ -174,9 +127,9 @@ namespace BigMachines
                 SerializeGroup(ref writer, x);
             }
 
-            void SerializeGroup(ref Tinyhand.IO.TinyhandWriter writer, Group info)
+            void SerializeGroup(ref Tinyhand.IO.TinyhandWriter writer, MachineGroup<TIdentifier> group)
             {
-                foreach (var machine in info.IdentificationToMachine.Values.Where(a => a.IsSerializable))
+                foreach (var machine in group.Machines.Where(a => a.IsSerializable))
                 {
                     if (machine is ITinyhandSerialize serializer)
                     {
@@ -224,7 +177,7 @@ namespace BigMachines
                     {
                         serializer.Deserialize(ref reader, options);
                         machine.CreateInterface(machine.Identifier);
-                        group.IdentificationToMachine[machine.Identifier] = machine;
+                        group.GetOrAddMachine(machine.Identifier, machine);
                     }
                     else
                     {
@@ -245,35 +198,26 @@ namespace BigMachines
             this.timerInterval = interval;
         }
 
-        internal Dictionary<int, Group> TypeIdToGroup { get; } = new();
+        internal Dictionary<int, MachineGroup<TIdentifier>> TypeIdToGroup { get; } = new();
 
-        internal Dictionary<Type, Group> MachineTypeToGroup { get; } = new();
-
-        private bool RemoveMachine(Group group, TIdentifier identifier, MachineBase<TIdentifier> machine)
-        {
-            lock (machine)
-            {
-                machine.Status = MachineStatus.Terminated;
-                return group.IdentificationToMachine.TryRemove(identifier, out _);
-            }
-        }
+        internal Dictionary<Type, MachineGroup<TIdentifier>> MachineTypeToGroup { get; } = new();
 
         private void DistributeCommand(CommandPost<TIdentifier>.Command command)
         {
-            if (command.Channel is Group group &&
-                group.IdentificationToMachine.TryGetValue(command.Identifier, out var machine))
+            if (command.Channel is MachineGroup<TIdentifier> group &&
+                group.TryGetMachine(command.Identifier, out var machine))
             {
                 lock (machine)
                 {
                     if (machine.DistributeCommand(command))
                     {
-                        group.IdentificationToMachine.TryRemove(machine.Identifier, out _);
+                        group.TryRemoveMachine(machine.Identifier);
                     }
                 }
             }
         }
 
-        private MachineBase<TIdentifier> CreateMachine(Group group)
+        private MachineBase<TIdentifier> CreateMachine(MachineGroup<TIdentifier> group)
         {
             MachineBase<TIdentifier>? machine = null;
 
@@ -327,7 +271,7 @@ namespace BigMachines
 
                 foreach (var x in this.groupArray)
                 {
-                    foreach (var y in x.IdentificationToMachine.Values)
+                    foreach (var y in x.Machines)
                     {
                         Interlocked.Add(ref y.Timeout, -elapsed.Ticks);
                         Interlocked.Add(ref y.Lifespan, -elapsed.Ticks);
@@ -336,7 +280,7 @@ namespace BigMachines
                         {// Terminate
                             lock (y)
                             {
-                                x.IdentificationToMachine.TryRemove(y.Identifier, out _);
+                                x.TryRemoveMachine(y.Identifier);
                             }
                         }
                         else if (y.Timeout <= 0 || y.NextRun >= now)
@@ -345,7 +289,7 @@ namespace BigMachines
                             {
                                 if (TryRun(y))
                                 {// Terminated
-                                    x.IdentificationToMachine.TryRemove(y.Identifier, out _);
+                                    x.TryRemoveMachine(y.Identifier);
                                 }
                             }
                         }
@@ -402,7 +346,7 @@ StateChangedLoop:
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        private void GetMachineGroup(Type interfaceType, out Group info)
+        private void GetMachineGroup(Type interfaceType, out MachineGroup<TIdentifier> info)
         {
             if (!this.interfaceTypeToGroup.TryGetValue(interfaceType, out info!))
             {
@@ -410,8 +354,8 @@ StateChangedLoop:
             }
         }
 
-        private ThreadsafeTypeKeyHashTable<Group> interfaceTypeToGroup = new();
-        private Group[] groupArray;
+        private ThreadsafeTypeKeyHashTable<MachineGroup<TIdentifier>> interfaceTypeToGroup = new();
+        private MachineGroup<TIdentifier>[] groupArray;
         private TimeSpan timerInterval = TimeSpan.FromMilliseconds(500);
 
         #region IDisposable Support
