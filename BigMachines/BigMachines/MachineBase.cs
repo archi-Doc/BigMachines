@@ -13,10 +13,18 @@ using Tinyhand;
 
 namespace BigMachines
 {
+    /// <summary>
+    /// Represents a base machine class.
+    /// </summary>
+    /// <typeparam name="TIdentifier">The type of an identifier.</typeparam>
     [TinyhandObject]
     public abstract class MachineBase<TIdentifier>
         where TIdentifier : notnull
     {
+        /// <summary>
+        /// Initializes a new instance of the <see cref="MachineBase{TIdentifier}"/> class.
+        /// </summary>
+        /// <param name="bigMachine">BigMachine which contains an instance of this machine.</param>
         public MachineBase(BigMachine<TIdentifier> bigMachine)
         {
             this.BigMachine = bigMachine;
@@ -53,7 +61,7 @@ namespace BigMachines
         public MachineStatus Status { get; protected internal set; } = MachineStatus.Running;
 
         /// <summary>
-        /// Gets or sets the time interval at which the machine will run.
+        /// Gets or sets the default time interval at which the machine will run.
         /// </summary>
         [Key(3)]
         public TimeSpan DefaultTimeout { get; protected internal set; }
@@ -66,23 +74,41 @@ namespace BigMachines
         internal long Timeout = long.MaxValue; // TimeSpan.Ticks (for interlocked)
 #pragma warning restore SA1401
 
+        /// <summary>
+        /// Gets or sets <see cref="DateTime"/> when the machine is executed last time.
+        /// </summary>
         [Key(5)]
         public DateTime LastRun { get; protected internal set; }
 
+        /// <summary>
+        /// Gets or sets <see cref="DateTime"/> when the machine is will be executed.
+        /// </summary>
         [Key(6)]
         public DateTime NextRun { get; protected internal set; }
 
 #pragma warning disable SA1401
+        /// <summary>
+        /// The lifespan of this machine. When this value reaches 0, the machine is terminated.
+        /// </summary>
         [Key(7)]
         internal long Lifespan = long.MaxValue; // TimeSpan.Ticks (for interlocked)
 #pragma warning restore SA1401
 
+        /// <summary>
+        /// Gets or sets <see cref="DateTime"/> when this machine will be automatically terminated.
+        /// </summary>
         [Key(8)]
         public DateTime TerminationDate { get; protected internal set; } = DateTime.MaxValue;
 
+        /// <summary>
+        /// Gets or sets a value indicating whether this machine is serializable or not.
+        /// </summary>
         [IgnoreMember]
         public bool IsSerializable { get; protected set; } = false;
 
+        /// <summary>
+        /// Gets or sets a TypeId of this machine.
+        /// </summary>
         [IgnoreMember]
         public int TypeId { get; internal set; }
 

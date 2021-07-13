@@ -12,9 +12,6 @@ namespace BigMachines
 {
     /// <summary>
     /// CommandPost is dependency-free pub/sub service.<br/>
-    /// It's easy to use.<br/>
-    /// 1. Open a channel (register a subscriber) : .<br/>
-    /// 2. Send a message (publish) : "/>.
     /// </summary>
     /// <typeparam name="TIdentifier">The type of an identifier.</typeparam>
     public class CommandPost<TIdentifier> : IDisposable
@@ -113,10 +110,17 @@ namespace BigMachines
         }
 
         /// <summary>
-        /// Command class which contains command information.
+        /// Command class contains command information.
         /// </summary>
         public class Command
         {
+            /// <summary>
+            /// Initializes a new instance of the <see cref="Command"/> class.
+            /// </summary>
+            /// <param name="type">CommandType.</param>
+            /// <param name="channel">Channel.</param>
+            /// <param name="identifier">Identifier.</param>
+            /// <param name="message">Message.</param>
             public Command(CommandType type, object? channel, TIdentifier identifier, object? message)
             {
                 this.Type = type;
