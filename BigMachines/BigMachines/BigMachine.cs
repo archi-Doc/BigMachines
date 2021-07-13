@@ -23,7 +23,7 @@ namespace BigMachines
     {
         public class Group
         {
-            internal Group(BigMachine<TIdentifier> bigMachine, GroupInfo groupInfo)
+            internal Group(BigMachine<TIdentifier> bigMachine, MachineGroupInfo<TIdentifier> groupInfo)
             {
                 this.BigMachine = bigMachine;
                 this.Info = groupInfo;
@@ -46,25 +46,9 @@ namespace BigMachines
 
             public BigMachine<TIdentifier> BigMachine { get; }
 
-            public GroupInfo Info { get; }
+            public MachineGroupInfo<TIdentifier> Info { get; }
 
             internal ConcurrentDictionary<TIdentifier, MachineBase<TIdentifier>> IdentificationToMachine { get; } = new();
-        }
-
-        public class GroupInfo
-        {
-            public GroupInfo(Type machineType, int typeId, Func<BigMachine<TIdentifier>, MachineBase<TIdentifier>>? constructor)
-            {
-                this.MachineType = machineType;
-                this.TypeId = typeId;
-                this.Constructor = constructor;
-            }
-
-            public Type MachineType { get; }
-
-            public int TypeId { get; }
-
-            public Func<BigMachine<TIdentifier>, MachineBase<TIdentifier>>? Constructor { get; }
         }
 
         public BigMachine(ThreadCoreBase parent, IServiceProvider? serviceProvider = null)
@@ -97,7 +81,7 @@ namespace BigMachines
             }
         }
 
-        public static Dictionary<Type, GroupInfo> StaticInfo { get; } = new(); // typeof(Machine.Interface), MachineGroup
+        public static Dictionary<Type, MachineGroupInfo<TIdentifier>> StaticInfo { get; } = new(); // typeof(Machine.Interface), MachineGroup
 
         public BigMachineStatus Status { get; }
 
