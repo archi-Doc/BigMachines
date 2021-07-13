@@ -18,13 +18,6 @@ using Tinyhand;
 
 namespace BigMachines
 {
-    // [TinyhandObject]
-    public partial class BigMachineStatus
-    {
-        // [Key(0)]
-        public DateTime LastRun { get; internal protected set; }
-    }
-
     public class BigMachine<TIdentifier> : IDisposable
         where TIdentifier : notnull
     {
