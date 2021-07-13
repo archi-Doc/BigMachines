@@ -71,7 +71,7 @@ namespace Sandbox
                 return StateResult.Continue;
             }
 
-            Console.WriteLine("TestMachine(First)");
+            Console.WriteLine($"TestMachine(First) : {this.Dummy++}");
             if (parameter.Message != null)
             {
                 return StateResult.Deny;

@@ -373,7 +373,7 @@ namespace BigMachines
                 bool TryRun(MachineBase<TIdentifier> machine)
                 {// locked
                     var runFlag = false;
-                    if (machine.Timeout < 0)
+                    if (machine.Timeout <= 0)
                     {// Timeout
                         if (machine.DefaultTimeout <= TimeSpan.Zero)
                         {

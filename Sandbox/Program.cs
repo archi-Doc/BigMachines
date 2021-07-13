@@ -1,4 +1,5 @@
 ﻿using System;
+using System.IO;
 using System.Threading.Tasks;
 using Arc.Threading;
 using BigMachines;
@@ -32,9 +33,23 @@ namespace Sandbox
             var bigMachine = container.Resolve<BigMachine<int>>();*/
             // var container_machine = container.Resolve<TestMachine>();
 
+            Console.WriteLine("BigMachines Sandbox");
             var bigMachine = new BigMachine<int>(ThreadCore.Root);
+
+            try
+            {
+                using (var fs = new FileStream("app.data", FileMode.Open))
+                {
+                    var bs = new byte[fs.Length];
+                    fs.Read(bs);
+                    bigMachine.Deserialize(bs);
+                }
+            }
+            catch
+            {
+            }
+
             var testMachine = bigMachine.TryGet<TestMachine.Interface>(3);
-            testMachine = bigMachine.TryCreate<TestMachine.Interface>(3, null);
             testMachine = bigMachine.TryCreate<TestMachine.Interface>(3, null);
             testMachine = bigMachine.TryCreate<TestMachine.Interface>(3, null);
             if (testMachine != null)
@@ -50,16 +65,21 @@ namespace Sandbox
             var bb = bigMachine.Serialize();
             bigMachine.Deserialize(bb);
 
-            await Task.Delay(1000);
             var testMachine2 = bigMachine.TryCreate<TestMachine.Interface>(4, null);
 
-            await Task.Delay(2000);
             var res = testGroup.CommandGroupTwoWay<int, int>(4);
             // var result = testMachine?.RunTwoWay(33);
 
             // testMachine?.Run();
 
             await ThreadCore.Root.WaitForTermination(-1); // Wait for the termination infinitely.
+
+            var data = bigMachine.Serialize();
+            using (var fs = new FileStream("app.data", FileMode.Create))
+            {
+                fs.Write(data);
+            }
+
             ThreadCore.Root.TerminationEvent.Set(); // The termination process is complete (#1).
         }
     }
