@@ -14,6 +14,14 @@ using Tinyhand;
 
 namespace Sandbox
 {
+    public class TestGroup : MachineGroup<int>
+    {
+        internal TestGroup(BigMachine<int> bigMachine, MachineGroupInfo<int> groupInfo)
+            : base(bigMachine, groupInfo)
+        {
+        }
+    }
+
     [TinyhandObject(UseServiceProvider = true)]
     [StateMachine(0x34)]
     public partial class TestMachine : Machine<int, TestMachine.State>
@@ -27,7 +35,7 @@ namespace Sandbox
 
         public class Interface : ManMachineInterface<int, TestMachine.State>
         {// Generated
-            public Interface(BigMachine<int>.Group group, int identifier)
+            public Interface(MachineGroup<int> group, int identifier)
                 : base(group, identifier)
             {
             }
@@ -37,7 +45,8 @@ namespace Sandbox
             : base(bigMachine)
         {// Custom
             this.IsSerializable = true;
-            // this.DefaultTimeout = TimeSpan.FromSeconds(1);
+            this.DefaultTimeout = TimeSpan.FromSeconds(1);
+            this.SetLifespan(TimeSpan.FromSeconds(55));
         }
 
         protected override void CreateInterface(int identifier)
@@ -57,7 +66,7 @@ namespace Sandbox
         {// lock(this)
             Console.WriteLine("TestMachine(Initial)");
 
-            this.SetTimeout(TimeSpan.FromSeconds(2));
+            this.SetTimeout(TimeSpan.FromSeconds(0.5));
             this.ChangeStateInternal(TestMachine.State.First);
             return StateResult.Continue;
         }
@@ -70,7 +79,11 @@ namespace Sandbox
                 return StateResult.Continue;
             }
 
-            Console.WriteLine("TestMachine(First)");
+            Console.WriteLine($"TestMachine(First) : {this.Dummy++}");
+            if (parameter.Message != null)
+            {
+                return StateResult.Deny;
+            }
 
             // this.SetTimeout(44.5);
             // this.ChangeStateInternal(State.First);
@@ -81,6 +94,8 @@ namespace Sandbox
         {// Custom
             if (command.Message is int x)
             {
+                Console.WriteLine($"command: {x}");
+                command.Response = x + 1;
             }
         }
 

@@ -15,11 +15,11 @@ namespace BigMachines
     {
         public BigMachine<TIdentifier> BigMachine { get; }
 
-        public BigMachine<TIdentifier>.Group Group { get; }
+        public MachineGroup<TIdentifier> Group { get; }
 
         public TIdentifier Identifier { get; }
 
-        public ManMachineInterface(BigMachine<TIdentifier>.Group group, TIdentifier identifier)
+        public ManMachineInterface(MachineGroup<TIdentifier> group, TIdentifier identifier)
         {
             this.BigMachine = group.BigMachine;
             this.Group = group;
@@ -28,7 +28,7 @@ namespace BigMachines
 
         public TState? GetCurrentState()
         {
-            if (this.Group.IdentificationToMachine.TryGetValue(this.Identifier, out var machine))
+            if (this.Group.TryGetMachine(this.Identifier, out var machine))
             {
                 if (machine is Machine<TIdentifier, TState> m && m.Status != MachineStatus.Terminated)
                 {
@@ -41,7 +41,7 @@ namespace BigMachines
 
         public MachineStatus? GetMachineStatus()
         {
-            if (this.Group.IdentificationToMachine.TryGetValue(this.Identifier, out var machine))
+            if (this.Group.TryGetMachine(this.Identifier, out var machine))
             {
                 return machine.Status;
             }
@@ -51,7 +51,7 @@ namespace BigMachines
 
         public bool SetMachineStatus(MachineStatus status)
         {
-            if (this.Group.IdentificationToMachine.TryGetValue(this.Identifier, out var machine))
+            if (this.Group.TryGetMachine(this.Identifier, out var machine))
             {
                 machine.Status = status;
                 return true;
@@ -62,7 +62,7 @@ namespace BigMachines
 
         public void Run() => this.BigMachine.CommandPost.Send(CommandPost<TIdentifier>.CommandType.Run, this.Group, this.Identifier, 0);
 
-        public TResponse? RunTwoWay<TMessage, TResponse>(TMessage message, int millisecondTimeout = 100) => this.BigMachine.CommandPost.SendTwoWay<TMessage, TResponse>(CommandPost<TIdentifier>.CommandType.RunTwoWay, this.Group, this.Identifier, message, millisecondTimeout);
+        public StateResult? RunTwoWay<TMessage>(TMessage message, int millisecondTimeout = 100) => this.BigMachine.CommandPost.SendTwoWay<TMessage, StateResult>(CommandPost<TIdentifier>.CommandType.RunTwoWay, this.Group, this.Identifier, message, millisecondTimeout);
 
         public void Command<TMessage>(TMessage message) => this.BigMachine.CommandPost.Send(CommandPost<TIdentifier>.CommandType.Command, this.Group, this.Identifier, message);
 
