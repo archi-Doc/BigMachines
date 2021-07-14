@@ -80,6 +80,8 @@ namespace Sandbox
                 fs.Write(data);
             }
 
+            bigMachine.Deserialize(data);
+
             ThreadCore.Root.TerminationEvent.Set(); // The termination process is complete (#1).
         }
     }
