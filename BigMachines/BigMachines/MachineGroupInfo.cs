@@ -8,9 +8,19 @@ using System.Threading.Tasks;
 
 namespace BigMachines
 {
+    /// <summary>
+    /// Contains information of <see cref="MachineGroup{TIdentifier}"/>.
+    /// </summary>
+    /// <typeparam name="TIdentifier">The type of an identifier.</typeparam>
     public class MachineGroupInfo<TIdentifier>
         where TIdentifier : notnull
     {
+        /// <summary>
+        /// Initializes a new instance of the <see cref="MachineGroupInfo{TIdentifier}"/> class.
+        /// </summary>
+        /// <param name="machineType"><see cref="Type"/> of machine.</param>
+        /// <param name="typeId">Type id (unique identifier for serialization).</param>
+        /// <param name="constructor">Constructor delegate of <see cref="MachineBase{TIdentifier}"/>.</param>
         public MachineGroupInfo(Type machineType, int typeId, Func<BigMachine<TIdentifier>, MachineBase<TIdentifier>>? constructor)
         {
             this.MachineType = machineType;
@@ -18,10 +28,19 @@ namespace BigMachines
             this.Constructor = constructor;
         }
 
+        /// <summary>
+        /// Gets <see cref="Type"/> of machine.
+        /// </summary>
         public Type MachineType { get; }
 
+        /// <summary>
+        /// Gets Type id (unique identifier for serialization).
+        /// </summary>
         public int TypeId { get; }
 
+        /// <summary>
+        /// Gets a constructor delegate of <see cref="MachineBase{TIdentifier}"/>.
+        /// </summary>
         public Func<BigMachine<TIdentifier>, MachineBase<TIdentifier>>? Constructor { get; }
     }
 }

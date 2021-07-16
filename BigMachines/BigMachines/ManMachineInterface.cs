@@ -5,6 +5,9 @@ using Tinyhand;
 
 namespace BigMachines
 {
+    /// <summary>
+    /// Base class for <see cref="ManMachineInterface{TIdentifier, TState}"/>.
+    /// </summary>
     public abstract class ManMachineInterface
     {
     }
@@ -39,6 +42,11 @@ namespace BigMachines
             return null;
         }
 
+        /// <summary>
+        /// Get the status of the machine.
+        /// </summary>
+        /// <returns>The status of the machine.<br/>
+        /// <see langword="null"/>: Machine is not available.</returns>
         public MachineStatus? GetMachineStatus()
         {
             if (this.Group.TryGetMachine(this.Identifier, out var machine))
@@ -49,6 +57,12 @@ namespace BigMachines
             return null;
         }
 
+        /// <summary>
+        /// Change the status of the machine.
+        /// </summary>
+        /// <param name="status">The status.</param>
+        /// <returns><see langword="true"/>: The status is successfully changed.<br/>
+        /// <see langword="false"/>: Machine is not available.</returns>
         public bool SetMachineStatus(MachineStatus status)
         {
             if (this.Group.TryGetMachine(this.Identifier, out var machine))
@@ -60,6 +74,10 @@ namespace BigMachines
             return false;
         }
 
+        /// <summary>
+        /// Manually run the machine.<br/>
+        /// This function does not change <see cref="MachineBase{TIdentifier}.Timeout"/> or <see cref="MachineBase{TIdentifier}.NextRun"/>.
+        /// </summary>
         public void Run() => this.BigMachine.CommandPost.Send(CommandPost<TIdentifier>.CommandType.Run, this.Group, this.Identifier, 0);
 
         public StateResult? RunTwoWay<TMessage>(TMessage message, int millisecondTimeout = 100) => this.BigMachine.CommandPost.SendTwoWay<TMessage, StateResult>(CommandPost<TIdentifier>.CommandType.RunTwoWay, this.Group, this.Identifier, message, millisecondTimeout);
