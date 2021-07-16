@@ -12,16 +12,16 @@ namespace BigMachines
     /// Contains information of <see cref="MachineGroup{TIdentifier}"/>.
     /// </summary>
     /// <typeparam name="TIdentifier">The type of an identifier.</typeparam>
-    public class MachineGroupInfo<TIdentifier>
+    public class MachineInfo<TIdentifier>
         where TIdentifier : notnull
     {
         /// <summary>
-        /// Initializes a new instance of the <see cref="MachineGroupInfo{TIdentifier}"/> class.
+        /// Initializes a new instance of the <see cref="MachineInfo{TIdentifier}"/> class.
         /// </summary>
         /// <param name="machineType"><see cref="Type"/> of machine.</param>
         /// <param name="typeId">Type id (unique identifier for serialization).</param>
         /// <param name="constructor">Constructor delegate of <see cref="MachineBase{TIdentifier}"/>.</param>
-        public MachineGroupInfo(Type machineType, int typeId, Func<BigMachine<TIdentifier>, MachineBase<TIdentifier>>? constructor)
+        public MachineInfo(Type machineType, int typeId, Func<BigMachine<TIdentifier>, MachineBase<TIdentifier>>? constructor)
         {
             this.MachineType = machineType;
             this.TypeId = typeId;

@@ -33,7 +33,8 @@ namespace BigMachines
             var n = 0;
             foreach (var x in StaticInfo)
             {
-                this.groupArray[n] = new MachineGroup<TIdentifier>(this, x.Value);
+                this.groupArray[n] = new MachineGroup<TIdentifier>(this);
+                this.groupArray[n].Assign(x.Value);
                 this.interfaceTypeToGroup.TryAdd(x.Key, this.groupArray[n]);
             }
 
@@ -51,7 +52,7 @@ namespace BigMachines
             }
         }
 
-        public static Dictionary<Type, MachineGroupInfo<TIdentifier>> StaticInfo { get; } = new(); // typeof(Machine.Interface), MachineGroup
+        public static Dictionary<Type, MachineInfo<TIdentifier>> StaticInfo { get; } = new(); // typeof(Machine.Interface), MachineGroup
 
         public BigMachineStatus Status { get; }
 

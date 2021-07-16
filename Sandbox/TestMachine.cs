@@ -16,8 +16,8 @@ namespace Sandbox
 {
     public class TestGroup : MachineGroup<int>
     {
-        internal TestGroup(BigMachine<int> bigMachine, MachineGroupInfo<int> groupInfo)
-            : base(bigMachine, groupInfo)
+        internal TestGroup(BigMachine<int> bigMachine)
+            : base(bigMachine)
         {
         }
     }
