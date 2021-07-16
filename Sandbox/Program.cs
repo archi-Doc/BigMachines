@@ -36,6 +36,7 @@ namespace Sandbox
             Console.WriteLine("BigMachines Sandbox");
             var bigMachine = new BigMachine<int>(ThreadCore.Root);
 
+            // Load
             try
             {
                 using (var fs = new FileStream("app.data", FileMode.Open))
@@ -74,6 +75,7 @@ namespace Sandbox
 
             await ThreadCore.Root.WaitForTermination(-1); // Wait for the termination infinitely.
 
+            // Save
             var data = bigMachine.Serialize();
             using (var fs = new FileStream("app.data", FileMode.Create))
             {

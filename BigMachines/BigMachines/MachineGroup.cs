@@ -84,6 +84,6 @@ namespace BigMachines
 
         internal ICollection<MachineBase<TIdentifier>> Machines => this.IdentificationToMachine.Values;
 
-        private ConcurrentDictionary<TIdentifier, MachineBase<TIdentifier>> IdentificationToMachine { get; } = new();
+        protected ConcurrentDictionary<TIdentifier, MachineBase<TIdentifier>> IdentificationToMachine { get; } = new();
     }
 }
