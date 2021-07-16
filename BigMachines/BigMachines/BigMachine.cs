@@ -5,11 +5,13 @@ using System.Collections;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Linq;
+using System.Reflection;
 using System.Runtime.CompilerServices;
 using System.Threading;
 using System.Threading.Tasks;
 using Arc.Threading;
 using BigMachines.Internal;
+using FastExpressionCompiler;
 using Tinyhand;
 
 #pragma warning disable SA1009 // Closing parenthesis should be spaced correctly
@@ -29,14 +31,15 @@ namespace BigMachines
             this.CommandPost.Open(this.DistributeCommand);
             this.ServiceProvider = serviceProvider;
 
-            this.groupArray = new MachineGroup<TIdentifier>[StaticInfo.Count];
+            var array = new MachineGroup<TIdentifier>[StaticInfo.Count];
             var n = 0;
             foreach (var x in StaticInfo)
             {
-                this.groupArray[n] = new MachineGroup<TIdentifier>(this, x.Value);
-                this.interfaceTypeToGroup.TryAdd(x.Key, this.groupArray[n]);
+                array[n] = this.CreateGroup(x.Value);
+                this.interfaceTypeToGroup.TryAdd(x.Key, array[n]);
             }
 
+            this.groupArray = array;
             foreach (var x in this.groupArray)
             {
                 if (!this.TypeIdToGroup.ContainsKey(x.Info.TypeId))
@@ -51,7 +54,7 @@ namespace BigMachines
             }
         }
 
-        public static Dictionary<Type, MachineGroupInfo<TIdentifier>> StaticInfo { get; } = new(); // typeof(Machine.Interface), MachineGroup
+        public static Dictionary<Type, MachineInfo<TIdentifier>> StaticInfo { get; } = new(); // typeof(Machine.Interface), MachineGroup
 
         public BigMachineStatus Status { get; }
 
@@ -246,6 +249,50 @@ namespace BigMachines
             return machine;
         }
 
+        private MachineGroup<TIdentifier> CreateGroup(MachineInfo<TIdentifier> info)
+        {
+            MachineGroup<TIdentifier>? group = null;
+
+            if (info.GroupType != null)
+            {// Customized group
+                if (this.ServiceProvider != null)
+                {
+                    group = this.ServiceProvider.GetService(info.GroupType) as MachineGroup<TIdentifier>;
+                }
+
+                if (group == null)
+                {
+                    try
+                    {
+                        /*var args = new Type[] { typeof(BigMachine<TIdentifier>), };
+                        var constructorInfo = info.GroupType.GetConstructor(BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic, null, CallingConventions.HasThis, args, null);
+                        group = constructorInfo.Invoke(new object[] { this, }) as MachineGroup<TIdentifier>;*/
+                        group = Activator.CreateInstance(info.GroupType, BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic, null, new object[] { this }, null) as MachineGroup<TIdentifier>;
+                    }
+                    catch
+                    {
+                    }
+                }
+            }
+
+            if (group == null)
+            {
+                if (this.ServiceProvider != null)
+                {
+                    group = this.ServiceProvider.GetService(typeof(MachineGroup<TIdentifier>)) as MachineGroup<TIdentifier>;
+                }
+
+                if (group == null)
+                {
+                    group = new MachineGroup<TIdentifier>(this);
+                }
+            }
+
+            group.Assign(info);
+
+            return group;
+        }
+
         private void MainLoop(object? parameter)
         {
             var core = (ThreadCore)parameter!;
@@ -355,7 +402,7 @@ StateChangedLoop:
         }
 
         private ThreadsafeTypeKeyHashTable<MachineGroup<TIdentifier>> interfaceTypeToGroup = new();
-        private MachineGroup<TIdentifier>[] groupArray;
+        private MachineGroup<TIdentifier>[] groupArray = Array.Empty<MachineGroup<TIdentifier>>();
         private TimeSpan timerInterval = TimeSpan.FromMilliseconds(500);
 
         #region IDisposable Support

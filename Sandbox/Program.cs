@@ -25,7 +25,7 @@ namespace Sandbox
             };
 
             // typeof(TestMachine.Interface) => GroupInfo ( Constructor, TypeId, typeof(TestMachine) )
-            BigMachine<int>.StaticInfo[typeof(TestMachine.Interface)] = new(typeof(TestMachine), 0, x => new TestMachine(x));
+            BigMachine<int>.StaticInfo[typeof(TestMachine.Interface)] = new(typeof(TestMachine), 0, x => new TestMachine(x), typeof(TestGroup));
 
             /*var container = new Container();
             container.RegisterDelegate<BigMachine<int>>(x => new BigMachine<int>(ThreadCore.Root, container), Reuse.Singleton);
@@ -79,6 +79,8 @@ namespace Sandbox
             {
                 fs.Write(data);
             }
+
+            bigMachine.Deserialize(data);
 
             ThreadCore.Root.TerminationEvent.Set(); // The termination process is complete (#1).
         }

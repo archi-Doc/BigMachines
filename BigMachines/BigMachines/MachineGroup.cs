@@ -13,10 +13,10 @@ namespace BigMachines
     public class MachineGroup<TIdentifier>
         where TIdentifier : notnull
     {
-        internal protected MachineGroup(BigMachine<TIdentifier> bigMachine, MachineGroupInfo<TIdentifier> groupInfo)
+        internal protected MachineGroup(BigMachine<TIdentifier> bigMachine)
         {
             this.BigMachine = bigMachine;
-            this.Info = groupInfo;
+            this.Info = default!; // Must Assign()
         }
 
         public TMachineInterface? TryGet<TMachineInterface>(TIdentifier identifier)
@@ -36,7 +36,7 @@ namespace BigMachines
 
         public BigMachine<TIdentifier> BigMachine { get; }
 
-        public MachineGroupInfo<TIdentifier> Info { get; }
+        public MachineInfo<TIdentifier> Info { get; private set; }
 
         internal bool TryGetMachine(TIdentifier identifier, [MaybeNullWhen(false)] out MachineBase<TIdentifier> machine) => this.IdentificationToMachine.TryGetValue(identifier, out machine);
 
@@ -75,6 +75,11 @@ namespace BigMachines
                     machineToRemove.Status = MachineStatus.Terminated;
                 }
             }
+        }
+
+        internal void Assign(MachineInfo<TIdentifier> info)
+        {
+            this.Info = info;
         }
 
         internal ICollection<MachineBase<TIdentifier>> Machines => this.IdentificationToMachine.Values;

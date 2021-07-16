@@ -14,4 +14,8 @@
     <ProjectReference Include="..\BigMachines\BigMachines.csproj" />
   </ItemGroup>
 
+  <ItemGroup>
+    <Compile Remove="Generated\*" />
+  </ItemGroup>
+
 </Project>
