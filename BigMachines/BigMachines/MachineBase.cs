@@ -71,7 +71,7 @@ namespace BigMachines
         /// The time until the machine is executed.
         /// </summary>
         [Key(4)]
-        public long Timeout = long.MaxValue; // TimeSpan.Ticks (for interlocked)
+        protected internal long Timeout = long.MaxValue; // TimeSpan.Ticks (for interlocked)
 #pragma warning restore SA1401
 
         /// <summary>
@@ -91,7 +91,7 @@ namespace BigMachines
         /// The lifespan of this machine. When this value reaches 0, the machine is terminated.
         /// </summary>
         [Key(7)]
-        internal long Lifespan = long.MaxValue; // TimeSpan.Ticks (for interlocked)
+        protected internal long Lifespan = long.MaxValue; // TimeSpan.Ticks (for interlocked)
 #pragma warning restore SA1401
 
         /// <summary>
