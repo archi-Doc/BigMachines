@@ -45,7 +45,7 @@ namespace BigMachines
         /// <summary>
         /// Gets a instance of <see cref="MachineGroup{TIdentifier}"/>.
         /// </summary>
-        public MachineGroup<TIdentifier> Group { get; }
+        public IMachineGroup<TIdentifier> Group { get; }
 
         /// <summary>
         /// Gets or sets the identifier of this machine.<br/>

@@ -30,7 +30,7 @@ namespace BigMachines
             this.CommandPost.Open(this.DistributeCommand);
             this.ServiceProvider = serviceProvider;
 
-            var array = new MachineGroup<TIdentifier>[StaticInfo.Count];
+            var array = new IMachineGroup<TIdentifier>[StaticInfo.Count];
             var n = 0;
             foreach (var x in StaticInfo)
             {
@@ -70,7 +70,7 @@ namespace BigMachines
             return group.TryGet<TMachineInterface>(identifier);
         }
 
-        public MachineGroup<TIdentifier> GetGroup<TMachineInterface>()
+        public IMachineGroup<TIdentifier> GetGroup<TMachineInterface>()
             where TMachineInterface : ManMachineInterface
         {
             this.GetMachineGroup(typeof(TMachineInterface), out var group);
@@ -129,7 +129,7 @@ namespace BigMachines
                 SerializeGroup(ref writer, x);
             }
 
-            void SerializeGroup(ref Tinyhand.IO.TinyhandWriter writer, MachineGroup<TIdentifier> group)
+            void SerializeGroup(ref Tinyhand.IO.TinyhandWriter writer, IMachineGroup<TIdentifier> group)
             {
                 foreach (var machine in group.Machines.Where(a => a.IsSerializable))
                 {
@@ -200,13 +200,13 @@ namespace BigMachines
             this.timerInterval = interval;
         }
 
-        internal Dictionary<int, MachineGroup<TIdentifier>> TypeIdToGroup { get; } = new();
+        internal Dictionary<int, IMachineGroup<TIdentifier>> TypeIdToGroup { get; } = new();
 
-        internal Dictionary<Type, MachineGroup<TIdentifier>> MachineTypeToGroup { get; } = new();
+        internal Dictionary<Type, IMachineGroup<TIdentifier>> MachineTypeToGroup { get; } = new();
 
         private void DistributeCommand(CommandPost<TIdentifier>.Command command)
         {
-            if (command.Channel is MachineGroup<TIdentifier> group &&
+            if (command.Channel is IMachineGroup<TIdentifier> group &&
                 group.TryGetMachine(command.Identifier, out var machine))
             {
                 lock (machine)
@@ -219,7 +219,7 @@ namespace BigMachines
             }
         }
 
-        private MachineBase<TIdentifier> CreateMachine(MachineGroup<TIdentifier> group)
+        private MachineBase<TIdentifier> CreateMachine(IMachineGroup<TIdentifier> group)
         {
             MachineBase<TIdentifier>? machine = null;
 
@@ -248,9 +248,9 @@ namespace BigMachines
             return machine;
         }
 
-        private MachineGroup<TIdentifier> CreateGroup(MachineInfo<TIdentifier> info)
+        private IMachineGroup<TIdentifier> CreateGroup(MachineInfo<TIdentifier> info)
         {
-            MachineGroup<TIdentifier>? group = null;
+            IMachineGroup<TIdentifier>? group = null;
 
             if (info.GroupType != null)
             {// Customized group
@@ -403,7 +403,7 @@ StateChangedLoop:
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        private void GetMachineGroup(Type interfaceType, out MachineGroup<TIdentifier> info)
+        private void GetMachineGroup(Type interfaceType, out IMachineGroup<TIdentifier> info)
         {
             if (!this.interfaceTypeToGroup.TryGetValue(interfaceType, out info!))
             {
@@ -411,8 +411,8 @@ StateChangedLoop:
             }
         }
 
-        private ThreadsafeTypeKeyHashTable<MachineGroup<TIdentifier>> interfaceTypeToGroup = new();
-        private MachineGroup<TIdentifier>[] groupArray = Array.Empty<MachineGroup<TIdentifier>>();
+        private ThreadsafeTypeKeyHashTable<IMachineGroup<TIdentifier>> interfaceTypeToGroup = new();
+        private IMachineGroup<TIdentifier>[] groupArray = Array.Empty<IMachineGroup<TIdentifier>>();
         private TimeSpan timerInterval = TimeSpan.FromMilliseconds(500);
 
         #region IDisposable Support

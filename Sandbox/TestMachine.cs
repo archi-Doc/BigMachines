@@ -44,7 +44,7 @@ namespace Sandbox
 
         public class Interface : ManMachineInterface<int, TestMachine.State>
         {// Generated
-            public Interface(MachineGroup<int> group, int identifier)
+            public Interface(IMachineGroup<int> group, int identifier)
                 : base(group, identifier)
             {
             }
