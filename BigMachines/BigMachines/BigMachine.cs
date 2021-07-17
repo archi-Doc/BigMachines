@@ -270,7 +270,13 @@ namespace BigMachines
                         // var exp = Expression.Parameter(typeof(BigMachine<TIdentifier>));
                         // func = Expression.Lambda<Func<BigMachine<TIdentifier>, MachineGroup<TIdentifier>>>(Expression.New(constructorInfo, exp), exp).CompileFast();
 
-                        group = Activator.CreateInstance(info.GroupType, BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic, null, new object[] { this }, null) as MachineGroup<TIdentifier>;
+                        Type type = info.GroupType;
+                        if (type.IsGenericTypeDefinition || type.ContainsGenericParameters)
+                        {// Open generic: CustomGroup<> -> CustomGroup<TIdentifier>
+                            type = type.MakeGenericType(new Type[] { typeof(TIdentifier) });
+                        }
+
+                        group = Activator.CreateInstance(type, BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic, null, new object[] { this }, null) as MachineGroup<TIdentifier>;
                     }
                     catch
                     {

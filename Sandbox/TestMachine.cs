@@ -22,6 +22,15 @@ namespace Sandbox
         }
     }
 
+    public class TestGroup2<TIdentifier> : MachineGroup<TIdentifier>
+        where TIdentifier : notnull
+    {
+        internal TestGroup2(BigMachine<TIdentifier> bigMachine)
+            : base(bigMachine)
+        {
+        }
+    }
+
     [TinyhandObject(UseServiceProvider = true)]
     [StateMachine(0x34)]
     public partial class TestMachine : Machine<int, TestMachine.State>
