@@ -34,6 +34,6 @@ namespace BigMachines
 
         internal bool TryRemoveMachine(TIdentifier identifier);
 
-        internal ICollection<MachineBase<TIdentifier>> Machines { get; }
+        internal IEnumerable<MachineBase<TIdentifier>> Machines { get; }
     }
 }

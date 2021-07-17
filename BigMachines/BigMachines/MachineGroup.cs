@@ -82,7 +82,7 @@ namespace BigMachines
             }
         }
 
-        ICollection<MachineBase<TIdentifier>> IMachineGroup<TIdentifier>.Machines => this.IdentificationToMachine.Values;
+        IEnumerable<MachineBase<TIdentifier>> IMachineGroup<TIdentifier>.Machines => this.IdentificationToMachine.Values;
 
         protected ConcurrentDictionary<TIdentifier, MachineBase<TIdentifier>> IdentificationToMachine { get; } = new();
     }

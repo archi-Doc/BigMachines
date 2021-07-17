@@ -276,7 +276,7 @@ namespace BigMachines
                             type = type.MakeGenericType(new Type[] { typeof(TIdentifier) });
                         }
 
-                        group = Activator.CreateInstance(type, BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic, null, new object[] { this }, null) as MachineGroup<TIdentifier>;
+                        group = Activator.CreateInstance(type, BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic, null, new object[] { this }, null) as IMachineGroup<TIdentifier>;
                     }
                     catch
                     {
