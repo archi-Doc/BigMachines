@@ -16,7 +16,7 @@ namespace BigMachines
         internal protected MachineGroup(BigMachine<TIdentifier> bigMachine)
         {
             this.BigMachine = bigMachine;
-            this.Info = default!; // Must Assign()
+            this.Info = default!; // Must call Assign()
         }
 
         public TMachineInterface? TryGet<TMachineInterface>(TIdentifier identifier)
