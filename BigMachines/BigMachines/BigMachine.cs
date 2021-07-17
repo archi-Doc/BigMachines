@@ -11,7 +11,6 @@ using System.Threading;
 using System.Threading.Tasks;
 using Arc.Threading;
 using BigMachines.Internal;
-using FastExpressionCompiler;
 using Tinyhand;
 
 #pragma warning disable SA1009 // Closing parenthesis should be spaced correctly
@@ -264,19 +263,24 @@ namespace BigMachines
                 {
                     try
                     {
-                        /*var args = new Type[] { typeof(BigMachine<TIdentifier>), };
-                        var constructorInfo = info.GroupType.GetConstructor(BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic, null, CallingConventions.HasThis, args, null);
-                        group = constructorInfo.Invoke(new object[] { this, }) as MachineGroup<TIdentifier>;*/
+                        // var args = new Type[] { typeof(BigMachine<TIdentifier>), };
+                        // var constructorInfo = info.GroupType.GetConstructor(BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic, null, CallingConventions.HasThis, args, null);
+                        // group = constructorInfo.Invoke(new object[] { this, }) as MachineGroup<TIdentifier>;
+
+                        // var exp = Expression.Parameter(typeof(BigMachine<TIdentifier>));
+                        // func = Expression.Lambda<Func<BigMachine<TIdentifier>, MachineGroup<TIdentifier>>>(Expression.New(constructorInfo, exp), exp).CompileFast();
+
                         group = Activator.CreateInstance(info.GroupType, BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic, null, new object[] { this }, null) as MachineGroup<TIdentifier>;
                     }
                     catch
                     {
+                        throw new InvalidOperationException("Constructor with parameter of BigMachine<TIdentifier> is not found.");
                     }
                 }
             }
 
             if (group == null)
-            {
+            {// Use MachineGroup<TIdentifier>
                 if (this.ServiceProvider != null)
                 {
                     group = this.ServiceProvider.GetService(typeof(MachineGroup<TIdentifier>)) as MachineGroup<TIdentifier>;
