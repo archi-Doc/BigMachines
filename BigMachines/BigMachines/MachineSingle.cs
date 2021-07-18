@@ -12,10 +12,10 @@ using System.Threading.Tasks;
 
 namespace BigMachines
 {
-    public class MachineGroupSingle<TIdentifier> : IMachineGroup<TIdentifier>
+    public class MachineSingle<TIdentifier> : IMachineGroup<TIdentifier>
         where TIdentifier : notnull
     {
-        internal protected MachineGroupSingle(BigMachine<TIdentifier> bigMachine)
+        internal protected MachineSingle(BigMachine<TIdentifier> bigMachine)
         {
             this.BigMachine = bigMachine;
             this.Info = default!; // Must call Assign()
@@ -23,7 +23,7 @@ namespace BigMachines
 
         public struct Enumerator : IEnumerable<MachineBase<TIdentifier>>, IEnumerator<MachineBase<TIdentifier>>, IEnumerator
         {
-            internal Enumerator(MachineGroupSingle<TIdentifier> group)
+            internal Enumerator(MachineSingle<TIdentifier> group)
             {
                 this.group = group;
                 this.current = default!;
@@ -57,7 +57,7 @@ namespace BigMachines
 
             IEnumerator IEnumerable.GetEnumerator() => this;
 
-            private MachineGroupSingle<TIdentifier> group;
+            private MachineSingle<TIdentifier> group;
             private MachineBase<TIdentifier> current;
         }
 
