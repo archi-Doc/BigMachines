@@ -1,5 +1,6 @@
 ﻿using System;
 using System.IO;
+using System.Linq;
 using System.Threading.Tasks;
 using Arc.Threading;
 using BigMachines;
@@ -25,7 +26,7 @@ namespace Sandbox
             };
 
             // typeof(TestMachine.Interface) => GroupInfo ( Constructor, TypeId, typeof(TestMachine) )
-            BigMachine<int>.StaticInfo[typeof(TestMachine.Interface)] = new(typeof(TestMachine), 0, x => new TestMachine(x), typeof(TestGroup));
+            BigMachine<int>.StaticInfo[typeof(TestMachine.Interface)] = new(typeof(TestMachine), 0, x => new TestMachine(x), typeof(MachineSingle<>));
 
             /*var container = new Container();
             container.RegisterDelegate<BigMachine<int>>(x => new BigMachine<int>(ThreadCore.Root, container), Reuse.Singleton);
@@ -70,6 +71,10 @@ namespace Sandbox
 
             var res = testGroup.CommandGroupTwoWay<int, int>(4);
             // var result = testMachine?.RunTwoWay(33);
+
+            var identifiers = testGroup.GetIdentifiers().ToArray();
+            // bigMachine.Create<TestMachine.Interface>(4);
+            identifiers = testGroup.GetIdentifiers().ToArray();
 
             // testMachine?.Run();
 

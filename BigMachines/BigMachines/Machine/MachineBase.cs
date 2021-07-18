@@ -45,7 +45,7 @@ namespace BigMachines
         /// <summary>
         /// Gets a instance of <see cref="MachineGroup{TIdentifier}"/>.
         /// </summary>
-        public MachineGroup<TIdentifier> Group { get; }
+        public IMachineGroup<TIdentifier> Group { get; }
 
         /// <summary>
         /// Gets or sets the identifier of this machine.<br/>
@@ -170,6 +170,15 @@ namespace BigMachines
         protected internal virtual bool DistributeCommand(CommandPost<TIdentifier>.Command command)
         {// Implemented in Machine<TIdentifier, TState>
             return true;
+        }
+
+        /// <summary>
+        /// Called when the machine is terminating.<br/>
+        /// Inside lock (machine) statement.
+        /// </summary>
+        protected internal virtual void TerminateInternal()
+        {
+            this.Status = MachineStatus.Terminated;
         }
 
         /// <summary>

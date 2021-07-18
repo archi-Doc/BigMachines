@@ -10,19 +10,19 @@ using System.Threading.Tasks;
 
 namespace BigMachines
 {
-    public class MachineGroup<TIdentifier>
+    public class MachineGroup<TIdentifier> : IMachineGroup<TIdentifier>
         where TIdentifier : notnull
     {
         internal protected MachineGroup(BigMachine<TIdentifier> bigMachine)
         {
             this.BigMachine = bigMachine;
-            this.Info = default!; // Must Assign()
+            this.Info = default!; // Must call Assign()
         }
 
         public TMachineInterface? TryGet<TMachineInterface>(TIdentifier identifier)
             where TMachineInterface : ManMachineInterface
         {
-            if (this.TryGetMachine(identifier, out var machine))
+            if (((IMachineGroup<TIdentifier>)this).TryGetMachine(identifier, out var machine))
             {
                 return machine.InterfaceInstance as TMachineInterface;
             }
@@ -38,28 +38,16 @@ namespace BigMachines
 
         public MachineInfo<TIdentifier> Info { get; private set; }
 
-        internal bool TryGetMachine(TIdentifier identifier, [MaybeNullWhen(false)] out MachineBase<TIdentifier> machine) => this.IdentificationToMachine.TryGetValue(identifier, out machine);
+        public IEnumerable<TIdentifier> GetIdentifiers() => this.IdentificationToMachine.Keys;
 
-        internal bool TryRemoveMachine(TIdentifier identifier)
+        void IMachineGroup<TIdentifier>.Assign(MachineInfo<TIdentifier> info)
         {
-            if (this.IdentificationToMachine.TryRemove(identifier, out var machine))
-            {
-                lock (machine)
-                {
-                    machine.Status = MachineStatus.Terminated;
-                }
-
-                return true;
-            }
-            else
-            {
-                return false;
-            }
+            this.Info = info;
         }
 
-        internal MachineBase<TIdentifier> GetOrAddMachine(TIdentifier identifier, MachineBase<TIdentifier> machine) => this.IdentificationToMachine.GetOrAdd(identifier, machine);
+        MachineBase<TIdentifier> IMachineGroup<TIdentifier>.GetOrAddMachine(TIdentifier identifier, MachineBase<TIdentifier> machine) => this.IdentificationToMachine.GetOrAdd(identifier, machine);
 
-        internal void AddMachine(TIdentifier identifier, MachineBase<TIdentifier> machine)
+        void IMachineGroup<TIdentifier>.AddMachine(TIdentifier identifier, MachineBase<TIdentifier> machine)
         {
             MachineBase<TIdentifier>? machineToRemove = null;
             this.IdentificationToMachine.AddOrUpdate(identifier, x => machine, (i, m) =>
@@ -72,17 +60,31 @@ namespace BigMachines
             {
                 lock (machineToRemove)
                 {
-                    machineToRemove.Status = MachineStatus.Terminated;
+                    machineToRemove.TerminateInternal();
                 }
             }
         }
 
-        internal void Assign(MachineInfo<TIdentifier> info)
+        bool IMachineGroup<TIdentifier>.TryGetMachine(TIdentifier identifier, [MaybeNullWhen(false)] out MachineBase<TIdentifier> machine) => this.IdentificationToMachine.TryGetValue(identifier, out machine);
+
+        bool IMachineGroup<TIdentifier>.TryRemoveMachine(TIdentifier identifier)
         {
-            this.Info = info;
+            if (this.IdentificationToMachine.TryRemove(identifier, out var machine))
+            {
+                lock (machine)
+                {
+                    machine.TerminateInternal();
+                }
+
+                return true;
+            }
+            else
+            {
+                return false;
+            }
         }
 
-        internal ICollection<MachineBase<TIdentifier>> Machines => this.IdentificationToMachine.Values;
+        IEnumerable<MachineBase<TIdentifier>> IMachineGroup<TIdentifier>.GetMachines() => this.IdentificationToMachine.Values;
 
         protected ConcurrentDictionary<TIdentifier, MachineBase<TIdentifier>> IdentificationToMachine { get; } = new();
     }

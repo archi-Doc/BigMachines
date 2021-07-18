@@ -30,7 +30,7 @@ namespace BigMachines
         /// <summary>
         /// Gets <see cref="MachineGroup{TIdentifier}"/> instance.
         /// </summary>
-        public MachineGroup<TIdentifier> Group { get; }
+        public IMachineGroup<TIdentifier> Group { get; }
 
         /// <summary>
         /// Gets the identifier.
@@ -42,7 +42,7 @@ namespace BigMachines
         /// </summary>
         /// <param name="group">The group to which the machine belongs.</param>
         /// <param name="identifier">The identifier.</param>
-        public ManMachineInterface(MachineGroup<TIdentifier> group, TIdentifier identifier)
+        public ManMachineInterface(IMachineGroup<TIdentifier> group, TIdentifier identifier)
         {
             this.BigMachine = group.BigMachine;
             this.Group = group;

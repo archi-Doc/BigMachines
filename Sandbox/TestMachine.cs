@@ -22,6 +22,15 @@ namespace Sandbox
         }
     }
 
+    public class TestGroup2<TIdentifier> : MachineGroup<TIdentifier>
+        where TIdentifier : notnull
+    {
+        internal TestGroup2(BigMachine<TIdentifier> bigMachine)
+            : base(bigMachine)
+        {
+        }
+    }
+
     [TinyhandObject(UseServiceProvider = true)]
     [StateMachine(0x34)]
     public partial class TestMachine : Machine<int, TestMachine.State>
@@ -35,7 +44,7 @@ namespace Sandbox
 
         public class Interface : ManMachineInterface<int, TestMachine.State>
         {// Generated
-            public Interface(MachineGroup<int> group, int identifier)
+            public Interface(IMachineGroup<int> group, int identifier)
                 : base(group, identifier)
             {
             }
