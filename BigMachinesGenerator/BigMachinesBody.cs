@@ -1,0 +1,216 @@
+﻿// Copyright (c) All contributors. All rights reserved. Licensed under the MIT license.
+
+using System;
+using System.Collections.Generic;
+using System.IO;
+using System.Linq;
+using System.Text;
+using Arc.Visceral;
+using Microsoft.CodeAnalysis;
+using Microsoft.CodeAnalysis.Text;
+
+#pragma warning disable RS2008
+#pragma warning disable SA1306 // Field names should begin with lower-case letter
+#pragma warning disable SA1310 // Field names should not contain underscore
+#pragma warning disable SA1401 // Fields should be private
+#pragma warning disable SA1117 // Parameters should be on same line or separate lines
+
+namespace BigMachines.Generator
+{
+    public class BigMachinesBody : VisceralBody<BigMachinesObject>
+    {
+        public static readonly DiagnosticDescriptor Error_NotPartial = new DiagnosticDescriptor(
+            id: "BMG001", title: "Not a partial class", messageFormat: "StateMachine '{0}' is not a partial class",
+            category: "BigMachinesGenerator", DiagnosticSeverity.Error, isEnabledByDefault: true);
+
+        public static readonly DiagnosticDescriptor Error_NotPartialParent = new DiagnosticDescriptor(
+            id: "BMG002", title: "Not a partial class/struct", messageFormat: "Parent object '{0}' is not a partial class/struct",
+            category: "BigMachinesGenerator", DiagnosticSeverity.Error, isEnabledByDefault: true);
+
+        public static readonly DiagnosticDescriptor Error_AttributePropertyError = new DiagnosticDescriptor(
+            id: "BMG003", title: "Attribute property type error", messageFormat: "The argument specified does not match the type of the property",
+            category: "BigMachinesGenerator", DiagnosticSeverity.Error, isEnabledByDefault: true);
+
+        public static readonly DiagnosticDescriptor Error_KeywordUsed = new DiagnosticDescriptor(
+            id: "BMG004", title: "Keyword used", messageFormat: "The type '{0}' already contains a definition for '{1}'",
+            category: "BigMachinesGenerator", DiagnosticSeverity.Error, isEnabledByDefault: true);
+
+        public static readonly DiagnosticDescriptor Error_NotDerived = new DiagnosticDescriptor(
+            id: "BMG005", title: "Not derived", messageFormat: "StateMachine '{0}' must be derived from Machine class",
+            category: "BigMachinesGenerator", DiagnosticSeverity.Error, isEnabledByDefault: true);
+
+        public BigMachinesBody(GeneratorExecutionContext context)
+            : base(context)
+        {
+        }
+
+        internal Dictionary<string, List<BigMachinesObject>> Namespaces = new();
+
+        public void Prepare()
+        {
+            // Configure objects.
+            var array = this.FullNameToObject.ToArray();
+            foreach (var x in array)
+            {
+                x.Value.Configure();
+            }
+
+            this.FlushDiagnostic();
+            if (this.Abort)
+            {
+                return;
+            }
+
+            array = this.FullNameToObject.Where(x => x.Value.ObjectAttribute != null).ToArray();
+            foreach (var x in array)
+            {
+                x.Value.ConfigureRelation();
+            }
+
+            // Check
+            foreach (var x in array)
+            {
+                x.Value.Check();
+            }
+
+            this.FlushDiagnostic();
+            if (this.Abort)
+            {
+                return;
+            }
+        }
+
+        public void Generate(BigMachinesGenerator generator)
+        {
+            ScopingStringBuilder ssb = new();
+            GeneratorInformation info = new();
+            List<BigMachinesObject> rootObjects = new();
+
+            // Namespace
+            foreach (var x in this.Namespaces)
+            {
+                this.GenerateHeader(ssb);
+                var ns = ssb.ScopeNamespace(x.Key);
+
+                rootObjects.AddRange(x.Value); // For loader generation
+
+                var firstFlag = true;
+                foreach (var y in x.Value)
+                {
+                    if (!firstFlag)
+                    {
+                        ssb.AppendLine();
+                    }
+
+                    firstFlag = false;
+
+                    y.Generate(ssb, info); // Primary TinyhandObject
+                }
+
+                var result = ssb.Finalize();
+
+                if (generator.GenerateToFile && generator.TargetFolder != null && Directory.Exists(generator.TargetFolder))
+                {
+                    this.StringToFile(result, Path.Combine(generator.TargetFolder, $"gen.CrossLink.{x.Key}.cs"));
+                }
+                else
+                {
+                    this.Context?.AddSource($"gen.CrossLink.{x.Key}", SourceText.From(result, Encoding.UTF8));
+                }
+            }
+
+            this.GenerateLoader(generator, info, rootObjects);
+
+            this.FlushDiagnostic();
+        }
+
+        private void GenerateHeader(ScopingStringBuilder ssb)
+        {
+            ssb.AddHeader("// <auto-generated/>");
+            ssb.AddUsing("System");
+            ssb.AddUsing("System.Collections.Generic");
+            ssb.AddUsing("System.Diagnostics.CodeAnalysis");
+            ssb.AddUsing("System.Runtime.CompilerServices");
+            ssb.AddUsing("BigMachines");
+            // ssb.AddUsing("Tinyhand");
+
+            ssb.AppendLine("#nullable enable", false);
+            ssb.AppendLine("#pragma warning disable CS1591", false);
+            ssb.AppendLine();
+        }
+
+        private void GenerateLoader(BigMachinesGenerator generator, GeneratorInformation info, List<BigMachinesObject> rootObjects)
+        {
+            var ssb = new ScopingStringBuilder();
+            this.GenerateHeader(ssb);
+
+            using (var scopeFormatter = ssb.ScopeNamespace("BigMachines.Generator"))
+            {
+                using (var methods = ssb.ScopeBrace("static class Generated"))
+                {
+                    info.FinalizeBlock(ssb);
+
+                    BigMachinesObject.GenerateLoader(ssb, info, rootObjects);
+                }
+            }
+
+            this.GenerateInitializer(generator, ssb, info);
+
+            var result = ssb.Finalize();
+
+            if (generator.GenerateToFile && generator.TargetFolder != null && Directory.Exists(generator.TargetFolder))
+            {
+                this.StringToFile(result, Path.Combine(generator.TargetFolder, "gen.BigMachinesGenerated.cs"));
+            }
+            else
+            {
+                this.Context?.AddSource($"gen.BigMachinesLoader", SourceText.From(result, Encoding.UTF8));
+            }
+        }
+
+        private void GenerateInitializer(BigMachinesGenerator generator, ScopingStringBuilder ssb, GeneratorInformation info)
+        {
+            // Namespace
+            var ns = "BigMachines";
+            var assemblyId = string.Empty; // Assembly ID
+            if (!string.IsNullOrEmpty(generator.CustomNamespace))
+            {// Custom namespace.
+                ns = generator.CustomNamespace;
+            }
+            else if (!string.IsNullOrEmpty(generator.AssemblyName) &&
+                generator.OutputKind != OutputKind.ConsoleApplication &&
+                generator.OutputKind != OutputKind.WindowsApplication)
+            {// To avoid namespace conflicts, use assembly name for namespace.
+                ns = generator.AssemblyName;
+            }
+            else
+            {// Other (Apps)
+                assemblyId = "_" + generator.AssemblyId.ToString("x");
+            }
+
+            info.ModuleInitializerClass.Add("BigMachines.Generator.Generated");
+
+            ssb.AppendLine();
+            using (var scopeCrossLink = ssb.ScopeNamespace(ns!))
+            using (var scopeClass = ssb.ScopeBrace("public static class BigMachinesModule" + assemblyId))
+            {
+                ssb.AppendLine("private static bool Initialized;");
+                ssb.AppendLine();
+                ssb.AppendLine("[ModuleInitializer]");
+
+                using (var scopeMethod = ssb.ScopeBrace("public static void Initialize()"))
+                {
+                    ssb.AppendLine("if (Initialized) return;");
+                    ssb.AppendLine("Initialized = true;");
+                    ssb.AppendLine();
+
+                    foreach (var x in info.ModuleInitializerClass)
+                    {
+                        ssb.Append(x, true);
+                        ssb.AppendLine(".__gen__bm();", false);
+                    }
+                }
+            }
+        }
+    }
+}

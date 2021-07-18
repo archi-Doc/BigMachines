@@ -1,11 +1,11 @@
 ﻿// Copyright (c) All contributors. All rights reserved. Licensed under the MIT license.
 
 using System;
-using Tinyhand;
+using BigMachines;
 
 namespace Sandbox
 {
-    [TinyhandGeneratorOption(AttachDebugger = false, GenerateToFile = false)]
+    [BigMachinesGeneratorOption(AttachDebugger = false, GenerateToFile = true)]
     internal class GeneratorOption
     {
     }

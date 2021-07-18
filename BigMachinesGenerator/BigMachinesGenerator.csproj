@@ -1,27 +1,35 @@
-﻿<Project Sdk="Microsoft.NET.Sdk">
+<Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
-    <TargetFramework>net5.0</TargetFramework>
+    <TargetFramework>netstandard2.0</TargetFramework>
     <GenerateDocumentationFile>true</GenerateDocumentationFile>
   </PropertyGroup>
 
   <PropertyGroup>
-    <PackageId>BigMachines</PackageId>
+    <PackageId>BigMachinesGenerator</PackageId>
     <Authors>archi-Doc</Authors>
-    <Product>BigMachines</Product>
-    <Description>BigMachines is State Machine library for .NET</Description>
+    <Product>BigMachinesGenerator</Product>
+    <Description>Source generator for BigMachines</Description>
     <PackageLicenseExpression>MIT</PackageLicenseExpression>
     <PackageProjectUrl>https://github.com/archi-Doc/BigMachines</PackageProjectUrl>
     <RepositoryUrl>https://github.com/archi-Doc/BigMachines</RepositoryUrl>
   </PropertyGroup>
 
   <ItemGroup>
+    <None Remove="bin\Release\netstandard2.0\\BigMachinesGenerator.dll" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <None Include="$(OutputPath)\$(AssemblyName).dll" Pack="true" PackagePath="analyzers/dotnet/cs" Visible="false" />
+  </ItemGroup>
+
+  <ItemGroup>
     <AdditionalFiles Include="..\stylecop.json" Link="stylecop.json" />
   </ItemGroup>
 
   <ItemGroup>
-    <PackageReference Include="Arc.Threading" Version="0.2.2" />
-    <PackageReference Include="Tinyhand" Version="0.19.1" />
+    <PackageReference Include="Microsoft.CodeAnalysis.Analyzers" Version="3.3.2" PrivateAssets="all" />
+    <PackageReference Include="Microsoft.CodeAnalysis.CSharp" Version="3.10.0" PrivateAssets="all" />
     <PackageReference Include="StyleCop.Analyzers" Version="1.1.118">
       <PrivateAssets>all</PrivateAssets>
       <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>

@@ -11,7 +11,7 @@ namespace BigMachines
     /// Class must be a partial type.
     /// </summary>
     [AttributeUsage(AttributeTargets.Class, AllowMultiple = false, Inherited = true)]
-    public class StateMachineAttribute : Attribute
+    public sealed class StateMachineAttribute : Attribute
     {
         /// <summary>
         /// Initializes a new instance of the <see cref="StateMachineAttribute"/> class.
@@ -37,7 +37,7 @@ namespace BigMachines
     /// </summary>
 #pragma warning restore SA1629
     [AttributeUsage(AttributeTargets.Method, AllowMultiple = false, Inherited = true)]
-    public class StateMethodAttribute : Attribute
+    public sealed class StateMethodAttribute : Attribute
     {
         /// <summary>
         /// Initializes a new instance of the <see cref="StateMethodAttribute"/> class.
@@ -45,6 +45,11 @@ namespace BigMachines
         public StateMethodAttribute()
         {
         }
+
+        /// <summary>
+        /// Gets a value indicating whether to check for the state change.
+        /// </summary>
+        public bool CheckStateChange { get; }
     }
 
     /// <summary>
@@ -151,5 +156,19 @@ namespace BigMachines
         /// Gets a message.
         /// </summary>
         public object? Message { get; }
+    }
+
+    [AttributeUsage(AttributeTargets.Class | AttributeTargets.Struct, AllowMultiple = false, Inherited = true)]
+    public sealed class BigMachinesGeneratorOptionAttribute : Attribute
+    {
+        public bool AttachDebugger { get; set; } = false;
+
+        public bool GenerateToFile { get; set; } = false;
+
+        public string? CustomNamespace { get; set; }
+
+        public BigMachinesGeneratorOptionAttribute()
+        {
+        }
     }
 }
