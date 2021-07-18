@@ -173,6 +173,15 @@ namespace BigMachines
         }
 
         /// <summary>
+        /// Called when the machine is terminating.<br/>
+        /// Inside lock (machine) statement.
+        /// </summary>
+        protected internal virtual void TerminateInternal()
+        {
+            this.Status = MachineStatus.Terminated;
+        }
+
+        /// <summary>
         /// Set the timeout of the machine.<br/>
         /// The time decreases while the program is running, and the machine will run when it reaches zero.
         /// </summary>

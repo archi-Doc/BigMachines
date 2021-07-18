@@ -16,6 +16,8 @@ namespace BigMachines
         public TMachineInterface? TryGet<TMachineInterface>(TIdentifier identifier)
             where TMachineInterface : ManMachineInterface;
 
+        public IEnumerable<TIdentifier> GetIdentifiers();
+
         public void CommandGroup<TMessage>(TMessage message);
 
         public KeyValuePair<TIdentifier, TResponse>[] CommandGroupTwoWay<TMessage, TResponse>(TMessage message, int millisecondTimeout = 100);

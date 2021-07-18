@@ -10,6 +10,9 @@ using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
 
+#pragma warning disable SA1009 // Closing parenthesis should be spaced correctly
+#pragma warning disable SA1108 // Block statements should not contain embedded comments
+
 namespace BigMachines
 {
     public class MachineSingle<TIdentifier> : IMachineGroup<TIdentifier>
@@ -21,44 +24,48 @@ namespace BigMachines
             this.Info = default!; // Must call Assign()
         }
 
-        public struct Enumerator : IEnumerable<MachineBase<TIdentifier>>, IEnumerator<MachineBase<TIdentifier>>, IEnumerator
+        public struct Enumerator2 : IEnumerable<TIdentifier>
+        {
+            internal Enumerator2(MachineSingle<TIdentifier> group)
+            {
+                this.group = group;
+            }
+
+            public IEnumerator<TIdentifier> GetEnumerator()
+            {
+                var m = Volatile.Read(ref this.group.machine1);
+                if (m != null)
+                {
+                    yield return m.Identifier;
+                }
+            }
+
+            IEnumerator IEnumerable.GetEnumerator() => this.GetEnumerator();
+
+            private MachineSingle<TIdentifier> group;
+        }
+
+        public IEnumerable<TIdentifier> GetIdentifiers() => new Enumerator2(this);
+
+        public struct Enumerator : IEnumerable<MachineBase<TIdentifier>>
         {
             internal Enumerator(MachineSingle<TIdentifier> group)
             {
                 this.group = group;
-                this.current = default!;
             }
 
-            public MachineBase<TIdentifier> Current => this.current;
-
-            object System.Collections.IEnumerator.Current => this.current;
-
-            public void Dispose()
+            public IEnumerator<MachineBase<TIdentifier>> GetEnumerator()
             {
-            }
-
-            public IEnumerator<MachineBase<TIdentifier>> GetEnumerator() => this;
-
-            public bool MoveNext()
-            {
-                if (this.current == null)
+                var m = Volatile.Read(ref this.group.machine1);
+                if (m != null)
                 {
-                    this.current = Volatile.Read(ref this.group.machine1)!;
-                    return this.current != null;
+                    yield return m;
                 }
-
-                return false;
             }
 
-            public void Reset()
-            {
-                this.current = default!;
-            }
-
-            IEnumerator IEnumerable.GetEnumerator() => this;
+            IEnumerator IEnumerable.GetEnumerator() => this.GetEnumerator();
 
             private MachineSingle<TIdentifier> group;
-            private MachineBase<TIdentifier> current;
         }
 
         IEnumerable<MachineBase<TIdentifier>> IMachineGroup<TIdentifier>.Machines => new Enumerator(this);
@@ -95,7 +102,21 @@ namespace BigMachines
             where TMachineInterface : ManMachineInterface
         {
             var m = Volatile.Read(ref this.machine1);
-            if (m != null && Comparer<TIdentifier>.Default.Compare(m.Identifier, identifier) == 0)
+            if (m != null) // && Comparer<TIdentifier>.Default.Compare(m.Identifier, identifier) == 0)
+            {
+                return m.InterfaceInstance as TMachineInterface;
+            }
+            else
+            {
+                return null;
+            }
+        }
+
+        public TMachineInterface? TryGet<TMachineInterface>()
+            where TMachineInterface : ManMachineInterface
+        {
+            var m = Volatile.Read(ref this.machine1);
+            if (m != null)
             {
                 return m.InterfaceInstance as TMachineInterface;
             }
@@ -107,7 +128,14 @@ namespace BigMachines
 
         void IMachineGroup<TIdentifier>.AddMachine(TIdentifier identifier, MachineBase<TIdentifier> machine)
         {
-            Volatile.Write(ref this.machine1, machine);
+            var m = Interlocked.Exchange(ref this.machine1, machine);
+            if (m != null)
+            {
+                lock (m)
+                {
+                    m.TerminateInternal();
+                }
+            }
         }
 
         void IMachineGroup<TIdentifier>.Assign(MachineInfo<TIdentifier> info)
@@ -132,7 +160,7 @@ namespace BigMachines
         bool IMachineGroup<TIdentifier>.TryGetMachine(TIdentifier identifier, [MaybeNullWhen(false)] out MachineBase<TIdentifier> machine)
         {
             var m = Volatile.Read(ref this.machine1);
-            if (m != null && Comparer<TIdentifier>.Default.Compare(m.Identifier, identifier) == 0)
+            if (m != null) // && EqualityComparer<TIdentifier>.Default.Equals(m.Identifier, identifier))
             {
                 machine = m;
                 return true;
@@ -147,7 +175,7 @@ namespace BigMachines
         bool IMachineGroup<TIdentifier>.TryRemoveMachine(TIdentifier identifier)
         {
             var m = Volatile.Read(ref this.machine1);
-            if (m != null && Comparer<TIdentifier>.Default.Compare(m.Identifier, identifier) == 0)
+            if (m != null && EqualityComparer<TIdentifier>.Default.Equals(m.Identifier, identifier))
             {
                 Volatile.Write(ref this.machine1, null);
                 return true;

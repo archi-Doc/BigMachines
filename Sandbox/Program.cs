@@ -1,5 +1,6 @@
 ﻿using System;
 using System.IO;
+using System.Linq;
 using System.Threading.Tasks;
 using Arc.Threading;
 using BigMachines;
@@ -70,6 +71,10 @@ namespace Sandbox
 
             var res = testGroup.CommandGroupTwoWay<int, int>(4);
             // var result = testMachine?.RunTwoWay(33);
+
+            var identifiers = testGroup.GetIdentifiers().ToArray();
+            // bigMachine.Create<TestMachine.Interface>(4);
+            identifiers = testGroup.GetIdentifiers().ToArray();
 
             // testMachine?.Run();
 

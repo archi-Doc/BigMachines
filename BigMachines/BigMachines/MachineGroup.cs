@@ -38,6 +38,8 @@ namespace BigMachines
 
         public MachineInfo<TIdentifier> Info { get; private set; }
 
+        public IEnumerable<TIdentifier> GetIdentifiers() => this.IdentificationToMachine.Keys;
+
         void IMachineGroup<TIdentifier>.Assign(MachineInfo<TIdentifier> info)
         {
             this.Info = info;
@@ -58,7 +60,7 @@ namespace BigMachines
             {
                 lock (machineToRemove)
                 {
-                    machineToRemove.Status = MachineStatus.Terminated;
+                    machineToRemove.TerminateInternal();
                 }
             }
         }
@@ -71,7 +73,7 @@ namespace BigMachines
             {
                 lock (machine)
                 {
-                    machine.Status = MachineStatus.Terminated;
+                    machine.TerminateInternal();
                 }
 
                 return true;
