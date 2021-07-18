@@ -131,7 +131,7 @@ namespace BigMachines
 
             void SerializeGroup(ref Tinyhand.IO.TinyhandWriter writer, IMachineGroup<TIdentifier> group)
             {
-                foreach (var machine in group.Machines.Where(a => a.IsSerializable))
+                foreach (var machine in group.GetMachines().Where(a => a.IsSerializable))
                 {
                     if (machine is ITinyhandSerialize serializer)
                     {
@@ -328,7 +328,7 @@ namespace BigMachines
 
                 foreach (var x in this.groupArray)
                 {
-                    foreach (var y in x.Machines)
+                    foreach (var y in x.GetMachines())
                     {
                         Interlocked.Add(ref y.Timeout, -elapsed.Ticks);
                         Interlocked.Add(ref y.Lifespan, -elapsed.Ticks);

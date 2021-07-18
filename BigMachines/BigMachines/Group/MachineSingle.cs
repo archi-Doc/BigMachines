@@ -68,7 +68,7 @@ namespace BigMachines
             private MachineSingle<TIdentifier> group;
         }
 
-        IEnumerable<MachineBase<TIdentifier>> IMachineGroup<TIdentifier>.Machines => new Enumerator(this);
+        IEnumerable<MachineBase<TIdentifier>> IMachineGroup<TIdentifier>.GetMachines() => new Enumerator(this);
 
         public void CommandGroup<TMessage>(TMessage message)
         {
