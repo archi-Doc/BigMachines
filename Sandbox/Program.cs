@@ -62,6 +62,10 @@ namespace Sandbox
                 }
             }
 
+            var state = testMachine.GetCurrentState();
+            // testMachine.ChangeStateTwoWay(TestMachine.State.ErrorState);
+            state = testMachine.GetCurrentState();
+
             var testGroup = bigMachine.GetGroup<TestMachine.Interface>();
 
             var bb = bigMachine.Serialize();

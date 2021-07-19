@@ -60,7 +60,7 @@ namespace BigMachines
             {
                 if (machine is Machine<TIdentifier, TState> m && m.Status != MachineStatus.Terminated)
                 {
-                    return m.CurrentState;
+                    return System.Runtime.CompilerServices.Unsafe.As<int, TState>(ref m.CurrentState);
                 }
             }
 

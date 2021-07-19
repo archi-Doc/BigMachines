@@ -40,7 +40,7 @@ namespace Sandbox
         }
     }
 
-    [StateMachine(0x33)]
+    [StateMachine(0x34)]
     public partial class TestMachine3 : TestMachine2<TestMachine3.State>
     {
         public TestMachine3(BigMachine<int> bigMachine)
@@ -50,7 +50,7 @@ namespace Sandbox
     }
 
     [TinyhandObject(UseServiceProvider = true)]
-    [StateMachine(0x34)]
+    [StateMachine(0x35)]
     public partial class TestMachine : Machine<int, TestMachine.State>
     {
         /*public enum State
@@ -91,12 +91,23 @@ namespace Sandbox
         [StateMethod(CheckStateChange = true)]
         protected StateResult ErrorState(StateParameter parameter)
         {
+            if (parameter.RunType == RunType.CanEnter || parameter.RunType == RunType.CanExit)
+            {
+                return StateResult.Continue;
+            }
+
+            this.ChangeStateInternal(State.Initial);
             return StateResult.Continue;
         }
 
         [StateMethod(CheckStateChange = true)]
         protected StateResult Initial(StateParameter parameter)
         {// lock(this)
+            if (parameter.RunType == RunType.CanEnter || parameter.RunType == RunType.CanExit)
+            {
+                return StateResult.Continue;
+            }
+
             Console.WriteLine("TestMachine(Initial)");
 
             this.SetTimeout(TimeSpan.FromSeconds(0.5));

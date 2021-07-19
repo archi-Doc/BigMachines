@@ -471,7 +471,8 @@ namespace BigMachines.Generator
 
             using (var scope = ssb.ScopeBrace("protected override StateResult RunInternal(StateParameter parameter)"))
             {
-                ssb.AppendLine("return this.CurrentState switch");
+                ssb.AppendLine($"var state = Unsafe.As<int, {this.StateName}>(ref this.CurrentState);");
+                ssb.AppendLine("return state switch");
                 ssb.AppendLine("{");
                 ssb.IncrementIndent();
 
@@ -490,6 +491,63 @@ namespace BigMachines.Generator
 
         internal void Generate_ChangeStateInternal(ScopingStringBuilder ssb, GeneratorInformation info)
         {
+            if (this.MachineObject == null || this.StateMethodList == null)
+            {
+                return;
+            }
+
+            using (var scope = ssb.ScopeBrace("protected override bool ChangeStateInternal(State state)"))
+            {
+                ssb.AppendLine($"var current = Unsafe.As<int, {this.StateName}>(ref this.CurrentState);");
+                using (var scopeTerminated = ssb.ScopeBrace("if (this.Status == MachineStatus.Terminated)"))
+                {
+                    ssb.AppendLine("return false;");
+                }
+
+                using (var scopeElse = ssb.ScopeBrace("else if (current == state)"))
+                {
+                    ssb.AppendLine("return true;");
+                }
+
+                ssb.AppendLine();
+                ssb.AppendLine("bool canExit = current switch");
+                ssb.AppendLine("{");
+                ssb.IncrementIndent();
+                foreach (var x in this.StateMethodList.Where(a => a.CheckStateChange))
+                {
+                    ssb.AppendLine($"State.{x.Name} => this.{x.Name}(new StateParameter(RunType.CanExit)) != StateResult.Deny,");
+                }
+
+                ssb.AppendLine("_ => true,");
+                ssb.DecrementIndent();
+                ssb.AppendLine("};");
+                ssb.AppendLine();
+
+                ssb.AppendLine("bool canEnter = state switch");
+                ssb.AppendLine("{");
+                ssb.IncrementIndent();
+                foreach (var x in this.StateMethodList.Where(a => a.CheckStateChange))
+                {
+                    ssb.AppendLine($"State.{x.Name} => this.{x.Name}(new StateParameter(RunType.CanEnter)) != StateResult.Deny,");
+                }
+
+                ssb.AppendLine("_ => true,");
+                ssb.DecrementIndent();
+                ssb.AppendLine("};");
+                ssb.AppendLine();
+
+                using (var scope2 = ssb.ScopeBrace("if (canExit && canEnter)"))
+                {
+                    ssb.AppendLine($"this.CurrentState = Unsafe.As<{this.StateName}, int>(ref state);");
+                    ssb.AppendLine("this.StateChanged = true;");
+                    ssb.AppendLine("return true;");
+                }
+
+                using (var scope2 = ssb.ScopeBrace("else"))
+                {
+                    ssb.AppendLine("return false;");
+                }
+            }
         }
     }
 }

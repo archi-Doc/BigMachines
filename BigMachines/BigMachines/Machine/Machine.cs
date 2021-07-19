@@ -34,11 +34,13 @@ namespace BigMachines
             this.CurrentState = default!;
         }
 
+#pragma warning disable SA1401
         /// <summary>
         /// Gets or sets the current state of this machine.
         /// </summary>
         [Key(0)]
-        public TState CurrentState { get; protected set; }
+        protected internal int CurrentState;
+#pragma warning restore SA1401
 
         /// <summary>
         /// Generated method which is called when the state changes.
