@@ -31,24 +31,42 @@ namespace Sandbox
         }
     }
 
+    public partial class TestMachine2<TState> : Machine<int, TState>
+        where TState : struct
+    {
+        public TestMachine2(BigMachine<int> bigMachine)
+            : base(bigMachine)
+        {// Custom
+        }
+    }
+
+    [StateMachine(0x33)]
+    public partial class TestMachine3 : TestMachine2<TestMachine.State>
+    {
+        public TestMachine3(BigMachine<int> bigMachine)
+            : base(bigMachine)
+        {// Custom
+        }
+    }
+
     [TinyhandObject(UseServiceProvider = true)]
     [StateMachine(0x34)]
     public partial class TestMachine : Machine<int, TestMachine.State>
     {
-        public enum State
+        /*public enum State
         {// Generated
             Initial,
             First,
             Last,
-        }
+        }*/
 
-        public class Interface : ManMachineInterface<int, TestMachine.State>
+        /*public class Interface : ManMachineInterface<int, TestMachine.State>
         {// Generated
             public Interface(IMachineGroup<int> group, int identifier)
                 : base(group, identifier)
             {
             }
-        }
+        }*/
 
         public TestMachine(BigMachine<int> bigMachine)
             : base(bigMachine)
@@ -58,19 +76,25 @@ namespace Sandbox
             this.SetLifespan(TimeSpan.FromSeconds(55));
         }
 
-        protected override void CreateInterface(int identifier)
+        /*protected override void CreateInterface(int identifier)
         {// Generated
             if (this.InterfaceInstance == null)
             {
                 this.Identifier = identifier;
                 this.InterfaceInstance = new Interface(this.Group, identifier);
             }
-        }
+        }*/
 
         [Key(10)]
         public int Dummy { get; set; }
 
-        [StateMethod]
+        [StateMethod(CheckStateChange = true)]
+        protected StateResult ErrorState(StateParameter parameter)
+        {
+            return StateResult.Continue;
+        }
+
+        [StateMethod(CheckStateChange = true)]
         protected StateResult Initial(StateParameter parameter)
         {// lock(this)
             Console.WriteLine("TestMachine(Initial)");
@@ -108,7 +132,7 @@ namespace Sandbox
             }
         }
 
-        protected override StateResult RunInternal(StateParameter parameter)
+        /*protected override StateResult RunInternal(StateParameter parameter)
         {// Generated
             return this.CurrentState switch
             {
@@ -117,9 +141,9 @@ namespace Sandbox
                 // State.Last => this.Last(),
                 _ => StateResult.Terminate,
             };
-        }
+        }*/
 
-        protected override bool ChangeStateInternal(State state)
+        /*protected override bool ChangeStateInternal(State state)
         {// Generated
             if (this.Status == MachineStatus.Terminated)
             {
@@ -152,6 +176,6 @@ namespace Sandbox
             {
                 return false;
             }
-        }
+        }*/
     }
 }

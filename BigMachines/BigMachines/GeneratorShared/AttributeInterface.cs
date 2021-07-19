@@ -47,9 +47,9 @@ namespace BigMachines
         }
 
         /// <summary>
-        /// Gets a value indicating whether to check for the state change.
+        /// Gets or sets a value indicating whether to check for the state change.
         /// </summary>
-        public bool CheckStateChange { get; }
+        public bool CheckStateChange { get; set; }
     }
 
     /// <summary>

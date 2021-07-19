@@ -5,7 +5,7 @@ using BigMachines;
 
 namespace Sandbox
 {
-    [BigMachinesGeneratorOption(AttachDebugger = false, GenerateToFile = true)]
+    [BigMachinesGeneratorOption(AttachDebugger = false, GenerateToFile = false)]
     internal class GeneratorOption
     {
     }

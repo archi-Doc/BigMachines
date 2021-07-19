@@ -29,3 +29,24 @@ Work in progress
 
 
 
+
+
+## Machine Class
+
+### Reserved keywords
+
+These keywords in `Machine` class are reserved for source generator.
+
+- `Interface`: Nested class for operating a machine.
+
+- `State`: enum type which represents the state of a machine.
+- `CreateInterface()`: Method for creating an interface.
+- `RunInternal()`: 
+- `ChangeStateInternal()`: 
+
+
+
+
+
+
+

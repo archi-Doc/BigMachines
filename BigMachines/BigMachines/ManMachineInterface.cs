@@ -13,7 +13,7 @@ namespace BigMachines
     }
 
     /// <summary>
-    /// Class for operating a machie.<br/>
+    /// Class for operating a machine.<br/>
     /// To achieve lock-free operation, you need to use <see cref="ManMachineInterface{TIdentifier, TState}"/> instead of using machines directly.
     /// </summary>
     /// <typeparam name="TIdentifier">The type of an identifier.</typeparam>

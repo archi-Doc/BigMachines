@@ -2398,6 +2398,23 @@ namespace Arc.Visceral
             }
         }
 
+        public T? Method_ReturnObject
+        {
+            get
+            {
+                if (this.symbol is IMethodSymbol ms)
+                {
+                    return this.Body.Add(ms.ReturnType);
+                }
+                else if (this.memberInfo is MethodInfo mi)
+                {
+                    return this.Body.Add(mi.ReturnType);
+                }
+
+                return null;
+            }
+        }
+
         public T? Array_Element
         {
             get

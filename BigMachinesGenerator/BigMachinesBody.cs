@@ -19,6 +19,15 @@ namespace BigMachines.Generator
 {
     public class BigMachinesBody : VisceralBody<BigMachinesObject>
     {
+        public const string StateIdentifier = "State";
+        public const string InterfaceIdentifier = "Interface";
+        public const string CreateInterfaceIdentifier = "CreateInterface";
+        public const string RunInternalIdentifier = "RunInternal";
+        public const string ChangeStateInternal = "ChangeStateInternal";
+
+        public const string StateResultFullName = "BigMachines.StateResult";
+        public const string StateParameterFullName = "BigMachines.StateParameter";
+
         public static readonly DiagnosticDescriptor Error_NotPartial = new DiagnosticDescriptor(
             id: "BMG001", title: "Not a partial class", messageFormat: "StateMachine '{0}' is not a partial class",
             category: "BigMachinesGenerator", DiagnosticSeverity.Error, isEnabledByDefault: true);
@@ -39,10 +48,24 @@ namespace BigMachines.Generator
             id: "BMG005", title: "Not derived", messageFormat: "StateMachine '{0}' must be derived from Machine class",
             category: "BigMachinesGenerator", DiagnosticSeverity.Error, isEnabledByDefault: true);
 
+        public static readonly DiagnosticDescriptor Error_MethodFormat = new DiagnosticDescriptor(
+            id: "BMG006", title: "Invalid method", messageFormat: "State method must be in the format of 'protected StateResult TestMethod(StateParameter parameter)'",
+            category: "BigMachinesGenerator", DiagnosticSeverity.Error, isEnabledByDefault: true);
+
+        public static readonly DiagnosticDescriptor Error_OpenGenericClass = new DiagnosticDescriptor(
+            id: "BMG007", title: "Not closed generic", messageFormat: "StateMachine '{0}' is not a closed generic class",
+            category: "BigMachinesGenerator", DiagnosticSeverity.Error, isEnabledByDefault: true);
+
+        public static readonly DiagnosticDescriptor Error_DuplicateTypeId = new DiagnosticDescriptor(
+            id: "BMG008", title: "Duplicate TypeId", messageFormat: "TypeId '{0}' is duplicated",
+            category: "BigMachinesGenerator", DiagnosticSeverity.Error, isEnabledByDefault: true);
+
         public BigMachinesBody(GeneratorExecutionContext context)
             : base(context)
         {
         }
+
+        internal Dictionary<int, BigMachinesObject> Machines = new();
 
         internal Dictionary<string, List<BigMachinesObject>> Namespaces = new();
 
@@ -111,11 +134,11 @@ namespace BigMachines.Generator
 
                 if (generator.GenerateToFile && generator.TargetFolder != null && Directory.Exists(generator.TargetFolder))
                 {
-                    this.StringToFile(result, Path.Combine(generator.TargetFolder, $"gen.CrossLink.{x.Key}.cs"));
+                    this.StringToFile(result, Path.Combine(generator.TargetFolder, $"gen.BigMachines.{x.Key}.cs"));
                 }
                 else
                 {
-                    this.Context?.AddSource($"gen.CrossLink.{x.Key}", SourceText.From(result, Encoding.UTF8));
+                    this.Context?.AddSource($"gen.BigMachines.{x.Key}", SourceText.From(result, Encoding.UTF8));
                 }
             }
 

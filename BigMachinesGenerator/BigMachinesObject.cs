@@ -47,6 +47,14 @@ namespace BigMachines.Generator
 
         public StateMachineAttributeMock? ObjectAttribute { get; private set; }
 
+        public BigMachinesObject? MachineObject { get; private set; }
+
+        public BigMachinesObject? IdentifierObject { get; private set; }
+
+        public string StateName { get; private set; } = string.Empty;
+
+        public List<StateMethod>? StateMethodList { get; private set; }
+
         public bool IsAbstractOrInterface => this.Kind == VisceralObjectKind.Interface || (this.symbol is INamedTypeSymbol nts && nts.IsAbstract);
 
         public List<BigMachinesObject>? Children { get; private set; } // The opposite of ContainingObject
@@ -147,7 +155,7 @@ namespace BigMachines.Generator
         {
             // Used keywords
             this.Identifier = new VisceralIdentifier("__gen_bm_identifier__");
-            foreach (var x in this.AllMembers)
+            foreach (var x in this.AllMembers.Where(a => a.ContainingObject == this))
             {
                 this.Identifier.Add(x.SimpleName);
             }
@@ -225,6 +233,12 @@ namespace BigMachines.Generator
                 this.ObjectFlag |= BigMachinesObjectFlag.CanCreateInstance;
             }
 
+            if (this.Generics_Kind == VisceralGenericsKind.OpenGeneric)
+            {
+                this.Body.ReportDiagnostic(BigMachinesBody.Error_OpenGenericClass, this.Location, this.FullName);
+                return;
+            }
+
             // if (this.ObjectFlag.HasFlag(BigMachinesObjectFlag.CanCreateInstance))
             {// Type which can create an instance
                 // partial class required.
@@ -243,6 +257,66 @@ namespace BigMachines.Generator
                     }
 
                     parent = parent.ContainingObject;
+                }
+            }
+
+            var id = this.ObjectAttribute!.MachineTypeId;
+            if (this.Body.Machines.ContainsKey(id))
+            {
+                this.Body.ReportDiagnostic(BigMachinesBody.Error_DuplicateTypeId, this.Location, id);
+            }
+            else
+            {
+                this.Body.Machines.Add(id, this);
+            }
+
+            // Machine<TIdentifier, TState>
+            var machineObject = this.BaseObject;
+            while (machineObject != null)
+            {
+                if (machineObject.OriginalDefinition?.FullName == "BigMachines.Machine<TIdentifier, TState>")
+                {
+                    break;
+                }
+
+                machineObject = machineObject.BaseObject;
+            }
+
+            if (machineObject == null)
+            {
+                this.Body.ReportDiagnostic(BigMachinesBody.Error_NotDerived, this.Location);
+                return;
+            }
+            else
+            {
+                if (machineObject.Generics_Arguments.Length == 2)
+                {
+                    var identifier = machineObject.Generics_Arguments[0];
+                    var state = machineObject.Generics_Arguments[1];
+
+                    this.MachineObject = machineObject;
+                    this.IdentifierObject = machineObject.Generics_Arguments[0];
+                    // this.StateName = machineObject.Generics_Arguments[1];
+                    this.StateName = this.FullName + ".State";
+                }
+            }
+
+            this.CheckKeyword(BigMachinesBody.StateIdentifier, this.Location);
+            this.CheckKeyword(BigMachinesBody.InterfaceIdentifier, this.Location);
+            this.CheckKeyword(BigMachinesBody.CreateInterfaceIdentifier, this.Location);
+            this.CheckKeyword(BigMachinesBody.RunInternalIdentifier, this.Location);
+            this.CheckKeyword(BigMachinesBody.ChangeStateInternal, this.Location);
+
+            this.StateMethodList = new();
+            foreach (var x in this.GetMembers(VisceralTarget.Method))
+            {
+                if (x.AllAttributes.FirstOrDefault(x => x.FullName == StateMethodAttributeMock.FullName) is { } attribute)
+                {
+                    var stateMethod = StateMethod.Create(x, attribute);
+                    if (stateMethod != null)
+                    {// Add
+                        this.StateMethodList.Add(stateMethod);
+                    }
                 }
             }
         }
@@ -323,7 +397,99 @@ namespace BigMachines.Generator
 
         internal void Generate2(ScopingStringBuilder ssb, GeneratorInformation info)
         {
+            this.Generate_State(ssb, info);
+            this.Generate_Interface(ssb, info);
+            this.Generate_CreateInterface(ssb, info);
+            this.Generate_RunInternal(ssb, info);
+            this.Generate_ChangeStateInternal(ssb, info);
+
             return;
+        }
+
+        internal void Generate_State(ScopingStringBuilder ssb, GeneratorInformation info)
+        {
+            if (this.StateMethodList == null)
+            {
+                return;
+            }
+
+            using (var scope = ssb.ScopeBrace("public enum State"))
+            {
+                foreach (var x in this.StateMethodList)
+                {
+                    ssb.AppendLine($"{x.Name},");
+                }
+            }
+
+            ssb.AppendLine();
+        }
+
+        internal void Generate_Interface(ScopingStringBuilder ssb, GeneratorInformation info)
+        {
+            if (this.MachineObject == null)
+            {
+                return;
+            }
+
+            var identifierName = this.IdentifierObject!.FullName;
+            using (var scope = ssb.ScopeBrace($"public class Interface : ManMachineInterface<{identifierName}, {this.StateName}>"))
+            {
+                using (var scope2 = ssb.ScopeBrace($"public Interface(IMachineGroup<{identifierName}> group, {identifierName} identifier) : base(group, identifier)"))
+                {
+                }
+            }
+
+            ssb.AppendLine();
+        }
+
+        internal void Generate_CreateInterface(ScopingStringBuilder ssb, GeneratorInformation info)
+        {
+            if (this.MachineObject == null)
+            {
+                return;
+            }
+
+            var identifierName = this.IdentifierObject!.FullName;
+            using (var scope = ssb.ScopeBrace($"protected override void CreateInterface({identifierName} identifier)"))
+            {
+                using (var scope2 = ssb.ScopeBrace("if (this.InterfaceInstance == null)"))
+                {
+                    ssb.AppendLine("this.Identifier = identifier;");
+                    ssb.AppendLine("this.InterfaceInstance = new Interface(this.Group, identifier);");
+                }
+            }
+
+            ssb.AppendLine();
+        }
+
+        internal void Generate_RunInternal(ScopingStringBuilder ssb, GeneratorInformation info)
+        {
+            if (this.MachineObject == null || this.StateMethodList == null)
+            {
+                return;
+            }
+
+            using (var scope = ssb.ScopeBrace("protected override StateResult RunInternal(StateParameter parameter)"))
+            {
+                ssb.AppendLine("return this.CurrentState switch");
+                ssb.AppendLine("{");
+                ssb.IncrementIndent();
+
+                foreach (var x in this.StateMethodList)
+                {
+                    ssb.AppendLine($"State.{x.Name} => this.{x.Name}(parameter),");
+                }
+
+                ssb.AppendLine("_ => StateResult.Terminate,");
+                ssb.DecrementIndent();
+                ssb.AppendLine("};");
+            }
+
+            ssb.AppendLine();
+        }
+
+        internal void Generate_ChangeStateInternal(ScopingStringBuilder ssb, GeneratorInformation info)
+        {
         }
     }
 }
