@@ -41,7 +41,7 @@ namespace Sandbox
     }
 
     [StateMachine(0x33)]
-    public partial class TestMachine3 : TestMachine2<TestMachine.State>
+    public partial class TestMachine3 : TestMachine2<TestMachine3.State>
     {
         public TestMachine3(BigMachine<int> bigMachine)
             : base(bigMachine)
