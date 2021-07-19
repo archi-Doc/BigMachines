@@ -492,7 +492,7 @@ namespace BigMachines.Generator
                 return;
             }
 
-            using (var scope = ssb.ScopeBrace("protected override bool ChangeStateInternal(int state)"))
+            using (var scope = ssb.ScopeBrace("protected override bool IntChangeState(int state)"))
             {
                 using (var scopeTerminated = ssb.ScopeBrace("if (this.Status == MachineStatus.Terminated)"))
                 {
@@ -547,7 +547,7 @@ namespace BigMachines.Generator
             }
 
             ssb.AppendLine();
-            ssb.AppendLine($"protected bool ChangeStateInternal({this.StateName} state) => this.ChangeStateInternal(Unsafe.As<{this.StateName}, int>(ref state));");
+            ssb.AppendLine($"protected bool ChangeState({this.StateName} state) => this.IntChangeState(Unsafe.As<{this.StateName}, int>(ref state));");
         }
     }
 }

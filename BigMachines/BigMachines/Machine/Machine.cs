@@ -169,7 +169,7 @@ namespace BigMachines
         /// </summary>
         /// <param name="state">The next state.</param>
         /// <returns><see langword="true"/>: State changed. <see langword="false"/>: Not changed (same state or denied). </returns>
-        protected internal virtual bool ChangeStateInternal(int state) => false;
+        protected internal virtual bool IntChangeState(int state) => false;
 
         /// <summary>
         /// Receivea a command and invoke the appropriate method.<br/>
@@ -198,7 +198,7 @@ namespace BigMachines
                 command.Type == CommandPost<TIdentifier>.CommandType.StateTwoWay) &&
                 command.Message is int state)
             {// ChangeState
-                command.Response = this.ChangeStateInternal(state);
+                command.Response = this.IntChangeState(state);
             }
             else
             {// Command

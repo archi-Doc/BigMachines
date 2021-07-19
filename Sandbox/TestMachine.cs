@@ -87,7 +87,7 @@ namespace Sandbox
                 return StateResult.Continue;
             }
 
-            this.ChangeStateInternal(State.Initial);
+            this.ChangeState(State.Initial);
             return StateResult.Continue;
         }
 
@@ -102,7 +102,7 @@ namespace Sandbox
             Console.WriteLine("TestMachine(Initial)");
 
             this.SetTimeout(TimeSpan.FromSeconds(0.5));
-            this.ChangeStateInternal(TestMachine.State.First);
+            this.ChangeState(TestMachine.State.First);
             return StateResult.Continue;
         }
 
