@@ -15,17 +15,15 @@ namespace BigMachines
 {
     /// <summary>
     /// Represents a machine class which is a base class for all machine classes.<br/>
-    /// <see cref="Machine{TIdentifier, TState}"/> = <see cref="MachineBase{TIdentifier}"/> + State type.
+    /// <see cref="Machine{TIdentifier}"/> = <see cref="MachineBase{TIdentifier}"/> + State type.
     /// </summary>
     /// <typeparam name="TIdentifier">The type of an identifier.</typeparam>
-    /// <typeparam name="TState">The type of machine state.</typeparam>
     [TinyhandObject]
-    public abstract class Machine<TIdentifier, TState> : MachineBase<TIdentifier>
+    public abstract class Machine<TIdentifier> : MachineBase<TIdentifier>
         where TIdentifier : notnull
-        where TState : struct
     {
         /// <summary>
-        /// Initializes a new instance of the <see cref="Machine{TIdentifier, TState}"/> class.
+        /// Initializes a new instance of the <see cref="Machine{TIdentifier}"/> class.
         /// </summary>
         /// <param name="bigMachine">BigMachine which contains an instance of this machine.</param>
         protected Machine(BigMachine<TIdentifier> bigMachine)

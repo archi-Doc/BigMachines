@@ -270,11 +270,11 @@ namespace BigMachines.Generator
                 this.Body.Machines.Add(id, this);
             }
 
-            // Machine<TIdentifier, TState>
+            // Machine<TIdentifier>
             var machineObject = this.BaseObject;
             while (machineObject != null)
             {
-                if (machineObject.OriginalDefinition?.FullName == "BigMachines.Machine<TIdentifier, TState>")
+                if (machineObject.OriginalDefinition?.FullName == "BigMachines.Machine<TIdentifier>")
                 {
                     break;
                 }
@@ -289,14 +289,10 @@ namespace BigMachines.Generator
             }
             else
             {
-                if (machineObject.Generics_Arguments.Length == 2)
+                if (machineObject.Generics_Arguments.Length == 1)
                 {
-                    var identifier = machineObject.Generics_Arguments[0];
-                    var state = machineObject.Generics_Arguments[1];
-
                     this.MachineObject = machineObject;
                     this.IdentifierObject = machineObject.Generics_Arguments[0];
-                    // this.StateName = machineObject.Generics_Arguments[1];
                     this.StateName = this.FullName + ".State";
                 }
             }

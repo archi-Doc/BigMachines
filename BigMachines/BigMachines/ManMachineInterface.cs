@@ -58,7 +58,7 @@ namespace BigMachines
         {
             if (this.Group.TryGetMachine(this.Identifier, out var machine))
             {
-                if (machine is Machine<TIdentifier, TState> m && m.Status != MachineStatus.Terminated)
+                if (machine is Machine<TIdentifier> m && m.Status != MachineStatus.Terminated)
                 {
                     return System.Runtime.CompilerServices.Unsafe.As<int, TState>(ref m.CurrentState);
                 }

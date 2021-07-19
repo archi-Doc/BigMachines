@@ -31,17 +31,8 @@ namespace Sandbox
         }
     }
 
-    public partial class TestMachine2<TState> : Machine<int, TState>
-        where TState : struct
-    {
-        public TestMachine2(BigMachine<int> bigMachine)
-            : base(bigMachine)
-        {// Custom
-        }
-    }
-
     [StateMachine(0x34)]
-    public partial class TestMachine3 : TestMachine2<TestMachine3.State>
+    public partial class TestMachine3 : Machine<int>
     {
         public TestMachine3(BigMachine<int> bigMachine)
             : base(bigMachine)
@@ -51,7 +42,7 @@ namespace Sandbox
 
     [TinyhandObject(UseServiceProvider = true)]
     [StateMachine(0x35)]
-    public partial class TestMachine : Machine<int, TestMachine.State>
+    public partial class TestMachine : Machine<int>
     {
         /*public enum State
         {// Generated
