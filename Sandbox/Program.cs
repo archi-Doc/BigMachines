@@ -68,11 +68,6 @@ namespace Sandbox
 
             var testGroup = bigMachine.GetGroup<TestMachine.Interface>();
 
-            var bb = bigMachine.Serialize();
-            bigMachine.Deserialize(bb);
-
-            var testMachine2 = bigMachine.TryCreate<TestMachine.Interface>(4, null);
-
             var res = testGroup.CommandGroupTwoWay<int, int>(4);
             // var result = testMachine?.RunTwoWay(33);
 
