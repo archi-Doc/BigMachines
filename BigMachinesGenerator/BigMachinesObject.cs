@@ -496,20 +496,20 @@ namespace BigMachines.Generator
                 return;
             }
 
-            using (var scope = ssb.ScopeBrace("protected override bool ChangeStateInternal(State state)"))
+            using (var scope = ssb.ScopeBrace("protected override bool ChangeStateInternal(int state)"))
             {
-                ssb.AppendLine($"var current = Unsafe.As<int, {this.StateName}>(ref this.CurrentState);");
                 using (var scopeTerminated = ssb.ScopeBrace("if (this.Status == MachineStatus.Terminated)"))
                 {
                     ssb.AppendLine("return false;");
                 }
 
-                using (var scopeElse = ssb.ScopeBrace("else if (current == state)"))
+                using (var scopeElse = ssb.ScopeBrace("else if (this.CurrentState == state)"))
                 {
                     ssb.AppendLine("return true;");
                 }
 
                 ssb.AppendLine();
+                ssb.AppendLine($"var current = Unsafe.As<int, {this.StateName}>(ref this.CurrentState);");
                 ssb.AppendLine("bool canExit = current switch");
                 ssb.AppendLine("{");
                 ssb.IncrementIndent();
@@ -523,7 +523,8 @@ namespace BigMachines.Generator
                 ssb.AppendLine("};");
                 ssb.AppendLine();
 
-                ssb.AppendLine("bool canEnter = state switch");
+                ssb.AppendLine($"var next = Unsafe.As<int, {this.StateName}>(ref state);");
+                ssb.AppendLine("bool canEnter = next switch");
                 ssb.AppendLine("{");
                 ssb.IncrementIndent();
                 foreach (var x in this.StateMethodList.Where(a => a.CheckStateChange))
@@ -538,7 +539,7 @@ namespace BigMachines.Generator
 
                 using (var scope2 = ssb.ScopeBrace("if (canExit && canEnter)"))
                 {
-                    ssb.AppendLine($"this.CurrentState = Unsafe.As<{this.StateName}, int>(ref state);");
+                    ssb.AppendLine($"this.CurrentState = state;");
                     ssb.AppendLine("this.StateChanged = true;");
                     ssb.AppendLine("return true;");
                 }
@@ -548,6 +549,9 @@ namespace BigMachines.Generator
                     ssb.AppendLine("return false;");
                 }
             }
+
+            ssb.AppendLine();
+            ssb.AppendLine($"protected bool ChangeStateInternal({this.StateName} state) => this.ChangeStateInternal(Unsafe.As<{this.StateName}, int>(ref state));");
         }
     }
 }

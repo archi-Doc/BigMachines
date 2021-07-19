@@ -47,7 +47,7 @@ namespace BigMachines
         /// </summary>
         /// <param name="state">The next state.</param>
         /// <returns><see langword="true"/>: State changed. <see langword="false"/>: Not changed (same state or denied). </returns>
-        protected internal virtual bool ChangeStateInternal(TState state) => false;
+        protected internal virtual bool ChangeStateInternal(int state) => false;
 
         /// <inheritdoc/>
         protected internal override bool DistributeCommand(CommandPost<TIdentifier>.Command command)
@@ -69,7 +69,7 @@ namespace BigMachines
             }
             else if ((command.Type == CommandPost<TIdentifier>.CommandType.State ||
                 command.Type == CommandPost<TIdentifier>.CommandType.StateTwoWay) &&
-                command.Message is TState state)
+                command.Message is int state)
             {// ChangeState
                 command.Response = this.ChangeStateInternal(state);
             }
