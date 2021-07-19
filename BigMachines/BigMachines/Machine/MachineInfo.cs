@@ -20,9 +20,9 @@ namespace BigMachines
         /// </summary>
         /// <param name="machineType"><see cref="Type"/> of machine.</param>
         /// <param name="typeId">Type id (unique identifier for serialization).</param>
-        /// <param name="constructor">Constructor delegate of <see cref="MachineBase{TIdentifier}"/>.</param>
+        /// <param name="constructor">Constructor delegate of <see cref="Machine{TIdentifier}"/>.</param>
         /// <param name="groupType"><see cref="Type"/> of machine group (if you want to use customized <see cref="MachineGroup{TIdentifier}"/>).</param>
-        public MachineInfo(Type machineType, int typeId, Func<BigMachine<TIdentifier>, MachineBase<TIdentifier>>? constructor, Type? groupType = null)
+        public MachineInfo(Type machineType, int typeId, Func<BigMachine<TIdentifier>, Machine<TIdentifier>>? constructor, Type? groupType = null)
         {
             this.MachineType = machineType;
             this.TypeId = typeId;
@@ -41,9 +41,9 @@ namespace BigMachines
         public int TypeId { get; }
 
         /// <summary>
-        /// Gets a constructor delegate of <see cref="MachineBase{TIdentifier}"/>.
+        /// Gets a constructor delegate of <see cref="Machine{TIdentifier}"/>.
         /// </summary>
-        public Func<BigMachine<TIdentifier>, MachineBase<TIdentifier>>? Constructor { get; }
+        public Func<BigMachine<TIdentifier>, Machine<TIdentifier>>? Constructor { get; }
 
         /// <summary>
         /// Gets <see cref="Type"/> of machine group.

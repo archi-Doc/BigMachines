@@ -45,11 +45,11 @@ namespace BigMachines
             this.Info = info;
         }
 
-        MachineBase<TIdentifier> IMachineGroup<TIdentifier>.GetOrAddMachine(TIdentifier identifier, MachineBase<TIdentifier> machine) => this.IdentificationToMachine.GetOrAdd(identifier, machine);
+        Machine<TIdentifier> IMachineGroup<TIdentifier>.GetOrAddMachine(TIdentifier identifier, Machine<TIdentifier> machine) => this.IdentificationToMachine.GetOrAdd(identifier, machine);
 
-        void IMachineGroup<TIdentifier>.AddMachine(TIdentifier identifier, MachineBase<TIdentifier> machine)
+        void IMachineGroup<TIdentifier>.AddMachine(TIdentifier identifier, Machine<TIdentifier> machine)
         {
-            MachineBase<TIdentifier>? machineToRemove = null;
+            Machine<TIdentifier>? machineToRemove = null;
             this.IdentificationToMachine.AddOrUpdate(identifier, x => machine, (i, m) =>
             {
                 machineToRemove = m;
@@ -65,7 +65,7 @@ namespace BigMachines
             }
         }
 
-        bool IMachineGroup<TIdentifier>.TryGetMachine(TIdentifier identifier, [MaybeNullWhen(false)] out MachineBase<TIdentifier> machine) => this.IdentificationToMachine.TryGetValue(identifier, out machine);
+        bool IMachineGroup<TIdentifier>.TryGetMachine(TIdentifier identifier, [MaybeNullWhen(false)] out Machine<TIdentifier> machine) => this.IdentificationToMachine.TryGetValue(identifier, out machine);
 
         bool IMachineGroup<TIdentifier>.TryRemoveMachine(TIdentifier identifier)
         {
@@ -84,8 +84,8 @@ namespace BigMachines
             }
         }
 
-        IEnumerable<MachineBase<TIdentifier>> IMachineGroup<TIdentifier>.GetMachines() => this.IdentificationToMachine.Values;
+        IEnumerable<Machine<TIdentifier>> IMachineGroup<TIdentifier>.GetMachines() => this.IdentificationToMachine.Values;
 
-        protected ConcurrentDictionary<TIdentifier, MachineBase<TIdentifier>> IdentificationToMachine { get; } = new();
+        protected ConcurrentDictionary<TIdentifier, Machine<TIdentifier>> IdentificationToMachine { get; } = new();
     }
 }

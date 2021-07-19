@@ -101,13 +101,13 @@ namespace BigMachines
 
         /// <summary>
         /// Runs the machine manually.<br/>
-        /// This function does not change <see cref="MachineBase{TIdentifier}.Timeout"/> or <see cref="MachineBase{TIdentifier}.NextRun"/>.
+        /// This function does not change <see cref="Machine{TIdentifier}.Timeout"/> or <see cref="Machine{TIdentifier}.NextRun"/>.
         /// </summary>
         public void Run() => this.BigMachine.CommandPost.Send(CommandPost<TIdentifier>.CommandType.Run, this.Group, this.Identifier, 0);
 
         /// <summary>
         /// Runs the machine manually and receives the result.<br/>
-        /// This function does not change <see cref="MachineBase{TIdentifier}.Timeout"/> or <see cref="MachineBase{TIdentifier}.NextRun"/>.
+        /// This function does not change <see cref="Machine{TIdentifier}.Timeout"/> or <see cref="Machine{TIdentifier}.NextRun"/>.
         /// </summary>
         /// <typeparam name="TMessage">The type of the message.</typeparam>
         /// <param name="message">Message.</param>

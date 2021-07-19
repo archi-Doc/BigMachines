@@ -82,7 +82,7 @@ namespace BigMachines
         {
             this.GetMachineGroup(typeof(TMachineInterface), out var group);
 
-            MachineBase<TIdentifier>? machine = null;
+            Machine<TIdentifier>? machine = null;
             if (group.TryGetMachine(identifier, out machine))
             {
                 return machine.InterfaceInstance as TMachineInterface;
@@ -219,13 +219,13 @@ namespace BigMachines
             }
         }
 
-        private MachineBase<TIdentifier> CreateMachine(IMachineGroup<TIdentifier> group)
+        private Machine<TIdentifier> CreateMachine(IMachineGroup<TIdentifier> group)
         {
-            MachineBase<TIdentifier>? machine = null;
+            Machine<TIdentifier>? machine = null;
 
             if (this.ServiceProvider != null)
             {
-                machine = this.ServiceProvider.GetService(group.Info.MachineType) as MachineBase<TIdentifier>;
+                machine = this.ServiceProvider.GetService(group.Info.MachineType) as Machine<TIdentifier>;
             }
 
             if (machine == null)
@@ -355,7 +355,7 @@ namespace BigMachines
 
                 this.Status.LastRun = now;
 
-                bool TryRun(MachineBase<TIdentifier> machine)
+                bool TryRun(Machine<TIdentifier> machine)
                 {// locked
                     var runFlag = false;
                     if (machine.Timeout <= 0)
