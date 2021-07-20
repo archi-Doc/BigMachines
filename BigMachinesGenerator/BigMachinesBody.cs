@@ -59,7 +59,7 @@ namespace BigMachines.Generator
             category: "BigMachinesGenerator", DiagnosticSeverity.Error, isEnabledByDefault: true);
 
         public static readonly DiagnosticDescriptor Error_DuplicateTypeId = new DiagnosticDescriptor(
-            id: "BMG008", title: "Duplicate TypeId", messageFormat: "TypeId '{0}' is duplicated",
+            id: "BMG008", title: "Duplicate TypeId", messageFormat: "Machine Type Id '{0}' must be unique",
             category: "BigMachinesGenerator", DiagnosticSeverity.Error, isEnabledByDefault: true);
 
         public static readonly DiagnosticDescriptor Error_DuplicateStateId = new DiagnosticDescriptor(

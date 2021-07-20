@@ -16,7 +16,7 @@ namespace BigMachines
         /// <summary>
         /// Initializes a new instance of the <see cref="StateMachineAttribute"/> class.
         /// </summary>
-        /// <param name="typeId">Type id (unique identifier for serialization).</param>
+        /// <param name="typeId">Machine Type id (unique identifier for serialization).</param>
         public StateMachineAttribute(int typeId)
         {
             this.MachineTypeId = typeId;
