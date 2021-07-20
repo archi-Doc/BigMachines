@@ -14,6 +14,18 @@ using Tinyhand;
 
 namespace Sandbox
 {
+    public partial class ParentClass
+    {
+        [StateMachine(333)]
+        public partial class NestedMachine : Machine<int>
+        {
+            public NestedMachine(BigMachine<int> bigMachine)
+            : base(bigMachine)
+            {
+            }
+        }
+    }
+
     public class TestGroup : MachineGroup<int>
     {
         internal TestGroup(BigMachine<int> bigMachine)
@@ -110,7 +122,7 @@ namespace Sandbox
             return StateResult.Continue;
         }
 
-        protected bool FirstCanEnter() => false;
+        protected bool FirstCanEnter() => true;
 
         protected override void ProcessCommand(CommandPost<int>.Command command)
         {// Custom
