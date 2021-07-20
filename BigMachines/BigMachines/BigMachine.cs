@@ -36,6 +36,7 @@ namespace BigMachines
             {
                 array[n] = this.CreateGroup(x.Value);
                 this.interfaceTypeToGroup.TryAdd(x.Key, array[n]);
+                n++;
             }
 
             this.groupArray = array;
