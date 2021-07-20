@@ -72,6 +72,8 @@ namespace BigMachines.Generator
 
         public BigMachinesObject? ClosedGenericHint { get; private set; }
 
+        public string? GroupType { get; private set; }
+
         public Arc.Visceral.NullableAnnotation NullableAnnotationIfReferenceType
         {
             get
@@ -270,6 +272,14 @@ namespace BigMachines.Generator
                 this.Body.Machines.Add(id, this);
             }
 
+            // MachineGroup
+            if (this.ObjectAttribute.Group != null)
+            {
+                this.GroupType = this.ObjectAttribute.Group.ToDisplayString();
+
+                // this.Body.ReportDiagnostic(BigMachinesBody.Error_GroupType, this.Location);
+            }
+
             // Machine<TIdentifier>
             var machineObject = this.BaseObject;
             while (machineObject != null)
@@ -423,7 +433,8 @@ ModuleInitializerClass_Added:
                     }
 
                     var constructor = x.ObjectFlag.HasFlag(BigMachinesObjectFlag.HasSimpleConstructor) ? $"x => new {x.FullName}(x)" : "null";
-                    ssb.AppendLine($"{BigMachinesBody.BigMachineIdentifier}<{x.IdentifierObject.FullName}>.StaticInfo[typeof({x.FullName}.{BigMachinesBody.InterfaceIdentifier})] = new(typeof({x.FullName}), {x.ObjectAttribute.MachineTypeId}, {constructor}, null);");
+                    var group = x.GroupType == null ? "null" : $"typeof({x.GroupType})";
+                    ssb.AppendLine($"{BigMachinesBody.BigMachineIdentifier}<{x.IdentifierObject.FullName}>.StaticInfo[typeof({x.FullName}.{BigMachinesBody.InterfaceIdentifier})] = new(typeof({x.FullName}), {x.ObjectAttribute.MachineTypeId}, {constructor}, {group});");
                     // typeof(MachineSingle<>)
                 }
             }

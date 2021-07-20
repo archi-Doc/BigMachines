@@ -16,6 +16,7 @@ namespace Sandbox
 {
     public partial class ParentClass
     {
+        [TinyhandObject(UseServiceProvider = true)]
         [StateMachine(333)]
         public partial class NestedMachine : Machine<int>
         {
@@ -28,6 +29,7 @@ namespace Sandbox
 
     public partial class ParentClassT<T>
     {
+        [TinyhandObject(UseServiceProvider = true)]
         [StateMachine(444)]
         public partial class NestedMachineT : Machine<int>
         {
@@ -69,7 +71,7 @@ namespace Sandbox
     }
 
     [TinyhandObject(UseServiceProvider = true)]
-    [StateMachine(0x35)]
+    [StateMachine(0x35, Group = typeof(MachineSingle<>))]
     public partial class TestMachine : Machine<int>
     {
         /*public enum State

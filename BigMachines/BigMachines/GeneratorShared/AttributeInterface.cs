@@ -26,6 +26,11 @@ namespace BigMachines
         /// Gets a type id (unique identifier for serialization) of the machine.
         /// </summary>
         public int MachineTypeId { get; }
+
+        /// <summary>
+        /// Gets or sets a machine group of the machine (e.g. <see cref="MachineGroup{TIdentifier}"/>, <see cref="MachineSingle{TIdentifier}"/>).
+        /// </summary>
+        public Type? Group { get; set; }
     }
 
 #pragma warning disable SA1629
