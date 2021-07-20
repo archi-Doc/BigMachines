@@ -11,12 +11,12 @@ namespace BigMachines
     /// Class must be a partial type.
     /// </summary>
     [AttributeUsage(AttributeTargets.Class, AllowMultiple = false, Inherited = true)]
-    public class StateMachineAttribute : Attribute
+    public sealed class StateMachineAttribute : Attribute
     {
         /// <summary>
         /// Initializes a new instance of the <see cref="StateMachineAttribute"/> class.
         /// </summary>
-        /// <param name="typeId">Type id (unique identifier for serialization).</param>
+        /// <param name="typeId">Machine Type id (unique identifier for serialization).</param>
         public StateMachineAttribute(int typeId)
         {
             this.MachineTypeId = typeId;
@@ -37,14 +37,25 @@ namespace BigMachines
     /// </summary>
 #pragma warning restore SA1629
     [AttributeUsage(AttributeTargets.Method, AllowMultiple = false, Inherited = true)]
-    public class StateMethodAttribute : Attribute
+    public sealed class StateMethodAttribute : Attribute
     {
         /// <summary>
         /// Initializes a new instance of the <see cref="StateMethodAttribute"/> class.
         /// </summary>
-        public StateMethodAttribute()
+        /// <param name="id">The identifier used for serialization.<br/>
+        /// 0: Default state method.<br/>
+        /// Id can be a random number, but it must be unique.</param>
+        public StateMethodAttribute(int id)
         {
+            this.Id = id;
         }
+
+        /// <summary>
+        /// Gets an identifier used for serialization.<br/>
+        /// 0: Default state method.<br/>
+        /// Id can be a random number, but it must be unique.
+        /// </summary>
+        public int Id { get; }
     }
 
     /// <summary>
@@ -61,12 +72,6 @@ namespace BigMachines
         /// Informs that the machine is going to be terminated.
         /// </summary>
         Terminate,
-
-        /// <summary>
-        /// Informs that changing to this state or from this state is not possible.<br/>
-        /// Available if <see cref="RunType"/> is <see cref="RunType.CanEnter"/> or <see cref="RunType.CanExit"/>.
-        /// </summary>
-        Deny,
     }
 
     /// <summary>
@@ -104,16 +109,6 @@ namespace BigMachines
         /// Machine is run by interval timer.
         /// </summary>
         RunTimer,
-
-        /// <summary>
-        /// Asking if the machine can be changed to this state.
-        /// </summary>
-        CanEnter,
-
-        /// <summary>
-        /// Asking if the machine can be changed from this state.
-        /// </summary>
-        CanExit,
     }
 
     /// <summary>
@@ -151,5 +146,19 @@ namespace BigMachines
         /// Gets a message.
         /// </summary>
         public object? Message { get; }
+    }
+
+    [AttributeUsage(AttributeTargets.Class | AttributeTargets.Struct, AllowMultiple = false, Inherited = true)]
+    public sealed class BigMachinesGeneratorOptionAttribute : Attribute
+    {
+        public bool AttachDebugger { get; set; } = false;
+
+        public bool GenerateToFile { get; set; } = false;
+
+        public string? CustomNamespace { get; set; }
+
+        public BigMachinesGeneratorOptionAttribute()
+        {
+        }
     }
 }

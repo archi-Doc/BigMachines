@@ -26,7 +26,7 @@ namespace Sandbox
             };
 
             // typeof(TestMachine.Interface) => GroupInfo ( Constructor, TypeId, typeof(TestMachine) )
-            BigMachine<int>.StaticInfo[typeof(TestMachine.Interface)] = new(typeof(TestMachine), 0, x => new TestMachine(x), typeof(MachineSingle<>));
+            // BigMachine<int>.StaticInfo[typeof(TestMachine.Interface)] = new(typeof(TestMachine), 0, x => new TestMachine(x), typeof(MachineSingle<>));
 
             /*var container = new Container();
             container.RegisterDelegate<BigMachine<int>>(x => new BigMachine<int>(ThreadCore.Root, container), Reuse.Singleton);
@@ -62,12 +62,11 @@ namespace Sandbox
                 }
             }
 
+            var state = testMachine.GetCurrentState();
+            // testMachine.ChangeStateTwoWay(TestMachine.State.ErrorState);
+            state = testMachine.GetCurrentState();
+
             var testGroup = bigMachine.GetGroup<TestMachine.Interface>();
-
-            var bb = bigMachine.Serialize();
-            bigMachine.Deserialize(bb);
-
-            var testMachine2 = bigMachine.TryCreate<TestMachine.Interface>(4, null);
 
             var res = testGroup.CommandGroupTwoWay<int, int>(4);
             // var result = testMachine?.RunTwoWay(33);

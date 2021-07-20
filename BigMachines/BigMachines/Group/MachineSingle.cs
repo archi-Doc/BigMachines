@@ -47,14 +47,14 @@ namespace BigMachines
 
         public IEnumerable<TIdentifier> GetIdentifiers() => new Enumerator2(this);
 
-        public struct Enumerator : IEnumerable<MachineBase<TIdentifier>>
+        public struct Enumerator : IEnumerable<Machine<TIdentifier>>
         {
             internal Enumerator(MachineSingle<TIdentifier> group)
             {
                 this.group = group;
             }
 
-            public IEnumerator<MachineBase<TIdentifier>> GetEnumerator()
+            public IEnumerator<Machine<TIdentifier>> GetEnumerator()
             {
                 var m = Volatile.Read(ref this.group.machine1);
                 if (m != null)
@@ -68,7 +68,7 @@ namespace BigMachines
             private MachineSingle<TIdentifier> group;
         }
 
-        IEnumerable<MachineBase<TIdentifier>> IMachineGroup<TIdentifier>.GetMachines() => new Enumerator(this);
+        IEnumerable<Machine<TIdentifier>> IMachineGroup<TIdentifier>.GetMachines() => new Enumerator(this);
 
         public void CommandGroup<TMessage>(TMessage message)
         {
@@ -126,7 +126,7 @@ namespace BigMachines
             }
         }
 
-        void IMachineGroup<TIdentifier>.AddMachine(TIdentifier identifier, MachineBase<TIdentifier> machine)
+        void IMachineGroup<TIdentifier>.AddMachine(TIdentifier identifier, Machine<TIdentifier> machine)
         {
             var m = Interlocked.Exchange(ref this.machine1, machine);
             if (m != null)
@@ -143,7 +143,7 @@ namespace BigMachines
             this.Info = info;
         }
 
-        MachineBase<TIdentifier> IMachineGroup<TIdentifier>.GetOrAddMachine(TIdentifier identifier, MachineBase<TIdentifier> machine)
+        Machine<TIdentifier> IMachineGroup<TIdentifier>.GetOrAddMachine(TIdentifier identifier, Machine<TIdentifier> machine)
         {
             var m = Volatile.Read(ref this.machine1);
             if (m == null)
@@ -157,7 +157,7 @@ namespace BigMachines
             }
         }
 
-        bool IMachineGroup<TIdentifier>.TryGetMachine(TIdentifier identifier, [MaybeNullWhen(false)] out MachineBase<TIdentifier> machine)
+        bool IMachineGroup<TIdentifier>.TryGetMachine(TIdentifier identifier, [MaybeNullWhen(false)] out Machine<TIdentifier> machine)
         {
             var m = Volatile.Read(ref this.machine1);
             if (m != null) // && EqualityComparer<TIdentifier>.Default.Equals(m.Identifier, identifier))
@@ -186,6 +186,6 @@ namespace BigMachines
             }
         }
 
-        private MachineBase<TIdentifier>? machine1;
+        private Machine<TIdentifier>? machine1;
     }
 }

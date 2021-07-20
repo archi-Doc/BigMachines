@@ -28,13 +28,13 @@ namespace BigMachines
 
         internal void Assign(MachineInfo<TIdentifier> info);
 
-        internal IEnumerable<MachineBase<TIdentifier>> GetMachines();
+        internal IEnumerable<Machine<TIdentifier>> GetMachines();
 
-        internal bool TryGetMachine(TIdentifier identifier, [MaybeNullWhen(false)] out MachineBase<TIdentifier> machine);
+        internal bool TryGetMachine(TIdentifier identifier, [MaybeNullWhen(false)] out Machine<TIdentifier> machine);
 
-        internal MachineBase<TIdentifier> GetOrAddMachine(TIdentifier identifier, MachineBase<TIdentifier> machine);
+        internal Machine<TIdentifier> GetOrAddMachine(TIdentifier identifier, Machine<TIdentifier> machine);
 
-        internal void AddMachine(TIdentifier identifier, MachineBase<TIdentifier> machine);
+        internal void AddMachine(TIdentifier identifier, Machine<TIdentifier> machine);
 
         internal bool TryRemoveMachine(TIdentifier identifier);
     }
