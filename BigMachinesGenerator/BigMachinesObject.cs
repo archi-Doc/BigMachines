@@ -313,7 +313,7 @@ namespace BigMachines.Generator
             {
                 if (x.AllAttributes.FirstOrDefault(x => x.FullName == StateMethodAttributeMock.FullName) is { } attribute)
                 {
-                    var stateMethod = StateMethod.Create(x, attribute);
+                    var stateMethod = StateMethod.Create(this, x, attribute);
                     if (stateMethod != null)
                     {// Add
                         this.StateMethodList.Add(stateMethod);
@@ -534,7 +534,13 @@ namespace BigMachines.Generator
                 ssb.AppendLine("bool canExit = current switch");
                 ssb.AppendLine("{");
                 ssb.IncrementIndent();
-                    // ssb.AppendLine($"State.{x.Name} => this.{x.Name}(new StateParameter(RunType.CanExit)) != StateResult.Deny,");
+                foreach (var x in this.StateMethodList)
+                {
+                    if (x.CanExit)
+                    {
+                        ssb.AppendLine($"State.{x.Name} => this.{x.Name}{StateMethod.CanExitName}(),");
+                    }
+                }
 
                 ssb.AppendLine("_ => true,");
                 ssb.DecrementIndent();
@@ -547,8 +553,14 @@ namespace BigMachines.Generator
                 ssb.IncrementIndent();
                 foreach (var x in this.StateMethodList)
                 {
-                    ssb.AppendLine($"State.{x.Name} => true,");
-                    // ssb.AppendLine($"State.{x.Name} => this.{x.Name}(new StateParameter(RunType.CanEnter)) != StateResult.Deny,");
+                    if (x.CanEnter)
+                    {
+                        ssb.AppendLine($"State.{x.Name} => this.{x.Name}{StateMethod.CanEnterName}(),");
+                    }
+                    else
+                    {
+                        ssb.AppendLine($"State.{x.Name} => true,");
+                    }
                 }
 
                 ssb.AppendLine("_ => false,");

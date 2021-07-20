@@ -10,7 +10,10 @@ namespace BigMachines.Generator
 {
     public class StateMethod
     {
-        public static StateMethod? Create(BigMachinesObject method, VisceralAttribute attribute)
+        public const string CanEnterName = "CanEnter";
+        public const string CanExitName = "CanExit";
+
+        public static StateMethod? Create(BigMachinesObject machine, BigMachinesObject method, VisceralAttribute attribute)
         {
             StateMethodAttributeMock methodAttribute;
             try
@@ -53,6 +56,22 @@ namespace BigMachines.Generator
             stateMethod.Name = method.SimpleName;
             stateMethod.Id = methodAttribute.Id;
 
+            foreach (var x in machine.GetMembers(VisceralTarget.Method))
+            {
+                if (x.Method_Parameters.Length == 0 &&
+                    x.Method_ReturnObject?.FullName == "bool")
+                {
+                    if (x.SimpleName == stateMethod.Name + CanEnterName)
+                    {
+                        stateMethod.CanEnter = true;
+                    }
+                    else if (x.SimpleName == stateMethod.Name + CanExitName)
+                    {
+                        stateMethod.CanExit = true;
+                    }
+                }
+            }
+
             return stateMethod;
         }
 
@@ -60,8 +79,12 @@ namespace BigMachines.Generator
 
         public string Name { get; private set; } = string.Empty;
 
+        public bool CanEnter { get; private set; }
+
+        public bool CanExit { get; private set; }
+
         public int Id { get; internal set; }
 
-        public bool DuplicateId { get; set; }
+        public bool DuplicateId { get; internal set; }
     }
 }

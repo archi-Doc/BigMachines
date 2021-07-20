@@ -82,11 +82,6 @@ namespace Sandbox
         [StateMethod(99)]
         protected StateResult ErrorState(StateParameter parameter)
         {
-            if (parameter.RunType == RunType.CanEnter || parameter.RunType == RunType.CanExit)
-            {
-                return StateResult.Continue;
-            }
-
             this.ChangeState(State.Initial);
             return StateResult.Continue;
         }
@@ -94,11 +89,6 @@ namespace Sandbox
         [StateMethod(0)]
         protected StateResult Initial(StateParameter parameter)
         {// lock(this)
-            if (parameter.RunType == RunType.CanEnter || parameter.RunType == RunType.CanExit)
-            {
-                return StateResult.Continue;
-            }
-
             Console.WriteLine("TestMachine(Initial)");
 
             this.SetTimeout(TimeSpan.FromSeconds(0.5));
@@ -106,24 +96,21 @@ namespace Sandbox
             return StateResult.Continue;
         }
 
+        private bool InitialCanEnter() => true;
+
+        private bool InitialCanExit() => true;
+
         [StateMethod(1)]
         protected StateResult First(StateParameter parameter)
         {
-            if (parameter.RunType == RunType.CanEnter)
-            {
-                return StateResult.Continue;
-            }
-
             Console.WriteLine($"TestMachine(First) : {this.Dummy++}");
-            if (parameter.Message != null)
-            {
-                return StateResult.Deny;
-            }
 
             // this.SetTimeout(44.5);
             // this.ChangeStateInternal(State.First);
             return StateResult.Continue;
         }
+
+        protected bool FirstCanEnter() => false;
 
         protected override void ProcessCommand(CommandPost<int>.Command command)
         {// Custom

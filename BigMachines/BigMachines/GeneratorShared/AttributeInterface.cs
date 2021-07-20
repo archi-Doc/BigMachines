@@ -72,12 +72,6 @@ namespace BigMachines
         /// Informs that the machine is going to be terminated.
         /// </summary>
         Terminate,
-
-        /// <summary>
-        /// Informs that changing to this state or from this state is not possible.<br/>
-        /// Available if <see cref="RunType"/> is <see cref="RunType.CanEnter"/> or <see cref="RunType.CanExit"/>.
-        /// </summary>
-        Deny,
     }
 
     /// <summary>
@@ -115,16 +109,6 @@ namespace BigMachines
         /// Machine is run by interval timer.
         /// </summary>
         RunTimer,
-
-        /// <summary>
-        /// Asking if the machine can be changed to this state.
-        /// </summary>
-        CanEnter,
-
-        /// <summary>
-        /// Asking if the machine can be changed from this state.
-        /// </summary>
-        CanExit,
     }
 
     /// <summary>
