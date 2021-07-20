@@ -55,6 +55,8 @@ namespace BigMachines.Generator
 
         public List<StateMethod>? StateMethodList { get; private set; }
 
+        public StateMethod? DefaultStateMethod { get; private set; }
+
         public bool IsAbstractOrInterface => this.Kind == VisceralObjectKind.Interface || (this.symbol is INamedTypeSymbol nts && nts.IsAbstract);
 
         public List<BigMachinesObject>? Children { get; private set; } // The opposite of ContainingObject
@@ -301,7 +303,9 @@ namespace BigMachines.Generator
             this.CheckKeyword(BigMachinesBody.InterfaceIdentifier, this.Location);
             this.CheckKeyword(BigMachinesBody.CreateInterfaceIdentifier, this.Location);
             this.CheckKeyword(BigMachinesBody.RunInternalIdentifier, this.Location);
-            this.CheckKeyword(BigMachinesBody.ChangeStateInternal, this.Location);
+            this.CheckKeyword(BigMachinesBody.ChangeState, this.Location);
+            this.CheckKeyword(BigMachinesBody.IntChangeState, this.Location);
+            this.CheckKeyword(BigMachinesBody.IntInitState, this.Location);
 
             this.StateMethodList = new();
             foreach (var x in this.GetMembers(VisceralTarget.Method))
@@ -312,6 +316,21 @@ namespace BigMachines.Generator
                     if (stateMethod != null)
                     {// Add
                         this.StateMethodList.Add(stateMethod);
+
+                        // Default state method
+                        if (stateMethod.Default)
+                        {
+                            if (this.DefaultStateMethod?.Default == true)
+                            {// warn
+                                this.Body.AddDiagnostic(BigMachinesBody.Warning_DefaultState, stateMethod.Location);
+                            }
+
+                            this.DefaultStateMethod = stateMethod;
+                        }
+                        else if (this.DefaultStateMethod == null)
+                        {
+                            this.DefaultStateMethod = stateMethod;
+                        }
                     }
                 }
             }
@@ -413,7 +432,7 @@ namespace BigMachines.Generator
             {
                 foreach (var x in this.StateMethodList)
                 {
-                    ssb.AppendLine($"{x.Name},");
+                    ssb.AppendLine($"{x.Name} = {x.Id},");
                 }
             }
 
@@ -548,6 +567,12 @@ namespace BigMachines.Generator
 
             ssb.AppendLine();
             ssb.AppendLine($"protected bool ChangeState({this.StateName} state) => this.IntChangeState(Unsafe.As<{this.StateName}, int>(ref state));");
+
+            if (this.DefaultStateMethod != null)
+            {
+                ssb.AppendLine();
+                ssb.AppendLine($"protected override void IntInitState() => this.CurrentState = {this.DefaultStateMethod.Id};");
+            }
         }
     }
 }

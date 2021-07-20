@@ -91,7 +91,7 @@ namespace Sandbox
             return StateResult.Continue;
         }
 
-        [StateMethod(CheckStateChange = true)]
+        [StateMethod(true, Id = 111)]
         protected StateResult Initial(StateParameter parameter)
         {// lock(this)
             if (parameter.RunType == RunType.CanEnter || parameter.RunType == RunType.CanExit)

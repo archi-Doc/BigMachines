@@ -23,7 +23,9 @@ namespace BigMachines.Generator
         public const string InterfaceIdentifier = "Interface";
         public const string CreateInterfaceIdentifier = "CreateInterface";
         public const string RunInternalIdentifier = "RunInternal";
-        public const string ChangeStateInternal = "ChangeStateInternal";
+        public const string ChangeState = "ChangeState";
+        public const string IntChangeState = "IntChangeState";
+        public const string IntInitState = "IntInitState";
 
         public const string StateResultFullName = "BigMachines.StateResult";
         public const string StateParameterFullName = "BigMachines.StateParameter";
@@ -59,6 +61,10 @@ namespace BigMachines.Generator
         public static readonly DiagnosticDescriptor Error_DuplicateTypeId = new DiagnosticDescriptor(
             id: "BMG008", title: "Duplicate TypeId", messageFormat: "TypeId '{0}' is duplicated",
             category: "BigMachinesGenerator", DiagnosticSeverity.Error, isEnabledByDefault: true);
+
+        public static readonly DiagnosticDescriptor Warning_DefaultState = new DiagnosticDescriptor(
+            id: "BMG009", title: "Duplicate default state", messageFormat: "Only one state method can be set as default",
+            category: "BigMachinesGenerator", DiagnosticSeverity.Warning, isEnabledByDefault: true);
 
         public BigMachinesBody(GeneratorExecutionContext context)
             : base(context)

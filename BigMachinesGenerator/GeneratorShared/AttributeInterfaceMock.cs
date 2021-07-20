@@ -72,17 +72,33 @@ namespace BigMachines.Generator
         {
         }
 
-        public bool CheckStateChange { get; set; }
+        public bool Default { get; set; } = false;
+
+        public bool CheckStateChange { get; set; } = false;
+
+        public int Id { get; set; } = int.MinValue;
 
         public static StateMethodAttributeMock FromArray(object?[] constructorArguments, KeyValuePair<string, object?>[] namedArguments)
         {
             var attribute = new StateMethodAttributeMock();
             object? val;
 
+            val = AttributeHelper.GetValue(0, nameof(Default), constructorArguments, namedArguments);
+            if (val != null)
+            {
+                attribute.Default = (bool)val;
+            }
+
             val = AttributeHelper.GetValue(-1, nameof(CheckStateChange), constructorArguments, namedArguments);
             if (val != null)
             {
                 attribute.CheckStateChange = (bool)val;
+            }
+
+            val = AttributeHelper.GetValue(-1, nameof(Id), constructorArguments, namedArguments);
+            if (val != null)
+            {
+                attribute.Id = (int)val;
             }
 
             return attribute;

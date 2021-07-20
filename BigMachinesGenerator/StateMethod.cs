@@ -50,16 +50,29 @@ namespace BigMachines.Generator
 
             var stateMethod = new StateMethod();
             stateMethod.Location = attribute.Location;
+            stateMethod.Default = methodAttribute.Default;
             stateMethod.CheckStateChange = methodAttribute.CheckStateChange;
             stateMethod.Name = method.SimpleName;
+            if (methodAttribute.Id == int.MinValue)
+            {
+                stateMethod.Id = method.SimpleName.GetHashCode();
+            }
+            else
+            {
+                stateMethod.Id = methodAttribute.Id;
+            }
 
             return stateMethod;
         }
 
         public Location Location { get; private set; } = Location.None;
 
+        public bool Default { get; private set; }
+
         public bool CheckStateChange { get; private set; }
 
         public string Name { get; private set; } = string.Empty;
+
+        public int Id { get; internal set; }
     }
 }

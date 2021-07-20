@@ -36,6 +36,7 @@ namespace BigMachines
 
             this.Group = group;
             this.TypeId = group.Info.TypeId;
+            this.IntInitState();
         }
 
         /// <summary>
@@ -170,6 +171,11 @@ namespace BigMachines
         /// <param name="state">The next state.</param>
         /// <returns><see langword="true"/>: State changed. <see langword="false"/>: Not changed (same state or denied). </returns>
         protected internal virtual bool IntChangeState(int state) => false;
+
+        /// <summary>
+        /// Generated method which is called to initialize the state.
+        /// </summary>
+        protected internal virtual void IntInitState() => this.CurrentState = 0;
 
         /// <summary>
         /// Receivea a command and invoke the appropriate method.<br/>
