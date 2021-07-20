@@ -79,7 +79,7 @@ namespace Sandbox
         [Key(10)]
         public int Dummy { get; set; }
 
-        [StateMethod(CheckStateChange = true)]
+        [StateMethod(99)]
         protected StateResult ErrorState(StateParameter parameter)
         {
             if (parameter.RunType == RunType.CanEnter || parameter.RunType == RunType.CanExit)
@@ -91,7 +91,7 @@ namespace Sandbox
             return StateResult.Continue;
         }
 
-        [StateMethod(true, Id = 111)]
+        [StateMethod(0)]
         protected StateResult Initial(StateParameter parameter)
         {// lock(this)
             if (parameter.RunType == RunType.CanEnter || parameter.RunType == RunType.CanExit)
@@ -106,7 +106,7 @@ namespace Sandbox
             return StateResult.Continue;
         }
 
-        [StateMethod]
+        [StateMethod(1)]
         protected StateResult First(StateParameter parameter)
         {
             if (parameter.RunType == RunType.CanEnter)

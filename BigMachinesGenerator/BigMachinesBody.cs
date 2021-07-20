@@ -62,9 +62,13 @@ namespace BigMachines.Generator
             id: "BMG008", title: "Duplicate TypeId", messageFormat: "TypeId '{0}' is duplicated",
             category: "BigMachinesGenerator", DiagnosticSeverity.Error, isEnabledByDefault: true);
 
-        public static readonly DiagnosticDescriptor Warning_DefaultState = new DiagnosticDescriptor(
-            id: "BMG009", title: "Duplicate default state", messageFormat: "Only one state method can be set as default",
-            category: "BigMachinesGenerator", DiagnosticSeverity.Warning, isEnabledByDefault: true);
+        public static readonly DiagnosticDescriptor Error_DuplicateStateId = new DiagnosticDescriptor(
+            id: "BMG009", title: "Duplicate state id", messageFormat: "State method id must be unique",
+            category: "BigMachinesGenerator", DiagnosticSeverity.Error, isEnabledByDefault: true);
+
+        public static readonly DiagnosticDescriptor Error_NoDefaultStateMethod = new DiagnosticDescriptor(
+            id: "BMG010", title: "No default state method", messageFormat: "Default state method (state method id = 0) is required",
+            category: "BigMachinesGenerator", DiagnosticSeverity.Error, isEnabledByDefault: true);
 
         public BigMachinesBody(GeneratorExecutionContext context)
             : base(context)

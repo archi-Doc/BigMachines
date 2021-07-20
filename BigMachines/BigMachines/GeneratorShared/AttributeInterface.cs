@@ -42,27 +42,20 @@ namespace BigMachines
         /// <summary>
         /// Initializes a new instance of the <see cref="StateMethodAttribute"/> class.
         /// </summary>
-        /// <param name="default">If set to true, the state method will be the default.</param>
-        public StateMethodAttribute(bool @default = false)
+        /// <param name="id">The identifier used for serialization.<br/>
+        /// 0: Default state method.<br/>
+        /// Id can be a random number, but it must be unique.</param>
+        public StateMethodAttribute(int id)
         {
-            this.Default = @default;
+            this.Id = id;
         }
 
         /// <summary>
-        /// Gets a value indicating whether or not the state machine is default [the default is false].
+        /// Gets an identifier used for serialization.<br/>
+        /// 0: Default state method.<br/>
+        /// Id can be a random number, but it must be unique.
         /// </summary>
-        public bool Default { get; } = false;
-
-        /// <summary>
-        /// Gets or sets a value indicating whether to check for the state change [the default is false].
-        /// </summary>
-        public bool CheckStateChange { get; set; } = false;
-
-        /// <summary>
-        /// Gets or sets an identifier which is used for serialization.<br/>
-        /// Id will be set as GetHashCode() of the method name by default [the default is int.MinValue].
-        /// </summary>
-        public int Id { get; set; } = int.MinValue;
+        public int Id { get; }
     }
 
     /// <summary>

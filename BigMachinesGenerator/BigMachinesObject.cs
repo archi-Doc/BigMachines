@@ -305,9 +305,10 @@ namespace BigMachines.Generator
             this.CheckKeyword(BigMachinesBody.RunInternalIdentifier, this.Location);
             this.CheckKeyword(BigMachinesBody.ChangeState, this.Location);
             this.CheckKeyword(BigMachinesBody.IntChangeState, this.Location);
-            this.CheckKeyword(BigMachinesBody.IntInitState, this.Location);
+            // this.CheckKeyword(BigMachinesBody.IntInitState, this.Location);
 
             this.StateMethodList = new();
+            var idToStateMethod = new Dictionary<int, StateMethod>();
             foreach (var x in this.GetMembers(VisceralTarget.Method))
             {
                 if (x.AllAttributes.FirstOrDefault(x => x.FullName == StateMethodAttributeMock.FullName) is { } attribute)
@@ -317,22 +318,27 @@ namespace BigMachines.Generator
                     {// Add
                         this.StateMethodList.Add(stateMethod);
 
-                        // Default state method
-                        if (stateMethod.Default)
-                        {
-                            if (this.DefaultStateMethod?.Default == true)
-                            {// warn
-                                this.Body.AddDiagnostic(BigMachinesBody.Warning_DefaultState, stateMethod.Location);
-                            }
-
-                            this.DefaultStateMethod = stateMethod;
+                        if (idToStateMethod.TryGetValue(stateMethod.Id, out var s))
+                        {// Duplicated
+                            stateMethod.DuplicateId = true;
+                            s.DuplicateId = true;
                         }
-                        else if (this.DefaultStateMethod == null)
+                        else
                         {
-                            this.DefaultStateMethod = stateMethod;
+                            idToStateMethod.Add(stateMethod.Id, stateMethod);
                         }
                     }
                 }
+            }
+
+            if (this.StateMethodList.Count > 0 && !idToStateMethod.ContainsKey(0))
+            {// No default state method
+                this.Body.AddDiagnostic(BigMachinesBody.Error_NoDefaultStateMethod, this.Location);
+            }
+
+            foreach (var x in this.StateMethodList.Where(a => a.DuplicateId))
+            {// Duplicate state method
+                this.Body.AddDiagnostic(BigMachinesBody.Error_DuplicateStateId, x.Location);
             }
         }
 
@@ -528,10 +534,7 @@ namespace BigMachines.Generator
                 ssb.AppendLine("bool canExit = current switch");
                 ssb.AppendLine("{");
                 ssb.IncrementIndent();
-                foreach (var x in this.StateMethodList.Where(a => a.CheckStateChange))
-                {
-                    ssb.AppendLine($"State.{x.Name} => this.{x.Name}(new StateParameter(RunType.CanExit)) != StateResult.Deny,");
-                }
+                    // ssb.AppendLine($"State.{x.Name} => this.{x.Name}(new StateParameter(RunType.CanExit)) != StateResult.Deny,");
 
                 ssb.AppendLine("_ => true,");
                 ssb.DecrementIndent();
@@ -542,12 +545,13 @@ namespace BigMachines.Generator
                 ssb.AppendLine("bool canEnter = next switch");
                 ssb.AppendLine("{");
                 ssb.IncrementIndent();
-                foreach (var x in this.StateMethodList.Where(a => a.CheckStateChange))
+                foreach (var x in this.StateMethodList)
                 {
-                    ssb.AppendLine($"State.{x.Name} => this.{x.Name}(new StateParameter(RunType.CanEnter)) != StateResult.Deny,");
+                    ssb.AppendLine($"State.{x.Name} => true,");
+                    // ssb.AppendLine($"State.{x.Name} => this.{x.Name}(new StateParameter(RunType.CanEnter)) != StateResult.Deny,");
                 }
 
-                ssb.AppendLine("_ => true,");
+                ssb.AppendLine("_ => false,");
                 ssb.DecrementIndent();
                 ssb.AppendLine("};");
                 ssb.AppendLine();
@@ -568,11 +572,11 @@ namespace BigMachines.Generator
             ssb.AppendLine();
             ssb.AppendLine($"protected bool ChangeState({this.StateName} state) => this.IntChangeState(Unsafe.As<{this.StateName}, int>(ref state));");
 
-            if (this.DefaultStateMethod != null)
+            /*if (this.DefaultStateMethod != null)
             {
                 ssb.AppendLine();
                 ssb.AppendLine($"protected override void IntInitState() => this.CurrentState = {this.DefaultStateMethod.Id};");
-            }
+            }*/
         }
     }
 }
