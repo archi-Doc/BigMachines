@@ -19,6 +19,7 @@ namespace BigMachines.Generator
 {
     public class BigMachinesBody : VisceralBody<BigMachinesObject>
     {
+        public const string BigMachineIdentifier = "BigMachine";
         public const string StateIdentifier = "State";
         public const string InterfaceIdentifier = "Interface";
         public const string CreateInterfaceIdentifier = "CreateInterface";
@@ -165,7 +166,6 @@ namespace BigMachines.Generator
             ssb.AddUsing("System.Diagnostics.CodeAnalysis");
             ssb.AddUsing("System.Runtime.CompilerServices");
             ssb.AddUsing("BigMachines");
-            // ssb.AddUsing("Tinyhand");
 
             ssb.AppendLine("#nullable enable", false);
             ssb.AppendLine("#pragma warning disable CS1591", false);

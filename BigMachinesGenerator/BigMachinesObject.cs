@@ -33,6 +33,7 @@ namespace BigMachines.Generator
         Checked = 1 << 2,
 
         CanCreateInstance = 1 << 12, // Can create an instance
+        HasSimpleConstructor = 1 << 13, // Has simple constructor: TestMachine(BigMachine<T> bigMachine)
     }
 
     public class BigMachinesObject : VisceralObjectBase<BigMachinesObject>
@@ -122,15 +123,12 @@ namespace BigMachines.Generator
                 return;
             }*/
 
-            // Closed generic type is not supported.
             if (this.Generics_Kind == VisceralGenericsKind.ClosedGeneric)
             {
                 if (this.OriginalDefinition != null && this.OriginalDefinition.ClosedGenericHint == null)
                 {
                     this.OriginalDefinition.ClosedGenericHint = this;
                 }
-
-                return;
             }
 
             // StateMachineAttribute
@@ -235,11 +233,11 @@ namespace BigMachines.Generator
                 this.ObjectFlag |= BigMachinesObjectFlag.CanCreateInstance;
             }
 
-            if (this.Generics_Kind == VisceralGenericsKind.OpenGeneric)
+            /*if (this.Generics_Kind == VisceralGenericsKind.OpenGeneric)
             {
                 this.Body.ReportDiagnostic(BigMachinesBody.Error_OpenGenericClass, this.Location, this.FullName);
                 return;
-            }
+            }*/
 
             // if (this.ObjectFlag.HasFlag(BigMachinesObjectFlag.CanCreateInstance))
             {// Type which can create an instance
@@ -329,6 +327,14 @@ namespace BigMachines.Generator
                         }
                     }
                 }
+                else if (x.Method_IsConstructor)
+                {// Constructor
+                    if (x.Method_Parameters.Length == 1 &&
+                        x.Method_Parameters[0].StartsWith("BigMachines.BigMachine<"))
+                    {
+                        this.ObjectFlag |= BigMachinesObjectFlag.HasSimpleConstructor;
+                    }
+                }
             }
 
             if (this.StateMethodList.Count > 0 && !idToStateMethod.ContainsKey(0))
@@ -373,12 +379,52 @@ namespace BigMachines.Generator
 
         public static void GenerateLoader(ScopingStringBuilder ssb, GeneratorInformation info, List<BigMachinesObject> list)
         {
-            var list2 = list.SelectMany(x => x.ConstructedObjects);
+            var list2 = list.SelectMany(x => x.ConstructedObjects).Where(x => x.ObjectAttribute != null).ToArray();
+
+            if (list2.Length > 0 && list2[0].ContainingObject is { } containingObject)
+            {// Add ModuleInitializerClass
+                string? initializerClassName = null;
+                if (containingObject.ClosedGenericHint != null)
+                {// ClosedGenericHint
+                    initializerClassName = containingObject.ClosedGenericHint.FullName;
+                    goto ModuleInitializerClass_Added;
+                }
+
+                var constructedList = containingObject.ConstructedObjects;
+                if (constructedList != null)
+                {// Closed generic
+                    for (var n = 0; n < constructedList.Count; n++)
+                    {
+                        if (constructedList[n].Generics_Kind != VisceralGenericsKind.OpenGeneric)
+                        {
+                            initializerClassName = constructedList[n].FullName;
+                            goto ModuleInitializerClass_Added;
+                        }
+                    }
+                }
+
+                // Open generic
+                (initializerClassName, _) = containingObject.GetClosedGenericName("object");
+
+ModuleInitializerClass_Added:
+                if (initializerClassName != null)
+                {
+                    info.ModuleInitializerClass.Add(initializerClassName);
+                }
+            }
 
             using (var m = ssb.ScopeBrace("internal static void __gen__bm()"))
             {
                 foreach (var x in list2)
                 {
+                    if (x.ObjectAttribute == null || x.IdentifierObject == null)
+                    {
+                        continue;
+                    }
+
+                    var constructor = x.ObjectFlag.HasFlag(BigMachinesObjectFlag.HasSimpleConstructor) ? $"x => new {x.FullName}(x)" : "null";
+                    ssb.AppendLine($"{BigMachinesBody.BigMachineIdentifier}<{x.IdentifierObject.FullName}>.StaticInfo[typeof({x.FullName}.{BigMachinesBody.InterfaceIdentifier})] = new(typeof({x.FullName}), {x.ObjectAttribute.MachineTypeId}, {constructor}, null);");
+                    // typeof(MachineSingle<>)
                 }
             }
         }

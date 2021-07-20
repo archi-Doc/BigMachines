@@ -26,6 +26,22 @@ namespace Sandbox
         }
     }
 
+    public partial class ParentClassT<T>
+    {
+        [StateMachine(444)]
+        public partial class NestedMachineT : Machine<int>
+        {
+            public NestedMachineT(BigMachine<int> bigMachine)
+            : base(bigMachine)
+            {
+                this.Param = default!;
+            }
+
+            [Key(10)]
+            public T Param { get; set; }
+        }
+    }
+
     public class TestGroup : MachineGroup<int>
     {
         internal TestGroup(BigMachine<int> bigMachine)
