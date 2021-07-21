@@ -28,7 +28,7 @@ namespace Sandbox
             // typeof(TestMachine.Interface) => GroupInfo ( Constructor, TypeId, typeof(TestMachine) )
             // BigMachine<int>.StaticInfo[typeof(TestMachine.Interface)] = new(typeof(TestMachine), 0, x => new TestMachine(x), typeof(MachineSingle<>));
 
-            BigMachine<int>.StaticInfo[typeof(Sandbox.ParentClassT<double>.NestedMachineT.Interface)] = new(typeof(Sandbox.ParentClassT<double>.NestedMachineT), 444, x => new Sandbox.ParentClassT<double>.NestedMachineT(x), null);
+            ParentClassT<double>.RegisterBM(); // Manual registration is required for open generic types.
 
             var container = new Container();
             container.RegisterDelegate<BigMachine<int>>(x => new BigMachine<int>(ThreadCore.Root, container), Reuse.Singleton);
@@ -65,9 +65,12 @@ namespace Sandbox
                 }
             }
 
-            var state = testMachine.GetCurrentState();
-            // testMachine.ChangeStateTwoWay(TestMachine.State.ErrorState);
-            state = testMachine.GetCurrentState();
+            if (testMachine != null)
+            {
+                var state = testMachine.GetCurrentState();
+                // testMachine.ChangeStateTwoWay(TestMachine.State.ErrorState);
+                state = testMachine.GetCurrentState();
+            }
 
             var testGroup = bigMachine.GetGroup<TestMachine.Interface>();
 

@@ -245,7 +245,7 @@ namespace BigMachines.Generator
                     foreach (var x in info.ModuleInitializerClass)
                     {
                         ssb.Append(x, true);
-                        ssb.AppendLine(".__gen__bm();", false);
+                        ssb.AppendLine(".RegisterBM();", false);
                     }
                 }
             }

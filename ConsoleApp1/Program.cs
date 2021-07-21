@@ -63,17 +63,17 @@ namespace ConsoleApp1
         protected StateResult Two(StateParameter parameter)
         {
             Console.WriteLine($"TestMachine {this.Identifier}: Two - {this.Count++}");
-            this.SetTimeout(TimeSpan.FromSeconds(0.5));
+            this.SetTimeout(TimeSpan.FromSeconds(0.5)); // Change the time until the next run.
 
             if (this.Count > 10)
             {// Terminate the machine.
                 return StateResult.Terminate;
             }
 
-            return StateResult.Continue;
+            return StateResult.Continue; // Continue
         }
 
-        protected override void OnTerminate()
+        protected override void OnTerminated()
         {
             Console.WriteLine($"TestMachine {this.Identifier}: Terminated");
 
@@ -118,15 +118,16 @@ namespace ConsoleApp1
             {
             }
 
-            var testMachine = bigMachine.TryCreate<TestMachine.Interface>(3); // Machine is created via the interface class, not the machine class itself.
+            var testMachine = bigMachine.TryCreate<TestMachine.Interface>(3); // Machine is created via the interface class and identifier, not the machine class itself.
             if (testMachine != null)
             {
                 var currentState = testMachine.GetCurrentState(); // Get current state. You can operate machines using the interface class.
             }
 
-            var testGroup = bigMachine.GetGroup<TestMachine.Interface>();
+            testMachine = bigMachine.TryGet<TestMachine.Interface>(3); // Get the created machine.
 
-            testMachine = testGroup.TryGet<TestMachine.Interface>(3);
+            var testGroup = bigMachine.GetGroup<TestMachine.Interface>(); // Group is a collection of machines.
+            testMachine = testGroup.TryGet<TestMachine.Interface>(3); // Same as above
 
             await ThreadCore.Root.WaitForTermination(-1); // Wait for the termination infinitely.
 

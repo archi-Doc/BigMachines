@@ -122,7 +122,7 @@ namespace BigMachines
         internal virtual void TerminateInternal()
         {
             this.Status = MachineStatus.Terminated;
-            this.OnTerminate();
+            this.OnTerminated();
         }
 
         /// <summary>
@@ -222,7 +222,7 @@ namespace BigMachines
         /// Called when the machine is terminating.<br/>
         /// Inside lock (machine) statement.
         /// </summary>
-        protected internal virtual void OnTerminate()
+        protected internal virtual void OnTerminated()
         {
         }
 
