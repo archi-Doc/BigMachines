@@ -68,7 +68,7 @@ namespace ConsoleApp1
             return StateResult.Continue;
         }
 
-        protected override void TerminateInternal()
+        protected override void OnTerminate()
         {
             Console.WriteLine($"TestMachine {this.Identifier}: Terminated");
 
