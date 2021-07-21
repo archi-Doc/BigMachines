@@ -87,6 +87,16 @@ namespace Sandbox
         }
     }
 
+    [StateMachine(4)]
+    public partial class TestMachine2<TIdentifier> : Machine<TIdentifier>
+        where TIdentifier : notnull
+    {
+        public TestMachine2(BigMachine<TIdentifier> bigMachine)
+            : base(bigMachine)
+        {// Custom
+        }
+    }
+
     [TinyhandObject(UseServiceProvider = true)]
     [StateMachine(0x35, Group = typeof(MachineSingle<>))]
     public partial class TestMachine : Machine<int>
