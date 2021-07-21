@@ -23,6 +23,15 @@ namespace Sandbox
             public NestedMachine(BigMachine<int> bigMachine)
             : base(bigMachine)
             {
+                this.DefaultTimeout = TimeSpan.FromSeconds(1);
+                this.SetLifespan(TimeSpan.FromSeconds(10));
+            }
+
+            [StateMethod(0)]
+            public StateResult One(StateParameter parameter)
+            {
+                Console.WriteLine("One");
+                return StateResult.Continue;
             }
         }
     }
@@ -37,10 +46,18 @@ namespace Sandbox
             : base(bigMachine)
             {
                 this.Param = default!;
+                this.DefaultTimeout = TimeSpan.FromSeconds(1);
             }
 
             [Key(10)]
             public T Param { get; set; }
+
+            [StateMethod(0)]
+            public StateResult Two(StateParameter parameter)
+            {
+                Console.WriteLine("Two" + this.Param?.ToString());
+                return StateResult.Continue;
+            }
         }
     }
 

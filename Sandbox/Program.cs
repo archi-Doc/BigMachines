@@ -28,6 +28,8 @@ namespace Sandbox
             // typeof(TestMachine.Interface) => GroupInfo ( Constructor, TypeId, typeof(TestMachine) )
             // BigMachine<int>.StaticInfo[typeof(TestMachine.Interface)] = new(typeof(TestMachine), 0, x => new TestMachine(x), typeof(MachineSingle<>));
 
+            BigMachine<int>.StaticInfo[typeof(Sandbox.ParentClassT<double>.NestedMachineT.Interface)] = new(typeof(Sandbox.ParentClassT<double>.NestedMachineT), 444, x => new Sandbox.ParentClassT<double>.NestedMachineT(x), null);
+
             /*var container = new Container();
             container.RegisterDelegate<BigMachine<int>>(x => new BigMachine<int>(ThreadCore.Root, container), Reuse.Singleton);
             container.Register<TestMachine>(Reuse.Singleton);
@@ -76,6 +78,9 @@ namespace Sandbox
             identifiers = testGroup.GetIdentifiers().ToArray();
 
             // testMachine?.Run();
+
+            // bigMachine.TryCreate<ParentClass.NestedMachine.Interface>(10);
+            bigMachine.TryCreate<ParentClassT<double>.NestedMachineT.Interface>(10);
 
             await ThreadCore.Root.WaitForTermination(-1); // Wait for the termination infinitely.
 
