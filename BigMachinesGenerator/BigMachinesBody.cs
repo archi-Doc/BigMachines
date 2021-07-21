@@ -20,6 +20,7 @@ namespace BigMachines.Generator
     public class BigMachinesBody : VisceralBody<BigMachinesObject>
     {
         public const string BigMachineIdentifier = "BigMachine";
+        public const string IMachineGroupIdentifier = "IMachineGroup<TIdentifier>";
         public const string StateIdentifier = "State";
         public const string InterfaceIdentifier = "Interface";
         public const string CreateInterfaceIdentifier = "CreateInterface";
@@ -69,6 +70,10 @@ namespace BigMachines.Generator
 
         public static readonly DiagnosticDescriptor Error_NoDefaultStateMethod = new DiagnosticDescriptor(
             id: "BMG010", title: "No default state method", messageFormat: "Default state method (state method id = 0) is required",
+            category: "BigMachinesGenerator", DiagnosticSeverity.Error, isEnabledByDefault: true);
+
+        public static readonly DiagnosticDescriptor Error_GroupType = new DiagnosticDescriptor(
+            id: "BMG011", title: "Group type error", messageFormat: "Group must implement IMachineGroup<TIdentifier> interface",
             category: "BigMachinesGenerator", DiagnosticSeverity.Error, isEnabledByDefault: true);
 
         public BigMachinesBody(GeneratorExecutionContext context)
@@ -240,7 +245,7 @@ namespace BigMachines.Generator
                     foreach (var x in info.ModuleInitializerClass)
                     {
                         ssb.Append(x, true);
-                        ssb.AppendLine(".__gen__bm();", false);
+                        ssb.AppendLine(".RegisterBM();", false);
                     }
                 }
             }

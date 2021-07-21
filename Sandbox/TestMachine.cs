@@ -16,18 +16,29 @@ namespace Sandbox
 {
     public partial class ParentClass
     {
+        [TinyhandObject(UseServiceProvider = true)]
         [StateMachine(333)]
         public partial class NestedMachine : Machine<int>
         {
             public NestedMachine(BigMachine<int> bigMachine)
             : base(bigMachine)
             {
+                this.DefaultTimeout = TimeSpan.FromSeconds(1);
+                this.SetLifespan(TimeSpan.FromSeconds(10));
+            }
+
+            [StateMethod(0)]
+            public StateResult One(StateParameter parameter)
+            {
+                Console.WriteLine("One");
+                return StateResult.Continue;
             }
         }
     }
 
     public partial class ParentClassT<T>
     {
+        [TinyhandObject(UseServiceProvider = true)]
         [StateMachine(444)]
         public partial class NestedMachineT : Machine<int>
         {
@@ -35,10 +46,18 @@ namespace Sandbox
             : base(bigMachine)
             {
                 this.Param = default!;
+                this.DefaultTimeout = TimeSpan.FromSeconds(1);
             }
 
             [Key(10)]
             public T Param { get; set; }
+
+            [StateMethod(0)]
+            public StateResult Two(StateParameter parameter)
+            {
+                Console.WriteLine("Two" + this.Param?.ToString());
+                return StateResult.Continue;
+            }
         }
     }
 
@@ -69,7 +88,7 @@ namespace Sandbox
     }
 
     [TinyhandObject(UseServiceProvider = true)]
-    [StateMachine(0x35)]
+    [StateMachine(0x35, Group = typeof(MachineSingle<>))]
     public partial class TestMachine : Machine<int>
     {
         /*public enum State

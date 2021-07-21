@@ -116,6 +116,16 @@ namespace BigMachines
         public int TypeId { get; internal set; }
 
         /// <summary>
+        /// Called when the machine is terminating.<br/>
+        /// Inside lock (machine) statement.
+        /// </summary>
+        internal virtual void TerminateInternal()
+        {
+            this.Status = MachineStatus.Terminated;
+            this.OnTerminated();
+        }
+
+        /// <summary>
         /// Gets or sets ManMachineInterface.
         /// </summary>
         protected internal ManMachineInterface? InterfaceInstance { get; set; }
@@ -212,9 +222,8 @@ namespace BigMachines
         /// Called when the machine is terminating.<br/>
         /// Inside lock (machine) statement.
         /// </summary>
-        protected internal virtual void TerminateInternal()
+        protected internal virtual void OnTerminated()
         {
-            this.Status = MachineStatus.Terminated;
         }
 
         /// <summary>

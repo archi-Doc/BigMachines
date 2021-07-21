@@ -3,9 +3,11 @@
 
 - Very versatile and easy to use.
 
-- Running machines and issuing commands to each machine is designed to be lock-free.
+- Running machines and sending commands to each machine is designed to be lock-free.
 
 - Full serialization features integrated with [Tinyhand](https://github.com/archi-Doc/Tinyhand).
+
+- Simplify complex and long-running processes as much as possible.
 
   
 
@@ -24,8 +26,6 @@ Work in progress
 **C# 9.0** or later for generated codes.
 
 **.NET 5** or later target framework.
-
-
 
 
 

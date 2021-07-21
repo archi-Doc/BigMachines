@@ -28,14 +28,17 @@ namespace Sandbox
             // typeof(TestMachine.Interface) => GroupInfo ( Constructor, TypeId, typeof(TestMachine) )
             // BigMachine<int>.StaticInfo[typeof(TestMachine.Interface)] = new(typeof(TestMachine), 0, x => new TestMachine(x), typeof(MachineSingle<>));
 
-            /*var container = new Container();
+            ParentClassT<double>.RegisterBM(); // Manual registration is required for open generic types.
+
+            var container = new Container();
             container.RegisterDelegate<BigMachine<int>>(x => new BigMachine<int>(ThreadCore.Root, container), Reuse.Singleton);
             container.Register<TestMachine>(Reuse.Singleton);
-            var bigMachine = container.Resolve<BigMachine<int>>();*/
-            // var container_machine = container.Resolve<TestMachine>();
+            // container.Register<Sandbox.ParentClassT<>.NestedMachineT>(Reuse.Singleton);
+            container.Register(typeof(Sandbox.ParentClassT<>.NestedMachineT));
+            var bigMachine = container.Resolve<BigMachine<int>>();
 
             Console.WriteLine("BigMachines Sandbox");
-            var bigMachine = new BigMachine<int>(ThreadCore.Root);
+            // var bigMachine = new BigMachine<int>(ThreadCore.Root);
 
             // Load
             try
@@ -52,7 +55,7 @@ namespace Sandbox
             }
 
             var testMachine = bigMachine.TryGet<TestMachine.Interface>(3);
-            testMachine = bigMachine.TryCreate<TestMachine.Interface>(3, null);
+            testMachine = bigMachine.TryCreate<TestMachine.Interface>(4, null);
             testMachine = bigMachine.TryCreate<TestMachine.Interface>(3, null);
             if (testMachine != null)
             {
@@ -62,9 +65,12 @@ namespace Sandbox
                 }
             }
 
-            var state = testMachine.GetCurrentState();
-            // testMachine.ChangeStateTwoWay(TestMachine.State.ErrorState);
-            state = testMachine.GetCurrentState();
+            if (testMachine != null)
+            {
+                var state = testMachine.GetCurrentState();
+                // testMachine.ChangeStateTwoWay(TestMachine.State.ErrorState);
+                state = testMachine.GetCurrentState();
+            }
 
             var testGroup = bigMachine.GetGroup<TestMachine.Interface>();
 
@@ -76,6 +82,9 @@ namespace Sandbox
             identifiers = testGroup.GetIdentifiers().ToArray();
 
             // testMachine?.Run();
+
+            // bigMachine.TryCreate<ParentClass.NestedMachine.Interface>(10);
+            bigMachine.TryCreate<ParentClassT<double>.NestedMachineT.Interface>(10);
 
             await ThreadCore.Root.WaitForTermination(-1); // Wait for the termination infinitely.
 

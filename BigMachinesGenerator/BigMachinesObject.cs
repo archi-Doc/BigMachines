@@ -72,6 +72,8 @@ namespace BigMachines.Generator
 
         public BigMachinesObject? ClosedGenericHint { get; private set; }
 
+        public string? GroupType { get; private set; }
+
         public Arc.Visceral.NullableAnnotation NullableAnnotationIfReferenceType
         {
             get
@@ -270,6 +272,14 @@ namespace BigMachines.Generator
                 this.Body.Machines.Add(id, this);
             }
 
+            // MachineGroup
+            if (this.ObjectAttribute.Group != null)
+            {
+                this.GroupType = this.ObjectAttribute.Group.ToDisplayString();
+
+                // this.Body.ReportDiagnostic(BigMachinesBody.Error_GroupType, this.Location);
+            }
+
             // Machine<TIdentifier>
             var machineObject = this.BaseObject;
             while (machineObject != null)
@@ -327,7 +337,7 @@ namespace BigMachines.Generator
                         }
                     }
                 }
-                else if (x.Method_IsConstructor)
+                else if (x.Method_IsConstructor && x.ContainingObject == this)
                 {// Constructor
                     if (x.Method_Parameters.Length == 1 &&
                         x.Method_Parameters[0].StartsWith("BigMachines.BigMachine<"))
@@ -404,7 +414,7 @@ namespace BigMachines.Generator
                 }
 
                 // Open generic
-                (initializerClassName, _) = containingObject.GetClosedGenericName("object");
+                // (initializerClassName, _) = containingObject.GetClosedGenericName("object");
 
 ModuleInitializerClass_Added:
                 if (initializerClassName != null)
@@ -413,7 +423,7 @@ ModuleInitializerClass_Added:
                 }
             }
 
-            using (var m = ssb.ScopeBrace("internal static void __gen__bm()"))
+            using (var m = ssb.ScopeBrace("internal static void RegisterBM()"))
             {
                 foreach (var x in list2)
                 {
@@ -423,7 +433,8 @@ ModuleInitializerClass_Added:
                     }
 
                     var constructor = x.ObjectFlag.HasFlag(BigMachinesObjectFlag.HasSimpleConstructor) ? $"x => new {x.FullName}(x)" : "null";
-                    ssb.AppendLine($"{BigMachinesBody.BigMachineIdentifier}<{x.IdentifierObject.FullName}>.StaticInfo[typeof({x.FullName}.{BigMachinesBody.InterfaceIdentifier})] = new(typeof({x.FullName}), {x.ObjectAttribute.MachineTypeId}, {constructor}, null);");
+                    var group = x.GroupType == null ? "null" : $"typeof({x.GroupType})";
+                    ssb.AppendLine($"{BigMachinesBody.BigMachineIdentifier}<{x.IdentifierObject.FullName}>.StaticInfo[typeof({x.FullName}.{BigMachinesBody.InterfaceIdentifier})] = new(typeof({x.FullName}), {x.ObjectAttribute.MachineTypeId}, {constructor}, {group});");
                     // typeof(MachineSingle<>)
                 }
             }

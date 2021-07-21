@@ -3,6 +3,7 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using Microsoft.CodeAnalysis;
 
 #pragma warning disable SA1602 // Enumeration items should be documented
 
@@ -46,6 +47,8 @@ namespace BigMachines.Generator
 
         public int MachineTypeId { get; set; }
 
+        public ISymbol? Group { get; set; }
+
         public static StateMachineAttributeMock FromArray(object?[] constructorArguments, KeyValuePair<string, object?>[] namedArguments)
         {
             var attribute = new StateMachineAttributeMock();
@@ -55,6 +58,12 @@ namespace BigMachines.Generator
             if (val != null)
             {
                 attribute.MachineTypeId = (int)val;
+            }
+
+            val = AttributeHelper.GetValue(-1, nameof(Group), constructorArguments, namedArguments);
+            if (val != null)
+            {
+                attribute.Group = val as ISymbol;
             }
 
             return attribute;
