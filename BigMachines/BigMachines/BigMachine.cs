@@ -255,9 +255,15 @@ namespace BigMachines
 
             if (info.GroupType != null)
             {// Customized group
+                Type type = info.GroupType;
+                if (type.IsGenericTypeDefinition || type.ContainsGenericParameters)
+                {// Open generic: CustomGroup<> -> CustomGroup<TIdentifier>
+                    type = type.MakeGenericType(new Type[] { typeof(TIdentifier) });
+                }
+
                 if (this.ServiceProvider != null)
                 {
-                    group = this.ServiceProvider.GetService(info.GroupType) as MachineGroup<TIdentifier>;
+                    group = this.ServiceProvider.GetService(type) as MachineGroup<TIdentifier>;
                 }
 
                 if (group == null)
@@ -270,12 +276,6 @@ namespace BigMachines
 
                         // var exp = Expression.Parameter(typeof(BigMachine<TIdentifier>));
                         // func = Expression.Lambda<Func<BigMachine<TIdentifier>, MachineGroup<TIdentifier>>>(Expression.New(constructorInfo, exp), exp).CompileFast();
-
-                        Type type = info.GroupType;
-                        if (type.IsGenericTypeDefinition || type.ContainsGenericParameters)
-                        {// Open generic: CustomGroup<> -> CustomGroup<TIdentifier>
-                            type = type.MakeGenericType(new Type[] { typeof(TIdentifier) });
-                        }
 
                         group = Activator.CreateInstance(type, BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic, null, new object[] { this }, null) as IMachineGroup<TIdentifier>;
                     }

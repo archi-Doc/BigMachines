@@ -14,7 +14,9 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Sandbox", "Sandbox\Sandbox.
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Benchmark", "Benchmark\Benchmark.csproj", "{A38FDC07-80DC-42F2-A2C7-0F1F69B2F519}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "BigMachinesGenerator", "BigMachinesGenerator\BigMachinesGenerator.csproj", "{13D57FCE-88CB-44C4-B160-6B5CB57CCF26}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "BigMachinesGenerator", "BigMachinesGenerator\BigMachinesGenerator.csproj", "{13D57FCE-88CB-44C4-B160-6B5CB57CCF26}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ConsoleApp1", "ConsoleApp1\ConsoleApp1.csproj", "{D1F88D6B-DFF3-49D7-9C2D-1F7A68045A72}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -38,6 +40,10 @@ Global
 		{13D57FCE-88CB-44C4-B160-6B5CB57CCF26}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{13D57FCE-88CB-44C4-B160-6B5CB57CCF26}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{13D57FCE-88CB-44C4-B160-6B5CB57CCF26}.Release|Any CPU.Build.0 = Release|Any CPU
+		{D1F88D6B-DFF3-49D7-9C2D-1F7A68045A72}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{D1F88D6B-DFF3-49D7-9C2D-1F7A68045A72}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{D1F88D6B-DFF3-49D7-9C2D-1F7A68045A72}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{D1F88D6B-DFF3-49D7-9C2D-1F7A68045A72}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

@@ -30,14 +30,15 @@ namespace Sandbox
 
             BigMachine<int>.StaticInfo[typeof(Sandbox.ParentClassT<double>.NestedMachineT.Interface)] = new(typeof(Sandbox.ParentClassT<double>.NestedMachineT), 444, x => new Sandbox.ParentClassT<double>.NestedMachineT(x), null);
 
-            /*var container = new Container();
+            var container = new Container();
             container.RegisterDelegate<BigMachine<int>>(x => new BigMachine<int>(ThreadCore.Root, container), Reuse.Singleton);
             container.Register<TestMachine>(Reuse.Singleton);
-            var bigMachine = container.Resolve<BigMachine<int>>();*/
-            // var container_machine = container.Resolve<TestMachine>();
+            // container.Register<Sandbox.ParentClassT<>.NestedMachineT>(Reuse.Singleton);
+            container.Register(typeof(Sandbox.ParentClassT<>.NestedMachineT));
+            var bigMachine = container.Resolve<BigMachine<int>>();
 
             Console.WriteLine("BigMachines Sandbox");
-            var bigMachine = new BigMachine<int>(ThreadCore.Root);
+            // var bigMachine = new BigMachine<int>(ThreadCore.Root);
 
             // Load
             try
