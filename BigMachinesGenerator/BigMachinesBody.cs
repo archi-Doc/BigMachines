@@ -28,6 +28,7 @@ namespace BigMachines.Generator
         public const string ChangeState = "ChangeState";
         public const string IntChangeState = "IntChangeState";
         public const string IntInitState = "IntInitState";
+        public const string RegisterBM = "RegisterBM";
 
         public const string StateResultFullName = "BigMachines.StateResult";
         public const string StateParameterFullName = "BigMachines.StateParameter";

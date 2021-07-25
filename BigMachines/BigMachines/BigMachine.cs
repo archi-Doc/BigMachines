@@ -47,10 +47,7 @@ namespace BigMachines
                     this.TypeIdToGroup.Add(x.Info.TypeId, x);
                 }
 
-                if (!this.MachineTypeToGroup.ContainsKey(x.Info.MachineType))
-                {
-                    this.MachineTypeToGroup.Add(x.Info.MachineType, x);
-                }
+                this.MachineTypeToGroup.TryAdd(x.Info.MachineType, x);
             }
         }
 
@@ -203,7 +200,7 @@ namespace BigMachines
 
         internal Dictionary<int, IMachineGroup<TIdentifier>> TypeIdToGroup { get; } = new();
 
-        internal Dictionary<Type, IMachineGroup<TIdentifier>> MachineTypeToGroup { get; } = new();
+        internal ThreadsafeTypeKeyHashTable<IMachineGroup<TIdentifier>> MachineTypeToGroup { get; } = new();
 
         private void DistributeCommand(CommandPost<TIdentifier>.Command command)
         {

@@ -14,6 +14,25 @@ using Tinyhand;
 
 namespace Sandbox
 {
+    [TinyhandObject(UseServiceProvider = true)]
+    [StateMachine(124)]
+    public partial class GenericMachine<TIdentifier> : Machine<TIdentifier>
+        where TIdentifier : notnull
+    {
+        public GenericMachine(BigMachine<TIdentifier> bigMachine)
+        : base(bigMachine)
+        {
+            this.DefaultTimeout = TimeSpan.FromSeconds(1);
+        }
+
+        [StateMethod(0)]
+        public StateResult Initial(StateParameter parameter)
+        {
+            Console.WriteLine("Generic");
+            return StateResult.Continue;
+        }
+    }
+
     public partial class ParentClass
     {
         [TinyhandObject(UseServiceProvider = true)]
@@ -56,6 +75,32 @@ namespace Sandbox
             public StateResult Two(StateParameter parameter)
             {
                 Console.WriteLine("Two" + this.Param?.ToString());
+                return StateResult.Continue;
+            }
+        }
+    }
+
+    public partial class ParentClassT2<T, TIdentifier>
+        where TIdentifier : notnull
+    {
+        [TinyhandObject(UseServiceProvider = true)]
+        [StateMachine(123)]
+        public partial class NestedMachineT2 : Machine<TIdentifier>
+        {
+            public NestedMachineT2(BigMachine<TIdentifier> bigMachine)
+            : base(bigMachine)
+            {
+                this.Param = default!;
+                this.DefaultTimeout = TimeSpan.FromSeconds(1);
+            }
+
+            [Key(10)]
+            public T Param { get; set; }
+
+            [StateMethod(0)]
+            public StateResult Two(StateParameter parameter)
+            {
+                Console.WriteLine("T2" + this.Param?.ToString());
                 return StateResult.Continue;
             }
         }
