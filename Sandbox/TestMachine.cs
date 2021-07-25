@@ -15,6 +15,25 @@ using Tinyhand;
 namespace Sandbox
 {
     [TinyhandObject(UseServiceProvider = true)]
+    [StateMachine(125)]
+    public partial class GenericMachine2<TIdentifier> : Machine<int>
+        where TIdentifier : notnull
+    {
+        public GenericMachine2(BigMachine<int> bigMachine)
+        : base(bigMachine)
+        {
+            this.DefaultTimeout = TimeSpan.FromSeconds(1);
+        }
+
+        [StateMethod(0)]
+        public StateResult Initial(StateParameter parameter)
+        {
+            Console.WriteLine("Generic2");
+            return StateResult.Continue;
+        }
+    }
+
+    [TinyhandObject(UseServiceProvider = true)]
     [StateMachine(124)]
     public partial class GenericMachine<TIdentifier> : Machine<TIdentifier>
         where TIdentifier : notnull

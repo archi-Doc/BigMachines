@@ -305,6 +305,16 @@ namespace BigMachines.Generator
                     this.IdentifierObject = machineObject.Generics_Arguments[0];
                     this.StateName = this.FullName + ".State";
                 }
+
+                if (this.Generics_Kind == VisceralGenericsKind.OpenGeneric)
+                {
+                    if (machineObject.Generics_Kind == VisceralGenericsKind.OpenGeneric &&
+                        this.Generics_Arguments.Length == 1 &&
+                        this.Generics_Arguments[0].FullName == machineObject.Generics_Arguments[0].FullName)
+                    {// Class<TIdentifier> : Machine<TIdentifier>
+                        // this.TryToInitialize
+                    }
+                }
             }
 
             this.CheckKeyword(BigMachinesBody.StateIdentifier, this.Location);
