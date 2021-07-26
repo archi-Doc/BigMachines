@@ -11,6 +11,16 @@ namespace Sandbox
 {
     class Program
     {
+        public class TestMachineLoader<TIdentifier> : IMachineLoader<TIdentifier>
+            where TIdentifier : notnull
+        {
+            public void Load()
+            {
+                GenericMachine<TIdentifier>.RegisterBM(102);
+                // NestedGenericParent<int>.NestedGenericMachine<TIdentifier>.RegisterBM(111);
+            }
+        }
+
         static async Task Main(string[] args)
         {
             AppDomain.CurrentDomain.ProcessExit += async (s, e) =>
@@ -28,7 +38,11 @@ namespace Sandbox
             // typeof(TestMachine.Interface) => GroupInfo ( Constructor, TypeId, typeof(TestMachine) )
             // BigMachine<int>.StaticInfo[typeof(TestMachine.Interface)] = new(typeof(TestMachine), 0, x => new TestMachine(x), typeof(MachineSingle<>));
 
-            ParentClassT<double>.RegisterBM(); // Manual registration is required for open generic types.
+            ParentClassT<double>.NestedMachineT.RegisterBM(100);
+            ParentClassT<string>.NestedMachineT.RegisterBM(101);
+            // ParentClassT2<byte, int>.NestedMachineT2.RegisterBM(101);
+            // GenericMachine<int>.RegisterBM(102);
+            // MachineLoader.Add(typeof(TestMachineLoader<>));
 
             var container = new Container();
             container.RegisterDelegate<BigMachine<int>>(x => new BigMachine<int>(ThreadCore.Root, container), Reuse.Singleton);
@@ -85,6 +99,8 @@ namespace Sandbox
 
             // bigMachine.TryCreate<ParentClass.NestedMachine.Interface>(10);
             bigMachine.TryCreate<ParentClassT<double>.NestedMachineT.Interface>(10);
+            bigMachine.TryCreate<GenericMachine<int>.Interface>(10);
+            // bigMachine.TryCreate<ParentClassT2<byte, int>.NestedMachineT2.Interface>(11);
 
             await ThreadCore.Root.WaitForTermination(-1); // Wait for the termination infinitely.
 

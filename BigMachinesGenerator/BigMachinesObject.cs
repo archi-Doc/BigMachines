@@ -34,6 +34,8 @@ namespace BigMachines.Generator
 
         CanCreateInstance = 1 << 12, // Can create an instance
         HasSimpleConstructor = 1 << 13, // Has simple constructor: TestMachine(BigMachine<T> bigMachine)
+        IsSimpleGenericMachine = 1 << 14, // Class<TIdentifier> : Machine<TIdentifier>
+        HasRegisterBM = 1 << 15, // RegisterBM() declared
     }
 
     public class BigMachinesObject : VisceralObjectBase<BigMachinesObject>
@@ -57,6 +59,10 @@ namespace BigMachines.Generator
         public List<StateMethod>? StateMethodList { get; private set; }
 
         public StateMethod? DefaultStateMethod { get; private set; }
+
+        public string? LoaderIdentifier { get; private set; }
+
+        public int LoaderNumber { get; private set; } = -1;
 
         public bool IsAbstractOrInterface => this.Kind == VisceralObjectKind.Interface || (this.symbol is INamedTypeSymbol nts && nts.IsAbstract);
 
@@ -305,6 +311,16 @@ namespace BigMachines.Generator
                     this.IdentifierObject = machineObject.Generics_Arguments[0];
                     this.StateName = this.FullName + ".State";
                 }
+
+                if (this.Generics_Kind == VisceralGenericsKind.OpenGeneric)
+                {
+                    if (machineObject.Generics_Kind == VisceralGenericsKind.OpenGeneric &&
+                        this.Generics_Arguments.Length == 1 &&
+                        this.Generics_Arguments[0].FullName == machineObject.Generics_Arguments[0].FullName)
+                    {// Class<TIdentifier> : Machine<TIdentifier>
+                        this.ObjectFlag |= BigMachinesObjectFlag.IsSimpleGenericMachine;
+                    }
+                }
             }
 
             this.CheckKeyword(BigMachinesBody.StateIdentifier, this.Location);
@@ -313,6 +329,7 @@ namespace BigMachines.Generator
             this.CheckKeyword(BigMachinesBody.RunInternalIdentifier, this.Location);
             this.CheckKeyword(BigMachinesBody.ChangeState, this.Location);
             this.CheckKeyword(BigMachinesBody.IntChangeState, this.Location);
+            this.CheckKeyword(BigMachinesBody.RegisterBM, this.Location);
             // this.CheckKeyword(BigMachinesBody.IntInitState, this.Location);
 
             this.StateMethodList = new();
@@ -387,11 +404,17 @@ namespace BigMachines.Generator
             this.CheckObject();
         }
 
-        public static void GenerateLoader(ScopingStringBuilder ssb, GeneratorInformation info, List<BigMachinesObject> list)
+        public static void GenerateLoader(ScopingStringBuilder ssb, GeneratorInformation info, BigMachinesObject? parent, List<BigMachinesObject> list)
         {
+            if (parent?.Generics_Kind == VisceralGenericsKind.OpenGeneric)
+            {
+                return;
+            }
+
+            var classFormat = "__gen__bm__{0:D4}";
             var list2 = list.SelectMany(x => x.ConstructedObjects).Where(x => x.ObjectAttribute != null).ToArray();
 
-            if (list2.Length > 0 && list2[0].ContainingObject is { } containingObject)
+            /*if (list2.Length > 0 && list2[0].ContainingObject is { } containingObject)
             {// Add ModuleInitializerClass
                 string? initializerClassName = null;
                 if (containingObject.ClosedGenericHint != null)
@@ -421,6 +444,39 @@ ModuleInitializerClass_Added:
                 {
                     info.ModuleInitializerClass.Add(initializerClassName);
                 }
+            }*/
+
+            string? loaderIdentifier = null;
+            var list3 = list2.Where(x => x.ObjectFlag.HasFlag(BigMachinesObjectFlag.IsSimpleGenericMachine)).ToArray();
+            if (list3.Length > 0)
+            {
+                ssb.AppendLine();
+                if (parent == null)
+                {
+                    loaderIdentifier = string.Format(classFormat, 0);
+                }
+                else
+                {
+                    parent.LoaderNumber = info.FormatterCount++;
+                    loaderIdentifier = string.Format(classFormat, parent.LoaderNumber);
+                }
+
+                ssb.AppendLine($"public class {loaderIdentifier}<TIdentifier> : IMachineLoader<TIdentifier>");
+                using (var scope = ssb.ScopeBrace($"    where TIdentifier : notnull"))
+                {
+                    using (var scope2 = ssb.ScopeBrace("public void Load()"))
+                    {
+                        foreach (var x in list3)
+                        {
+                            ssb.AppendLine($"{x.FullName}.RegisterBM({x.ObjectAttribute!.MachineTypeId});");
+                        }
+                    }
+                }
+            }
+
+            if (parent != null)
+            {
+                parent.ObjectFlag |= BigMachinesObjectFlag.HasRegisterBM;
             }
 
             using (var m = ssb.ScopeBrace("internal static void RegisterBM()"))
@@ -432,10 +488,20 @@ ModuleInitializerClass_Added:
                         continue;
                     }
 
-                    var constructor = x.ObjectFlag.HasFlag(BigMachinesObjectFlag.HasSimpleConstructor) ? $"x => new {x.FullName}(x)" : "null";
-                    var group = x.GroupType == null ? "null" : $"typeof({x.GroupType})";
-                    ssb.AppendLine($"{BigMachinesBody.BigMachineIdentifier}<{x.IdentifierObject.FullName}>.StaticInfo[typeof({x.FullName}.{BigMachinesBody.InterfaceIdentifier})] = new(typeof({x.FullName}), {x.ObjectAttribute.MachineTypeId}, {constructor}, {group});");
-                    // typeof(MachineSingle<>)
+                    if (x.Generics_Kind != VisceralGenericsKind.OpenGeneric)
+                    {// Register fixed types.
+                        ssb.AppendLine($"{x.FullName}.RegisterBM({x.ObjectAttribute.MachineTypeId});");
+                    }
+                }
+
+                foreach (var x in list.Where(a => a.ObjectFlag.HasFlag(BigMachinesObjectFlag.HasRegisterBM)))
+                {// Children
+                    ssb.AppendLine($"{x.FullName}.RegisterBM();");
+                }
+
+                if (loaderIdentifier != null)
+                {// Loader
+                    ssb.AppendLine($"MachineLoader.Add(typeof({loaderIdentifier}<>));");
                 }
             }
         }
@@ -468,7 +534,7 @@ ModuleInitializerClass_Added:
                     }
 
                     ssb.AppendLine();
-                    GenerateLoader(ssb, info, this.Children);
+                    GenerateLoader(ssb, info, this, this.Children);
                 }
             }
         }
@@ -480,6 +546,7 @@ ModuleInitializerClass_Added:
             this.Generate_CreateInterface(ssb, info);
             this.Generate_RunInternal(ssb, info);
             this.Generate_ChangeStateInternal(ssb, info);
+            this.Generate_RegisterBM(ssb, info);
 
             return;
         }
@@ -640,12 +707,28 @@ ModuleInitializerClass_Added:
 
             ssb.AppendLine();
             ssb.AppendLine($"protected bool ChangeState({this.StateName} state) => this.IntChangeState(Unsafe.As<{this.StateName}, int>(ref state));");
+            ssb.AppendLine();
 
             /*if (this.DefaultStateMethod != null)
             {
                 ssb.AppendLine();
                 ssb.AppendLine($"protected override void IntInitState() => this.CurrentState = {this.DefaultStateMethod.Id};");
             }*/
+        }
+
+        internal void Generate_RegisterBM(ScopingStringBuilder ssb, GeneratorInformation info)
+        {
+            if (this.MachineObject == null || this.IdentifierObject == null || this.ObjectAttribute == null)
+            {
+                return;
+            }
+
+            using (var scope = ssb.ScopeBrace("public static void RegisterBM(int typeId)"))
+            {
+                var constructor = this.ObjectFlag.HasFlag(BigMachinesObjectFlag.HasSimpleConstructor) ? $"x => new {this.FullName}(x)" : "null";
+                var group = this.GroupType == null ? "null" : $"typeof({this.GroupType})";
+                ssb.AppendLine($"{BigMachinesBody.BigMachineIdentifier}<{this.IdentifierObject.FullName}>.StaticInfo[typeof({this.FullName}.{BigMachinesBody.InterfaceIdentifier})] = new(typeof({this.FullName}), typeId, {constructor}, {group});");
+            }
         }
     }
 }

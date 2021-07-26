@@ -14,6 +14,66 @@ using Tinyhand;
 
 namespace Sandbox
 {
+    internal partial class NestedGenericParent<T>
+    {
+        [TinyhandObject(UseServiceProvider = true)]
+        [StateMachine(126)]
+        private partial class NestedGenericMachine<TIdentifier> : Machine<TIdentifier>
+            where TIdentifier : notnull
+        {
+            public NestedGenericMachine(BigMachine<TIdentifier> bigMachine)
+            : base(bigMachine)
+            {
+                this.DefaultTimeout = TimeSpan.FromSeconds(1);
+            }
+
+            [StateMethod(0)]
+            public StateResult Initial(StateParameter parameter)
+            {
+                Console.WriteLine("NestedGeneric");
+                return StateResult.Continue;
+            }
+        }
+    }
+
+    [TinyhandObject(UseServiceProvider = true)]
+    [StateMachine(124)]
+    public partial class GenericMachine<TIdentifier> : Machine<TIdentifier>
+        where TIdentifier : notnull
+    {
+        public GenericMachine(BigMachine<TIdentifier> bigMachine)
+        : base(bigMachine)
+        {
+            this.DefaultTimeout = TimeSpan.FromSeconds(1);
+        }
+
+        [StateMethod(0)]
+        public StateResult Initial(StateParameter parameter)
+        {
+            Console.WriteLine("Generic");
+            return StateResult.Continue;
+        }
+    }
+
+    [TinyhandObject(UseServiceProvider = true)]
+    [StateMachine(125)]
+    public partial class GenericMachine2<TIdentifier> : Machine<TIdentifier>
+        where TIdentifier : notnull
+    {
+        public GenericMachine2(BigMachine<TIdentifier> bigMachine)
+        : base(bigMachine)
+        {
+            this.DefaultTimeout = TimeSpan.FromSeconds(1);
+        }
+
+        [StateMethod(0)]
+        public StateResult Initial(StateParameter parameter)
+        {
+            Console.WriteLine("Generic");
+            return StateResult.Continue;
+        }
+    }
+
     public partial class ParentClass
     {
         [TinyhandObject(UseServiceProvider = true)]
@@ -21,6 +81,29 @@ namespace Sandbox
         public partial class NestedMachine : Machine<int>
         {
             public NestedMachine(BigMachine<int> bigMachine)
+            : base(bigMachine)
+            {
+                this.DefaultTimeout = TimeSpan.FromSeconds(1);
+                this.SetLifespan(TimeSpan.FromSeconds(10));
+            }
+
+            [StateMethod(0)]
+            public StateResult One(StateParameter parameter)
+            {
+                Console.WriteLine("One");
+                return StateResult.Continue;
+            }
+        }
+    }
+
+    public partial class ParentClass2
+    {
+        [TinyhandObject(UseServiceProvider = true)]
+        [StateMachine(334)]
+        private partial class NestedMachine2<TIdentifier> : Machine<TIdentifier>
+            where TIdentifier : notnull
+        {
+            public NestedMachine2(BigMachine<TIdentifier> bigMachine)
             : base(bigMachine)
             {
                 this.DefaultTimeout = TimeSpan.FromSeconds(1);
@@ -61,6 +144,32 @@ namespace Sandbox
         }
     }
 
+    public partial class ParentClassT2<T, TIdentifier>
+        where TIdentifier : notnull
+    {
+        [TinyhandObject(UseServiceProvider = true)]
+        [StateMachine(123)]
+        public partial class NestedMachineT2 : Machine<TIdentifier>
+        {
+            public NestedMachineT2(BigMachine<TIdentifier> bigMachine)
+            : base(bigMachine)
+            {
+                this.Param = default!;
+                this.DefaultTimeout = TimeSpan.FromSeconds(1);
+            }
+
+            [Key(10)]
+            public T Param { get; set; }
+
+            [StateMethod(0)]
+            public StateResult Two(StateParameter parameter)
+            {
+                Console.WriteLine("T2" + this.Param?.ToString());
+                return StateResult.Continue;
+            }
+        }
+    }
+
     public class TestGroup : MachineGroup<int>
     {
         internal TestGroup(BigMachine<int> bigMachine)
@@ -82,6 +191,16 @@ namespace Sandbox
     public partial class TestMachine3 : Machine<int>
     {
         public TestMachine3(BigMachine<int> bigMachine)
+            : base(bigMachine)
+        {// Custom
+        }
+    }
+
+    [StateMachine(4)]
+    public partial class TestMachine2<TIdentifier> : Machine<TIdentifier>
+        where TIdentifier : notnull
+    {
+        public TestMachine2(BigMachine<TIdentifier> bigMachine)
             : base(bigMachine)
         {// Custom
         }

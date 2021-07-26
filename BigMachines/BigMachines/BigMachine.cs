@@ -19,11 +19,13 @@ using Tinyhand;
 
 namespace BigMachines
 {
-    public class BigMachine<TIdentifier> : IDisposable
+    public partial class BigMachine<TIdentifier> : IDisposable
         where TIdentifier : notnull
     {
         public BigMachine(ThreadCoreBase parent, IServiceProvider? serviceProvider = null)
         {
+            MachineLoader.Load<TIdentifier>(); // Load generic machine information.
+
             this.Status = new();
             this.Core = new ThreadCore(parent, this.MainLoop);
             this.CommandPost = new(parent);
@@ -42,14 +44,14 @@ namespace BigMachines
             this.groupArray = array;
             foreach (var x in this.groupArray)
             {
-                if (!this.TypeIdToGroup.ContainsKey(x.Info.TypeId))
+                if (!this.TypeIdToGroup.TryAdd(x.Info.TypeId, x))
                 {
-                    this.TypeIdToGroup.Add(x.Info.TypeId, x);
+                    throw new InvalidOperationException($"Machine: {x.Info.MachineType} Type id: {x.Info.TypeId} is already registered.");
                 }
 
-                if (!this.MachineTypeToGroup.ContainsKey(x.Info.MachineType))
+                if (!this.MachineTypeToGroup.TryAdd(x.Info.MachineType, x))
                 {
-                    this.MachineTypeToGroup.Add(x.Info.MachineType, x);
+                    throw new InvalidOperationException($"Machine: {x.Info.MachineType} is already registered.");
                 }
             }
         }
@@ -203,7 +205,7 @@ namespace BigMachines
 
         internal Dictionary<int, IMachineGroup<TIdentifier>> TypeIdToGroup { get; } = new();
 
-        internal Dictionary<Type, IMachineGroup<TIdentifier>> MachineTypeToGroup { get; } = new();
+        internal ThreadsafeTypeKeyHashTable<IMachineGroup<TIdentifier>> MachineTypeToGroup { get; } = new();
 
         private void DistributeCommand(CommandPost<TIdentifier>.Command command)
         {
