@@ -117,7 +117,7 @@ namespace BigMachines
     }
 
     /// <summary>
-    /// Input parameter for a state method.
+    /// Input parameter of a state method.
     /// </summary>
     public struct StateParameter
     {

@@ -24,7 +24,7 @@ namespace BigMachines
     {
         public BigMachine(ThreadCoreBase parent, IServiceProvider? serviceProvider = null)
         {
-            MachineLoader.Load<TIdentifier>();
+            MachineLoader.Load<TIdentifier>(); // Load generic machine information.
 
             this.Status = new();
             this.Core = new ThreadCore(parent, this.MainLoop);
@@ -44,12 +44,15 @@ namespace BigMachines
             this.groupArray = array;
             foreach (var x in this.groupArray)
             {
-                if (!this.TypeIdToGroup.ContainsKey(x.Info.TypeId))
+                if (!this.TypeIdToGroup.TryAdd(x.Info.TypeId, x))
                 {
-                    this.TypeIdToGroup.Add(x.Info.TypeId, x);
+                    throw new InvalidOperationException($"Machine: {x.Info.MachineType} Type id: {x.Info.TypeId} is already registered.");
                 }
 
-                this.MachineTypeToGroup.TryAdd(x.Info.MachineType, x);
+                if (!this.MachineTypeToGroup.TryAdd(x.Info.MachineType, x))
+                {
+                    throw new InvalidOperationException($"Machine: {x.Info.MachineType} is already registered.");
+                }
             }
         }
 

@@ -34,6 +34,8 @@ namespace BigMachines.Generator
 
         CanCreateInstance = 1 << 12, // Can create an instance
         HasSimpleConstructor = 1 << 13, // Has simple constructor: TestMachine(BigMachine<T> bigMachine)
+        IsSimpleGenericMachine = 1 << 14, // Class<TIdentifier> : Machine<TIdentifier>
+        HasRegisterBM = 1 << 15, // RegisterBM() declared
     }
 
     public class BigMachinesObject : VisceralObjectBase<BigMachinesObject>
@@ -59,6 +61,8 @@ namespace BigMachines.Generator
         public StateMethod? DefaultStateMethod { get; private set; }
 
         public string? LoaderIdentifier { get; private set; }
+
+        public int LoaderNumber { get; private set; } = -1;
 
         public bool IsAbstractOrInterface => this.Kind == VisceralObjectKind.Interface || (this.symbol is INamedTypeSymbol nts && nts.IsAbstract);
 
@@ -314,8 +318,7 @@ namespace BigMachines.Generator
                         this.Generics_Arguments.Length == 1 &&
                         this.Generics_Arguments[0].FullName == machineObject.Generics_Arguments[0].FullName)
                     {// Class<TIdentifier> : Machine<TIdentifier>
-                        // this.TryToInitialize
-                        ...
+                        this.ObjectFlag |= BigMachinesObjectFlag.IsSimpleGenericMachine;
                     }
                 }
             }
@@ -403,6 +406,12 @@ namespace BigMachines.Generator
 
         public static void GenerateLoader(ScopingStringBuilder ssb, GeneratorInformation info, BigMachinesObject? parent, List<BigMachinesObject> list)
         {
+            if (parent?.Generics_Kind == VisceralGenericsKind.OpenGeneric)
+            {
+                return;
+            }
+
+            var classFormat = "__gen__bm__{0:D4}";
             var list2 = list.SelectMany(x => x.ConstructedObjects).Where(x => x.ObjectAttribute != null).ToArray();
 
             /*if (list2.Length > 0 && list2[0].ContainingObject is { } containingObject)
@@ -438,11 +447,20 @@ ModuleInitializerClass_Added:
             }*/
 
             string? loaderIdentifier = null;
-            var list3 = list2.Where(x => x.ObjectFlag.HasFlag(BigMachinesObjectFlag.HasSimpleConstructor)).ToArray();
+            var list3 = list2.Where(x => x.ObjectFlag.HasFlag(BigMachinesObjectFlag.IsSimpleGenericMachine)).ToArray();
             if (list3.Length > 0)
             {
                 ssb.AppendLine();
-                loaderIdentifier = "gen__loader";
+                if (parent == null)
+                {
+                    loaderIdentifier = string.Format(classFormat, 0);
+                }
+                else
+                {
+                    parent.LoaderNumber = info.FormatterCount++;
+                    loaderIdentifier = string.Format(classFormat, parent.LoaderNumber);
+                }
+
                 ssb.AppendLine($"public class {loaderIdentifier}<TIdentifier> : IMachineLoader<TIdentifier>");
                 using (var scope = ssb.ScopeBrace($"    where TIdentifier : notnull"))
                 {
@@ -456,6 +474,11 @@ ModuleInitializerClass_Added:
                 }
             }
 
+            if (parent != null)
+            {
+                parent.ObjectFlag |= BigMachinesObjectFlag.HasRegisterBM;
+            }
+
             using (var m = ssb.ScopeBrace("internal static void RegisterBM()"))
             {
                 foreach (var x in list2)
@@ -466,13 +489,18 @@ ModuleInitializerClass_Added:
                     }
 
                     if (x.Generics_Kind != VisceralGenericsKind.OpenGeneric)
-                    {
+                    {// Register fixed types.
                         ssb.AppendLine($"{x.FullName}.RegisterBM({x.ObjectAttribute.MachineTypeId});");
                     }
                 }
 
+                foreach (var x in list.Where(a => a.ObjectFlag.HasFlag(BigMachinesObjectFlag.HasRegisterBM)))
+                {// Children
+                    ssb.AppendLine($"{x.FullName}.RegisterBM();");
+                }
+
                 if (loaderIdentifier != null)
-                {
+                {// Loader
                     ssb.AppendLine($"MachineLoader.Add(typeof({loaderIdentifier}<>));");
                 }
             }

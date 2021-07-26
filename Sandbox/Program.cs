@@ -39,7 +39,8 @@ namespace Sandbox
             // BigMachine<int>.StaticInfo[typeof(TestMachine.Interface)] = new(typeof(TestMachine), 0, x => new TestMachine(x), typeof(MachineSingle<>));
 
             ParentClassT<double>.NestedMachineT.RegisterBM(100);
-            ParentClassT2<byte, int>.NestedMachineT2.RegisterBM(101);
+            ParentClassT<string>.NestedMachineT.RegisterBM(101);
+            // ParentClassT2<byte, int>.NestedMachineT2.RegisterBM(101);
             // GenericMachine<int>.RegisterBM(102);
             // MachineLoader.Add(typeof(TestMachineLoader<>));
 

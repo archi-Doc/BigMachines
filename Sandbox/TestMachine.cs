@@ -18,10 +18,10 @@ namespace Sandbox
     {
         [TinyhandObject(UseServiceProvider = true)]
         [StateMachine(126)]
-        private partial class NestedGenericMachine<TIdentifier> : Machine<int>
+        private partial class NestedGenericMachine<TIdentifier> : Machine<TIdentifier>
             where TIdentifier : notnull
         {
-            public NestedGenericMachine(BigMachine<int> bigMachine)
+            public NestedGenericMachine(BigMachine<TIdentifier> bigMachine)
             : base(bigMachine)
             {
                 this.DefaultTimeout = TimeSpan.FromSeconds(1);
@@ -81,6 +81,29 @@ namespace Sandbox
         public partial class NestedMachine : Machine<int>
         {
             public NestedMachine(BigMachine<int> bigMachine)
+            : base(bigMachine)
+            {
+                this.DefaultTimeout = TimeSpan.FromSeconds(1);
+                this.SetLifespan(TimeSpan.FromSeconds(10));
+            }
+
+            [StateMethod(0)]
+            public StateResult One(StateParameter parameter)
+            {
+                Console.WriteLine("One");
+                return StateResult.Continue;
+            }
+        }
+    }
+
+    public partial class ParentClass2
+    {
+        [TinyhandObject(UseServiceProvider = true)]
+        [StateMachine(334)]
+        private partial class NestedMachine2<TIdentifier> : Machine<TIdentifier>
+            where TIdentifier : notnull
+        {
+            public NestedMachine2(BigMachine<TIdentifier> bigMachine)
             : base(bigMachine)
             {
                 this.DefaultTimeout = TimeSpan.FromSeconds(1);
