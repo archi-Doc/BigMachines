@@ -19,11 +19,13 @@ using Tinyhand;
 
 namespace BigMachines
 {
-    public class BigMachine<TIdentifier> : IDisposable
+    public partial class BigMachine<TIdentifier> : IDisposable
         where TIdentifier : notnull
     {
         public BigMachine(ThreadCoreBase parent, IServiceProvider? serviceProvider = null)
         {
+            MachineLoader.Load<TIdentifier>();
+
             this.Status = new();
             this.Core = new ThreadCore(parent, this.MainLoop);
             this.CommandPost = new(parent);

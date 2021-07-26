@@ -58,6 +58,8 @@ namespace BigMachines.Generator
 
         public StateMethod? DefaultStateMethod { get; private set; }
 
+        public string? LoaderIdentifier { get; private set; }
+
         public bool IsAbstractOrInterface => this.Kind == VisceralObjectKind.Interface || (this.symbol is INamedTypeSymbol nts && nts.IsAbstract);
 
         public List<BigMachinesObject>? Children { get; private set; } // The opposite of ContainingObject
@@ -313,6 +315,7 @@ namespace BigMachines.Generator
                         this.Generics_Arguments[0].FullName == machineObject.Generics_Arguments[0].FullName)
                     {// Class<TIdentifier> : Machine<TIdentifier>
                         // this.TryToInitialize
+                        ...
                     }
                 }
             }
@@ -398,7 +401,7 @@ namespace BigMachines.Generator
             this.CheckObject();
         }
 
-        public static void GenerateLoader(ScopingStringBuilder ssb, GeneratorInformation info, List<BigMachinesObject> list)
+        public static void GenerateLoader(ScopingStringBuilder ssb, GeneratorInformation info, BigMachinesObject? parent, List<BigMachinesObject> list)
         {
             var list2 = list.SelectMany(x => x.ConstructedObjects).Where(x => x.ObjectAttribute != null).ToArray();
 
@@ -434,6 +437,25 @@ ModuleInitializerClass_Added:
                 }
             }*/
 
+            string? loaderIdentifier = null;
+            var list3 = list2.Where(x => x.ObjectFlag.HasFlag(BigMachinesObjectFlag.HasSimpleConstructor)).ToArray();
+            if (list3.Length > 0)
+            {
+                ssb.AppendLine();
+                loaderIdentifier = "gen__loader";
+                ssb.AppendLine($"public class {loaderIdentifier}<TIdentifier> : IMachineLoader<TIdentifier>");
+                using (var scope = ssb.ScopeBrace($"    where TIdentifier : notnull"))
+                {
+                    using (var scope2 = ssb.ScopeBrace("public void Load()"))
+                    {
+                        foreach (var x in list3)
+                        {
+                            ssb.AppendLine($"{x.FullName}.RegisterBM({x.ObjectAttribute!.MachineTypeId});");
+                        }
+                    }
+                }
+            }
+
             using (var m = ssb.ScopeBrace("internal static void RegisterBM()"))
             {
                 foreach (var x in list2)
@@ -447,6 +469,11 @@ ModuleInitializerClass_Added:
                     {
                         ssb.AppendLine($"{x.FullName}.RegisterBM({x.ObjectAttribute.MachineTypeId});");
                     }
+                }
+
+                if (loaderIdentifier != null)
+                {
+                    ssb.AppendLine($"MachineLoader.Add(typeof({loaderIdentifier}<>));");
                 }
             }
         }
@@ -479,7 +506,7 @@ ModuleInitializerClass_Added:
                     }
 
                     ssb.AppendLine();
-                    GenerateLoader(ssb, info, this.Children);
+                    GenerateLoader(ssb, info, this, this.Children);
                 }
             }
         }

@@ -11,6 +11,16 @@ namespace Sandbox
 {
     class Program
     {
+        public class TestMachineLoader<TIdentifier> : IMachineLoader<TIdentifier>
+            where TIdentifier : notnull
+        {
+            public void Load()
+            {
+                GenericMachine<TIdentifier>.RegisterBM(102);
+                // NestedGenericParent<int>.NestedGenericMachine<TIdentifier>.RegisterBM(111);
+            }
+        }
+
         static async Task Main(string[] args)
         {
             AppDomain.CurrentDomain.ProcessExit += async (s, e) =>
@@ -30,7 +40,8 @@ namespace Sandbox
 
             ParentClassT<double>.NestedMachineT.RegisterBM(100);
             ParentClassT2<byte, int>.NestedMachineT2.RegisterBM(101);
-            GenericMachine<int>.RegisterBM(102);
+            // GenericMachine<int>.RegisterBM(102);
+            // MachineLoader.Add(typeof(TestMachineLoader<>));
 
             var container = new Container();
             container.RegisterDelegate<BigMachine<int>>(x => new BigMachine<int>(ThreadCore.Root, container), Reuse.Singleton);

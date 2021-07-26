@@ -144,7 +144,7 @@ namespace BigMachines.Generator
 
                     firstFlag = false;
 
-                    y.Generate(ssb, info); // Primary TinyhandObject
+                    y.Generate(ssb, info); // Primary objects
                 }
 
                 var result = ssb.Finalize();
@@ -189,7 +189,7 @@ namespace BigMachines.Generator
                 {
                     info.FinalizeBlock(ssb);
 
-                    BigMachinesObject.GenerateLoader(ssb, info, rootObjects);
+                    BigMachinesObject.GenerateLoader(ssb, info, null, rootObjects);
                 }
             }
 

@@ -14,22 +14,25 @@ using Tinyhand;
 
 namespace Sandbox
 {
-    [TinyhandObject(UseServiceProvider = true)]
-    [StateMachine(125)]
-    public partial class GenericMachine2<TIdentifier> : Machine<int>
-        where TIdentifier : notnull
+    internal partial class NestedGenericParent<T>
     {
-        public GenericMachine2(BigMachine<int> bigMachine)
-        : base(bigMachine)
+        [TinyhandObject(UseServiceProvider = true)]
+        [StateMachine(126)]
+        private partial class NestedGenericMachine<TIdentifier> : Machine<int>
+            where TIdentifier : notnull
         {
-            this.DefaultTimeout = TimeSpan.FromSeconds(1);
-        }
+            public NestedGenericMachine(BigMachine<int> bigMachine)
+            : base(bigMachine)
+            {
+                this.DefaultTimeout = TimeSpan.FromSeconds(1);
+            }
 
-        [StateMethod(0)]
-        public StateResult Initial(StateParameter parameter)
-        {
-            Console.WriteLine("Generic2");
-            return StateResult.Continue;
+            [StateMethod(0)]
+            public StateResult Initial(StateParameter parameter)
+            {
+                Console.WriteLine("NestedGeneric");
+                return StateResult.Continue;
+            }
         }
     }
 
@@ -39,6 +42,25 @@ namespace Sandbox
         where TIdentifier : notnull
     {
         public GenericMachine(BigMachine<TIdentifier> bigMachine)
+        : base(bigMachine)
+        {
+            this.DefaultTimeout = TimeSpan.FromSeconds(1);
+        }
+
+        [StateMethod(0)]
+        public StateResult Initial(StateParameter parameter)
+        {
+            Console.WriteLine("Generic");
+            return StateResult.Continue;
+        }
+    }
+
+    [TinyhandObject(UseServiceProvider = true)]
+    [StateMachine(125)]
+    public partial class GenericMachine2<TIdentifier> : Machine<TIdentifier>
+        where TIdentifier : notnull
+    {
+        public GenericMachine2(BigMachine<TIdentifier> bigMachine)
         : base(bigMachine)
         {
             this.DefaultTimeout = TimeSpan.FromSeconds(1);
