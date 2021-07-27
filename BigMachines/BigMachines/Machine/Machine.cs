@@ -114,7 +114,7 @@ namespace BigMachines
         /// Gets a TypeId of the machine.
         /// </summary>
         [IgnoreMember]
-        public int TypeId { get; internal set; }
+        public uint TypeId { get; internal set; }
 
         /// <summary>
         /// Called when the machine is terminating.<br/>

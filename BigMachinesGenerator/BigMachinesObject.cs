@@ -333,7 +333,7 @@ namespace BigMachines.Generator
             // this.CheckKeyword(BigMachinesBody.IntInitState, this.Location);
 
             this.StateMethodList = new();
-            var idToStateMethod = new Dictionary<int, StateMethod>();
+            var idToStateMethod = new Dictionary<uint, StateMethod>();
             foreach (var x in this.GetMembers(VisceralTarget.Method))
             {
                 if (x.AllAttributes.FirstOrDefault(x => x.FullName == StateMethodAttributeMock.FullName) is { } attribute)
@@ -723,7 +723,7 @@ ModuleInitializerClass_Added:
                 return;
             }
 
-            using (var scope = ssb.ScopeBrace("public static void RegisterBM(int typeId)"))
+            using (var scope = ssb.ScopeBrace("public static void RegisterBM(uint typeId)"))
             {
                 var constructor = this.ObjectFlag.HasFlag(BigMachinesObjectFlag.HasSimpleConstructor) ? $"x => new {this.FullName}(x)" : "null";
                 var group = this.GroupType == null ? "null" : $"typeof({this.GroupType})";

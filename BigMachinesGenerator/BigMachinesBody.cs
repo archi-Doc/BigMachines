@@ -82,7 +82,7 @@ namespace BigMachines.Generator
         {
         }
 
-        internal Dictionary<int, BigMachinesObject> Machines = new();
+        internal Dictionary<uint, BigMachinesObject> Machines = new();
 
         internal Dictionary<string, List<BigMachinesObject>> Namespaces = new();
 

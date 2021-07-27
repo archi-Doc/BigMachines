@@ -45,7 +45,7 @@ namespace BigMachines.Generator
         {
         }
 
-        public int MachineTypeId { get; set; }
+        public uint MachineTypeId { get; set; }
 
         public ISymbol? Group { get; set; }
 
@@ -57,7 +57,7 @@ namespace BigMachines.Generator
             val = AttributeHelper.GetValue(0, nameof(MachineTypeId), constructorArguments, namedArguments);
             if (val != null)
             {
-                attribute.MachineTypeId = (int)val;
+                attribute.MachineTypeId = (uint)val;
             }
 
             val = AttributeHelper.GetValue(-1, nameof(Group), constructorArguments, namedArguments);
@@ -81,7 +81,7 @@ namespace BigMachines.Generator
         {
         }
 
-        public int Id { get; set; } = int.MinValue;
+        public uint Id { get; set; }
 
         public static StateMethodAttributeMock FromArray(object?[] constructorArguments, KeyValuePair<string, object?>[] namedArguments)
         {
@@ -91,7 +91,7 @@ namespace BigMachines.Generator
             val = AttributeHelper.GetValue(0, nameof(Id), constructorArguments, namedArguments);
             if (val != null)
             {
-                attribute.Id = (int)val;
+                attribute.Id = (uint)val;
             }
 
             return attribute;

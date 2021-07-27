@@ -17,7 +17,7 @@ namespace BigMachines
         /// Initializes a new instance of the <see cref="StateMachineAttribute"/> class.
         /// </summary>
         /// <param name="typeId">Machine Type id (unique identifier for serialization).</param>
-        public StateMachineAttribute(int typeId)
+        public StateMachineAttribute(uint typeId)
         {
             this.MachineTypeId = typeId;
         }
@@ -25,7 +25,7 @@ namespace BigMachines
         /// <summary>
         /// Gets a type id (unique identifier for serialization) of the machine.
         /// </summary>
-        public int MachineTypeId { get; }
+        public uint MachineTypeId { get; }
 
         /// <summary>
         /// Gets or sets a machine group of the machine (e.g. <see cref="MachineGroup{TIdentifier}"/>, <see cref="MachineSingle{TIdentifier}"/>).
@@ -50,7 +50,7 @@ namespace BigMachines
         /// <param name="id">The identifier used for serialization.<br/>
         /// 0: Default state method.<br/>
         /// Id can be a random number, but it must be unique.</param>
-        public StateMethodAttribute(int id)
+        public StateMethodAttribute(uint id)
         {
             this.Id = id;
         }
@@ -60,7 +60,7 @@ namespace BigMachines
         /// 0: Default state method.<br/>
         /// Id can be a random number, but it must be unique.
         /// </summary>
-        public int Id { get; }
+        public uint Id { get; }
     }
 
     /// <summary>

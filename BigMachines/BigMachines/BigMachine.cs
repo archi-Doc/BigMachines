@@ -174,7 +174,7 @@ namespace BigMachines
                     continue;
                 }
 
-                var key = reader.ReadInt32();
+                var key = reader.ReadUInt32();
                 if (this.TypeIdToGroup.TryGetValue(key, out var group))
                 {
                     var machine = this.CreateMachine(group);
@@ -203,7 +203,7 @@ namespace BigMachines
             this.timerInterval = interval;
         }
 
-        internal Dictionary<int, IMachineGroup<TIdentifier>> TypeIdToGroup { get; } = new();
+        internal Dictionary<uint, IMachineGroup<TIdentifier>> TypeIdToGroup { get; } = new();
 
         internal ThreadsafeTypeKeyHashTable<IMachineGroup<TIdentifier>> MachineTypeToGroup { get; } = new();
 
