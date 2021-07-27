@@ -14,6 +14,23 @@ using Tinyhand;
 
 namespace Sandbox
 {
+    [TinyhandObject(UseServiceProvider = true)]
+    [StateMachine(0x18aba06a)]
+    public partial class StringMachine : Machine<int>
+    {
+        public StringMachine(BigMachine<int> bigMachine)
+        : base(bigMachine)
+        {
+        }
+
+        [StateMethod(0)]
+        public StateResult Initial(StateParameter parameter)
+        {
+            Console.WriteLine("String");
+            return StateResult.Continue;
+        }
+    }
+
     internal partial class NestedGenericParent<T>
     {
         [TinyhandObject(UseServiceProvider = true)]

@@ -8,7 +8,9 @@ namespace BigMachines
     /// <summary>
     /// Base class of <see cref="ManMachineInterface{TIdentifier, TState}"/>.
     /// </summary>
-    public abstract class ManMachineInterface
+    /// <typeparam name="TIdentifier">The type of an identifier.</typeparam>
+    public abstract class ManMachineInterface<TIdentifier>
+        where TIdentifier : notnull
     {
     }
 
@@ -18,7 +20,7 @@ namespace BigMachines
     /// </summary>
     /// <typeparam name="TIdentifier">The type of an identifier.</typeparam>
     /// <typeparam name="TState">The type of machine state.</typeparam>
-    public abstract class ManMachineInterface<TIdentifier, TState> : ManMachineInterface
+    public abstract class ManMachineInterface<TIdentifier, TState> : ManMachineInterface<TIdentifier>
         where TIdentifier : notnull
         where TState : struct
     {
