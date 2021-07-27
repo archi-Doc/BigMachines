@@ -38,6 +38,8 @@ namespace BigMachines
 
         public MachineInfo<TIdentifier> Info { get; private set; }
 
+        public int Count => this.IdentificationToMachine.Count;
+
         public IEnumerable<TIdentifier> GetIdentifiers() => this.IdentificationToMachine.Keys;
 
         void IMachineGroup<TIdentifier>.Assign(MachineInfo<TIdentifier> info)

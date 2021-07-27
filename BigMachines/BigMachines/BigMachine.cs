@@ -66,6 +66,8 @@ namespace BigMachines
 
         public IServiceProvider? ServiceProvider { get; }
 
+        public IEnumerable<IMachineGroup<TIdentifier>> GetGroups() => this.groupArray;
+
         public TMachineInterface? TryGet<TMachineInterface>(TIdentifier identifier)
             where TMachineInterface : ManMachineInterface<TIdentifier>
         {

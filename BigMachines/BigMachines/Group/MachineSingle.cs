@@ -98,6 +98,8 @@ namespace BigMachines
 
         public MachineInfo<TIdentifier> Info { get; private set; }
 
+        public int Count => this.machine1 == null ? 0 : 1;
+
         public TMachineInterface? TryGet<TMachineInterface>(TIdentifier identifier)
             where TMachineInterface : ManMachineInterface<TIdentifier>
         {
