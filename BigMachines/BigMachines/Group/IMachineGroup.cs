@@ -26,6 +26,8 @@ namespace BigMachines
 
         public MachineInfo<TIdentifier> Info { get; }
 
+        public int Count { get; }
+
         internal void Assign(MachineInfo<TIdentifier> info);
 
         internal IEnumerable<Machine<TIdentifier>> GetMachines();
