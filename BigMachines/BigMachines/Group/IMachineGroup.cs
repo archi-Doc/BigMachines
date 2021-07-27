@@ -14,7 +14,7 @@ namespace BigMachines
         where TIdentifier : notnull
     {
         public TMachineInterface? TryGet<TMachineInterface>(TIdentifier identifier)
-            where TMachineInterface : ManMachineInterface;
+            where TMachineInterface : ManMachineInterface<TIdentifier>;
 
         public IEnumerable<TIdentifier> GetIdentifiers();
 

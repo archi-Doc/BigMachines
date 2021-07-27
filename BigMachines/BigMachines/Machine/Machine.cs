@@ -68,7 +68,8 @@ namespace BigMachines
         protected internal int CurrentState;
 
         /// <summary>
-        /// Gets or sets the default time interval at which the machine will run.
+        /// Gets or sets the default time interval at which the machine will run.<br/>
+        /// TimeSpan.Zero: no interval execution.
         /// </summary>
         [Key(3)]
         public TimeSpan DefaultTimeout { get; protected internal set; }
@@ -128,7 +129,7 @@ namespace BigMachines
         /// <summary>
         /// Gets or sets ManMachineInterface.
         /// </summary>
-        protected internal ManMachineInterface? InterfaceInstance { get; set; }
+        protected internal ManMachineInterface<TIdentifier>? InterfaceInstance { get; set; }
 
         /// <summary>
         /// Gets or sets a value indicating whether the state is changed in <see cref="RunInternal(StateParameter)"/>.

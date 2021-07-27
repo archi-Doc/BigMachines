@@ -20,7 +20,7 @@ namespace BigMachines
         }
 
         public TMachineInterface? TryGet<TMachineInterface>(TIdentifier identifier)
-            where TMachineInterface : ManMachineInterface
+            where TMachineInterface : ManMachineInterface<TIdentifier>
         {
             if (((IMachineGroup<TIdentifier>)this).TryGetMachine(identifier, out var machine))
             {

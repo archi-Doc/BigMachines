@@ -99,7 +99,7 @@ namespace BigMachines
         public MachineInfo<TIdentifier> Info { get; private set; }
 
         public TMachineInterface? TryGet<TMachineInterface>(TIdentifier identifier)
-            where TMachineInterface : ManMachineInterface
+            where TMachineInterface : ManMachineInterface<TIdentifier>
         {
             var m = Volatile.Read(ref this.machine1);
             if (m != null) // && Comparer<TIdentifier>.Default.Compare(m.Identifier, identifier) == 0)
@@ -113,7 +113,7 @@ namespace BigMachines
         }
 
         public TMachineInterface? TryGet<TMachineInterface>()
-            where TMachineInterface : ManMachineInterface
+            where TMachineInterface : ManMachineInterface<TIdentifier>
         {
             var m = Volatile.Read(ref this.machine1);
             if (m != null)

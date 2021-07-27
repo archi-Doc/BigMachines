@@ -67,21 +67,21 @@ namespace BigMachines
         public IServiceProvider? ServiceProvider { get; }
 
         public TMachineInterface? TryGet<TMachineInterface>(TIdentifier identifier)
-            where TMachineInterface : ManMachineInterface
+            where TMachineInterface : ManMachineInterface<TIdentifier>
         {
             this.GetMachineGroup(typeof(TMachineInterface), out var group);
             return group.TryGet<TMachineInterface>(identifier);
         }
 
         public IMachineGroup<TIdentifier> GetGroup<TMachineInterface>()
-            where TMachineInterface : ManMachineInterface
+            where TMachineInterface : ManMachineInterface<TIdentifier>
         {
             this.GetMachineGroup(typeof(TMachineInterface), out var group);
             return group;
         }
 
         public TMachineInterface? TryCreate<TMachineInterface>(TIdentifier identifier, object? parameter = null)
-            where TMachineInterface : ManMachineInterface
+            where TMachineInterface : ManMachineInterface<TIdentifier>
         {
             this.GetMachineGroup(typeof(TMachineInterface), out var group);
 
@@ -102,7 +102,7 @@ namespace BigMachines
         }
 
         public TMachineInterface Create<TMachineInterface>(TIdentifier identifier, object? parameter = null)
-            where TMachineInterface : ManMachineInterface
+            where TMachineInterface : ManMachineInterface<TIdentifier>
         {
             this.GetMachineGroup(typeof(TMachineInterface), out var group);
 
@@ -410,17 +410,17 @@ StateChangedLoop:
         {
             if (!this.interfaceTypeToGroup.TryGetValue(interfaceType, out info!))
             {
-                if (interfaceType.BaseType is { } baseType)
+                /*if (interfaceType.BaseType is { } baseType)
                 {
                     if (baseType.GetGenericTypeDefinition() == typeof(ManMachineInterface<,>))
                     {
                         if (baseType.GenericTypeArguments.Length > 0 &&
                             baseType.GenericTypeArguments[0] != typeof(TIdentifier))
                         {// Identifier type mismatch
-
                         }
                     }
-                }
+                }*/
+
                 throw new InvalidOperationException($"Machine interface {interfaceType.FullName} is not registered.");
             }
         }

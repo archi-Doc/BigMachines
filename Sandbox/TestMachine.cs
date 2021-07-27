@@ -16,12 +16,11 @@ namespace Sandbox
 {
     [TinyhandObject(UseServiceProvider = true)]
     [StateMachine(0x18aba06a)]
-    public partial class StringMachine : Machine<string>
+    public partial class StringMachine : Machine<int>
     {
-        public StringMachine(BigMachine<string> bigMachine)
+        public StringMachine(BigMachine<int> bigMachine)
         : base(bigMachine)
         {
-            this.DefaultTimeout = TimeSpan.FromSeconds(1);
         }
 
         [StateMethod(0)]
