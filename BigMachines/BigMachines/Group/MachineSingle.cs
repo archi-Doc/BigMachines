@@ -79,7 +79,7 @@ namespace BigMachines
             }
         }
 
-        public KeyValuePair<TIdentifier, TResponse>[] CommandGroupTwoWay<TMessage, TResponse>(TMessage message, int millisecondTimeout = 100)
+        public KeyValuePair<TIdentifier, TResponse?>[] CommandGroupTwoWay<TMessage, TResponse>(TMessage message, int millisecondTimeout = 100)
         {
             var m = Volatile.Read(ref this.machine1);
             if (m != null)
@@ -87,11 +87,11 @@ namespace BigMachines
                 var result = this.BigMachine.CommandPost.SendTwoWay<TMessage, TResponse>(CommandPost<TIdentifier>.CommandType.CommandTwoWay, this, m.Identifier, message, millisecondTimeout);
                 if (result != null)
                 {
-                    return new[] { new KeyValuePair<TIdentifier, TResponse>(m.Identifier, result) };
+                    return new[] { new KeyValuePair<TIdentifier, TResponse?>(m.Identifier, result) };
                 }
             }
 
-            return Array.Empty<KeyValuePair<TIdentifier, TResponse>>();
+            return Array.Empty<KeyValuePair<TIdentifier, TResponse?>>();
         }
 
         public BigMachine<TIdentifier> BigMachine { get; }
