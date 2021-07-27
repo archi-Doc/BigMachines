@@ -69,7 +69,7 @@ namespace BigMachines
 
         /// <summary>
         /// Gets or sets the default time interval at which the machine will run.<br/>
-        /// TimeSpan.Zero: no interval execution.
+        /// <see cref="TimeSpan.Zero"/>: No interval execution.
         /// </summary>
         [Key(3)]
         public TimeSpan DefaultTimeout { get; protected internal set; }
