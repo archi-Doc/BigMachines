@@ -83,7 +83,7 @@ namespace BigMachines.Generator
 
         public bool CanExit { get; private set; }
 
-        public int Id { get; internal set; }
+        public uint Id { get; internal set; }
 
         public bool DuplicateId { get; internal set; }
     }

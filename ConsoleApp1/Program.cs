@@ -1,4 +1,6 @@
-﻿using System;
+﻿// Copyright (c) All contributors. All rights reserved. Licensed under the MIT license.
+
+using System;
 using System.IO;
 using System.Linq;
 using System.Threading.Tasks;
@@ -53,7 +55,6 @@ namespace ConsoleApp1
             else
             {
                 Console.WriteLine("One -> Two denied.");
-
             }
 
             return result;
@@ -81,9 +82,9 @@ namespace ConsoleApp1
         }
     }
 
-    class Program
+    public class Program
     {
-        static async Task Main(string[] args)
+        public static async Task Main(string[] args)
         {
             AppDomain.CurrentDomain.ProcessExit += async (s, e) =>
             {// Console window is closing or process terminated.
@@ -118,13 +119,9 @@ namespace ConsoleApp1
             {
             }
 
-            var testMachine = bigMachine.TryCreate<TestMachine.Interface>(3); // Machine is created via the interface class and identifier, not the machine class itself.
-            if (testMachine != null)
-            {
-                var currentState = testMachine.GetCurrentState(); // Get current state. You can operate machines using the interface class.
-            }
+            bigMachine.TryCreate<GenericMachine<int>.Interface>(1);
 
-            testMachine = bigMachine.TryGet<TestMachine.Interface>(3); // Get the created machine.
+            var testMachine = bigMachine.TryGet<TestMachine.Interface>(3); // Get the created machine.
 
             var testGroup = bigMachine.GetGroup<TestMachine.Interface>(); // Group is a collection of machines.
             testMachine = testGroup.TryGet<TestMachine.Interface>(3); // Same as above

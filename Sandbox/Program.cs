@@ -68,8 +68,6 @@ namespace Sandbox
             {
             }
 
-            var stringMachine = bigMachine.TryCreate<StringMachine.Interface>(33);
-
             var testMachine = bigMachine.TryGet<TestMachine.Interface>(3);
             testMachine = bigMachine.TryCreate<TestMachine.Interface>(4, null);
             testMachine = bigMachine.TryCreate<TestMachine.Interface>(3, null);
