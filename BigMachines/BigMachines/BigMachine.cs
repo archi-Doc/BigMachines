@@ -410,6 +410,17 @@ StateChangedLoop:
         {
             if (!this.interfaceTypeToGroup.TryGetValue(interfaceType, out info!))
             {
+                if (interfaceType.BaseType is { } baseType)
+                {
+                    if (baseType.GetGenericTypeDefinition() == typeof(ManMachineInterface<,>))
+                    {
+                        if (baseType.GenericTypeArguments.Length > 0 &&
+                            baseType.GenericTypeArguments[0] != typeof(TIdentifier))
+                        {// Identifier type mismatch
+
+                        }
+                    }
+                }
                 throw new InvalidOperationException($"Machine interface {interfaceType.FullName} is not registered.");
             }
         }
