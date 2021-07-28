@@ -6,24 +6,25 @@ using Tinyhand;
 namespace BigMachines
 {
     /// <summary>
-    /// Base class of <see cref="ManMachineInterface{TIdentifier, TState}"/>.
+    /// Class for operating a machine.<br/>
+    /// To achieve lock-free operation, you need to use <see cref="ManMachineInterface{TIdentifier, TState}"/> instead of using machines directly.
     /// </summary>
     /// <typeparam name="TIdentifier">The type of an identifier.</typeparam>
     public abstract class ManMachineInterface<TIdentifier>
         where TIdentifier : notnull
     {
-    }
+        /// <summary>
+        /// Initializes a new instance of the <see cref="ManMachineInterface{TIdentifier}"/> class.
+        /// </summary>
+        /// <param name="group">The group to which the machine belongs.</param>
+        /// <param name="identifier">The identifier.</param>
+        public ManMachineInterface(IMachineGroup<TIdentifier> group, TIdentifier identifier)
+        {
+            this.BigMachine = group.BigMachine;
+            this.Group = group;
+            this.Identifier = TinyhandSerializer.Clone(identifier);
+        }
 
-    /// <summary>
-    /// Class for operating a machine.<br/>
-    /// To achieve lock-free operation, you need to use <see cref="ManMachineInterface{TIdentifier, TState}"/> instead of using machines directly.
-    /// </summary>
-    /// <typeparam name="TIdentifier">The type of an identifier.</typeparam>
-    /// <typeparam name="TState">The type of machine state.</typeparam>
-    public abstract class ManMachineInterface<TIdentifier, TState> : ManMachineInterface<TIdentifier>
-        where TIdentifier : notnull
-        where TState : struct
-    {
         /// <summary>
         /// Gets <see cref="BigMachine{TIdentifier}"/> instance.
         /// </summary>
@@ -38,36 +39,6 @@ namespace BigMachines
         /// Gets the identifier.
         /// </summary>
         public TIdentifier Identifier { get; }
-
-        /// <summary>
-        /// Initializes a new instance of the <see cref="ManMachineInterface{TIdentifier, TState}"/> class.
-        /// </summary>
-        /// <param name="group">The group to which the machine belongs.</param>
-        /// <param name="identifier">The identifier.</param>
-        public ManMachineInterface(IMachineGroup<TIdentifier> group, TIdentifier identifier)
-        {
-            this.BigMachine = group.BigMachine;
-            this.Group = group;
-            this.Identifier = TinyhandSerializer.Clone(identifier);
-        }
-
-        /// <summary>
-        /// Get the current state of the machine.
-        /// </summary>
-        /// <returns>The state of the machine..<br/>
-        /// <see langword="null"/>: Machine is not available.</returns>
-        public TState? GetCurrentState()
-        {
-            if (this.Group.TryGetMachine(this.Identifier, out var machine))
-            {
-                if (machine is Machine<TIdentifier> m && m.Status != MachineStatus.Terminated)
-                {
-                    return System.Runtime.CompilerServices.Unsafe.As<int, TState>(ref m.CurrentState);
-                }
-            }
-
-            return null;
-        }
 
         /// <summary>
         /// Get the status of the machine.
@@ -133,6 +104,46 @@ namespace BigMachines
         /// <param name="millisecondTimeout">Timeout in milliseconds.</param>
         /// <returns>The response.</returns>
         public TResponse? CommandTwoWay<TMessage, TResponse>(TMessage message, int millisecondTimeout = 100) => this.BigMachine.CommandPost.SendTwoWay<TMessage, TResponse>(CommandPost<TIdentifier>.CommandType.CommandTwoWay, this.Group, this.Identifier, message, millisecondTimeout);
+    }
+
+    /// <summary>
+    /// Class for operating a machine.<br/>
+    /// To achieve lock-free operation, you need to use <see cref="ManMachineInterface{TIdentifier, TState}"/> instead of using machines directly.<br/>
+    /// <see cref="ManMachineInterface{TIdentifier, TState}"/> = <see cref="ManMachineInterface{TIdentifier}"/> + TState.
+    /// </summary>
+    /// <typeparam name="TIdentifier">The type of an identifier.</typeparam>
+    /// <typeparam name="TState">The type of machine state.</typeparam>
+    public abstract class ManMachineInterface<TIdentifier, TState> : ManMachineInterface<TIdentifier>
+        where TIdentifier : notnull
+        where TState : struct
+    {
+        /// <summary>
+        /// Initializes a new instance of the <see cref="ManMachineInterface{TIdentifier, TState}"/> class.
+        /// </summary>
+        /// <param name="group">The group to which the machine belongs.</param>
+        /// <param name="identifier">The identifier.</param>
+        public ManMachineInterface(IMachineGroup<TIdentifier> group, TIdentifier identifier)
+            : base(group, identifier)
+        {
+        }
+
+        /// <summary>
+        /// Get the current state of the machine.
+        /// </summary>
+        /// <returns>The state of the machine..<br/>
+        /// <see langword="null"/>: Machine is not available.</returns>
+        public TState? GetCurrentState()
+        {
+            if (this.Group.TryGetMachine(this.Identifier, out var machine))
+            {
+                if (machine is Machine<TIdentifier> m && m.Status != MachineStatus.Terminated)
+                {
+                    return System.Runtime.CompilerServices.Unsafe.As<int, TState>(ref m.CurrentState);
+                }
+            }
+
+            return null;
+        }
 
         /// <summary>
         /// Try to change the state of the machine.

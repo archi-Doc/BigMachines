@@ -24,7 +24,21 @@ namespace ConsoleApp1
         [StateMethod(0)]
         protected StateResult Initial(StateParameter parameter)
         {
-            Console.WriteLine($"Single ({this.Identifier.ToString()}) - {this.Count++}");
+            Console.WriteLine($"Single: ({this.Identifier.ToString()}) - {this.Count++}");
+
+            var testGroup = this.BigMachine.GetGroup<TestMachine.Interface>();
+            foreach (var x in testGroup.GetIdentifiers())
+            {
+                var machine = testGroup.TryGet<TestMachine.Interface>(x);
+                if (machine != null)
+                {
+                    var result = machine.CommandTwoWay<int, int>(0);
+                    Console.WriteLine($"Single: TestMachine found {x} - {result}");
+                }
+            }
+
+            var results = testGroup.CommandGroupTwoWay<int, int>(0);
+
             if (this.Count >= 5)
             {
                 return StateResult.Terminate;
