@@ -9,9 +9,6 @@
 
 - Simplify complex and long-running tasks as much as possible.
 
-  
-
-Work in progress
 
 
 
@@ -48,7 +45,7 @@ using BigMachines;
 
 namespace QuickStart
 {
-    [StateMachine(0)] // Annotate StateMachine and set Machine type id (unique number).
+    [MachineObject(0)] // Annotate MachineObject and set Machine type id (unique number).
     public partial class TestMachine : Machine<int> // Inherit Machine<TIdentifier> class. The type of an identifier is int.
     {
         public TestMachine(BigMachine<int> bigMachine)
@@ -114,13 +111,12 @@ namespace QuickStart
 These keywords in `Machine` class are reserved for source generator.
 
 - `Interface`: Nested class for operating a machine.
-
 - `State`: enum type which represents the state of a machine.
 - `CreateInterface()`: Method for creating an interface.
 - `RunInternal()`: 
 - `ChangeStateInternal()`: 
-
-
+- `ChangeState()`: 
+- `RegisterBM()`: 
 
 
 

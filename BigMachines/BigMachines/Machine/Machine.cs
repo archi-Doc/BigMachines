@@ -118,7 +118,7 @@ namespace BigMachines
 
         /// <summary>
         /// Called when the machine is terminating.<br/>
-        /// Inside lock (machine) statement.
+        /// This code is inside 'lock (machine) {}'.
         /// </summary>
         internal virtual void TerminateInternal()
         {
@@ -137,9 +137,9 @@ namespace BigMachines
         protected internal bool StateChanged { get; set; }
 
         /// <summary>
-        /// Expected to be implemented by the user.<br/>
+        /// Expected to be implemented on the user side.<br/>
         /// Receives commands and respond if necessary.<br/>
-        /// Inside lock (machine) statement.
+        /// This code is inside 'lock (machine) {}'.
         /// </summary>
         /// <param name="command">The command.</param>
         protected internal virtual void ProcessCommand(CommandPost<TIdentifier>.Command command)
@@ -147,7 +147,7 @@ namespace BigMachines
         }
 
         /// <summary>
-        /// Expected to be implemented by the user.<br/>
+        /// Expected to be implemented on the user side.<br/>
         /// Set a parameter for the machine after the instance is created.<br/>
         /// Note that this method is called when the instance is created, but not called during deserialization.
         /// </summary>
@@ -184,12 +184,12 @@ namespace BigMachines
 
         /// <summary>
         /// Receivea a command and invoke the appropriate method.<br/>
-        /// Inside lock (machine) statement.
+        /// This code is inside 'lock (machine) {}'.
         /// </summary>
         /// <param name="command">Command.</param>
         /// <returns><see langword="true"/>: Terminated, <see langword="false"/>: Continue.</returns>
         protected internal virtual bool DistributeCommand(CommandPost<TIdentifier>.Command command)
-        {// lock (machine)
+        {// This code is inside 'lock (machine) {}'.
             if (this.Status == MachineStatus.Terminated)
             {// Terminated
                 return true;
@@ -221,7 +221,7 @@ namespace BigMachines
 
         /// <summary>
         /// Called when the machine is terminating.<br/>
-        /// Inside lock (machine) statement.
+        /// This code is inside 'lock (machine) {}'.
         /// </summary>
         protected internal virtual void OnTerminated()
         {

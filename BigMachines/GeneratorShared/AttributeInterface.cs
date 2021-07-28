@@ -16,7 +16,8 @@ namespace BigMachines
         /// <summary>
         /// Initializes a new instance of the <see cref="MachineObjectAttribute"/> class.
         /// </summary>
-        /// <param name="typeId">Machine Type id (unique identifier for serialization).</param>
+        /// <param name="typeId">Machine Type id used for serialization.<br/>
+        /// Type id can be a random number, but it must be unique.</param>
         public MachineObjectAttribute(uint typeId)
         {
             this.MachineTypeId = typeId;
@@ -106,7 +107,7 @@ namespace BigMachines
     public enum RunType
     {
         /// <summary>
-        /// Machine is run by <see cref="ManMachineInterface{TIdentifier, TState}.Run"/> method.
+        /// Machine is run by <see cref="ManMachineInterface{TIdentifier}.Run"/> method.
         /// </summary>
         RunManual,
 
