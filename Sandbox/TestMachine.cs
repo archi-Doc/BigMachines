@@ -17,7 +17,7 @@ namespace Sandbox
     internal partial class NestedGenericParent<T>
     {
         [TinyhandObject(UseServiceProvider = true)]
-        [StateMachine(126)]
+        [MachineObject(126)]
         private partial class NestedGenericMachine<TIdentifier> : Machine<TIdentifier>
             where TIdentifier : notnull
         {
@@ -37,7 +37,7 @@ namespace Sandbox
     }
 
     [TinyhandObject(UseServiceProvider = true)]
-    [StateMachine(124)]
+    [MachineObject(124)]
     public partial class GenericMachine<TIdentifier> : Machine<TIdentifier>
         where TIdentifier : notnull
     {
@@ -56,7 +56,7 @@ namespace Sandbox
     }
 
     [TinyhandObject(UseServiceProvider = true)]
-    [StateMachine(125)]
+    [MachineObject(125)]
     public partial class GenericMachine2<TIdentifier> : Machine<TIdentifier>
         where TIdentifier : notnull
     {
@@ -77,7 +77,7 @@ namespace Sandbox
     public partial class ParentClass
     {
         [TinyhandObject(UseServiceProvider = true)]
-        [StateMachine(333)]
+        [MachineObject(333)]
         public partial class NestedMachine : Machine<int>
         {
             public NestedMachine(BigMachine<int> bigMachine)
@@ -99,7 +99,7 @@ namespace Sandbox
     public partial class ParentClass2
     {
         [TinyhandObject(UseServiceProvider = true)]
-        [StateMachine(334)]
+        [MachineObject(334)]
         private partial class NestedMachine2<TIdentifier> : Machine<TIdentifier>
             where TIdentifier : notnull
         {
@@ -122,7 +122,7 @@ namespace Sandbox
     public partial class ParentClassT<T>
     {
         [TinyhandObject(UseServiceProvider = true)]
-        [StateMachine(444)]
+        [MachineObject(444)]
         public partial class NestedMachineT : Machine<int>
         {
             public NestedMachineT(BigMachine<int> bigMachine)
@@ -148,7 +148,7 @@ namespace Sandbox
         where TIdentifier : notnull
     {
         [TinyhandObject(UseServiceProvider = true)]
-        [StateMachine(123)]
+        [MachineObject(123)]
         public partial class NestedMachineT2 : Machine<TIdentifier>
         {
             public NestedMachineT2(BigMachine<TIdentifier> bigMachine)
@@ -187,7 +187,7 @@ namespace Sandbox
         }
     }
 
-    [StateMachine(0x34)]
+    [MachineObject(0x34)]
     public partial class TestMachine3 : Machine<int>
     {
         public TestMachine3(BigMachine<int> bigMachine)
@@ -196,7 +196,7 @@ namespace Sandbox
         }
     }
 
-    [StateMachine(4)]
+    [MachineObject(4)]
     public partial class TestMachine2<TIdentifier> : Machine<TIdentifier>
         where TIdentifier : notnull
     {
@@ -207,7 +207,7 @@ namespace Sandbox
     }
 
     [TinyhandObject(UseServiceProvider = true)]
-    [StateMachine(0x35, Group = typeof(MachineSingle<>))]
+    [MachineObject(0x35, Group = typeof(MachineSingle<>))]
     public partial class TestMachine : Machine<int>
     {
         /*public enum State

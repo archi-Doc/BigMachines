@@ -11,7 +11,7 @@ using BigMachines;
 namespace ConsoleApp1
 {
     // Single Machine
-    [StateMachine(0x48eb1f0f, Group = typeof(MachineSingle<>))] // Change groups from MachineGroup<> to MachineSingle<>.
+    [MachineObject(0x48eb1f0f, Group = typeof(MachineSingle<>))] // Change groups from MachineGroup<> to MachineSingle<>.
     public partial class TerminatorMachine : Machine<int>
     {
         public TerminatorMachine(BigMachine<int> bigMachine)

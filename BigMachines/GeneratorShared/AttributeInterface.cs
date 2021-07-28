@@ -11,13 +11,13 @@ namespace BigMachines
     /// Class must be a partial type.
     /// </summary>
     [AttributeUsage(AttributeTargets.Class, AllowMultiple = false, Inherited = true)]
-    public sealed class StateMachineAttribute : Attribute
+    public sealed class MachineObjectAttribute : Attribute
     {
         /// <summary>
-        /// Initializes a new instance of the <see cref="StateMachineAttribute"/> class.
+        /// Initializes a new instance of the <see cref="MachineObjectAttribute"/> class.
         /// </summary>
         /// <param name="typeId">Machine Type id (unique identifier for serialization).</param>
-        public StateMachineAttribute(uint typeId)
+        public MachineObjectAttribute(uint typeId)
         {
             this.MachineTypeId = typeId;
         }
