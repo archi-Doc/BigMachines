@@ -32,7 +32,7 @@ namespace BigMachines.Generator
         public GeneratorExecutionContext Context { get; private set; }
 
         private BigMachinesBody body = default!;
-        private INamedTypeSymbol? stateMachineAttributeSymbol;
+        private INamedTypeSymbol? machineObjectAttributeSymbol;
         private INamedTypeSymbol? bigMachinesGeneratorOptionAttributeSymbol;
 #pragma warning disable RS1024
         private HashSet<INamedTypeSymbol?> processedSymbol = new();
@@ -53,8 +53,8 @@ namespace BigMachines.Generator
 
             var compilation = context.Compilation;
 
-            this.stateMachineAttributeSymbol = compilation.GetTypeByMetadataName(StateMachineAttributeMock.FullName);
-            if (this.stateMachineAttributeSymbol == null)
+            this.machineObjectAttributeSymbol = compilation.GetTypeByMetadataName(MachineObjectAttributeMock.FullName);
+            if (this.machineObjectAttributeSymbol == null)
             {
                 return;
             }
@@ -123,8 +123,8 @@ namespace BigMachines.Generator
             this.processedSymbol.Add(s);
             foreach (var x in s.GetAttributes())
             {
-                if (SymbolEqualityComparer.Default.Equals(x.AttributeClass, this.stateMachineAttributeSymbol))
-                { // StateMachine
+                if (SymbolEqualityComparer.Default.Equals(x.AttributeClass, this.machineObjectAttributeSymbol))
+                { // MachineObject
                     var obj = this.body.Add(s);
                     break;
                 }
@@ -206,8 +206,8 @@ namespace BigMachines.Generator
                             }
                         }
 
-                        if (name.EndsWith(StateMachineAttributeMock.StandardName) ||
-                            name.EndsWith(StateMachineAttributeMock.SimpleName))
+                        if (name.EndsWith(MachineObjectAttributeMock.StandardName) ||
+                            name.EndsWith(MachineObjectAttributeMock.SimpleName))
                         {
                             return true;
                         }

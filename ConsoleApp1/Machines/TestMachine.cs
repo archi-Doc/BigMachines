@@ -11,7 +11,7 @@ using Tinyhand;
 namespace ConsoleApp1
 {
     [TinyhandObject(UseServiceProvider = true)] // Annotate TinyhandObject attribute to enable serialization (and set UseServiceProvider to true to skip default constructor check).
-    [StateMachine(0x6169e4ee)] // Annotate StateMachine and set Machine type id (unique number).
+    [MachineObject(0x6169e4ee)] // Annotate MachineObject and set Machine type id (unique number).
     public partial class TestMachine : Machine<int> // Inherit Machine<TIdentifier> class.
     {
         public TestMachine(BigMachine<int> bigMachine)

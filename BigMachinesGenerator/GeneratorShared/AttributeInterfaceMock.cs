@@ -35,13 +35,13 @@ namespace BigMachines.Generator
     }
 
     [AttributeUsage(AttributeTargets.Class, AllowMultiple = false, Inherited = true)]
-    public sealed class StateMachineAttributeMock : Attribute
+    public sealed class MachineObjectAttributeMock : Attribute
     {
-        public static readonly string SimpleName = "StateMachine";
+        public static readonly string SimpleName = "MachineObject";
         public static readonly string StandardName = SimpleName + "Attribute";
         public static readonly string FullName = "BigMachines." + StandardName;
 
-        public StateMachineAttributeMock()
+        public MachineObjectAttributeMock()
         {
         }
 
@@ -49,9 +49,9 @@ namespace BigMachines.Generator
 
         public ISymbol? Group { get; set; }
 
-        public static StateMachineAttributeMock FromArray(object?[] constructorArguments, KeyValuePair<string, object?>[] namedArguments)
+        public static MachineObjectAttributeMock FromArray(object?[] constructorArguments, KeyValuePair<string, object?>[] namedArguments)
         {
-            var attribute = new StateMachineAttributeMock();
+            var attribute = new MachineObjectAttributeMock();
             object? val;
 
             val = AttributeHelper.GetValue(0, nameof(MachineTypeId), constructorArguments, namedArguments);

@@ -10,7 +10,7 @@ using BigMachines;
 namespace ConsoleApp1
 {
     // Generic version.
-    [StateMachine(0x928b319e)]
+    [MachineObject(0x928b319e)]
     public partial class GenericMachine<TIdentifier> : Machine<TIdentifier>
         where TIdentifier : notnull
     {

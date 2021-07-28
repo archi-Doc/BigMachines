@@ -48,7 +48,7 @@ namespace BigMachines.Generator
 
         public BigMachinesObjectFlag ObjectFlag { get; private set; }
 
-        public StateMachineAttributeMock? ObjectAttribute { get; private set; }
+        public MachineObjectAttributeMock? ObjectAttribute { get; private set; }
 
         public BigMachinesObject? MachineObject { get; private set; }
 
@@ -139,13 +139,13 @@ namespace BigMachines.Generator
                 }
             }
 
-            // StateMachineAttribute
-            if (this.AllAttributes.FirstOrDefault(x => x.FullName == StateMachineAttributeMock.FullName) is { } objectAttribute)
+            // MachineObjectAttribute
+            if (this.AllAttributes.FirstOrDefault(x => x.FullName == MachineObjectAttributeMock.FullName) is { } objectAttribute)
             {
                 this.Location = objectAttribute.Location;
                 try
                 {
-                    this.ObjectAttribute = StateMachineAttributeMock.FromArray(objectAttribute.ConstructorArguments, objectAttribute.NamedArguments);
+                    this.ObjectAttribute = MachineObjectAttributeMock.FromArray(objectAttribute.ConstructorArguments, objectAttribute.NamedArguments);
                 }
                 catch (InvalidCastException)
                 {

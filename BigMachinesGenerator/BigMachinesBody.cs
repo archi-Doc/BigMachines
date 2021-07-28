@@ -34,7 +34,7 @@ namespace BigMachines.Generator
         public const string StateParameterFullName = "BigMachines.StateParameter";
 
         public static readonly DiagnosticDescriptor Error_NotPartial = new DiagnosticDescriptor(
-            id: "BMG001", title: "Not a partial class", messageFormat: "StateMachine '{0}' is not a partial class",
+            id: "BMG001", title: "Not a partial class", messageFormat: "MachineObject '{0}' is not a partial class",
             category: "BigMachinesGenerator", DiagnosticSeverity.Error, isEnabledByDefault: true);
 
         public static readonly DiagnosticDescriptor Error_NotPartialParent = new DiagnosticDescriptor(
@@ -50,7 +50,7 @@ namespace BigMachines.Generator
             category: "BigMachinesGenerator", DiagnosticSeverity.Error, isEnabledByDefault: true);
 
         public static readonly DiagnosticDescriptor Error_NotDerived = new DiagnosticDescriptor(
-            id: "BMG005", title: "Not derived", messageFormat: "StateMachine '{0}' must be derived from Machine class",
+            id: "BMG005", title: "Not derived", messageFormat: "MachineObject '{0}' must be derived from Machine class",
             category: "BigMachinesGenerator", DiagnosticSeverity.Error, isEnabledByDefault: true);
 
         public static readonly DiagnosticDescriptor Error_MethodFormat = new DiagnosticDescriptor(
@@ -58,7 +58,7 @@ namespace BigMachines.Generator
             category: "BigMachinesGenerator", DiagnosticSeverity.Error, isEnabledByDefault: true);
 
         public static readonly DiagnosticDescriptor Error_OpenGenericClass = new DiagnosticDescriptor(
-            id: "BMG007", title: "Not closed generic", messageFormat: "StateMachine '{0}' is not a closed generic class",
+            id: "BMG007", title: "Not closed generic", messageFormat: "MachineObject '{0}' is not a closed generic class",
             category: "BigMachinesGenerator", DiagnosticSeverity.Error, isEnabledByDefault: true);
 
         public static readonly DiagnosticDescriptor Error_DuplicateTypeId = new DiagnosticDescriptor(

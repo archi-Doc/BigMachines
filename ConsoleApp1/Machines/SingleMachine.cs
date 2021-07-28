@@ -10,7 +10,7 @@ using BigMachines;
 namespace ConsoleApp1
 {
     // Single Machine
-    [StateMachine(0xe5cff489, Group = typeof(MachineSingle<>))] // Change groups from MachineGroup<> to MachineSingle<>.
+    [MachineObject(0xe5cff489, Group = typeof(MachineSingle<>))] // Change groups from MachineGroup<> to MachineSingle<>.
     public partial class SingleMachine : Machine<int>
     {
         public SingleMachine(BigMachine<int> bigMachine)

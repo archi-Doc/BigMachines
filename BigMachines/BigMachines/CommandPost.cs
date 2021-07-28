@@ -216,7 +216,14 @@ namespace BigMachines
                         if (m.Type == CommandType.Responded)
                         {
                             this.commandResponded.Reset();
-                            return (TResult)m.Response!;
+                            if (m.Response is TResult result)
+                            {
+                                return result;
+                            }
+                            else
+                            {
+                                return default;
+                            }
                         }
                     }
                 }
@@ -231,7 +238,7 @@ namespace BigMachines
             }
         }
 
-        public KeyValuePair<TIdentifier, TResult>[] SendGroupTwoWay<TMessage, TResult>(CommandType commandType, object? channel, IEnumerable<TIdentifier> identifiers, TMessage message, int millisecondTimeout = 100)
+        public KeyValuePair<TIdentifier, TResult?>[] SendGroupTwoWay<TMessage, TResult>(CommandType commandType, object? channel, IEnumerable<TIdentifier> identifiers, TMessage message, int millisecondTimeout = 100)
         {
             if (millisecondTimeout < 0 || millisecondTimeout > MaxMillisecondTimeout)
             {
@@ -248,7 +255,7 @@ namespace BigMachines
             }
 
             this.commandAdded.Set();
-            var responseList = new KeyValuePair<TIdentifier, TResult>[commandQueue.Count];
+            var responseList = new KeyValuePair<TIdentifier, TResult?>[commandQueue.Count];
             var responseNumber = 0;
 
             if (commandType == CommandType.CommandTwoWay ||
@@ -267,7 +274,14 @@ namespace BigMachines
                             {
                                 flag = true;
                                 commandQueue.Dequeue();
-                                responseList[responseNumber++] = new(c.Identifier, (TResult)c.Response!);
+                                if (c.Response is TResult result)
+                                {
+                                    responseList[responseNumber++] = new(c.Identifier, result);
+                                }
+                                else
+                                {
+                                    responseList[responseNumber++] = new(c.Identifier, default(TResult));
+                                }
                             }
                             else
                             {
@@ -285,12 +299,12 @@ namespace BigMachines
                 }
                 catch
                 {
-                    return Array.Empty<KeyValuePair<TIdentifier, TResult>>();
+                    return Array.Empty<KeyValuePair<TIdentifier, TResult?>>();
                 }
             }
             else
             {
-                return Array.Empty<KeyValuePair<TIdentifier, TResult>>();
+                return Array.Empty<KeyValuePair<TIdentifier, TResult?>>();
             }
         }
 

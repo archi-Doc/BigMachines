@@ -7,7 +7,7 @@ using BigMachines;
 
 namespace QuickStart
 {
-    [StateMachine(0)] // Annotate StateMachine and set Machine type id (unique number).
+    [MachineObject(0)] // Annotate MachineObject and set Machine type id (unique number).
     public partial class TestMachine : Machine<int> // Inherit Machine<TIdentifier> class. The type of an identifier is int.
     {
         public TestMachine(BigMachine<int> bigMachine)

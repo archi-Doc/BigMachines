@@ -20,7 +20,7 @@ namespace BigMachines
 
         public void CommandGroup<TMessage>(TMessage message);
 
-        public KeyValuePair<TIdentifier, TResponse>[] CommandGroupTwoWay<TMessage, TResponse>(TMessage message, int millisecondTimeout = 100);
+        public KeyValuePair<TIdentifier, TResponse?>[] CommandGroupTwoWay<TMessage, TResponse>(TMessage message, int millisecondTimeout = 100);
 
         public BigMachine<TIdentifier> BigMachine { get; }
 
