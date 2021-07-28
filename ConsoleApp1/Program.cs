@@ -29,7 +29,9 @@ namespace ConsoleApp1
 
             var container = new Container(); // You can use DI container if you want.
             container.RegisterDelegate<BigMachine<int>>(x => new BigMachine<int>(ThreadCore.Root, container), Reuse.Singleton);
-            container.Register<TestMachine>(Reuse.Transient);
+            container.Register<SomeService>();
+            container.Register<ServiceProviderMachine>(Reuse.Transient);
+            // container.Register<TestMachine>(Reuse.Transient); BigMachine will use default constructor if not registered.
             var bigMachine = container.Resolve<BigMachine<int>>(); // Create BigMachine.
             // var bigMachine = new BigMachine<int>(ThreadCore.Root);
 
@@ -49,11 +51,12 @@ namespace ConsoleApp1
 
             bigMachine.TryCreate<TerminatorMachine.Interface>(0);
 
-            bigMachine.TryCreate<TestMachine.Interface>(0);
+            bigMachine.TryCreate<ServiceProviderMachine.Interface>(0);
+            // bigMachine.TryCreate<TestMachine.Interface>(0);
             // bigMachine.TryCreate<GenericMachine<int>.Interface>(1);
 
-            bigMachine.TryCreate<SingleMachine.Interface>(0);
-            bigMachine.TryCreate<SingleMachine.Interface>(1); // Only one machine is created since SingleMachine belongs MachineSingle<> group.
+            // bigMachine.TryCreate<SingleMachine.Interface>(0);
+            // bigMachine.TryCreate<SingleMachine.Interface>(1); // Only one machine is created since SingleMachine belongs MachineSingle<> group.
 
             var testMachine = bigMachine.TryGet<TestMachine.Interface>(3); // Get the created machine.
 
