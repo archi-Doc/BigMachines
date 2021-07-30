@@ -54,8 +54,14 @@ namespace ConsoleApp1
             bigMachine.TryCreate<ServiceProviderMachine.Interface>(0);
             // bigMachine.TryCreate<GenericMachine<int>.Interface>(1);
 
-            bigMachine.TryCreate<SingleMachine.Interface>(0);
+            // bigMachine.TryCreate<SingleMachine.Interface>(0);
             // bigMachine.TryCreate<SingleMachine.Interface>(1); // Only one machine is created since SingleMachine belongs MachineSingle<> group.
+
+            var loopMachine = bigMachine.TryCreate<LoopMachine.Interface>(0);
+            if (loopMachine != null)
+            {
+                loopMachine.Command(1);
+            }
 
             bigMachine.TryCreate<TestMachine.Interface>(3);
             var testMachine = bigMachine.TryGet<TestMachine.Interface>(3); // Get the created machine.

@@ -3,6 +3,7 @@
 using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Threading;
 using System.Threading.Tasks;
 using Arc.Threading;
@@ -200,6 +201,8 @@ namespace BigMachines
                 millisecondTimeout = MaxMillisecondTimeout;
             }
 
+            var end = Stopwatch.GetTimestamp() + (long)((double)millisecondTimeout / 1000d * (double)Stopwatch.Frequency);
+
             var m = new Command(commandType, channel, identifier, TinyhandSerializer.Clone(message));
             this.concurrentQueue.Enqueue(m);
             this.commandAdded.Set();
@@ -208,6 +211,8 @@ namespace BigMachines
                 commandType == CommandType.StateTwoWay ||
                 commandType == CommandType.RunTwoWay)
             {
+                Task.Run(this.MainProcess);
+
                 try
                 {
                     while (true)
@@ -224,6 +229,12 @@ namespace BigMachines
                             {
                                 return default;
                             }
+                        }
+
+                        if (Stopwatch.GetTimestamp() >= end)
+                        {// Timeout
+                            Console.WriteLine("Timeout");
+                            return default;
                         }
                     }
                 }
@@ -244,6 +255,8 @@ namespace BigMachines
             {
                 millisecondTimeout = MaxMillisecondTimeout;
             }
+
+            var end = Stopwatch.GetTimestamp() + (long)((double)millisecondTimeout / 1000d * (double)Stopwatch.Frequency);
 
             var commandQueue = new Queue<Command>();
             var messageClone = TinyhandSerializer.Clone(message);
@@ -293,6 +306,12 @@ namespace BigMachines
                         {
                             this.commandResponded.Reset();
                         }
+
+                        if (Stopwatch.GetTimestamp() >= end)
+                        {// Timeout
+                            Array.Resize(ref responseList, responseNumber);
+                            return responseList;
+                        }
                     }
 
                     return responseList;
@@ -327,17 +346,23 @@ namespace BigMachines
                 }
 
                 this.commandAdded.Reset();
-                var method = this.primaryChannel?.Method;
-                while (this.concurrentQueue.TryDequeue(out var command))
-                {
-                    if (method != null)
-                    {
-                        var type = command.Type;
-                        method(command);
-                        command.Type = CommandType.Responded;
 
-                        this.commandResponded.Set();
-                    }
+                this.MainProcess();
+            }
+        }
+
+        private void MainProcess()
+        {
+            var method = this.primaryChannel?.Method;
+            while (this.concurrentQueue.TryDequeue(out var command))
+            {
+                if (method != null)
+                {
+                    var type = command.Type;
+                    method(command);
+                    command.Type = CommandType.Responded;
+
+                    this.commandResponded.Set();
                 }
             }
         }
