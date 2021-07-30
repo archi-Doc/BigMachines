@@ -29,14 +29,18 @@ namespace BigMachines
 
         public LoopChecker()
         {
+            this.RunId = new uint[InitialArray];
             this.CommandId = new uint[InitialArray];
         }
 
         public LoopChecker(LoopChecker loopChecker)
         {
-            var array = loopChecker.RunId.ToArray();
-            Array.Reverse(array);
-            this.RunId = new Stack<uint>(array);
+            this.RunId = new uint[loopChecker.RunId.Length];
+            this.RunIdCount = loopChecker.RunIdCount;
+            for (var n = 0; n < loopChecker.RunIdCount; n++)
+            {
+                this.RunId[n] = loopChecker.RunId[n];
+            }
 
             this.CommandId = new uint[loopChecker.CommandId.Length];
             this.CommandIdCount = loopChecker.CommandIdCount;
@@ -44,6 +48,17 @@ namespace BigMachines
             {
                 this.CommandId[n] = loopChecker.CommandId[n];
             }
+        }
+
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public void AddRunId(uint id)
+        {
+            if (this.RunIdCount >= this.RunId.Length)
+            {
+                Array.Resize(ref this.RunId, this.RunId.Length + InitialArray);
+            }
+
+            this.RunId[this.RunIdCount++] = id;
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -57,7 +72,9 @@ namespace BigMachines
             this.CommandId[this.CommandIdCount++] = id;
         }
 
-        public Stack<uint> RunId { get; } = new();
+        internal uint[] RunId;
+
+        internal int RunIdCount;
 
         internal uint[] CommandId;
 
