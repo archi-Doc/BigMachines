@@ -205,6 +205,16 @@ namespace BigMachines
             this.timerInterval = interval;
         }
 
+        public MachineInfo<TIdentifier>? GetMachineInfoFromTypeId(uint typeId)
+        {
+            if (this.TypeIdToGroup.TryGetValue(typeId, out var group))
+            {
+                return group.Info;
+            }
+
+            return null;
+        }
+
         internal Dictionary<uint, IMachineGroup<TIdentifier>> TypeIdToGroup { get; } = new();
 
         internal ThreadsafeTypeKeyHashTable<IMachineGroup<TIdentifier>> MachineTypeToGroup { get; } = new();

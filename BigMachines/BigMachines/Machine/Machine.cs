@@ -3,6 +3,7 @@
 using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
+using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 using Tinyhand;
@@ -143,7 +144,7 @@ namespace BigMachines
         /// </summary>
         /// <param name="command">The command.</param>
         protected internal virtual void ProcessCommand(CommandPost<TIdentifier>.Command command)
-        {// Override
+        {// Called: Machine.DistributeCommand()
         }
 
         /// <summary>
@@ -213,6 +214,21 @@ namespace BigMachines
             }
             else
             {// Command
+                if (command.LoopChecker is { } checker)
+                {
+                    for (var n = 0; n < checker.CommandIdCount; n++)
+                    {
+                        if (checker.CommandId[n] == this.TypeId)
+                        {
+                            var s = string.Join('-', checker.CommandId.Select(x => this.BigMachine.GetMachineInfoFromTypeId(x)?.MachineType.Name));
+                            throw new InvalidOperationException($"Command loop detected ({s}).");
+                        }
+                    }
+
+                    LoopChecker.Instance = command.LoopChecker.Clone();
+                    LoopChecker.Instance.AddCommandId(this.TypeId);
+                }
+
                 this.ProcessCommand(command);
             }
 

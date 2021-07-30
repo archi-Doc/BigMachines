@@ -73,6 +73,21 @@ namespace BigMachines
         }
 
         /// <summary>
+        /// Get default timeout of the machine.
+        /// </summary>
+        /// <returns>Default timeout of the machine.<br/>
+        /// <see langword="null"/>: Machine is not available.</returns>
+        public TimeSpan? GetDefaultTimeout()
+        {
+            if (this.Group.TryGetMachine(this.Identifier, out var machine))
+            {
+                return machine.DefaultTimeout;
+            }
+
+            return null;
+        }
+
+        /// <summary>
         /// Runs the machine manually.<br/>
         /// This function does not change <see cref="Machine{TIdentifier}.Timeout"/> or <see cref="Machine{TIdentifier}.NextRun"/>.
         /// </summary>

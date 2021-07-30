@@ -4,6 +4,7 @@ using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Diagnostics;
+using System.Runtime.CompilerServices;
 using System.Threading;
 using System.Threading.Tasks;
 using Arc.Threading;
@@ -11,6 +12,61 @@ using Tinyhand;
 
 namespace BigMachines
 {
+#pragma warning disable SA1401 // Fields should be private
+
+    public class LoopChecker
+    {
+        public const int InitialArray = 4;
+
+        /*public static LoopChecker Instance
+        {
+            get => instance ?? (instance = new());
+            set => instance = value;
+        }*/
+
+        [ThreadStatic]
+        public static LoopChecker? Instance;
+
+        public LoopChecker()
+        {
+            this.CommandId = new uint[InitialArray];
+        }
+
+        public LoopChecker(LoopChecker loopChecker)
+        {
+            var array = loopChecker.RunId.ToArray();
+            Array.Reverse(array);
+            this.RunId = new Stack<uint>(array);
+
+            this.CommandId = new uint[loopChecker.CommandId.Length];
+            this.CommandIdCount = loopChecker.CommandIdCount;
+            for (var n = 0; n < loopChecker.CommandIdCount; n++)
+            {
+                this.CommandId[n] = loopChecker.CommandId[n];
+            }
+        }
+
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public void AddCommandId(uint id)
+        {
+            if (this.CommandIdCount >= this.CommandId.Length)
+            {
+                Array.Resize(ref this.CommandId, this.CommandId.Length + InitialArray);
+            }
+
+            this.CommandId[this.CommandIdCount++] = id;
+        }
+
+        public Stack<uint> RunId { get; } = new();
+
+        internal uint[] CommandId;
+
+        internal int CommandIdCount;
+
+        public LoopChecker Clone() => new(this);
+    }
+#pragma warning restore SA1401 // Fields should be private
+
     /// <summary>
     /// CommandPost is dependency-free pub/sub service.<br/>
     /// </summary>
@@ -124,7 +180,12 @@ namespace BigMachines
             /// <param name="message">Message.</param>
             public Command(CommandType type, object? channel, TIdentifier identifier, object? message)
             {
-                this.Type = type;
+                if (LoopChecker.Instance == null)
+                {// LoopChecker enabled.
+                    LoopChecker.Instance = new();
+                }
+
+                this.LoopChecker = LoopChecker.Instance;
                 this.Channel = channel;
                 this.Identifier = identifier;
                 this.Message = message;
@@ -139,6 +200,8 @@ namespace BigMachines
             public object? Message { get; }
 
             public object? Response { get; set; }
+
+            internal LoopChecker? LoopChecker { get; }
         }
 
         /// <summary>

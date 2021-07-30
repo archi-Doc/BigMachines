@@ -21,8 +21,12 @@ namespace ConsoleApp1
         protected override void ProcessCommand(CommandPost<int>.Command command)
         {
             if (command.Message is int n)
-            {
+            {// LoopMachine
                 this.BigMachine.TryGet<Interface>(this.Identifier)?.Command(0);
+            }
+            else if (command.Message is string st)
+            {// LoopMachine -> TestMachine
+                this.BigMachine.TryGet<TestMachine.Interface>(3)?.Command(st);
             }
         }
     }

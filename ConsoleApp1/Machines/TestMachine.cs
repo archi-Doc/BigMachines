@@ -80,6 +80,10 @@ namespace ConsoleApp1
                 this.BigMachine.TryGet<TerminatorMachine.Interface>(0)?.CommandTwoWay<int, int>(0);
                 command.Response = this.Count;
             }
+            else if (command.Message is string st)
+            {
+                this.BigMachine.TryGet<LoopMachine.Interface>(0)?.Command(st);
+            }
         }
 
         protected override void OnTerminated()
