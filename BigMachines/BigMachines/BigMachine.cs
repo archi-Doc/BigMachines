@@ -56,6 +56,8 @@ namespace BigMachines
             }
         }
 
+        public static bool EnableLoopChecker { get; set; } = false;
+
         public static Dictionary<Type, MachineInfo<TIdentifier>> StaticInfo { get; } = new(); // typeof(Machine.Interface), MachineGroup
 
         public BigMachineStatus Status { get; }

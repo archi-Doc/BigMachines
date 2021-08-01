@@ -13,16 +13,9 @@ using Tinyhand;
 namespace BigMachines
 {
 #pragma warning disable SA1401 // Fields should be private
-
     public class LoopChecker
     {
         public const int InitialArray = 4;
-
-        /*public static LoopChecker Instance
-        {
-            get => instance ?? (instance = new());
-            set => instance = value;
-        }*/
 
         [ThreadStatic]
         public static LoopChecker? Instance;
@@ -197,7 +190,7 @@ namespace BigMachines
             /// <param name="message">Message.</param>
             public Command(CommandType type, object? channel, TIdentifier identifier, object? message)
             {
-                if (LoopChecker.Instance == null)
+                if (BigMachine<TIdentifier>.EnableLoopChecker && LoopChecker.Instance == null)
                 {// LoopChecker enabled.
                     LoopChecker.Instance = new();
                 }

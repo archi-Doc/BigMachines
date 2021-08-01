@@ -66,8 +66,8 @@ namespace ConsoleApp1
             var loopMachine = bigMachine.TryCreate<LoopMachine.Interface>(0);
             if (loopMachine != null)
             {
-                loopMachine.Command(1);
-                loopMachine.Command("1");
+                // loopMachine.Command(1);
+                // loopMachine.Command("1");
             }
 
             await ThreadCore.Root.WaitForTermination(-1); // Wait for the termination infinitely.

@@ -173,7 +173,7 @@ namespace BigMachines
         /// <param name="parameter">StateParameter.</param>
         /// <returns>StateResult.</returns>
         protected internal virtual StateResult RunInternal(StateParameter parameter)
-        {// Generated
+        {// Called: Machine.DistributeCommand(), BigMachine.MainLoop()
             return StateResult.Terminate;
         }
 
@@ -199,6 +199,21 @@ namespace BigMachines
             else if (command.Type == CommandPost<TIdentifier>.CommandType.Run ||
                 command.Type == CommandPost<TIdentifier>.CommandType.RunTwoWay)
             {// Run
+                if (command.LoopChecker is { } checker)
+                {
+                    for (var n = 0; n < checker.RunIdCount; n++)
+                    {
+                        if (checker.RunId[n] == this.TypeId)
+                        {
+                            var s = string.Join('-', checker.CommandId.Take(checker.CommandIdCount).Select(x => this.BigMachine.GetMachineInfoFromTypeId(x)?.MachineType.Name));
+                            throw new InvalidOperationException($"Run loop detected ({s}).");
+                        }
+                    }
+
+                    LoopChecker.Instance = command.LoopChecker.Clone();
+                    LoopChecker.Instance.AddRunId(this.TypeId);
+                }
+
                 var result = this.RunInternal(new(RunType.RunManual, command.Message));
                 this.LastRun = DateTime.UtcNow;
                 command.Response = result;
