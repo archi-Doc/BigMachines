@@ -27,10 +27,16 @@ namespace Benchmark
         {
             // await Benchmark.Design.CommandDesign1.Test();
             // await Benchmark.Design.CommandDesign2.Test();
-            /*await Benchmark.Design.CommandDesign3.Test();
-            await Benchmark.Design.CommandDesign4.Test();
-            await Benchmark.Design.CommandDesign5.Test();
-            await Benchmark.Design.CommandDesign6.Test();*/
+            // await Benchmark.Design.CommandDesign3.Test();
+            // await Benchmark.Design.CommandDesign4.Test();
+            // await Benchmark.Design.CommandDesign5.Test();
+            await Benchmark.Design.CommandDesign6.Test();
+            await Benchmark.Design.CommandDesign7.Test();
+            await Benchmark.Design.CommandDesign8.Test();
+
+            var bm = new BigMachine<int>(ThreadCore.Root);
+            BigMachine<int>.EnableLoopChecker = false;
+            await Benchmark.Design.SimpleBench.Test(bm);
 
             var cp = new CommandPost<int>(ThreadCore.Root);
             cp.Open(x =>
@@ -41,10 +47,11 @@ namespace Benchmark
                 }
             });
 
-            DebugRun<Design.ConcurrentQueueBenchmark>();
+            DebugRun<LoopCheckerBenchmark>();
 
             var switcher = new BenchmarkSwitcher(new[]
             {
+                typeof(LoopCheckerBenchmark),
                 typeof(Design.ConcurrentQueueBenchmark),
                 typeof(Test.TestBenchmark),
             });

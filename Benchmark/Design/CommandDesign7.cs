@@ -9,8 +9,8 @@ using System.Threading.Tasks;
 
 namespace Benchmark.Design
 {
-    internal class CommandDesign6
-    {// Thread + ManualResetEventSlim
+    internal class CommandDesign7
+    {// Task.Run
         internal class Command
         {
             public Command(bool flag)
@@ -25,46 +25,38 @@ namespace Benchmark.Design
         internal const int MillisecondInterval = 5;
 
         // private static object obj = new();
-        private static ConcurrentQueue<Command> concurrentQueue = new();
-        private static ManualResetEventSlim manualEvent = new(false); // Just slow
-        private static ManualResetEventSlim manualEvent2 = new(false); // Just slow
+        private static CancellationTokenSource cancellationTokenSource = new();
+        private static CancellationToken cancellationToken;
         // private static bool EventFlag = false;
 
         internal static async Task Test()
         {
+            cancellationToken = cancellationTokenSource.Token;
             var sw = new Stopwatch();
-            var cts = new CancellationTokenSource();
 
-            var t = new Thread(ReceiveAction); // Task.Run(() => ReceiveAction(cts.Token));
-            t.Priority = ThreadPriority.AboveNormal;
-            t.Start(cts.Token);
-
-            Start("Event");
+            Start("Task.Run");
             await TestCommand();
             Stop();
 
-            Start("Event Parallel");
+            Start("Task.Run Parallel");
             await TestCommandParallel();
             Stop();
 
-            Start("Event TwoWay");
+            Start("await Task.Run");
             await TestCommandTwoWay();
             Stop();
 
-            Start("Event TwoWay response");
+            Start("await Task.Run response");
             await SendTwoWay();
             Stop2();
 
-            Start("Event TwoWay response");
+            Start("await Task.Run response");
             await SendTwoWay();
             Stop2();
 
-            Start("Event TwoWay response");
+            Start("await Task.Run response");
             await SendTwoWay();
             Stop2();
-
-            cts.Cancel();
-            t.Join();
 
             Console.WriteLine();
 
@@ -113,23 +105,16 @@ namespace Benchmark.Design
 
         internal static void Send(int n)
         {
-            concurrentQueue.Enqueue(new Command(false));
-
-            // EventFlag = true;
-            manualEvent.Set();
+            Task.Run(() => ReceiveAction(new Command(false)));
 
             return;
         }
 
         internal static async Task SendTwoWay()
         {
-            var c = new Command(false);
-            concurrentQueue.Enqueue(c);
+            await Task.Run(() => ReceiveAction(new Command(false)));
 
-            // EventFlag = true;
-            manualEvent.Set();
-
-            while (true)
+            /*while (true)
             {
                 if (c.Flag)
                 {
@@ -140,39 +125,17 @@ namespace Benchmark.Design
                 {
                     manualEvent2.Reset();
                 }
-            }
+            }*/
         }
 
-        internal static void ReceiveAction(object? parameter)
+        internal static void ReceiveAction(Command command)
         {
-            var cancellationToken = (CancellationToken)parameter!;
-            while (true)
+            if (cancellationToken.IsCancellationRequested)
             {
-                if (cancellationToken.IsCancellationRequested)
-                {
-                    break;
-                }
-                else if (manualEvent.Wait(5))
-                {
-                    manualEvent.Reset();
-                }
-                /*else if (!EventFlag)
-                {// manualEvent.WaitOne();
-                    Thread.Sleep(1);
-                    continue;
-                }
-                else
-                {
-                    EventFlag = false;
-                }*/
-
-                while (concurrentQueue.TryDequeue(out var command))
-                {
-                    command.Flag = true;
-                }
-
-                manualEvent2.Set();
+                return;
             }
+
+            command.Flag = true;
         }
     }
 }

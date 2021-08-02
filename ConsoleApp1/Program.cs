@@ -63,6 +63,13 @@ namespace ConsoleApp1
             var testGroup = bigMachine.GetGroup<TestMachine.Interface>(); // Group is a collection of machines.
             testMachine = testGroup.TryGet<TestMachine.Interface>(3); // Get machine from the group.
 
+            var loopMachine = bigMachine.TryCreate<LoopMachine.Interface>(0);
+            if (loopMachine != null)
+            {
+                // loopMachine.Command(1);
+                // loopMachine.Command("1");
+            }
+
             await ThreadCore.Root.WaitForTermination(-1); // Wait for the termination infinitely.
 
             // Save

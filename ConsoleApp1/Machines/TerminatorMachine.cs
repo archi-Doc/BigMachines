@@ -28,7 +28,13 @@ namespace ConsoleApp1
                 if (x.Info.MachineType != typeof(TerminatorMachine) &&
                     x.Count > 0)
                 {
-                    return StateResult.Continue;
+                    foreach (var y in x.GetIdentifiers())
+                    {
+                        if (x.TryGet<ManMachineInterface<int>>(y)?.GetDefaultTimeout() is TimeSpan ts && ts > TimeSpan.Zero)
+                        {
+                            return StateResult.Continue;
+                        }
+                    }
                 }
             }
 

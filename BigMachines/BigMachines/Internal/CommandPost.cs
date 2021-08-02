@@ -3,6 +3,8 @@
 using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
+using System.Diagnostics;
+using System.Runtime.CompilerServices;
 using System.Threading;
 using System.Threading.Tasks;
 using Arc.Threading;
@@ -123,7 +125,12 @@ namespace BigMachines
             /// <param name="message">Message.</param>
             public Command(CommandType type, object? channel, TIdentifier identifier, object? message)
             {
-                this.Type = type;
+                if (BigMachine<TIdentifier>.EnableLoopChecker && LoopChecker.Instance == null)
+                {// LoopChecker enabled.
+                    LoopChecker.Instance = new();
+                }
+
+                this.LoopChecker = LoopChecker.Instance;
                 this.Channel = channel;
                 this.Identifier = identifier;
                 this.Message = message;
@@ -138,6 +145,8 @@ namespace BigMachines
             public object? Message { get; }
 
             public object? Response { get; set; }
+
+            internal LoopChecker? LoopChecker { get; }
         }
 
         /// <summary>
@@ -200,14 +209,26 @@ namespace BigMachines
                 millisecondTimeout = MaxMillisecondTimeout;
             }
 
+            var end = Stopwatch.GetTimestamp() + (long)((double)millisecondTimeout / 1000d * (double)Stopwatch.Frequency);
+
             var m = new Command(commandType, channel, identifier, TinyhandSerializer.Clone(message));
             this.concurrentQueue.Enqueue(m);
-            this.commandAdded.Set();
+
+            var taskFlag = Thread.CurrentThread == this.Core.Thread;
+            if (!taskFlag)
+            {
+                this.commandAdded.Set();
+            }
 
             if (commandType == CommandType.CommandTwoWay ||
                 commandType == CommandType.StateTwoWay ||
                 commandType == CommandType.RunTwoWay)
             {
+                if (taskFlag)
+                {// Another thread required.
+                    Task.Run(this.MainProcess);
+                }
+
                 try
                 {
                     while (true)
@@ -224,6 +245,12 @@ namespace BigMachines
                             {
                                 return default;
                             }
+                        }
+
+                        if (Stopwatch.GetTimestamp() >= end)
+                        {// Timeout
+                            Console.WriteLine("Timeout");
+                            return default;
                         }
                     }
                 }
@@ -245,6 +272,8 @@ namespace BigMachines
                 millisecondTimeout = MaxMillisecondTimeout;
             }
 
+            var end = Stopwatch.GetTimestamp() + (long)((double)millisecondTimeout / 1000d * (double)Stopwatch.Frequency);
+
             var commandQueue = new Queue<Command>();
             var messageClone = TinyhandSerializer.Clone(message);
             foreach (var x in identifiers)
@@ -254,14 +283,23 @@ namespace BigMachines
                 this.concurrentQueue.Enqueue(m);
             }
 
-            this.commandAdded.Set();
+            var taskFlag = Thread.CurrentThread == this.Core.Thread;
+            if (!taskFlag)
+            {
+                this.commandAdded.Set();
+            }
+
             var responseList = new KeyValuePair<TIdentifier, TResult?>[commandQueue.Count];
             var responseNumber = 0;
-
             if (commandType == CommandType.CommandTwoWay ||
                 commandType == CommandType.StateTwoWay ||
                 commandType == CommandType.RunTwoWay)
             {
+                if (taskFlag)
+                {// Another thread required.
+                    Task.Run(this.MainProcess);
+                }
+
                 try
                 {
                     while (commandQueue.Count > 0)
@@ -278,10 +316,6 @@ namespace BigMachines
                                 {
                                     responseList[responseNumber++] = new(c.Identifier, result);
                                 }
-                                else
-                                {
-                                    responseList[responseNumber++] = new(c.Identifier, default(TResult));
-                                }
                             }
                             else
                             {
@@ -293,6 +327,17 @@ namespace BigMachines
                         {
                             this.commandResponded.Reset();
                         }
+
+                        if (Stopwatch.GetTimestamp() >= end)
+                        {// Timeout
+                            goto SendGroupTwoWay_Exit;
+                        }
+                    }
+
+SendGroupTwoWay_Exit:
+                    if (responseList.Length != responseNumber)
+                    {
+                        Array.Resize(ref responseList, responseNumber);
                     }
 
                     return responseList;
@@ -327,17 +372,23 @@ namespace BigMachines
                 }
 
                 this.commandAdded.Reset();
-                var method = this.primaryChannel?.Method;
-                while (this.concurrentQueue.TryDequeue(out var command))
-                {
-                    if (method != null)
-                    {
-                        var type = command.Type;
-                        method(command);
-                        command.Type = CommandType.Responded;
 
-                        this.commandResponded.Set();
-                    }
+                this.MainProcess();
+            }
+        }
+
+        private void MainProcess()
+        {
+            var method = this.primaryChannel?.Method;
+            while (this.concurrentQueue.TryDequeue(out var command))
+            {
+                if (method != null)
+                {
+                    var type = command.Type;
+                    method(command);
+                    command.Type = CommandType.Responded;
+
+                    this.commandResponded.Set();
                 }
             }
         }

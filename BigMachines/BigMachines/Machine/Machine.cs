@@ -3,6 +3,8 @@
 using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
+using System.Linq;
+using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
 using Tinyhand;
@@ -143,7 +145,7 @@ namespace BigMachines
         /// </summary>
         /// <param name="command">The command.</param>
         protected internal virtual void ProcessCommand(CommandPost<TIdentifier>.Command command)
-        {// Override
+        {// Called: Machine.DistributeCommand()
         }
 
         /// <summary>
@@ -171,7 +173,7 @@ namespace BigMachines
         /// <param name="parameter">StateParameter.</param>
         /// <returns>StateResult.</returns>
         protected internal virtual StateResult RunInternal(StateParameter parameter)
-        {// Generated
+        {// Called: Machine.DistributeCommand(), BigMachine.MainLoop()
             return StateResult.Terminate;
         }
 
@@ -197,6 +199,21 @@ namespace BigMachines
             else if (command.Type == CommandPost<TIdentifier>.CommandType.Run ||
                 command.Type == CommandPost<TIdentifier>.CommandType.RunTwoWay)
             {// Run
+                if (command.LoopChecker is { } checker)
+                {
+                    for (var n = 0; n < checker.RunIdCount; n++)
+                    {
+                        if (checker.RunId[n] == this.TypeId)
+                        {
+                            var s = string.Join('-', checker.CommandId.Take(checker.CommandIdCount).Select(x => this.BigMachine.GetMachineInfoFromTypeId(x)?.MachineType.Name));
+                            throw new InvalidOperationException($"Run loop detected ({s}).");
+                        }
+                    }
+
+                    LoopChecker.Instance = command.LoopChecker.Clone();
+                    LoopChecker.Instance.AddRunId(this.TypeId);
+                }
+
                 var result = this.RunInternal(new(RunType.RunManual, command.Message));
                 this.LastRun = DateTime.UtcNow;
                 command.Response = result;
@@ -213,6 +230,21 @@ namespace BigMachines
             }
             else
             {// Command
+                if (command.LoopChecker is { } checker)
+                {
+                    for (var n = 0; n < checker.CommandIdCount; n++)
+                    {
+                        if (checker.CommandId[n] == this.TypeId)
+                        {
+                            var s = string.Join('-', checker.CommandId.Take(checker.CommandIdCount).Select(x => this.BigMachine.GetMachineInfoFromTypeId(x)?.MachineType.Name));
+                            throw new InvalidOperationException($"Command loop detected ({s}).");
+                        }
+                    }
+
+                    LoopChecker.Instance = command.LoopChecker.Clone();
+                    LoopChecker.Instance.AddCommandId(this.TypeId);
+                }
+
                 this.ProcessCommand(command);
             }
 

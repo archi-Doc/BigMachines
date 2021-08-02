@@ -12,6 +12,7 @@
   </ItemGroup>
 
   <ItemGroup>
+    <ProjectReference Include="..\BigMachinesGenerator\BigMachinesGenerator.csproj" ReferenceOutputAssembly="false" OutputItemType="Analyzer" />
     <ProjectReference Include="..\BigMachines\BigMachines.csproj" />
   </ItemGroup>
 

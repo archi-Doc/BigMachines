@@ -56,6 +56,8 @@ namespace BigMachines
             }
         }
 
+        public static bool EnableLoopChecker { get; set; } = true;
+
         public static Dictionary<Type, MachineInfo<TIdentifier>> StaticInfo { get; } = new(); // typeof(Machine.Interface), MachineGroup
 
         public BigMachineStatus Status { get; }
@@ -203,6 +205,16 @@ namespace BigMachines
         public void SetTimerInterval(TimeSpan interval)
         {
             this.timerInterval = interval;
+        }
+
+        public MachineInfo<TIdentifier>? GetMachineInfoFromTypeId(uint typeId)
+        {
+            if (this.TypeIdToGroup.TryGetValue(typeId, out var group))
+            {
+                return group.Info;
+            }
+
+            return null;
         }
 
         internal Dictionary<uint, IMachineGroup<TIdentifier>> TypeIdToGroup { get; } = new();
