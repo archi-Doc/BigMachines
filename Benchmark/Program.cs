@@ -27,10 +27,11 @@ namespace Benchmark
         {
             // await Benchmark.Design.CommandDesign1.Test();
             // await Benchmark.Design.CommandDesign2.Test();
-            /*await Benchmark.Design.CommandDesign3.Test();
-            await Benchmark.Design.CommandDesign4.Test();
-            await Benchmark.Design.CommandDesign5.Test();
-            await Benchmark.Design.CommandDesign6.Test();*/
+            // await Benchmark.Design.CommandDesign3.Test();
+            // await Benchmark.Design.CommandDesign4.Test();
+            // await Benchmark.Design.CommandDesign5.Test();
+            await Benchmark.Design.CommandDesign6.Test();
+            await Benchmark.Design.CommandDesign7.Test();
 
             var cp = new CommandPost<int>(ThreadCore.Root);
             cp.Open(x =>

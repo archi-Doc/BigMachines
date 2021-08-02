@@ -9,8 +9,8 @@ using System.Threading.Tasks;
 
 namespace Benchmark.Design
 {
-    internal class CommandDesign6
-    {// Thread + ManualResetEventSlim
+    internal class CommandDesign7
+    {// Task.Run + ManualResetEventSlim
         internal class Command
         {
             public Command(bool flag)
@@ -26,18 +26,14 @@ namespace Benchmark.Design
 
         // private static object obj = new();
         private static ConcurrentQueue<Command> concurrentQueue = new();
-        private static ManualResetEventSlim manualEvent = new(false); // Just slow
-        private static ManualResetEventSlim manualEvent2 = new(false); // Just slow
+        private static CancellationTokenSource cancellationTokenSource = new();
+        private static CancellationToken cancellationToken;
         // private static bool EventFlag = false;
 
         internal static async Task Test()
         {
+            cancellationToken = cancellationTokenSource.Token;
             var sw = new Stopwatch();
-            var cts = new CancellationTokenSource();
-
-            var t = new Thread(ReceiveAction); // Task.Run(() => ReceiveAction(cts.Token));
-            t.Priority = ThreadPriority.AboveNormal;
-            t.Start(cts.Token);
 
             Start("Event");
             await TestCommand();
@@ -62,9 +58,6 @@ namespace Benchmark.Design
             Start("Event TwoWay response");
             await SendTwoWay();
             Stop2();
-
-            cts.Cancel();
-            t.Join();
 
             void Start(string name)
             {
@@ -117,8 +110,7 @@ namespace Benchmark.Design
         {
             concurrentQueue.Enqueue(new Command(false));
 
-            // EventFlag = true;
-            manualEvent.Set();
+            Task.Run(ReceiveAction);
 
             return;
         }
@@ -128,10 +120,9 @@ namespace Benchmark.Design
             var c = new Command(false);
             concurrentQueue.Enqueue(c);
 
-            // EventFlag = true;
-            manualEvent.Set();
+            await Task.Run(ReceiveAction);
 
-            while (true)
+            /*while (true)
             {
                 if (c.Flag)
                 {
@@ -142,38 +133,19 @@ namespace Benchmark.Design
                 {
                     manualEvent2.Reset();
                 }
-            }
+            }*/
         }
 
-        internal static void ReceiveAction(object? parameter)
+        internal static void ReceiveAction()
         {
-            var cancellationToken = (CancellationToken)parameter!;
-            while (true)
+            if (cancellationToken.IsCancellationRequested)
             {
-                if (cancellationToken.IsCancellationRequested)
-                {
-                    break;
-                }
-                else if (manualEvent.Wait(5))
-                {
-                    manualEvent.Reset();
-                }
-                /*else if (!EventFlag)
-                {// manualEvent.WaitOne();
-                    Thread.Sleep(1);
-                    continue;
-                }
-                else
-                {
-                    EventFlag = false;
-                }*/
+                return;
+            }
 
-                while (concurrentQueue.TryDequeue(out var command))
-                {
-                    command.Flag = true;
-                }
-
-                manualEvent2.Set();
+            while (concurrentQueue.TryDequeue(out var command))
+            {
+                command.Flag = true;
             }
         }
     }
