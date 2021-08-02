@@ -213,13 +213,21 @@ namespace BigMachines
 
             var m = new Command(commandType, channel, identifier, TinyhandSerializer.Clone(message));
             this.concurrentQueue.Enqueue(m);
-            this.commandAdded.Set();
+
+            var taskFlag = Thread.CurrentThread == this.Core.Thread;
+            if (!taskFlag)
+            {
+                this.commandAdded.Set();
+            }
 
             if (commandType == CommandType.CommandTwoWay ||
                 commandType == CommandType.StateTwoWay ||
                 commandType == CommandType.RunTwoWay)
             {
-                Task.Run(this.MainProcess);
+                if (taskFlag)
+                {// Another thread required.
+                    Task.Run(this.MainProcess);
+                }
 
                 try
                 {

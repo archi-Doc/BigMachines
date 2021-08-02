@@ -32,6 +32,7 @@ namespace Benchmark
             // await Benchmark.Design.CommandDesign5.Test();
             await Benchmark.Design.CommandDesign6.Test();
             await Benchmark.Design.CommandDesign7.Test();
+            await Benchmark.Design.CommandDesign8.Test();
 
             var cp = new CommandPost<int>(ThreadCore.Root);
             cp.Open(x =>

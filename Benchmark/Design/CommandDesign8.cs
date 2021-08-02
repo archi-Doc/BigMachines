@@ -9,8 +9,8 @@ using System.Threading.Tasks;
 
 namespace Benchmark.Design
 {
-    internal class CommandDesign7
-    {// Task.Run
+    internal class CommandDesign8
+    {// Task.Run + 
         internal class Command
         {
             public Command(bool flag)
@@ -28,6 +28,7 @@ namespace Benchmark.Design
         private static ConcurrentQueue<Command> concurrentQueue = new();
         private static CancellationTokenSource cancellationTokenSource = new();
         private static CancellationToken cancellationToken;
+        private static ManualResetEventSlim manualEvent2 = new(false); // Just slow
         // private static bool EventFlag = false;
 
         internal static async Task Test()
@@ -120,9 +121,11 @@ namespace Benchmark.Design
             var c = new Command(false);
             concurrentQueue.Enqueue(c);
 
-            await Task.Run(ReceiveAction);
+#pragma warning disable CS4014 // Because this call is not awaited, execution of the current method continues before the call is completed
+            Task.Run(ReceiveAction);
+#pragma warning restore CS4014 // Because this call is not awaited, execution of the current method continues before the call is completed
 
-            /*while (true)
+            while (true)
             {
                 if (c.Flag)
                 {
@@ -133,7 +136,7 @@ namespace Benchmark.Design
                 {
                     manualEvent2.Reset();
                 }
-            }*/
+            }
         }
 
         internal static void ReceiveAction()
@@ -147,6 +150,8 @@ namespace Benchmark.Design
             {
                 command.Flag = true;
             }
+
+            manualEvent2.Set();
         }
     }
 }
