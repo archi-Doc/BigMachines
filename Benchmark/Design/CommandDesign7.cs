@@ -25,7 +25,6 @@ namespace Benchmark.Design
         internal const int MillisecondInterval = 5;
 
         // private static object obj = new();
-        private static ConcurrentQueue<Command> concurrentQueue = new();
         private static CancellationTokenSource cancellationTokenSource = new();
         private static CancellationToken cancellationToken;
         // private static bool EventFlag = false;
@@ -35,50 +34,48 @@ namespace Benchmark.Design
             cancellationToken = cancellationTokenSource.Token;
             var sw = new Stopwatch();
 
-            Start("Event");
+            Start("Task.Run");
             await TestCommand();
             Stop();
 
-            Start("Event Parallel");
+            Start("Task.Run Parallel");
             await TestCommandParallel();
             Stop();
 
-            Start("Event TwoWay");
+            Start("await Task.Run");
             await TestCommandTwoWay();
             Stop();
 
-            Start("Event TwoWay response");
+            Start("await Task.Run response");
             await SendTwoWay();
             Stop2();
 
-            Start("Event TwoWay response");
+            Start("await Task.Run response");
             await SendTwoWay();
             Stop2();
 
-            Start("Event TwoWay response");
+            Start("await Task.Run response");
             await SendTwoWay();
             Stop2();
+
+            Console.WriteLine();
 
             void Start(string name)
             {
-                Console.WriteLine(name);
+                Console.Write($"{name,-25}: ");
                 sw.Restart();
             }
 
             void Stop()
             {
                 sw.Stop();
-                // Console.WriteLine($"count: {objCount}");
-                Console.WriteLine($"time: {sw.ElapsedMilliseconds} ms");
-                Console.WriteLine();
+                Console.WriteLine($"{sw.ElapsedMilliseconds} ms");
             }
 
             void Stop2()
             {
                 sw.Stop();
-                // Console.WriteLine($"count: {objCount}");
-                Console.WriteLine($"ticks: {sw.ElapsedTicks}");
-                Console.WriteLine();
+                Console.WriteLine($"{sw.ElapsedTicks} ticks");
             }
         }
 
@@ -100,7 +97,7 @@ namespace Benchmark.Design
 
         internal static async Task TestCommandTwoWay()
         {
-            for (var i = 0; i < 100_000; i++)
+            for (var i = 0; i < N; i++)
             {
                 await SendTwoWay();
             }
@@ -108,19 +105,14 @@ namespace Benchmark.Design
 
         internal static void Send(int n)
         {
-            concurrentQueue.Enqueue(new Command(false));
-
-            Task.Run(ReceiveAction);
+            Task.Run(() => ReceiveAction(new Command(false)));
 
             return;
         }
 
         internal static async Task SendTwoWay()
         {
-            var c = new Command(false);
-            concurrentQueue.Enqueue(c);
-
-            await Task.Run(ReceiveAction);
+            await Task.Run(() => ReceiveAction(new Command(false)));
 
             /*while (true)
             {
@@ -136,17 +128,14 @@ namespace Benchmark.Design
             }*/
         }
 
-        internal static void ReceiveAction()
+        internal static void ReceiveAction(Command command)
         {
             if (cancellationToken.IsCancellationRequested)
             {
                 return;
             }
 
-            while (concurrentQueue.TryDequeue(out var command))
-            {
-                command.Flag = true;
-            }
+            command.Flag = true;
         }
     }
 }

@@ -9,6 +9,7 @@ using Tinyhand;
 
 namespace BigMachines.Obsolete
 {
+    /*
     /// <summary>
     /// CommandPost is a class for dependency-free pub/sub service.<br/>
     /// It's easy to use.<br/>
@@ -219,4 +220,5 @@ namespace BigMachines.Obsolete
         }
         #endregion
     }
+    */
 }

@@ -283,14 +283,23 @@ namespace BigMachines
                 this.concurrentQueue.Enqueue(m);
             }
 
-            this.commandAdded.Set();
+            var taskFlag = Thread.CurrentThread == this.Core.Thread;
+            if (!taskFlag)
+            {
+                this.commandAdded.Set();
+            }
+
             var responseList = new KeyValuePair<TIdentifier, TResult?>[commandQueue.Count];
             var responseNumber = 0;
-
             if (commandType == CommandType.CommandTwoWay ||
                 commandType == CommandType.StateTwoWay ||
                 commandType == CommandType.RunTwoWay)
             {
+                if (taskFlag)
+                {// Another thread required.
+                    Task.Run(this.MainProcess);
+                }
+
                 try
                 {
                     while (commandQueue.Count > 0)
@@ -307,10 +316,6 @@ namespace BigMachines
                                 {
                                     responseList[responseNumber++] = new(c.Identifier, result);
                                 }
-                                else
-                                {
-                                    responseList[responseNumber++] = new(c.Identifier, default(TResult));
-                                }
                             }
                             else
                             {
@@ -325,9 +330,14 @@ namespace BigMachines
 
                         if (Stopwatch.GetTimestamp() >= end)
                         {// Timeout
-                            Array.Resize(ref responseList, responseNumber);
-                            return responseList;
+                            goto SendGroupTwoWay_Exit;
                         }
+                    }
+
+SendGroupTwoWay_Exit:
+                    if (responseList.Length != responseNumber)
+                    {
+                        Array.Resize(ref responseList, responseNumber);
                     }
 
                     return responseList;

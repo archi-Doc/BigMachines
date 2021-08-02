@@ -10,7 +10,7 @@ using System.Threading.Tasks;
 namespace Benchmark.Design
 {
     internal class CommandDesign8
-    {// Task.Run + 
+    {// Task.Run + ManualResetEventSlim
         internal class Command
         {
             public Command(bool flag)
@@ -60,26 +60,24 @@ namespace Benchmark.Design
             await SendTwoWay();
             Stop2();
 
+            Console.WriteLine();
+
             void Start(string name)
             {
-                Console.WriteLine(name);
+                Console.Write($"{name, -25}: ");
                 sw.Restart();
             }
 
             void Stop()
             {
                 sw.Stop();
-                // Console.WriteLine($"count: {objCount}");
-                Console.WriteLine($"time: {sw.ElapsedMilliseconds} ms");
-                Console.WriteLine();
+                Console.WriteLine($"{sw.ElapsedMilliseconds} ms");
             }
 
             void Stop2()
             {
                 sw.Stop();
-                // Console.WriteLine($"count: {objCount}");
-                Console.WriteLine($"ticks: {sw.ElapsedTicks}");
-                Console.WriteLine();
+                Console.WriteLine($"{sw.ElapsedTicks} ticks");
             }
         }
 
@@ -101,7 +99,7 @@ namespace Benchmark.Design
 
         internal static async Task TestCommandTwoWay()
         {
-            for (var i = 0; i < 100_000; i++)
+            for (var i = 0; i < N; i++)
             {
                 await SendTwoWay();
             }
