@@ -7,9 +7,9 @@
 
 - Full serialization features integrated with [Tinyhand](https://github.com/archi-Doc/Tinyhand).
 
-- Simplify complex and long-running tasks as much as possible.
+- Simplify complex and long-running tasks.
 
-
+  
 
 
 ## Table of Contents
@@ -112,11 +112,11 @@ These keywords in `Machine` class are reserved for source generator.
 
 - `Interface`: Nested class for operating a machine.
 - `State`: enum type which represents the state of a machine.
-- `CreateInterface()`: Method for creating an interface.
-- `RunInternal()`: 
-- `ChangeStateInternal()`: 
-- `ChangeState()`: 
-- `RegisterBM()`: 
+- `CreateInterface()`: Creates an instance of machine interface.
+- `RunInternal()`: Runs machine and process each state.
+- `ChangeState()`: Changes the state of a machine.
+- `IntChangeState()`: Internally used to change the state.
+- `RegisterBM()`: Registers the machine to BigMachine.
 
 
 

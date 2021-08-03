@@ -41,7 +41,7 @@ namespace BigMachines
         public TIdentifier Identifier { get; }
 
         /// <summary>
-        /// Get the status of the machine.
+        /// Gets the status of the machine.
         /// </summary>
         /// <returns>The status of the machine.<br/>
         /// <see langword="null"/>: Machine is not available.</returns>
@@ -56,7 +56,7 @@ namespace BigMachines
         }
 
         /// <summary>
-        /// Change the status of the machine.
+        /// Changes the status of the machine.
         /// </summary>
         /// <param name="status">The status.</param>
         /// <returns><see langword="true"/>: The status is successfully changed.<br/>
@@ -73,9 +73,9 @@ namespace BigMachines
         }
 
         /// <summary>
-        /// Get default timeout of the machine.
+        /// Gets the default timeout of the machine.
         /// </summary>
-        /// <returns>Default timeout of the machine.<br/>
+        /// <returns>The default timeout of the machine.<br/>
         /// <see langword="null"/>: Machine is not available.</returns>
         public TimeSpan? GetDefaultTimeout()
         {
@@ -104,14 +104,14 @@ namespace BigMachines
         public StateResult? RunTwoWay<TMessage>(TMessage message, int millisecondTimeout = 100) => this.BigMachine.CommandPost.SendTwoWay<TMessage, StateResult>(CommandPost<TIdentifier>.CommandType.RunTwoWay, this.Group, this.Identifier, message, millisecondTimeout);
 
         /// <summary>
-        /// Sends a message to the machine.
+        /// Sends a command to the machine.
         /// </summary>
         /// <typeparam name="TMessage">The type of the message.</typeparam>
         /// <param name="message">Message.</param>
         public void Command<TMessage>(TMessage message) => this.BigMachine.CommandPost.Send(CommandPost<TIdentifier>.CommandType.Command, this.Group, this.Identifier, message);
 
         /// <summary>
-        /// Sends a message to the machine and receives the result.
+        /// Sends a command to the machine and receives the result.
         /// </summary>
         /// <typeparam name="TMessage">The type of the message.</typeparam>
         /// <typeparam name="TResponse">The type of the response.</typeparam>
@@ -143,7 +143,7 @@ namespace BigMachines
         }
 
         /// <summary>
-        /// Get the current state of the machine.
+        /// Gets the current state of the machine.
         /// </summary>
         /// <returns>The state of the machine..<br/>
         /// <see langword="null"/>: Machine is not available.</returns>
@@ -161,13 +161,13 @@ namespace BigMachines
         }
 
         /// <summary>
-        /// Try to change the state of the machine.
+        /// Changes the state of the machine.
         /// </summary>
         /// <param name="state">The next machine state.</param>
         public void ChangeState(TState state) => this.BigMachine.CommandPost.Send(CommandPost<TIdentifier>.CommandType.State, this.Group, this.Identifier, state);
 
         /// <summary>
-        /// Try to change the state of the machine.
+        /// Changes the state of the machine and receives the result.
         /// </summary>
         /// <param name="state">The next machine state.</param>
         /// <param name="millisecondTimeout">Timeout in milliseconds.</param>
