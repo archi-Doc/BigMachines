@@ -19,9 +19,18 @@ using Tinyhand;
 
 namespace BigMachines
 {
+    /// <summary>
+    /// <see cref="BigMachine{TIdentifier}"/> is a container class used to manage and manipulate multiple <see cref="Machine{TIdentifier}"/>.
+    /// </summary>
+    /// <typeparam name="TIdentifier">The type of an identifier.</typeparam>
     public partial class BigMachine<TIdentifier> : IDisposable
         where TIdentifier : notnull
     {
+        /// <summary>
+        /// Initializes a new instance of the <see cref="BigMachine{TIdentifier}"/> class.
+        /// </summary>
+        /// <param name="parent">The parent <see cref="ThreadCore"/>.</param>
+        /// <param name="serviceProvider"><see cref="IServiceProvider"/> used to create instances of <see cref="Machine{TIdentifier}"/>.</param>
         public BigMachine(ThreadCoreBase parent, IServiceProvider? serviceProvider = null)
         {
             MachineLoader.Load<TIdentifier>(); // Load generic machine information.
@@ -56,20 +65,49 @@ namespace BigMachines
             }
         }
 
+        /// <summary>
+        /// Gets or sets a value indicating whether to enable loop checker.
+        /// </summary>
         public static bool EnableLoopChecker { get; set; } = true;
 
+        /// <summary>
+        /// Gets <see cref="MachineInfo{TIdentifier}"/> from the type of Machine.Interface. Used internally.
+        /// </summary>
         public static Dictionary<Type, MachineInfo<TIdentifier>> StaticInfo { get; } = new(); // typeof(Machine.Interface), MachineGroup
 
+        /// <summary>
+        /// Gets the status of <see cref="BigMachine{TIdentifier}"/>.
+        /// </summary>
         public BigMachineStatus Status { get; }
 
+        /// <summary>
+        /// Gets <see cref="ThreadCore"/> of <see cref="BigMachine{TIdentifier}"/>.
+        /// </summary>
         public ThreadCore Core { get; }
 
+        /// <summary>
+        /// Gets <see cref="CommandPost"/> (message distributing class).
+        /// </summary>
         public CommandPost<TIdentifier> CommandPost { get; }
 
+        /// <summary>
+        /// Gets <see cref="IServiceProvider"/> used to create instances of <see cref="Machine{TIdentifier}"/>.
+        /// </summary>
         public IServiceProvider? ServiceProvider { get; }
 
+        /// <summary>
+        /// Gets a collection of <see cref="IMachineGroup{TIdentifier}"/>.
+        /// </summary>
+        /// <returns>A collection containing <see cref="IMachineGroup{TIdentifier}"/>.</returns>
         public IEnumerable<IMachineGroup<TIdentifier>> GetGroups() => this.groupArray;
 
+        /// <summary>
+        /// Gets a machine interface associated with the identifier.
+        /// </summary>
+        /// <typeparam name="TMachineInterface"><see cref="ManMachineInterface{TIdentifier, TState}"/>of the machine (e.g TestMachine.Interface).</typeparam>
+        /// <param name="identifier">The identifier.</param>
+        /// <returns>An instance of <see cref="ManMachineInterface{TIdentifier, TState}"/><br/>
+        /// <see langword="null"/>: Machine is not available.</returns>
         public TMachineInterface? TryGet<TMachineInterface>(TIdentifier identifier)
             where TMachineInterface : ManMachineInterface<TIdentifier>
         {
@@ -77,6 +115,11 @@ namespace BigMachines
             return group.TryGet<TMachineInterface>(identifier);
         }
 
+        /// <summary>
+        /// Gets a machine group associated with <typeparamref name="TMachineInterface"/>.
+        /// </summary>
+        /// <typeparam name="TMachineInterface"><see cref="ManMachineInterface{TIdentifier, TState}"/>of the machine (e.g TestMachine.Interface).</typeparam>
+        /// <returns>An instance of <see cref="IMachineGroup{TIdentifier}"/>.</returns>
         public IMachineGroup<TIdentifier> GetGroup<TMachineInterface>()
             where TMachineInterface : ManMachineInterface<TIdentifier>
         {
@@ -84,7 +127,16 @@ namespace BigMachines
             return group;
         }
 
-        public TMachineInterface? TryCreate<TMachineInterface>(TIdentifier identifier, object? parameter = null)
+        /// <summary>
+        /// Create a machine by specifying the identifier and parameter.<br/>
+        /// Returns the existing machine if the machine with the identifier is already created.
+        /// </summary>
+        /// <typeparam name="TMachineInterface"><see cref="ManMachineInterface{TIdentifier, TState}"/>of the machine (e.g TestMachine.Interface).</typeparam>
+        /// <param name="identifier">The identifier.</param>
+        /// <param name="parameter">The parameter.</param>
+        /// <returns>An instance of <see cref="ManMachineInterface{TIdentifier, TState}"/><br/>
+        /// <see langword="null"/>: Machine is not available.</returns>
+        public TMachineInterface TryCreate<TMachineInterface>(TIdentifier identifier, object? parameter = null)
             where TMachineInterface : ManMachineInterface<TIdentifier>
         {
             this.GetMachineGroup(typeof(TMachineInterface), out var group);
@@ -92,7 +144,7 @@ namespace BigMachines
             Machine<TIdentifier>? machine = null;
             if (group.TryGetMachine(identifier, out machine))
             {
-                return machine.InterfaceInstance as TMachineInterface;
+                return (TMachineInterface)machine.InterfaceInstance!;
             }
 
             machine = this.CreateMachine(group);
@@ -102,9 +154,18 @@ namespace BigMachines
             machine.SetParameter(parameter);
 
             machine = group.GetOrAddMachine(clone, machine);
-            return machine.InterfaceInstance as TMachineInterface;
+            return (TMachineInterface)machine.InterfaceInstance!;
         }
 
+        /// <summary>
+        /// Create a machine by specifying the identifier and parameter.<br/>
+        /// Removes the existing machine if the machine with the identifier is already created.
+        /// </summary>
+        /// <typeparam name="TMachineInterface"><see cref="ManMachineInterface{TIdentifier, TState}"/>of the machine (e.g TestMachine.Interface).</typeparam>
+        /// <param name="identifier">The identifier.</param>
+        /// <param name="parameter">The parameter.</param>
+        /// <returns>An instance of <see cref="ManMachineInterface{TIdentifier, TState}"/><br/>
+        /// <see langword="null"/>: Machine is not available.</returns>
         public TMachineInterface Create<TMachineInterface>(TIdentifier identifier, object? parameter = null)
             where TMachineInterface : ManMachineInterface<TIdentifier>
         {
@@ -120,12 +181,23 @@ namespace BigMachines
             return (TMachineInterface)machine.InterfaceInstance!;
         }
 
+        /// <summary>
+        /// Remove a machine associated with the identifier.
+        /// </summary>
+        /// <typeparam name="TMachineInterface"><see cref="ManMachineInterface{TIdentifier, TState}"/>of the machine (e.g TestMachine.Interface).</typeparam>
+        /// <param name="identifier">The identifier.</param>
+        /// <returns><see langword="true"/>: The machine is successfully removed.</returns>
         public bool Remove<TMachineInterface>(TIdentifier identifier)
         {
             this.GetMachineGroup(typeof(TMachineInterface), out var group);
             return group.TryRemoveMachine(identifier);
         }
 
+        /// <summary>
+        /// Serialize machines to a byte array.
+        /// </summary>
+        /// <param name="options">Serializer options.</param>
+        /// <returns>A byte array with the serialized value.</returns>
         public byte[] Serialize(TinyhandSerializerOptions? options = null)
         {
             options ??= TinyhandSerializer.DefaultOptions;
@@ -155,6 +227,10 @@ namespace BigMachines
             return writer.FlushAndGetArray();
         }
 
+        /// <summary>
+        /// Serialize machines from a byte array.
+        /// </summary>
+        /// <param name="byteArray">A byte array.</param>
         public void Deserialize(byte[] byteArray)
         {
             var reader = new Tinyhand.IO.TinyhandReader(byteArray);
@@ -202,11 +278,21 @@ namespace BigMachines
             }
         }
 
+        /// <summary>
+        /// Sets a timer interval of <see cref="BigMachine{TIdentifier}"/>.<br/>
+        /// The default value is TimeSpan.FromMilliseconds(500).
+        /// </summary>
+        /// <param name="interval">Timer interval.</param>
         public void SetTimerInterval(TimeSpan interval)
         {
             this.timerInterval = interval;
         }
 
+        /// <summary>
+        /// Gets <see cref="MachineInfo{TIdentifier}"/> associated with the type id.
+        /// </summary>
+        /// <param name="typeId">The type id.</param>
+        /// <returns>The Machine information.</returns>
         public MachineInfo<TIdentifier>? GetMachineInfoFromTypeId(uint typeId)
         {
             if (this.TypeIdToGroup.TryGetValue(typeId, out var group))
