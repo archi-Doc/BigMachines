@@ -32,6 +32,7 @@ namespace BigMachines.Generator
 
         public const string StateResultFullName = "BigMachines.StateResult";
         public const string StateParameterFullName = "BigMachines.StateParameter";
+        public const string StateResultTaskFullName = "System.Threading.Tasks.Task<BigMachines.StateResult>";
 
         public static readonly DiagnosticDescriptor Error_NotPartial = new DiagnosticDescriptor(
             id: "BMG001", title: "Not a partial class", messageFormat: "MachineObject '{0}' is not a partial class",
@@ -171,10 +172,12 @@ namespace BigMachines.Generator
             ssb.AddUsing("System.Collections.Generic");
             ssb.AddUsing("System.Diagnostics.CodeAnalysis");
             ssb.AddUsing("System.Runtime.CompilerServices");
+            ssb.AddUsing("System.Threading.Tasks");
             ssb.AddUsing("BigMachines");
 
             ssb.AppendLine("#nullable enable", false);
             ssb.AppendLine("#pragma warning disable CS1591", false);
+            ssb.AppendLine("#pragma warning disable CS1998", false);
             ssb.AppendLine();
         }
 

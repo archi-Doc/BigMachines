@@ -128,6 +128,8 @@ namespace BigMachines
             this.OnTerminated();
         }
 
+        protected internal SemaphoreSlim SemaphoreSlim { get; } = new(1, 1);
+
         /// <summary>
         /// Gets or sets ManMachineInterface.
         /// </summary>
@@ -172,7 +174,7 @@ namespace BigMachines
         /// </summary>
         /// <param name="parameter">StateParameter.</param>
         /// <returns>StateResult.</returns>
-        protected internal virtual StateResult RunInternal(StateParameter parameter)
+        protected internal virtual async Task<StateResult> RunInternal(StateParameter parameter)
         {// Called: Machine.DistributeCommand(), BigMachine.MainLoop()
             return StateResult.Terminate;
         }
@@ -190,7 +192,7 @@ namespace BigMachines
         /// </summary>
         /// <param name="command">Command.</param>
         /// <returns><see langword="true"/>: Terminated, <see langword="false"/>: Continue.</returns>
-        protected internal virtual bool DistributeCommand(CommandPost<TIdentifier>.Command command)
+        protected internal virtual async Task<bool> DistributeCommand(CommandPost<TIdentifier>.Command command)
         {// This code is inside 'lock (machine) {}'.
             if (this.Status == MachineStatus.Terminated)
             {// Terminated
@@ -214,7 +216,7 @@ namespace BigMachines
                     LoopChecker.Instance.AddRunId(this.TypeId);
                 }
 
-                var result = this.RunInternal(new(RunType.RunManual, command.Message));
+                var result = await this.RunInternal(new(RunType.RunManual, command.Message));
                 this.LastRun = DateTime.UtcNow;
                 command.Response = result;
                 if (result == StateResult.Terminate)

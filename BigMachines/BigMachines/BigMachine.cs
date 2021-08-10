@@ -36,7 +36,7 @@ namespace BigMachines
             MachineLoader.Load<TIdentifier>(); // Load generic machine information.
 
             this.Status = new();
-            this.Core = new ThreadCore(parent, this.MainLoop);
+            this.Core = new TaskCore(parent, this.MainLoop);
             this.CommandPost = new(parent);
             this.CommandPost.Open(this.DistributeCommand);
             this.ServiceProvider = serviceProvider;
@@ -81,9 +81,9 @@ namespace BigMachines
         public BigMachineStatus Status { get; }
 
         /// <summary>
-        /// Gets <see cref="ThreadCore"/> of <see cref="BigMachine{TIdentifier}"/>.
+        /// Gets <see cref="TaskCore"/> of <see cref="BigMachine{TIdentifier}"/>.
         /// </summary>
-        public ThreadCore Core { get; }
+        public TaskCore Core { get; }
 
         /// <summary>
         /// Gets <see cref="CommandPost"/> (message distributing class).
@@ -307,17 +307,23 @@ namespace BigMachines
 
         internal ThreadsafeTypeKeyHashTable<IMachineGroup<TIdentifier>> MachineTypeToGroup { get; } = new();
 
-        private void DistributeCommand(CommandPost<TIdentifier>.Command command)
+        private async void DistributeCommand(CommandPost<TIdentifier>.Command command)
         {
             if (command.Channel is IMachineGroup<TIdentifier> group &&
                 group.TryGetMachine(command.Identifier, out var machine))
             {
-                lock (machine)
+                await machine.SemaphoreSlim.WaitAsync();
+                try
                 {
-                    if (machine.DistributeCommand(command))
+                    var result = await machine.DistributeCommand(command);
+                    if (result)
                     {
                         group.TryRemoveMachine(machine.Identifier);
                     }
+                }
+                finally
+                {
+                    machine.SemaphoreSlim.Release();
                 }
             }
         }
@@ -406,9 +412,9 @@ namespace BigMachines
             return group;
         }
 
-        private void MainLoop(object? parameter)
+        private async Task MainLoop(object? parameter)
         {
-            var core = (ThreadCore)parameter!;
+            var core = (TaskCore)parameter!;
 
             while (!core.IsTerminated)
             {
@@ -445,12 +451,18 @@ namespace BigMachines
                         }
                         else if (y.Timeout <= 0 || y.NextRun >= now)
                         {// Screening
-                            lock (y)
+                            await y.SemaphoreSlim.WaitAsync();
+                            try
                             {
-                                if (TryRun(y))
+                                var result = await TryRun(y);
+                                if (result)
                                 {// Terminated
                                     x.TryRemoveMachine(y.Identifier);
                                 }
+                            }
+                            finally
+                            {
+                                y.SemaphoreSlim.Release();
                             }
                         }
                     }
@@ -458,7 +470,7 @@ namespace BigMachines
 
                 this.Status.LastRun = now;
 
-                bool TryRun(Machine<TIdentifier> machine)
+                async Task<bool> TryRun(Machine<TIdentifier> machine)
                 {// locked
                     var runFlag = false;
                     if (machine.Timeout <= 0)
@@ -485,7 +497,7 @@ namespace BigMachines
                     {
 StateChangedLoop:
                         machine.StateChanged = false;
-                        var result = machine.RunInternal(new(RunType.RunTimer));
+                        var result = await machine.RunInternal(new(RunType.RunTimer));
                         if (result == StateResult.Terminate)
                         {
                             return true;

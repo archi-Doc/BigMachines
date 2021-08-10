@@ -267,9 +267,11 @@ namespace Sandbox
         private bool InitialCanExit() => true;
 
         [StateMethod(1)]
-        protected StateResult First(StateParameter parameter)
+        protected async Task<StateResult> First(StateParameter parameter)
         {
             Console.WriteLine($"TestMachine(First) : {this.Dummy++}");
+
+            await Task.Delay(1000).ConfigureAwait(false);
 
             // this.SetTimeout(44.5);
             // this.ChangeStateInternal(State.First);

@@ -614,7 +614,7 @@ ModuleInitializerClass_Added:
                 return;
             }
 
-            using (var scope = ssb.ScopeBrace("protected override StateResult RunInternal(StateParameter parameter)"))
+            using (var scope = ssb.ScopeBrace("protected override async Task<StateResult> RunInternal(StateParameter parameter)"))
             {
                 ssb.AppendLine($"var state = Unsafe.As<int, {this.StateName}>(ref this.CurrentState);");
                 ssb.AppendLine("return state switch");
@@ -623,7 +623,14 @@ ModuleInitializerClass_Added:
 
                 foreach (var x in this.StateMethodList)
                 {
-                    ssb.AppendLine($"State.{x.Name} => this.{x.Name}(parameter),");
+                    if (x.Type == StateMethod.MethodType.Normal)
+                    {
+                        ssb.AppendLine($"State.{x.Name} => this.{x.Name}(parameter),");
+                    }
+                    else if (x.Type == StateMethod.MethodType.Async)
+                    {
+                        ssb.AppendLine($"State.{x.Name} => await this.{x.Name}(parameter),");
+                    }
                 }
 
                 ssb.AppendLine("_ => StateResult.Terminate,");
