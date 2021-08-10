@@ -47,10 +47,11 @@ namespace Benchmark
                 }
             });
 
-            DebugRun<LoopCheckerBenchmark>();
+            DebugRun<Test.LockingBenchmark>();
 
             var switcher = new BenchmarkSwitcher(new[]
             {
+                typeof(Test.LockingBenchmark),
                 typeof(LoopCheckerBenchmark),
                 typeof(Design.ConcurrentQueueBenchmark),
                 typeof(Test.TestBenchmark),
