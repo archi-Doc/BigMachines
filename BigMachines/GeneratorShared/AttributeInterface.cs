@@ -32,6 +32,11 @@ namespace BigMachines
         /// Gets or sets a machine group of the machine (e.g. <see cref="MachineGroup{TIdentifier}"/>(default), <see cref="MachineSingle{TIdentifier}"/>).
         /// </summary>
         public Type? Group { get; set; }
+
+        /// <summary>
+        /// Gets or sets a value indicating whether or not the machine is continuous machine.
+        /// </summary>
+        public bool Continuous { get; set; }
     }
 
 #pragma warning disable SA1629

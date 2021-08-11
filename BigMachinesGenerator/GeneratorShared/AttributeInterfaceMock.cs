@@ -49,6 +49,8 @@ namespace BigMachines.Generator
 
         public ISymbol? Group { get; set; }
 
+        public bool Continuous { get; set; }
+
         public static MachineObjectAttributeMock FromArray(object?[] constructorArguments, KeyValuePair<string, object?>[] namedArguments)
         {
             var attribute = new MachineObjectAttributeMock();
@@ -64,6 +66,12 @@ namespace BigMachines.Generator
             if (val != null)
             {
                 attribute.Group = val as ISymbol;
+            }
+
+            val = AttributeHelper.GetValue(-1, nameof(Continuous), constructorArguments, namedArguments);
+            if (val != null)
+            {
+                attribute.Continuous = (bool)val;
             }
 
             return attribute;

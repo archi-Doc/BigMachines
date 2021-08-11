@@ -14,6 +14,16 @@ using Tinyhand;
 
 namespace Sandbox
 {
+    [MachineObject(0x436a0f8f, Continuous = true)]
+    public partial class ContinuousMachine : Machine<int>
+    {
+        public ContinuousMachine(BigMachine<int> bigMachine)
+        : base(bigMachine)
+        {
+            this.DefaultTimeout = TimeSpan.FromSeconds(1);
+        }
+    }
+
     internal partial class NestedGenericParent<T>
     {
         [TinyhandObject(UseServiceProvider = true)]
