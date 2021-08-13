@@ -64,8 +64,8 @@ namespace Sandbox
         public StateResult Initial(StateParameter parameter)
         {
             var c = this.BigMachine.Continuous;
-            var i = c.GetInterfaces(true);
 
+            /*var i = c.GetInterfaces(true);
             if (i.Length == 0)
             {
                 Console.WriteLine("ContinuousMachine: none");
@@ -75,6 +75,17 @@ namespace Sandbox
             {
                 var d = i[0].Interface.CommandTwoWay<double, double>(0);
                 Console.WriteLine($"ContinuousMachine: {d * 100:F2}%");
+            }*/
+
+            var results = c.CommandTwoWay<double, double>(true, 0);
+            if (results.Length == 0)
+            {
+                Console.WriteLine("ContinuousMachine: none");
+                return StateResult.Terminate;
+            }
+            else
+            {
+                Console.WriteLine($"ContinuousMachine: {results[0].Value * 100:F2}%");
             }
             
             return StateResult.Continue;

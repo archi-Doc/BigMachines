@@ -168,7 +168,7 @@ namespace BigMachines
                 }
             }
 
-            return this.BigMachine.CommandPost.SendGroupsTwoWay<TMessage, TResponse>(CommandPost<TIdentifier>.CommandType.Command, groups, identifiers, message, millisecondTimeout);
+            return this.BigMachine.CommandPost.SendGroupsTwoWay<TMessage, TResponse>(CommandPost<TIdentifier>.CommandType.CommandTwoWay, groups, identifiers, message, millisecondTimeout);
         }
 
         /// <summary>
