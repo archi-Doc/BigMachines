@@ -102,6 +102,9 @@ namespace Sandbox
             bigMachine.TryCreate<GenericMachine<int>.Interface>(10);
             // bigMachine.TryCreate<ParentClassT2<byte, int>.NestedMachineT2.Interface>(11);
 
+            // Continuous
+            bigMachine.TryCreate<ContinuousMachine.Interface>(0);
+
             await ThreadCore.Root.WaitForTermination(-1); // Wait for the termination infinitely.
 
             // Save

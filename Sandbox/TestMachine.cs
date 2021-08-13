@@ -22,6 +22,12 @@ namespace Sandbox
         {
             this.DefaultTimeout = TimeSpan.FromSeconds(1);
         }
+
+        [StateMethod(0)]
+        public StateResult Initial(StateParameter parameter)
+        {
+            return StateResult.Continue;
+        }
     }
 
     internal partial class NestedGenericParent<T>

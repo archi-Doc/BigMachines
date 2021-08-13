@@ -36,11 +36,11 @@ namespace BigMachines
             MachineLoader.Load<TIdentifier>(); // Load generic machine information.
 
             this.Status = new();
-            this.Core = new ThreadCore(parent, this.MainLoop);
+            this.Core = new ThreadCore(parent, this.MainLoop, false);
             this.CommandPost = new(parent);
             this.CommandPost.Open(this.DistributeCommand);
-            this.Continuous = new(this);
             this.ServiceProvider = serviceProvider;
+            this.Continuous = new(this);
 
             var array = new IMachineGroup<TIdentifier>[StaticInfo.Count];
             var n = 0;
@@ -64,6 +64,8 @@ namespace BigMachines
                     throw new InvalidOperationException($"Machine: {x.Info.MachineType} is already registered.");
                 }
             }
+
+            this.Core.Start();
         }
 
         /// <summary>

@@ -20,7 +20,7 @@ namespace BigMachines
 
         internal class Core : ThreadCore
         {
-            static public void Process(object? parameter)
+            public static void Process(object? parameter)
             {
                 var core = (Core)parameter!;
                 var item = core.Item;
@@ -39,16 +39,17 @@ namespace BigMachines
                 }
                 finally
                 {
-                    item.Core = null;
                     machine.Group.TryRemoveMachine(machine.Identifier);
                     item.Continuous.RemoveCore(core);
+                    item.Core = null;
                 }
             }
 
             public Core(ThreadCoreBase parent, Item item)
-                : base(parent, Process)
+                : base(parent, Process, false)
             {
                 this.Item = item;
+                this.Start();
             }
 
             public Item Item { get; }
@@ -157,11 +158,13 @@ namespace BigMachines
                     lock (this.items)
                     {
                         var i = this.items.FirstOrDefault(a => a.Core == null);
-                        if (i != null)
-                        {
-                            i.Core = new Core(this.CoreGroup, i);
-                            this.cores.Add(i.Core);
+                        if (i == null)
+                        {// No item
+                            return;
                         }
+
+                        i.Core = new Core(this.CoreGroup, i);
+                        this.cores.Add(i.Core);
                     }
                 }
             }
