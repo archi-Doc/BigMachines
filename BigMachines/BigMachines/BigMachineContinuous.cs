@@ -90,13 +90,13 @@ namespace BigMachines
             this.maxThreads = DefaultMaxThreads;
         }
 
-        public Info[] GetInterfaces(bool onlyRunning)
+        public Info[] GetInterfaces(bool running)
         {
             lock (this.items)
             {
-                var count = onlyRunning ? this.items.Count(a => a.Core != null) : this.items.Count;
+                var count = running ? this.items.Count(a => a.Core != null) : this.items.Count;
                 var array = new Info[count];
-                var e = onlyRunning ? this.items.Where(a => a.Core != null) : this.items;
+                var e = running ? this.items.Where(a => a.Core != null) : this.items;
                 var n = 0;
                 foreach (var x in e)
                 {
@@ -106,6 +106,69 @@ namespace BigMachines
 
                 return array;
             }
+        }
+
+        /// <summary>
+        /// Sends a command to each continuous machine.
+        /// </summary>
+        /// <typeparam name="TMessage">The type of the message.</typeparam>
+        /// <param name="running">Sends message to running machines only.</param>
+        /// <param name="message">The message.</param>
+        public void Command<TMessage>(bool running, TMessage message)
+        {
+            int count;
+            TIdentifier[] identifiers;
+            IMachineGroup<TIdentifier>[] groups;
+            lock (this.items)
+            {
+                var e = running ? this.items.Where(a => a.Core != null) : this.items;
+                count = e.Count();
+
+                identifiers = new TIdentifier[count];
+                groups = new IMachineGroup<TIdentifier>[count];
+                int n = 0;
+                foreach (var x in e)
+                {
+                    identifiers[n] = x.Machine.Identifier;
+                    groups[n] = x.Machine.Group;
+                    n++;
+                }
+            }
+
+            this.BigMachine.CommandPost.SendGroups(CommandPost<TIdentifier>.CommandType.Command, groups, identifiers, message);
+        }
+
+        /// <summary>
+        /// Sends a message to each machine in the group and receives the result.
+        /// </summary>
+        /// <typeparam name="TMessage">The type of the message.</typeparam>
+        /// <typeparam name="TResponse">The type of the response.</typeparam>
+        /// <param name="running">Sends message to running machines only.</param>
+        /// <param name="message">The message.</param>
+        /// <param name="millisecondTimeout">Timeout in milliseconds.</param>
+        /// <returns>The response.</returns>
+        public KeyValuePair<TIdentifier, TResponse?>[] CommandTwoWay<TMessage, TResponse>(bool running, TMessage message, int millisecondTimeout = 100)
+        {
+            int count;
+            TIdentifier[] identifiers;
+            IMachineGroup<TIdentifier>[] groups;
+            lock (this.items)
+            {
+                var e = running ? this.items.Where(a => a.Core != null) : this.items;
+                count = e.Count();
+
+                identifiers = new TIdentifier[count];
+                groups = new IMachineGroup<TIdentifier>[count];
+                int n = 0;
+                foreach (var x in e)
+                {
+                    identifiers[n] = x.Machine.Identifier;
+                    groups[n] = x.Machine.Group;
+                    n++;
+                }
+            }
+
+            return this.BigMachine.CommandPost.SendGroupsTwoWay<TMessage, TResponse>(CommandPost<TIdentifier>.CommandType.Command, groups, identifiers, message, millisecondTimeout);
         }
 
         /// <summary>
