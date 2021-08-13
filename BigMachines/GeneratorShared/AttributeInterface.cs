@@ -34,7 +34,7 @@ namespace BigMachines
         public Type? Group { get; set; }
 
         /// <summary>
-        /// Gets or sets a value indicating whether or not the machine is continuous machine.
+        /// Gets or sets a value indicating whether or not the machine is continuous machine (runs continuously and uses one thread).
         /// </summary>
         public bool Continuous { get; set; }
     }
@@ -114,12 +114,17 @@ namespace BigMachines
         /// <summary>
         /// Machine is run by <see cref="ManMachineInterface{TIdentifier}.Run"/> method.
         /// </summary>
-        RunManual,
+        Manual,
 
         /// <summary>
         /// Machine is run by interval timer.
         /// </summary>
-        RunTimer,
+        Timer,
+
+        /// <summary>
+        /// Machine is run by <see cref="BigMachineContinuous{TIdentifier}"/>.
+        /// </summary>
+        Continuous,
     }
 
     /// <summary>

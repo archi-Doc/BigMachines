@@ -39,6 +39,7 @@ namespace BigMachines
             this.Core = new ThreadCore(parent, this.MainLoop);
             this.CommandPost = new(parent);
             this.CommandPost.Open(this.DistributeCommand);
+            this.Continuous = new(this);
             this.ServiceProvider = serviceProvider;
 
             var array = new IMachineGroup<TIdentifier>[StaticInfo.Count];
@@ -89,6 +90,11 @@ namespace BigMachines
         /// Gets <see cref="CommandPost"/> (message distributing class).
         /// </summary>
         public CommandPost<TIdentifier> CommandPost { get; }
+
+        /// <summary>
+        /// Gets a management class of continuous machines.
+        /// </summary>
+        public BigMachineContinuous<TIdentifier> Continuous { get; }
 
         /// <summary>
         /// Gets <see cref="IServiceProvider"/> used to create instances of <see cref="Machine{TIdentifier}"/>.
@@ -348,6 +354,11 @@ namespace BigMachines
                 Volatile.Write(ref machine.Timeout, 0);
             }
 
+            if (group.Info.Continuous)
+            {
+                this.Continuous.AddMachine(machine);
+            }
+
             return machine;
         }
 
@@ -417,6 +428,8 @@ namespace BigMachines
                     break;
                 }
 
+                this.Continuous.Process();
+
                 var now = DateTime.UtcNow;
                 if (this.Status.LastRun == default)
                 {
@@ -431,6 +444,11 @@ namespace BigMachines
 
                 foreach (var x in this.groupArray)
                 {
+                    if (x.Info.Continuous)
+                    {// Omit continuous machines
+                        continue;
+                    }
+
                     foreach (var y in x.GetMachines())
                     {
                         Interlocked.Add(ref y.Timeout, -elapsed.Ticks);
@@ -485,7 +503,7 @@ namespace BigMachines
                     {
 StateChangedLoop:
                         machine.StateChanged = false;
-                        var result = machine.RunInternal(new(RunType.RunTimer));
+                        var result = machine.RunInternal(new(RunType.Timer));
                         if (result == StateResult.Terminate)
                         {
                             return true;
