@@ -18,6 +18,19 @@ namespace BigMachines
     {
         public const int DefaultMaxThreads = 2;
 
+        public class Info
+        {
+            internal Info(Item item)
+            {
+                this.Interface = item.Machine.InterfaceInstance!;
+                this.Running = item.Core != null;
+            }
+
+            public ManMachineInterface<TIdentifier> Interface { get; }
+
+            public bool Running { get; }
+        }
+
         internal class Core : ThreadCore
         {
             public static void Process(object? parameter)
@@ -75,6 +88,24 @@ namespace BigMachines
             this.BigMachine = bigMachine;
             this.CoreGroup = new ThreadCoreGroup(this.BigMachine.Core);
             this.maxThreads = DefaultMaxThreads;
+        }
+
+        public Info[] GetInterfaces(bool onlyRunning)
+        {
+            lock (this.items)
+            {
+                var count = onlyRunning ? this.items.Count(a => a.Core != null) : this.items.Count;
+                var array = new Info[count];
+                var e = onlyRunning ? this.items.Where(a => a.Core != null) : this.items;
+                var n = 0;
+                foreach (var x in e)
+                {
+                    var info = new Info(x);
+                    array[n++] = info;
+                }
+
+                return array;
+            }
         }
 
         /// <summary>

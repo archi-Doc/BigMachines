@@ -20,12 +20,63 @@ namespace Sandbox
         public ContinuousMachine(BigMachine<int> bigMachine)
         : base(bigMachine)
         {
+            this.total = 5_000_000_000;
+        }
+
+        [StateMethod(0)]
+        public StateResult Initial(StateParameter parameter)
+        {
+            for (var n = 0; n < 1_000_000; n++)
+            {
+                this.count++;
+            }
+
+            if (this.count > this.total)
+            {
+                return StateResult.Terminate;
+            }
+
+            return StateResult.Continue;
+        }
+
+        protected override void ProcessCommand(CommandPost<int>.Command command)
+        {
+            if (command.Message is double)
+            {
+                command.Response = (double)this.count / (double)this.total;
+            }
+        }
+
+        private long total;
+        private long count;
+    }
+
+    [MachineObject(0xbed5cbf5)]
+    public partial class ContinuousWatcher : Machine<int>
+    {
+        public ContinuousWatcher(BigMachine<int> bigMachine)
+        : base(bigMachine)
+        {
             this.DefaultTimeout = TimeSpan.FromSeconds(1);
         }
 
         [StateMethod(0)]
         public StateResult Initial(StateParameter parameter)
         {
+            var c = this.BigMachine.Continuous;
+            var i = c.GetInterfaces(true);
+
+            if (i.Length == 0)
+            {
+                Console.WriteLine("ContinuousMachine: none");
+                return StateResult.Terminate;
+            }
+            else
+            {
+                var d = i[0].Interface.CommandTwoWay<double, double>(0);
+                Console.WriteLine($"ContinuousMachine: {d * 100:F2}%");
+            }
+            
             return StateResult.Continue;
         }
     }
