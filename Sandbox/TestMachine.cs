@@ -85,7 +85,10 @@ namespace Sandbox
             }
             else
             {
-                Console.WriteLine($"ContinuousMachine: {results[0].Value * 100:F2}%");
+                foreach (var x in results)
+                {
+                    Console.WriteLine($"ContinuousMachine {x.Key}: {x.Value * 100:F2}%");
+                }
             }
             
             return StateResult.Continue;
