@@ -20,12 +20,14 @@ namespace BigMachines
         /// </summary>
         /// <param name="machineType"><see cref="Type"/> of machine.</param>
         /// <param name="typeId">Type id (unique identifier for serialization).</param>
+        /// <param name="continuous">True if the machine is continuous.</param>
         /// <param name="constructor">Constructor delegate of <see cref="Machine{TIdentifier}"/>.</param>
         /// <param name="groupType"><see cref="Type"/> of machine group (if you want to use customized <see cref="MachineGroup{TIdentifier}"/>).</param>
-        public MachineInfo(Type machineType, uint typeId, Func<BigMachine<TIdentifier>, Machine<TIdentifier>>? constructor, Type? groupType = null)
+        public MachineInfo(Type machineType, uint typeId, bool continuous, Func<BigMachine<TIdentifier>, Machine<TIdentifier>>? constructor, Type? groupType = null)
         {
             this.MachineType = machineType;
             this.TypeId = typeId;
+            this.Continuous = continuous;
             this.Constructor = constructor;
             this.GroupType = groupType;
         }
@@ -39,6 +41,11 @@ namespace BigMachines
         /// Gets Type id (unique identifier for serialization).
         /// </summary>
         public uint TypeId { get; }
+
+        /// <summary>
+        /// Gets a value indicating whether or not the machine is continuous machine.
+        /// </summary>
+        public bool Continuous { get; }
 
         /// <summary>
         /// Gets a constructor delegate of <see cref="Machine{TIdentifier}"/>.

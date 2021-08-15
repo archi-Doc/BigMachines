@@ -36,10 +36,11 @@ namespace BigMachines
             MachineLoader.Load<TIdentifier>(); // Load generic machine information.
 
             this.Status = new();
-            this.Core = new ThreadCore(parent, this.MainLoop);
+            this.Core = new ThreadCore(parent, this.MainLoop, false);
             this.CommandPost = new(parent);
             this.CommandPost.Open(this.DistributeCommand);
             this.ServiceProvider = serviceProvider;
+            this.Continuous = new(this);
 
             var array = new IMachineGroup<TIdentifier>[StaticInfo.Count];
             var n = 0;
@@ -63,6 +64,8 @@ namespace BigMachines
                     throw new InvalidOperationException($"Machine: {x.Info.MachineType} is already registered.");
                 }
             }
+
+            this.Core.Start();
         }
 
         /// <summary>
@@ -89,6 +92,11 @@ namespace BigMachines
         /// Gets <see cref="CommandPost"/> (message distributing class).
         /// </summary>
         public CommandPost<TIdentifier> CommandPost { get; }
+
+        /// <summary>
+        /// Gets a management class of continuous machines.
+        /// </summary>
+        public BigMachineContinuous<TIdentifier> Continuous { get; }
 
         /// <summary>
         /// Gets <see cref="IServiceProvider"/> used to create instances of <see cref="Machine{TIdentifier}"/>.
@@ -348,6 +356,11 @@ namespace BigMachines
                 Volatile.Write(ref machine.Timeout, 0);
             }
 
+            if (group.Info.Continuous)
+            {
+                this.Continuous.AddMachine(machine);
+            }
+
             return machine;
         }
 
@@ -417,6 +430,8 @@ namespace BigMachines
                     break;
                 }
 
+                this.Continuous.Process();
+
                 var now = DateTime.UtcNow;
                 if (this.Status.LastRun == default)
                 {
@@ -431,6 +446,11 @@ namespace BigMachines
 
                 foreach (var x in this.groupArray)
                 {
+                    if (x.Info.Continuous)
+                    {// Omit continuous machines
+                        continue;
+                    }
+
                     foreach (var y in x.GetMachines())
                     {
                         Interlocked.Add(ref y.Timeout, -elapsed.Ticks);
@@ -485,7 +505,7 @@ namespace BigMachines
                     {
 StateChangedLoop:
                         machine.StateChanged = false;
-                        var result = machine.RunInternal(new(RunType.RunTimer));
+                        var result = machine.RunInternal(new(RunType.Timer));
                         if (result == StateResult.Terminate)
                         {
                             return true;

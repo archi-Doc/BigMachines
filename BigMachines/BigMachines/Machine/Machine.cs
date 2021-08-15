@@ -125,6 +125,11 @@ namespace BigMachines
         internal virtual void TerminateInternal()
         {
             this.Status = MachineStatus.Terminated;
+            if (this.Group.Info.Continuous)
+            {
+                this.BigMachine.Continuous.RemoveMachine(this);
+            }
+
             this.OnTerminated();
         }
 
@@ -214,7 +219,7 @@ namespace BigMachines
                     LoopChecker.Instance.AddRunId(this.TypeId);
                 }
 
-                var result = this.RunInternal(new(RunType.RunManual, command.Message));
+                var result = this.RunInternal(new(RunType.Manual, command.Message));
                 this.LastRun = DateTime.UtcNow;
                 command.Response = result;
                 if (result == StateResult.Terminate)

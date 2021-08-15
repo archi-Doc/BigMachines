@@ -4,6 +4,7 @@ using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Diagnostics;
+using System.Linq;
 using System.Runtime.CompilerServices;
 using System.Threading;
 using System.Threading.Tasks;
@@ -190,12 +191,16 @@ namespace BigMachines
             this.commandAdded.Set();
         }
 
-        public void SendGroup<TMessage>(CommandType commandType, object? channel, IEnumerable<TIdentifier> identifiers, TMessage message)
+        public void SendGroup<TMessage>(CommandType commandType, IMachineGroup<TIdentifier> group, IEnumerable<TIdentifier> identifiers, TMessage message) => this.SendGroups(commandType, Enumerable.Repeat(group, identifiers.Count()), identifiers, message);
+
+        public void SendGroups<TMessage>(CommandType commandType, IEnumerable<IMachineGroup<TIdentifier>> groups, IEnumerable<TIdentifier> identifiers, TMessage message)
         {
             var messageClone = TinyhandSerializer.Clone(message);
-            foreach (var x in identifiers)
+            var g = groups.GetEnumerator();
+            var i = identifiers.GetEnumerator();
+            while (g.MoveNext() && i.MoveNext())
             {
-                var m = new Command(commandType, channel, x, messageClone);
+                var m = new Command(commandType, g.Current, i.Current, messageClone);
                 this.concurrentQueue.Enqueue(m);
             }
 
@@ -265,7 +270,9 @@ namespace BigMachines
             }
         }
 
-        public KeyValuePair<TIdentifier, TResult?>[] SendGroupTwoWay<TMessage, TResult>(CommandType commandType, object? channel, IEnumerable<TIdentifier> identifiers, TMessage message, int millisecondTimeout = 100)
+        public KeyValuePair<TIdentifier, TResult?>[] SendGroupTwoWay<TMessage, TResult>(CommandType commandType, IMachineGroup<TIdentifier> group, IEnumerable<TIdentifier> identifiers, TMessage message, int millisecondTimeout = 100) => this.SendGroupsTwoWay<TMessage, TResult>(commandType, Enumerable.Repeat(group, identifiers.Count()), identifiers, message, millisecondTimeout);
+
+        public KeyValuePair<TIdentifier, TResult?>[] SendGroupsTwoWay<TMessage, TResult>(CommandType commandType, IEnumerable<IMachineGroup<TIdentifier>> groups, IEnumerable<TIdentifier> identifiers, TMessage message, int millisecondTimeout = 100)
         {
             if (millisecondTimeout < 0 || millisecondTimeout > MaxMillisecondTimeout)
             {
@@ -276,9 +283,11 @@ namespace BigMachines
 
             var commandQueue = new Queue<Command>();
             var messageClone = TinyhandSerializer.Clone(message);
-            foreach (var x in identifiers)
+            var g = groups.GetEnumerator();
+            var i = identifiers.GetEnumerator();
+            while (g.MoveNext() && i.MoveNext())
             {
-                var m = new Command(commandType, channel, x, messageClone);
+                var m = new Command(commandType, g.Current, i.Current, messageClone);
                 commandQueue.Enqueue(m);
                 this.concurrentQueue.Enqueue(m);
             }

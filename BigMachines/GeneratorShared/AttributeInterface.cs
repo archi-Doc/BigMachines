@@ -32,6 +32,11 @@ namespace BigMachines
         /// Gets or sets a machine group of the machine (e.g. <see cref="MachineGroup{TIdentifier}"/>(default), <see cref="MachineSingle{TIdentifier}"/>).
         /// </summary>
         public Type? Group { get; set; }
+
+        /// <summary>
+        /// Gets or sets a value indicating whether or not the machine is continuous machine (runs continuously and uses one thread).
+        /// </summary>
+        public bool Continuous { get; set; }
     }
 
 #pragma warning disable SA1629
@@ -109,12 +114,17 @@ namespace BigMachines
         /// <summary>
         /// Machine is run by <see cref="ManMachineInterface{TIdentifier}.Run"/> method.
         /// </summary>
-        RunManual,
+        Manual,
 
         /// <summary>
         /// Machine is run by interval timer.
         /// </summary>
-        RunTimer,
+        Timer,
+
+        /// <summary>
+        /// Machine is run by <see cref="BigMachineContinuous{TIdentifier}"/>.
+        /// </summary>
+        Continuous,
     }
 
     /// <summary>
