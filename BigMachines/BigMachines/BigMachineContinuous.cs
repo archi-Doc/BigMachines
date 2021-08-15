@@ -44,17 +44,18 @@ namespace BigMachines
                     var stateParameter = new StateParameter(RunType.Continuous);
                     while (!core.IsTerminated)
                     {
-                        if (machine.RunInternal(stateParameter) == StateResult.Terminate)
+                        lock (machine)
                         {
-                            break;
+                            if (machine.RunInternal(stateParameter) == StateResult.Terminate)
+                            {
+                                break;
+                            }
                         }
                     }
                 }
                 finally
                 {
                     machine.Group.TryRemoveMachine(machine.Identifier);
-                    item.Continuous.RemoveCore(core);
-                    item.Core = null;
                 }
             }
 
@@ -62,7 +63,6 @@ namespace BigMachines
                 : base(parent, Process, false)
             {
                 this.Item = item;
-                this.Start();
             }
 
             public Item Item { get; }
@@ -90,7 +90,7 @@ namespace BigMachines
             this.maxThreads = DefaultMaxThreads;
         }
 
-        public Info[] GetInterfaces(bool running)
+        public Info[] GetInfo(bool running)
         {
             lock (this.items)
             {
@@ -116,25 +116,7 @@ namespace BigMachines
         /// <param name="message">The message.</param>
         public void Command<TMessage>(bool running, TMessage message)
         {
-            int count;
-            TIdentifier[] identifiers;
-            IMachineGroup<TIdentifier>[] groups;
-            lock (this.items)
-            {
-                var e = running ? this.items.Where(a => a.Core != null) : this.items;
-                count = e.Count();
-
-                identifiers = new TIdentifier[count];
-                groups = new IMachineGroup<TIdentifier>[count];
-                int n = 0;
-                foreach (var x in e)
-                {
-                    identifiers[n] = x.Machine.Identifier;
-                    groups[n] = x.Machine.Group;
-                    n++;
-                }
-            }
-
+            (var groups, var identifiers) = this.GetGroupsAndIdentifiers(running);
             this.BigMachine.CommandPost.SendGroups(CommandPost<TIdentifier>.CommandType.Command, groups, identifiers, message);
         }
 
@@ -149,25 +131,7 @@ namespace BigMachines
         /// <returns>The response.</returns>
         public KeyValuePair<TIdentifier, TResponse?>[] CommandTwoWay<TMessage, TResponse>(bool running, TMessage message, int millisecondTimeout = 100)
         {
-            int count;
-            TIdentifier[] identifiers;
-            IMachineGroup<TIdentifier>[] groups;
-            lock (this.items)
-            {
-                var e = running ? this.items.Where(a => a.Core != null) : this.items;
-                count = e.Count();
-
-                identifiers = new TIdentifier[count];
-                groups = new IMachineGroup<TIdentifier>[count];
-                int n = 0;
-                foreach (var x in e)
-                {
-                    identifiers[n] = x.Machine.Identifier;
-                    groups[n] = x.Machine.Group;
-                    n++;
-                }
-            }
-
+            (var groups, var identifiers) = this.GetGroupsAndIdentifiers(running);
             return this.BigMachine.CommandPost.SendGroupsTwoWay<TMessage, TResponse>(CommandPost<TIdentifier>.CommandType.CommandTwoWay, groups, identifiers, message, millisecondTimeout);
         }
 
@@ -207,32 +171,25 @@ namespace BigMachines
 
         internal bool RemoveMachine(Machine<TIdentifier> machine)
         {
-            lock (this.items)
-            {
-                var first = this.items.FirstOrDefault(a => a.Machine == machine);
-                if (first == null)
-                {// Not found
-                    return false;
-                }
-
-                first.Core?.Terminate(); // Terminate if the task is running.
-                this.items.Remove(first);
-            }
-
-            return true;
-        }
-
-        internal bool RemoveCore(Core core)
-        {
             lock (this.cores)
             {
-                var first = this.cores.FirstOrDefault(a => a == core);
-                if (first == null)
-                {// Not found
-                    return false;
-                }
+                lock (this.items)
+                {
+                    var item = this.items.FirstOrDefault(a => a.Machine == machine);
+                    if (item == null)
+                    {// Not found
+                        return false;
+                    }
 
-                this.cores.Remove(first);
+                    this.items.Remove(item);
+
+                    if (item.Core != null)
+                    {
+                        item.Core.Terminate(); // Terminate if the task is running.
+                        this.cores.Remove(item.Core);
+                        item.Core = null;
+                    }
+                }
             }
 
             return true;
@@ -259,6 +216,7 @@ namespace BigMachines
 
                         i.Core = new Core(this.CoreGroup, i);
                         this.cores.Add(i.Core);
+                        i.Core.Start();
                     }
                 }
             }
@@ -267,5 +225,26 @@ namespace BigMachines
         private int maxThreads;
         private List<Core> cores = new();
         private LinkedList<Item> items = new();
+
+        private (IMachineGroup<TIdentifier>[], TIdentifier[]) GetGroupsAndIdentifiers(bool running)
+        {
+            lock (this.items)
+            {
+                var e = running ? this.items.Where(a => a.Core != null) : this.items;
+                var count = e.Count();
+
+                var identifiers = new TIdentifier[count];
+                var groups = new IMachineGroup<TIdentifier>[count];
+                int n = 0;
+                foreach (var x in e)
+                {
+                    identifiers[n] = x.Machine.Identifier;
+                    groups[n] = x.Machine.Group;
+                    n++;
+                }
+
+                return (groups, identifiers);
+            }
+        }
     }
 }
