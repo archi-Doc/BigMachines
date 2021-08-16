@@ -39,11 +39,6 @@ namespace BigMachines
                 var item = core.Item;
                 var machine = item.Machine;
 
-                if (core.IsTerminated)
-                {
-                    var n = 0;
-                }
-
                 try
                 {
                     var stateParameter = new StateParameter(RunType.Continuous);
