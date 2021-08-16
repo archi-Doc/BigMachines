@@ -17,7 +17,7 @@ using Tinyhand;
 namespace BigMachines
 {
     /// <summary>
-    /// Represents a machine class which is a base class for all machine classes.<br/>
+    /// Represents a base class for all machine classes.<br/>
     /// </summary>
     /// <typeparam name="TIdentifier">The type of an identifier.</typeparam>
     [TinyhandObject]
@@ -119,10 +119,88 @@ namespace BigMachines
         public uint TypeId { get; internal set; }
 
         /// <summary>
-        /// Called when the machine is terminating.<br/>
-        /// This code is inside 'lock (machine) {}'.
+        /// Receivea a command and invoke an appropriate method.<br/>
         /// </summary>
-        internal virtual void TerminateInternal()
+        /// <param name="group">Machine group.</param>
+        /// <param name="command">Command.</param>
+        /// <returns><see langword="true"/>: Terminated, <see langword="false"/>: Continue.</returns>
+        internal bool DistributeCommand(IMachineGroup<TIdentifier> group, CommandPost<TIdentifier>.Command command)
+        {
+            if (this.Status == MachineStatus.Terminated)
+            {// Terminated
+                return true;
+            }
+            else if (command.Type == CommandPost<TIdentifier>.CommandType.Run ||
+                command.Type == CommandPost<TIdentifier>.CommandType.RunTwoWay)
+            {// Run
+                if (command.LoopChecker is { } checker)
+                {
+                    for (var n = 0; n < checker.RunIdCount; n++)
+                    {
+                        if (checker.RunId[n] == this.TypeId)
+                        {
+                            var s = string.Join('-', checker.CommandId.Take(checker.CommandIdCount).Select(x => this.BigMachine.GetMachineInfoFromTypeId(x)?.MachineType.Name));
+                            throw new InvalidOperationException($"Run loop detected ({s}).");
+                        }
+                    }
+
+                    LoopChecker.Instance = command.LoopChecker.Clone();
+                    LoopChecker.Instance.AddRunId(this.TypeId);
+                }
+
+                lock (this.SyncMachine)
+                {
+                    var result = this.RunInternal(new(RunType.Manual, command.Message));
+                    this.LastRun = DateTime.UtcNow;
+
+                    command.Response = result;
+                    if (result == StateResult.Terminate)
+                    {
+                        group.TryRemoveMachine(this.Identifier);
+                        return true;
+                    }
+                }
+            }
+            else if ((command.Type == CommandPost<TIdentifier>.CommandType.State ||
+                command.Type == CommandPost<TIdentifier>.CommandType.StateTwoWay) &&
+                command.Message is int state)
+            {// ChangeState
+                lock (this.SyncMachine)
+                {
+                    command.Response = this.IntChangeState(state);
+                }
+            }
+            else
+            {// Command
+                if (command.LoopChecker is { } checker)
+                {
+                    for (var n = 0; n < checker.CommandIdCount; n++)
+                    {
+                        if (checker.CommandId[n] == this.TypeId)
+                        {
+                            var s = string.Join('-', checker.CommandId.Take(checker.CommandIdCount).Select(x => this.BigMachine.GetMachineInfoFromTypeId(x)?.MachineType.Name));
+                            throw new InvalidOperationException($"Command loop detected ({s}).");
+                        }
+                    }
+
+                    LoopChecker.Instance = command.LoopChecker.Clone();
+                    LoopChecker.Instance.AddCommandId(this.TypeId);
+                }
+
+                // lock (this.SyncMachine) // Not inside lock statement.
+                {
+                    this.ProcessCommand(command);
+                }
+            }
+
+            return false;
+        }
+
+        /// <summary>
+        /// Called when the machine is terminating.<br/>
+        /// This code is inside 'lock (this.SyncMachine) {}'.
+        /// </summary>
+        internal void TerminateInternal()
         {
             this.Status = MachineStatus.Terminated;
             if (this.Group.Info.Continuous)
@@ -132,6 +210,11 @@ namespace BigMachines
 
             this.OnTerminated();
         }
+
+        /// <summary>
+        /// Gets an object that can be used to synchronize access to the machine.
+        /// </summary>
+        protected internal object SyncMachine { get; } = new();
 
         /// <summary>
         /// Gets or sets ManMachineInterface.
@@ -146,7 +229,7 @@ namespace BigMachines
         /// <summary>
         /// Expected to be implemented on the user side.<br/>
         /// Receives commands and respond if necessary.<br/>
-        /// This code is inside 'lock (machine) {}'.
+        /// This code is NOT inside 'lock (this.SyncMachine) {}'.
         /// </summary>
         /// <param name="command">The command.</param>
         protected internal virtual void ProcessCommand(CommandPost<TIdentifier>.Command command)
@@ -155,8 +238,8 @@ namespace BigMachines
 
         /// <summary>
         /// Expected to be implemented on the user side.<br/>
-        /// Set a parameter for the machine after the instance is created.<br/>
-        /// Note that this method is called when the instance is created, but not called during deserialization.
+        /// Set a parameter of the machine after the creation method.<br/>
+        /// Note that its called during <see cref="BigMachine{TIdentifier}.TryCreate{TMachineInterface}(TIdentifier, object?)"/>), <br/>but not during deserialization.
         /// </summary>
         /// <param name="parameter">The parameter.</param>
         protected internal virtual void SetParameter(object? parameter)
@@ -190,75 +273,8 @@ namespace BigMachines
         protected internal virtual bool IntChangeState(int state) => false;
 
         /// <summary>
-        /// Receivea a command and invoke the appropriate method.<br/>
-        /// This code is inside 'lock (machine) {}'.
-        /// </summary>
-        /// <param name="command">Command.</param>
-        /// <returns><see langword="true"/>: Terminated, <see langword="false"/>: Continue.</returns>
-        protected internal virtual bool DistributeCommand(CommandPost<TIdentifier>.Command command)
-        {// This code is inside 'lock (machine) {}'.
-            if (this.Status == MachineStatus.Terminated)
-            {// Terminated
-                return true;
-            }
-            else if (command.Type == CommandPost<TIdentifier>.CommandType.Run ||
-                command.Type == CommandPost<TIdentifier>.CommandType.RunTwoWay)
-            {// Run
-                if (command.LoopChecker is { } checker)
-                {
-                    for (var n = 0; n < checker.RunIdCount; n++)
-                    {
-                        if (checker.RunId[n] == this.TypeId)
-                        {
-                            var s = string.Join('-', checker.CommandId.Take(checker.CommandIdCount).Select(x => this.BigMachine.GetMachineInfoFromTypeId(x)?.MachineType.Name));
-                            throw new InvalidOperationException($"Run loop detected ({s}).");
-                        }
-                    }
-
-                    LoopChecker.Instance = command.LoopChecker.Clone();
-                    LoopChecker.Instance.AddRunId(this.TypeId);
-                }
-
-                var result = this.RunInternal(new(RunType.Manual, command.Message));
-                this.LastRun = DateTime.UtcNow;
-                command.Response = result;
-                if (result == StateResult.Terminate)
-                {
-                    return true;
-                }
-            }
-            else if ((command.Type == CommandPost<TIdentifier>.CommandType.State ||
-                command.Type == CommandPost<TIdentifier>.CommandType.StateTwoWay) &&
-                command.Message is int state)
-            {// ChangeState
-                command.Response = this.IntChangeState(state);
-            }
-            else
-            {// Command
-                if (command.LoopChecker is { } checker)
-                {
-                    for (var n = 0; n < checker.CommandIdCount; n++)
-                    {
-                        if (checker.CommandId[n] == this.TypeId)
-                        {
-                            var s = string.Join('-', checker.CommandId.Take(checker.CommandIdCount).Select(x => this.BigMachine.GetMachineInfoFromTypeId(x)?.MachineType.Name));
-                            throw new InvalidOperationException($"Command loop detected ({s}).");
-                        }
-                    }
-
-                    LoopChecker.Instance = command.LoopChecker.Clone();
-                    LoopChecker.Instance.AddCommandId(this.TypeId);
-                }
-
-                this.ProcessCommand(command);
-            }
-
-            return false;
-        }
-
-        /// <summary>
         /// Called when the machine is terminating.<br/>
-        /// This code is inside 'lock (machine) {}'.
+        /// This code is inside 'lock (this.SyncMachine) {}'.
         /// </summary>
         protected internal virtual void OnTerminated()
         {

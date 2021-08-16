@@ -3,6 +3,7 @@
 using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
+using System.Threading;
 using System.Threading.Tasks;
 using Arc.Threading;
 using BigMachines;
@@ -43,7 +44,9 @@ namespace Sandbox
         {
             if (command.Message is double)
             {
-                command.Response = (double)this.count / (double)this.total;
+                var count = (double)Volatile.Read(ref this.count);
+                var total = (double)Volatile.Read(ref this.total);
+                command.Response = count / total;
             }
         }
 
@@ -75,11 +78,16 @@ namespace Sandbox
                 Console.WriteLine($"ContinuousMachine: {d * 100:F2}%");
             }*/
 
-            var results = this.BigMachine.Continuous.CommandTwoWay<double, double>(true, 0, 1000);
+            var results = this.BigMachine.Continuous.CommandTwoWay<double, double>(true, 0);
             if (results.Length == 0)
             {
                 Console.WriteLine("ContinuousMachine: none");
-                return StateResult.Terminate;
+
+                var info = this.BigMachine.Continuous.GetInfo(true);
+                if (info.Length == 0)
+                {// No running machine.
+                    return StateResult.Terminate;
+                }
             }
             else
             {
@@ -88,7 +96,7 @@ namespace Sandbox
                     Console.WriteLine($"ContinuousMachine {x.Key}: {x.Value * 100:F2}%");
                 }
             }
-            
+
             return StateResult.Continue;
         }
     }
@@ -333,7 +341,7 @@ namespace Sandbox
 
         [StateMethod(0)]
         protected StateResult Initial(StateParameter parameter)
-        {// lock(this)
+        {
             Console.WriteLine("TestMachine(Initial)");
 
             this.SetTimeout(TimeSpan.FromSeconds(0.5));

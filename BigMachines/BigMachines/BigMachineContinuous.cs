@@ -44,7 +44,7 @@ namespace BigMachines
                     var stateParameter = new StateParameter(RunType.Continuous);
                     while (!core.IsTerminated)
                     {
-                        lock (machine)
+                        lock (machine.SyncMachine)
                         {
                             if (machine.RunInternal(stateParameter) == StateResult.Terminate)
                             {
@@ -92,7 +92,7 @@ namespace BigMachines
 
         public Info[] GetInfo(bool running)
         {
-            lock (this.items)
+            lock (this.syncContinuous)
             {
                 var count = running ? this.items.Count(a => a.Core != null) : this.items.Count;
                 var array = new Info[count];
@@ -155,7 +155,7 @@ namespace BigMachines
 
         internal bool AddMachine(Machine<TIdentifier> machine)
         {
-            lock (this.items)
+            lock (this.syncContinuous)
             {
                 if (this.items.Any(a => a.Machine == machine))
                 {// Already exists.
@@ -171,24 +171,21 @@ namespace BigMachines
 
         internal bool RemoveMachine(Machine<TIdentifier> machine)
         {
-            lock (this.cores)
+            lock (this.syncContinuous)
             {
-                lock (this.items)
+                var item = this.items.FirstOrDefault(a => a.Machine == machine);
+                if (item == null)
+                {// Not found
+                    return false;
+                }
+
+                this.items.Remove(item);
+
+                if (item.Core != null)
                 {
-                    var item = this.items.FirstOrDefault(a => a.Machine == machine);
-                    if (item == null)
-                    {// Not found
-                        return false;
-                    }
-
-                    this.items.Remove(item);
-
-                    if (item.Core != null)
-                    {
-                        item.Core.Terminate(); // Terminate if the task is running.
-                        this.cores.Remove(item.Core);
-                        item.Core = null;
-                    }
+                    item.Core.Terminate(); // Terminate if the task is running.
+                    this.cores.Remove(item.Core);
+                    item.Core = null;
                 }
             }
 
@@ -199,36 +196,34 @@ namespace BigMachines
         {
             while (true)
             {
-                lock (this.cores)
+                lock (this.syncContinuous)
                 {
                     if (this.cores.Count >= this.maxThreads)
                     {
                         return;
                     }
 
-                    lock (this.items)
-                    {
-                        var i = this.items.FirstOrDefault(a => a.Core == null);
-                        if (i == null)
-                        {// No item
-                            return;
-                        }
-
-                        i.Core = new Core(this.CoreGroup, i);
-                        this.cores.Add(i.Core);
-                        i.Core.Start();
+                    var i = this.items.FirstOrDefault(a => a.Core == null);
+                    if (i == null)
+                    {// No item
+                        return;
                     }
+
+                    i.Core = new Core(this.CoreGroup, i);
+                    this.cores.Add(i.Core);
+                    i.Core.Start();
                 }
             }
         }
 
+        private object syncContinuous = new();
         private int maxThreads;
         private List<Core> cores = new();
         private LinkedList<Item> items = new();
 
         private (IMachineGroup<TIdentifier>[], TIdentifier[]) GetGroupsAndIdentifiers(bool running)
         {
-            lock (this.items)
+            lock (this.syncContinuous)
             {
                 var e = running ? this.items.Where(a => a.Core != null) : this.items;
                 var count = e.Count();

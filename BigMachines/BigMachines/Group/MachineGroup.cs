@@ -60,7 +60,7 @@ namespace BigMachines
 
             if (machineToRemove != null)
             {
-                lock (machineToRemove)
+                lock (machineToRemove.SyncMachine)
                 {
                     machineToRemove.TerminateInternal();
                 }
@@ -73,7 +73,7 @@ namespace BigMachines
         {
             if (this.IdentificationToMachine.TryRemove(identifier, out var machine))
             {
-                lock (machine)
+                lock (machine.SyncMachine)
                 {
                     machine.TerminateInternal();
                 }

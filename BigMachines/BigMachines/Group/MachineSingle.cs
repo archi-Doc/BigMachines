@@ -133,7 +133,7 @@ namespace BigMachines
             var m = Interlocked.Exchange(ref this.machine1, machine);
             if (m != null)
             {
-                lock (m)
+                lock (m.SyncMachine)
                 {
                     m.TerminateInternal();
                 }
@@ -179,6 +179,11 @@ namespace BigMachines
             var m = Volatile.Read(ref this.machine1);
             if (m != null && EqualityComparer<TIdentifier>.Default.Equals(m.Identifier, identifier))
             {
+                lock (m.SyncMachine)
+                {
+                    m.TerminateInternal();
+                }
+
                 Volatile.Write(ref this.machine1, null);
                 return true;
             }
