@@ -191,12 +191,12 @@ namespace BigMachines
 
         /// <summary>
         /// Receivea a command and invoke the appropriate method.<br/>
-        /// This code is inside 'lock (machine) {}'.
         /// </summary>
+        /// <param name="group">Machine group.</param>
         /// <param name="command">Command.</param>
         /// <returns><see langword="true"/>: Terminated, <see langword="false"/>: Continue.</returns>
-        protected internal virtual bool DistributeCommand(CommandPost<TIdentifier>.Command command)
-        {// This code is inside 'lock (machine) {}'.
+        protected internal bool DistributeCommand(IMachineGroup<TIdentifier> group, CommandPost<TIdentifier>.Command command)
+        {
             if (this.Status == MachineStatus.Terminated)
             {// Terminated
                 return true;
@@ -219,19 +219,27 @@ namespace BigMachines
                     LoopChecker.Instance.AddRunId(this.TypeId);
                 }
 
-                var result = this.RunInternal(new(RunType.Manual, command.Message));
-                this.LastRun = DateTime.UtcNow;
-                command.Response = result;
-                if (result == StateResult.Terminate)
+                lock (this)
                 {
-                    return true;
+                    var result = this.RunInternal(new(RunType.Manual, command.Message));
+                    this.LastRun = DateTime.UtcNow;
+
+                    command.Response = result;
+                    if (result == StateResult.Terminate)
+                    {
+                        group.TryRemoveMachine(this.Identifier);
+                        return true;
+                    }
                 }
             }
             else if ((command.Type == CommandPost<TIdentifier>.CommandType.State ||
                 command.Type == CommandPost<TIdentifier>.CommandType.StateTwoWay) &&
                 command.Message is int state)
             {// ChangeState
-                command.Response = this.IntChangeState(state);
+                lock (this)
+                {
+                    command.Response = this.IntChangeState(state);
+                }
             }
             else
             {// Command
@@ -250,7 +258,17 @@ namespace BigMachines
                     LoopChecker.Instance.AddCommandId(this.TypeId);
                 }
 
-                this.ProcessCommand(command);
+                if (group.Info.Continuous)
+                {
+                    this.ProcessCommand(command);
+                }
+                else
+                {
+                    lock (this)
+                    {
+                        this.ProcessCommand(command);
+                    }
+                }
             }
 
             return false;

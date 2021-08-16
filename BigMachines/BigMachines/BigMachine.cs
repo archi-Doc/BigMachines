@@ -320,13 +320,7 @@ namespace BigMachines
             if (command.Channel is IMachineGroup<TIdentifier> group &&
                 group.TryGetMachine(command.Identifier, out var machine))
             {
-                lock (machine)
-                {
-                    if (machine.DistributeCommand(command))
-                    {
-                        group.TryRemoveMachine(machine.Identifier);
-                    }
-                }
+                machine.DistributeCommand(group, command);
             }
         }
 
