@@ -23,7 +23,7 @@ namespace BigMachines
     /// <see cref="BigMachine{TIdentifier}"/> is a container class used to manage and manipulate multiple <see cref="Machine{TIdentifier}"/>.
     /// </summary>
     /// <typeparam name="TIdentifier">The type of an identifier.</typeparam>
-    public partial class BigMachine<TIdentifier> : IDisposable
+    public partial class BigMachine<TIdentifier>
         where TIdentifier : notnull
     {
         /// <summary>
@@ -37,8 +37,7 @@ namespace BigMachines
 
             this.Status = new();
             this.Core = new ThreadCore(parent, this.MainLoop, false);
-            this.CommandPost = new(parent);
-            this.CommandPost.Open(this.DistributeCommand);
+            this.CommandPost = new(this.DistributeCommand, parent);
             this.ServiceProvider = serviceProvider;
             this.Continuous = new(this);
 
@@ -542,43 +541,5 @@ StateChangedLoop:
         private ThreadsafeTypeKeyHashTable<IMachineGroup<TIdentifier>> interfaceTypeToGroup = new();
         private IMachineGroup<TIdentifier>[] groupArray = Array.Empty<IMachineGroup<TIdentifier>>();
         private TimeSpan timerInterval = TimeSpan.FromMilliseconds(500);
-
-        #region IDisposable Support
-        private bool disposed = false; // To detect redundant calls.
-
-        /// <summary>
-        /// Finalizes an instance of the <see cref="BigMachine{TIdentifier}"/> class.
-        /// </summary>
-        ~BigMachine()
-        {
-            this.Dispose(false);
-        }
-
-        /// <inheritdoc/>
-        public void Dispose()
-        {
-            this.Dispose(true);
-            GC.SuppressFinalize(this);
-        }
-
-        /// <summary>
-        /// free managed/native resources.
-        /// </summary>
-        /// <param name="disposing">true: free managed resources.</param>
-        protected virtual void Dispose(bool disposing)
-        {
-            if (!this.disposed)
-            {
-                if (disposing)
-                {
-                    // free managed resources.
-                    this.CommandPost.Dispose();
-                }
-
-                // free native resources here if there are any.
-                this.disposed = true;
-            }
-        }
-        #endregion
     }
 }

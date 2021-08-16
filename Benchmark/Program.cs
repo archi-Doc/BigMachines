@@ -38,14 +38,13 @@ namespace Benchmark
             BigMachine<int>.EnableLoopChecker = false;
             await Benchmark.Design.SimpleBench.Test(bm);
 
-            var cp = new CommandPost<int>(ThreadCore.Root);
-            cp.Open(x =>
+            var cp = new CommandPost<int>(x =>
             {
                 if (x.Message is int i)
                 {
                     x.Response = i + 2;
                 }
-            });
+            }, ThreadCore.Root);
 
             DebugRun<Test.LockingBenchmark>();
 
