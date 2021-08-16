@@ -75,14 +75,17 @@ namespace ConsoleApp1
 
         protected override void ProcessCommand(CommandPost<int>.Command command)
         {
-            if (command.Message is int n && n == 0)
+            lock (this)
             {
-                this.BigMachine.TryGet<TerminatorMachine.Interface>(0)?.CommandTwoWay<int, int>(0);
-                command.Response = this.Count;
-            }
-            else if (command.Message is string st)
-            {
-                this.BigMachine.TryGet<LoopMachine.Interface>(0)?.Command(st);
+                if (command.Message is int n && n == 0)
+                {
+                    this.BigMachine.TryGet<TerminatorMachine.Interface>(0)?.CommandTwoWay<int, int>(0);
+                    command.Response = this.Count;
+                }
+                else if (command.Message is string st)
+                {
+                    this.BigMachine.TryGet<LoopMachine.Interface>(0)?.Command(st);
+                }
             }
         }
 

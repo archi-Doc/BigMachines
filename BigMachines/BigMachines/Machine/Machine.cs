@@ -17,7 +17,7 @@ using Tinyhand;
 namespace BigMachines
 {
     /// <summary>
-    /// Represents a machine class which is a base class for all machine classes.<br/>
+    /// Represents a base class for all machine classes.<br/>
     /// </summary>
     /// <typeparam name="TIdentifier">The type of an identifier.</typeparam>
     [TinyhandObject]
@@ -119,83 +119,12 @@ namespace BigMachines
         public uint TypeId { get; internal set; }
 
         /// <summary>
-        /// Called when the machine is terminating.<br/>
-        /// This code is inside 'lock (machine) {}'.
-        /// </summary>
-        internal virtual void TerminateInternal()
-        {
-            this.Status = MachineStatus.Terminated;
-            if (this.Group.Info.Continuous)
-            {
-                this.BigMachine.Continuous.RemoveMachine(this);
-            }
-
-            this.OnTerminated();
-        }
-
-        /// <summary>
-        /// Gets or sets ManMachineInterface.
-        /// </summary>
-        protected internal ManMachineInterface<TIdentifier>? InterfaceInstance { get; set; }
-
-        /// <summary>
-        /// Gets or sets a value indicating whether the state is changed in <see cref="RunInternal(StateParameter)"/>.
-        /// </summary>
-        protected internal bool StateChanged { get; set; }
-
-        /// <summary>
-        /// Expected to be implemented on the user side.<br/>
-        /// Receives commands and respond if necessary.<br/>
-        /// This code is inside 'lock (machine) {}'.
-        /// </summary>
-        /// <param name="command">The command.</param>
-        protected internal virtual void ProcessCommand(CommandPost<TIdentifier>.Command command)
-        {// Called: Machine.DistributeCommand()
-        }
-
-        /// <summary>
-        /// Expected to be implemented on the user side.<br/>
-        /// Set a parameter for the machine after the instance is created.<br/>
-        /// Note that this method is called when the instance is created, but not called during deserialization.
-        /// </summary>
-        /// <param name="parameter">The parameter.</param>
-        protected internal virtual void SetParameter(object? parameter)
-        {// Override
-        }
-
-        /// <summary>
-        /// Generated method which is called when creating <see cref="ManMachineInterface{TIdentifier, TState}"/>.
-        /// </summary>
-        /// <param name="identifier">The identifier of the machine.</param>
-        protected internal virtual void CreateInterface(TIdentifier identifier)
-        {// Generated
-            throw new NotImplementedException();
-        }
-
-        /// <summary>
-        /// Generated method which is called when the machine executes.
-        /// </summary>
-        /// <param name="parameter">StateParameter.</param>
-        /// <returns>StateResult.</returns>
-        protected internal virtual StateResult RunInternal(StateParameter parameter)
-        {// Called: Machine.DistributeCommand(), BigMachine.MainLoop()
-            return StateResult.Terminate;
-        }
-
-        /// <summary>
-        /// Generated method which is called when the state changes.
-        /// </summary>
-        /// <param name="state">The next state.</param>
-        /// <returns><see langword="true"/>: State changed. <see langword="false"/>: Not changed (same state or denied). </returns>
-        protected internal virtual bool IntChangeState(int state) => false;
-
-        /// <summary>
-        /// Receivea a command and invoke the appropriate method.<br/>
+        /// Receivea a command and invoke an appropriate method.<br/>
         /// </summary>
         /// <param name="group">Machine group.</param>
         /// <param name="command">Command.</param>
         /// <returns><see langword="true"/>: Terminated, <see langword="false"/>: Continue.</returns>
-        protected internal bool DistributeCommand(IMachineGroup<TIdentifier> group, CommandPost<TIdentifier>.Command command)
+        internal bool DistributeCommand(IMachineGroup<TIdentifier> group, CommandPost<TIdentifier>.Command command)
         {
             if (this.Status == MachineStatus.Terminated)
             {// Terminated
@@ -258,21 +187,85 @@ namespace BigMachines
                     LoopChecker.Instance.AddCommandId(this.TypeId);
                 }
 
-                if (group.Info.Continuous)
+                // lock (this) // Not inside lock statement.
                 {
                     this.ProcessCommand(command);
-                }
-                else
-                {
-                    lock (this)
-                    {
-                        this.ProcessCommand(command);
-                    }
                 }
             }
 
             return false;
         }
+
+        /// <summary>
+        /// Called when the machine is terminating.<br/>
+        /// This code is inside 'lock (machine) {}'.
+        /// </summary>
+        internal void TerminateInternal()
+        {
+            this.Status = MachineStatus.Terminated;
+            if (this.Group.Info.Continuous)
+            {
+                this.BigMachine.Continuous.RemoveMachine(this);
+            }
+
+            this.OnTerminated();
+        }
+
+        /// <summary>
+        /// Gets or sets ManMachineInterface.
+        /// </summary>
+        protected internal ManMachineInterface<TIdentifier>? InterfaceInstance { get; set; }
+
+        /// <summary>
+        /// Gets or sets a value indicating whether the state is changed in <see cref="RunInternal(StateParameter)"/>.
+        /// </summary>
+        protected internal bool StateChanged { get; set; }
+
+        /// <summary>
+        /// Expected to be implemented on the user side.<br/>
+        /// Receives commands and respond if necessary.<br/>
+        /// This code is NOT inside 'lock (machine) {}'.
+        /// </summary>
+        /// <param name="command">The command.</param>
+        protected internal virtual void ProcessCommand(CommandPost<TIdentifier>.Command command)
+        {// Called: Machine.DistributeCommand()
+        }
+
+        /// <summary>
+        /// Expected to be implemented on the user side.<br/>
+        /// Set a parameter of the machine after the creation method.<br/>
+        /// Note that its called during <see cref="BigMachine{TIdentifier}.TryCreate{TMachineInterface}(TIdentifier, object?)"/>), <br/>but not during deserialization.
+        /// </summary>
+        /// <param name="parameter">The parameter.</param>
+        protected internal virtual void SetParameter(object? parameter)
+        {// Override
+        }
+
+        /// <summary>
+        /// Generated method which is called when creating <see cref="ManMachineInterface{TIdentifier, TState}"/>.
+        /// </summary>
+        /// <param name="identifier">The identifier of the machine.</param>
+        protected internal virtual void CreateInterface(TIdentifier identifier)
+        {// Generated
+            throw new NotImplementedException();
+        }
+
+        /// <summary>
+        /// Generated method which is called when the machine executes.
+        /// </summary>
+        /// <param name="parameter">StateParameter.</param>
+        /// <returns>StateResult.</returns>
+        protected internal virtual StateResult RunInternal(StateParameter parameter)
+        {// Called: Machine.DistributeCommand(), BigMachine.MainLoop()
+            return StateResult.Terminate;
+        }
+
+        /// <summary>
+        /// Generated method which is called when the state changes.
+        /// </summary>
+        /// <param name="state">The next state.</param>
+        /// <returns><see langword="true"/>: State changed. <see langword="false"/>: Not changed (same state or denied). </returns>
+        protected internal virtual bool IntChangeState(int state) => false;
 
         /// <summary>
         /// Called when the machine is terminating.<br/>

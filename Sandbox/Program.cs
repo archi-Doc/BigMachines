@@ -68,6 +68,8 @@ namespace Sandbox
             {
             }
 
+            bigMachine.TryCreate<TerminatorMachine.Interface>(0);
+
             var testMachine = bigMachine.TryGet<TestMachine.Interface>(3);
             testMachine = bigMachine.TryCreate<TestMachine.Interface>(4, null);
             testMachine = bigMachine.TryCreate<TestMachine.Interface>(3, null);
@@ -98,8 +100,8 @@ namespace Sandbox
             // testMachine?.Run();
 
             // bigMachine.TryCreate<ParentClass.NestedMachine.Interface>(10);
-            bigMachine.TryCreate<ParentClassT<double>.NestedMachineT.Interface>(10);
-            bigMachine.TryCreate<GenericMachine<int>.Interface>(10);
+            // bigMachine.TryCreate<ParentClassT<double>.NestedMachineT.Interface>(10);
+            // bigMachine.TryCreate<GenericMachine<int>.Interface>(10);
             // bigMachine.TryCreate<ParentClassT2<byte, int>.NestedMachineT2.Interface>(11);
 
             // Continuous
