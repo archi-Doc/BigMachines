@@ -148,7 +148,7 @@ namespace BigMachines
                     LoopChecker.Instance.AddRunId(this.TypeId);
                 }
 
-                lock (this)
+                lock (this.SyncMachine)
                 {
                     var result = this.RunInternal(new(RunType.Manual, command.Message));
                     this.LastRun = DateTime.UtcNow;
@@ -165,7 +165,7 @@ namespace BigMachines
                 command.Type == CommandPost<TIdentifier>.CommandType.StateTwoWay) &&
                 command.Message is int state)
             {// ChangeState
-                lock (this)
+                lock (this.SyncMachine)
                 {
                     command.Response = this.IntChangeState(state);
                 }
@@ -187,7 +187,7 @@ namespace BigMachines
                     LoopChecker.Instance.AddCommandId(this.TypeId);
                 }
 
-                // lock (this) // Not inside lock statement.
+                // lock (this.SyncMachine) // Not inside lock statement.
                 {
                     this.ProcessCommand(command);
                 }
@@ -198,7 +198,7 @@ namespace BigMachines
 
         /// <summary>
         /// Called when the machine is terminating.<br/>
-        /// This code is inside 'lock (machine) {}'.
+        /// This code is inside 'lock (this.SyncMachine) {}'.
         /// </summary>
         internal void TerminateInternal()
         {
@@ -210,6 +210,11 @@ namespace BigMachines
 
             this.OnTerminated();
         }
+
+        /// <summary>
+        /// Gets an object that can be used to synchronize access to the machine.
+        /// </summary>
+        protected internal object SyncMachine { get; } = new();
 
         /// <summary>
         /// Gets or sets ManMachineInterface.
@@ -224,7 +229,7 @@ namespace BigMachines
         /// <summary>
         /// Expected to be implemented on the user side.<br/>
         /// Receives commands and respond if necessary.<br/>
-        /// This code is NOT inside 'lock (machine) {}'.
+        /// This code is NOT inside 'lock (this.SyncMachine) {}'.
         /// </summary>
         /// <param name="command">The command.</param>
         protected internal virtual void ProcessCommand(CommandPost<TIdentifier>.Command command)
@@ -269,7 +274,7 @@ namespace BigMachines
 
         /// <summary>
         /// Called when the machine is terminating.<br/>
-        /// This code is inside 'lock (machine) {}'.
+        /// This code is inside 'lock (this.SyncMachine) {}'.
         /// </summary>
         protected internal virtual void OnTerminated()
         {

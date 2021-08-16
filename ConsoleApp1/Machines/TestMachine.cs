@@ -27,7 +27,7 @@ namespace ConsoleApp1
 
         [StateMethod(0)] // Annotate StateMethod attribute and set state method id (0 for default state).
         protected StateResult Initial(StateParameter parameter)
-        {// This code is inside 'lock (machine) {}'.
+        {// This code is inside 'lock (this.SyncMachine) {}'.
             Console.WriteLine($"TestMachine {this.Identifier}: Initial");
 
             this.ChangeState(TestMachine.State.One); // Change to state One (The method name becomes the state name).
@@ -75,7 +75,7 @@ namespace ConsoleApp1
 
         protected override void ProcessCommand(CommandPost<int>.Command command)
         {
-            lock (this)
+            lock (this.SyncMachine)
             {
                 if (command.Message is int n && n == 0)
                 {

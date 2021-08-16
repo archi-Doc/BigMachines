@@ -341,7 +341,7 @@ namespace Sandbox
 
         [StateMethod(0)]
         protected StateResult Initial(StateParameter parameter)
-        {// lock(this)
+        {
             Console.WriteLine("TestMachine(Initial)");
 
             this.SetTimeout(TimeSpan.FromSeconds(0.5));

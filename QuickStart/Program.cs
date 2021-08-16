@@ -21,7 +21,7 @@ namespace QuickStart
 
         [StateMethod(0)] // Annotate StateMethod attribute and set state method id (0 for default state).
         protected StateResult Initial(StateParameter parameter) // The name of method becomes the state name.
-        {// This code is inside 'lock (machine) {}'.
+        {// This code is inside 'lock (this.SyncMachine) {}'.
             Console.WriteLine($"TestMachine {this.Identifier}: Initial");
             this.ChangeState(TestMachine.State.One); // Change to state One.
             return StateResult.Continue; // Continue (StateResult.Terminate to terminate machine).

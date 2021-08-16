@@ -221,7 +221,7 @@ namespace BigMachines
                 {
                     if (machine is ITinyhandSerialize serializer)
                     {
-                        lock (machine)
+                        lock (machine.SyncMachine)
                         {
                             writer.WriteArrayHeader(2); // Header
                             writer.Write(machine.TypeId); // Id
@@ -451,14 +451,14 @@ namespace BigMachines
 
                         if (y.Lifespan <= 0 || y.TerminationDate <= now)
                         {// Terminate
-                            lock (y)
+                            lock (y.SyncMachine)
                             {
                                 x.TryRemoveMachine(y.Identifier);
                             }
                         }
                         else if (y.Timeout <= 0 || y.NextRun >= now)
                         {// Screening
-                            lock (y)
+                            lock (y.SyncMachine)
                             {
                                 if (TryRun(y))
                                 {// Terminated

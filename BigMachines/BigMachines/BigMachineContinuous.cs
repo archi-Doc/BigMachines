@@ -44,7 +44,7 @@ namespace BigMachines
                     var stateParameter = new StateParameter(RunType.Continuous);
                     while (!core.IsTerminated)
                     {
-                        lock (machine)
+                        lock (machine.SyncMachine)
                         {
                             if (machine.RunInternal(stateParameter) == StateResult.Terminate)
                             {
