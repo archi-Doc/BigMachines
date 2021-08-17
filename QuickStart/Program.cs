@@ -27,7 +27,7 @@ namespace QuickStart
             return StateResult.Continue; // Continue (StateResult.Terminate to terminate machine).
         }
 
-        [StateMethod(1)]
+        [StateMethod(0x6015f7a7)] // State id can be a random number.
         protected StateResult One(StateParameter parameter)
         {
             Console.WriteLine($"TestMachine {this.Identifier}: One - {this.Count++}");

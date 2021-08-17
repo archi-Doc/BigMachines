@@ -13,6 +13,12 @@ namespace ConsoleApp1
     [MachineObject(0xe5cff489, Group = typeof(MachineSingle<>))] // Change groups from MachineGroup<> to MachineSingle<>.
     public partial class SingleMachine : Machine<int>
     {
+        public static void Test(BigMachine<int> bigMachine)
+        {
+            bigMachine.TryCreate<SingleMachine.Interface>(0);
+            bigMachine.TryCreate<SingleMachine.Interface>(1); // Only one machine is created since SingleMachine belongs MachineSingle<> group.
+        }
+
         public SingleMachine(BigMachine<int> bigMachine)
             : base(bigMachine)
         {

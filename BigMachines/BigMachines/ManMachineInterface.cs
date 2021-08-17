@@ -1,6 +1,7 @@
 ﻿// Copyright (c) All contributors. All rights reserved. Licensed under the MIT license.
 
 using System;
+using System.Runtime.CompilerServices;
 using Tinyhand;
 
 namespace BigMachines
@@ -164,7 +165,7 @@ namespace BigMachines
         /// Changes the state of the machine.
         /// </summary>
         /// <param name="state">The next machine state.</param>
-        public void ChangeState(TState state) => this.BigMachine.CommandPost.Send(CommandPost<TIdentifier>.CommandType.State, this.Group, this.Identifier, state);
+        public void ChangeState(TState state) => this.BigMachine.CommandPost.Send(CommandPost<TIdentifier>.CommandType.State, this.Group, this.Identifier, Unsafe.As<TState, int>(ref state));
 
         /// <summary>
         /// Changes the state of the machine and receives the result.
@@ -173,6 +174,6 @@ namespace BigMachines
         /// <param name="millisecondTimeout">Timeout in milliseconds.</param>
         /// <returns><see langword="true"/>: The state is successfully changed.<br/>
         /// <see langword="false"/>: Not changed (change denied or the machine is not available.)</returns>
-        public bool ChangeStateTwoWay(TState state, int millisecondTimeout = 100) => this.BigMachine.CommandPost.SendTwoWay<TState, bool>(CommandPost<TIdentifier>.CommandType.StateTwoWay, this.Group, this.Identifier, state, millisecondTimeout);
+        public bool ChangeStateTwoWay(TState state, int millisecondTimeout = 100) => this.BigMachine.CommandPost.SendTwoWay<int, bool>(CommandPost<TIdentifier>.CommandType.StateTwoWay, this.Group, this.Identifier, Unsafe.As<TState, int>(ref state), millisecondTimeout);
     }
 }

@@ -88,10 +88,11 @@ namespace BigMachines
                     LoopChecker.Instance = new();
                 }
 
-                this.LoopChecker = LoopChecker.Instance;
+                this.Type = type;
                 this.Channel = channel;
                 this.Identifier = identifier;
                 this.Message = message;
+                this.LoopChecker = LoopChecker.Instance;
             }
 
             public CommandType Type { get; internal set; }

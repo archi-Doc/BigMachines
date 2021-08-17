@@ -328,6 +328,7 @@ namespace BigMachines.Generator
             this.CheckKeyword(BigMachinesBody.CreateInterfaceIdentifier, this.Location);
             this.CheckKeyword(BigMachinesBody.RunInternalIdentifier, this.Location);
             this.CheckKeyword(BigMachinesBody.ChangeState, this.Location);
+            this.CheckKeyword(BigMachinesBody.GetCurrentState, this.Location);
             this.CheckKeyword(BigMachinesBody.IntChangeState, this.Location);
             this.CheckKeyword(BigMachinesBody.RegisterBM, this.Location);
             // this.CheckKeyword(BigMachinesBody.IntInitState, this.Location);
@@ -707,6 +708,8 @@ ModuleInitializerClass_Added:
 
             ssb.AppendLine();
             ssb.AppendLine($"protected bool ChangeState({this.StateName} state) => this.IntChangeState(Unsafe.As<{this.StateName}, int>(ref state));");
+            ssb.AppendLine();
+            ssb.AppendLine($"protected {this.StateName} GetCurrentState() => Unsafe.As<int, {this.StateName}>(ref this.CurrentState);");
             ssb.AppendLine();
 
             /*if (this.DefaultStateMethod != null)

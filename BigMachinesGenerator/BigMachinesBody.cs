@@ -26,6 +26,7 @@ namespace BigMachines.Generator
         public const string CreateInterfaceIdentifier = "CreateInterface";
         public const string RunInternalIdentifier = "RunInternal";
         public const string ChangeState = "ChangeState";
+        public const string GetCurrentState = "GetCurrentState";
         public const string IntChangeState = "IntChangeState";
         public const string IntInitState = "IntInitState";
         public const string RegisterBM = "RegisterBM";

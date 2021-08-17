@@ -49,26 +49,15 @@ namespace ConsoleApp1
             {
             }
 
-            bigMachine.TryCreate<TerminatorMachine.Interface>(0);
+            TerminatorMachine.Test(bigMachine);
 
-            bigMachine.TryCreate<ServiceProviderMachine.Interface>(0);
-            // bigMachine.TryCreate<GenericMachine<int>.Interface>(1);
+            PassiveMachine.Test(bigMachine);
 
-            bigMachine.TryCreate<SingleMachine.Interface>(0);
-            // bigMachine.TryCreate<SingleMachine.Interface>(1); // Only one machine is created since SingleMachine belongs MachineSingle<> group.
-
-            bigMachine.TryCreate<TestMachine.Interface>(3);
-            var testMachine = bigMachine.TryGet<TestMachine.Interface>(3); // Get the created machine.
-
-            var testGroup = bigMachine.GetGroup<TestMachine.Interface>(); // Group is a collection of machines.
-            testMachine = testGroup.TryGet<TestMachine.Interface>(3); // Get machine from the group.
-
-            var loopMachine = bigMachine.TryCreate<LoopMachine.Interface>(0);
-            if (loopMachine != null)
-            {
-                // loopMachine.Command(1);
-                // loopMachine.Command("1");
-            }
+            // Other test code.
+            // GenericMachine<int>.Test(bigMachine);
+            // LoopMachine.Test(bigMachine);
+            // SingleMachine.Test(bigMachine);
+            // ServiceProviderMachine.Test(bigMachine);
 
             await ThreadCore.Root.WaitForTermination(-1); // Wait for the termination infinitely.
 
