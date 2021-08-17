@@ -51,7 +51,9 @@ namespace ConsoleApp1
 
             TerminatorMachine.Test(bigMachine);
 
-            PassiveMachine.Test(bigMachine);
+            // PassiveMachine.Test(bigMachine);
+            IntermittentMachine.Test(bigMachine);
+            ContinuousMachine.Test(bigMachine);
 
             // Other test code.
             // GenericMachine<int>.Test(bigMachine);

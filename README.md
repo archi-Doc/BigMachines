@@ -191,6 +191,50 @@ public partial class PassiveMachine : Machine<int>
 
 ### Intermittent Machine
 
+Intermittent machine is a machine that runs at regular intervals.
+
+```csharp
+[MachineObject(0x1b431670)]
+public partial class IntermittentMachine : Machine<int>
+{
+    public static void Test(BigMachine<int> bigMachine)
+    {
+        var m = bigMachine.TryCreate<IntermittentMachine.Interface>(0);
+
+        // The machine will run at regular intervals (1 second).
+    }
+
+    public IntermittentMachine(BigMachine<int> bigMachine)
+        : base(bigMachine)
+    {
+        this.DefaultTimeout = TimeSpan.FromSeconds(1); // Default time interval for machine execution.
+        this.SetLifespan(TimeSpan.FromSeconds(5)); // Time until the machine automatically terminates.
+    }
+
+    public int Count { get; set; }
+
+    [StateMethod(0)]
+    protected StateResult Initial(StateParameter parameter)
+    {
+        Console.WriteLine($"IntermittentMachine: Initial - {this.Count++}");
+        if (this.Count > 2)
+        {
+            this.ChangeState(State.First);
+        }
+
+        return StateResult.Continue;
+    }
+
+    [StateMethod(1)]
+    protected StateResult First(StateParameter parameter)
+    {
+        Console.WriteLine($"IntermittentMachine: First - {this.Count++}");
+        this.SetTimeout(TimeSpan.FromSeconds(0.5)); // Change the timeout of the machine.
+        return StateResult.Continue;
+    }
+}
+```
+
 
 
 ### Continuous Machine
@@ -200,6 +244,44 @@ Continuous machine is different from passive and intermittent machine (passive a
 It's designed for heavy and time-consuming tasks.
 
 Once a continuous machine is created, `BigMachine` will assign one thread for the machine and run the machine repeatedly until the machine returns `StateResult.Terminate`.
+
+```csharp
+[MachineObject(0xb579a7d8, Continuous = true)] // Set Continuous property to true.
+public partial class ContinuousMachine : Machine<int>
+{
+    public static void Test(BigMachine<int> bigMachine)
+    {
+        bigMachine.Continuous.SetMaxThreads(2); // Set the maximum number of threads used for continuous machines.
+        var m = bigMachine.TryCreate<ContinuousMachine.Interface>(0);
+
+        // The machine will run until the task is complete.
+    }
+
+    public ContinuousMachine(BigMachine<int> bigMachine)
+        : base(bigMachine)
+    {
+    }
+
+    public int Count { get; set; }
+
+    [StateMethod(0)]
+    protected StateResult Initial(StateParameter parameter)
+    {
+        Console.WriteLine($"ContinuousMachine: Initial - {this.Count++}");
+        if (this.Count > 10)
+        {
+            Console.WriteLine($"ContinuousMachine: Done");
+            return StateResult.Terminate;
+        }
+
+        Thread.Sleep(100); // Some heavy task
+
+        return StateResult.Continue;
+    }
+}
+```
+
+To improve response and share resource, heavy task should not be done at once, but divided into several smaller task.
 
 
 
