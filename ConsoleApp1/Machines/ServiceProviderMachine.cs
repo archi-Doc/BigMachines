@@ -18,6 +18,11 @@ namespace ConsoleApp1
     [MachineObject(0x4f8f7256)]
     public partial class ServiceProviderMachine : Machine<int>
     {
+        public static void Test(BigMachine<int> bigMachine)
+        {
+            bigMachine.TryCreate<ServiceProviderMachine.Interface>(0);
+        }
+
         public ServiceProviderMachine(BigMachine<int> bigMachine, SomeService service)
             : base(bigMachine)
         {
