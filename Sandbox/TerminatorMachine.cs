@@ -23,6 +23,11 @@ namespace Sandbox
         [StateMethod(0)]
         protected StateResult Initial(StateParameter parameter)
         {
+            if (this.BigMachine.Continuous.GetInfo(true).Length > 0)
+            {
+                return StateResult.Continue;
+            }
+
             foreach (var x in this.BigMachine.GetGroups())
             {
                 if (x.Info.MachineType != typeof(TerminatorMachine) &&

@@ -141,7 +141,8 @@ namespace BigMachines
         }
 
         /// <summary>
-        /// Sets the maximum number of threads used for continuous machines.
+        /// Sets the maximum number of threads used for continuous machines.<br/>
+        /// The default value is 2 (<see cref="DefaultMaxThreads"/>).
         /// </summary>
         /// <param name="numberOfThreads">The maximum number of threads.</param>
         public void SetMaxThreads(int numberOfThreads)
