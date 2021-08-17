@@ -39,6 +39,7 @@ namespace BigMachines
                 var item = core.Item;
                 var machine = item.Machine;
 
+                var terminated = false;
                 try
                 {
                     var stateParameter = new StateParameter(RunType.Continuous);
@@ -48,6 +49,7 @@ namespace BigMachines
                         {
                             if (machine.RunInternal(stateParameter) == StateResult.Terminate)
                             {
+                                terminated = true;
                                 break;
                             }
                         }
@@ -55,7 +57,10 @@ namespace BigMachines
                 }
                 finally
                 {
-                    machine.Group.TryRemoveMachine(machine.Identifier);
+                    if (terminated)
+                    {
+                        machine.Group.TryRemoveMachine(machine.Identifier);
+                    }
                 }
             }
 

@@ -15,6 +15,7 @@ using Tinyhand;
 
 namespace Sandbox
 {
+    [TinyhandObject(UseServiceProvider = true)]
     [MachineObject(0x436a0f8f, Continuous = true)]
     public partial class ContinuousMachine : Machine<int>
     {
@@ -22,6 +23,7 @@ namespace Sandbox
         : base(bigMachine)
         {
             this.total = 5_000_000_000;
+            this.IsSerializable = true;
         }
 
         [StateMethod(0)]
@@ -50,7 +52,10 @@ namespace Sandbox
             }
         }
 
+        [Key(10)]
         private long total;
+
+        [Key(11)]
         private long count;
     }
 

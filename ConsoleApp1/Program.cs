@@ -51,7 +51,7 @@ namespace ConsoleApp1
 
             TerminatorMachine.Test(bigMachine);
 
-            // bigMachine.TryCreate<GenericMachine<int>.Interface>(1);
+            PassiveMachine.Test(bigMachine);
 
             // Other test code.
             // GenericMachine<int>.Test(bigMachine);
