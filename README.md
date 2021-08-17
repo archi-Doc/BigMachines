@@ -281,7 +281,7 @@ public partial class ContinuousMachine : Machine<int>
 }
 ```
 
-To improve response and share resource, heavy task should not be done at once, but divided into several smaller task.
+To improve response and share resource, heavy task should not be done at once, but divided into several smaller tasks.
 
 
 
