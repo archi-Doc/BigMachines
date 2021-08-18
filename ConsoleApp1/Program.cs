@@ -9,6 +9,8 @@ using BigMachines;
 using DryIoc;
 using Tinyhand;
 
+#pragma warning disable SA1201 // Elements should appear in the correct order
+
 namespace ConsoleApp1
 {
     public class Program
@@ -28,7 +30,7 @@ namespace ConsoleApp1
             };
 
             // await Test();
-            await Test();
+            await Test2();
 
             ThreadCore.Root.TerminationEvent.Set(); // The termination process is complete (#1).
         }
@@ -81,9 +83,13 @@ namespace ConsoleApp1
 
         public static async Task Test2()
         {
-            var bigMachine = new BigMachine<int>(ThreadCore.Root);
+            var bigMachine = new BigMachine<IdentifierClass>(ThreadCore.Root);
+            bigMachine.TryCreate<IdentifierMachine.Interface>(new(1, "A"));
+            TerminatorMachine<IdentifierClass>.Test(bigMachine, IdentifierClass.Default);
 
-            TerminatorMachine<int>.Test(bigMachine, 0);
+            // var bigMachine = new BigMachine<IdentifierClass2>(ThreadCore.Root);
+            // bigMachine.TryCreate<IdentifierMachine2.Interface>(new(1, "A"));
+            // TerminatorMachine<IdentifierClass2>.Test(bigMachine, default!);
 
             await ThreadCore.Root.WaitForTermination(-1); // Wait for the termination infinitely.
         }

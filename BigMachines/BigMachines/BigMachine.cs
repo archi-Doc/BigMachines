@@ -156,11 +156,10 @@ namespace BigMachines
 
             machine = this.CreateMachine(group);
 
-            var clone = TinyhandSerializer.Clone(identifier);
-            machine.CreateInterface(clone);
+            machine.CreateInterface(identifier);
             machine.SetParameter(parameter);
 
-            machine = group.GetOrAddMachine(clone, machine);
+            machine = group.GetOrAddMachine(identifier, machine);
             return (TMachineInterface)machine.InterfaceInstance!;
         }
 
@@ -180,8 +179,7 @@ namespace BigMachines
 
             var machine = this.CreateMachine(group);
 
-            var clone = TinyhandSerializer.Clone(identifier);
-            machine.CreateInterface(clone);
+            machine.CreateInterface(identifier);
             machine.SetParameter(parameter);
 
             group.AddMachine(identifier, machine);

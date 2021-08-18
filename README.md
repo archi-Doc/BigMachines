@@ -293,14 +293,57 @@ Each machine has a unique identifier, and machines are identified and operated b
 
 `Identifier` has several constraints.
 
-- Serializable with `Tinyhand`
+- Serializable with `Tinyhand ` (has `TinyhandObject` attribute).
+- Must be immutable.
+- Has proper `Equals()` implementation.
 - Has proper `GetHashCode()` implementation.
 
 
 
-This is a sample of `Identifier`
+This is a sample implementation of `Identifier`.
 
+```csharp
+[TinyhandObject]
+public partial class IdentifierClass : IEquatable<IdentifierClass>
+{
+    public static IdentifierClass Default { get; } = new();
 
+    public IdentifierClass()
+    {
+        this.Name = string.Empty;
+    }
+
+    public IdentifierClass(int id, string name)
+    {
+        this.Id = id;
+        this.Name = name;
+    }
+
+    [Key(0)]
+    public int Id { get; private set; }
+
+    [Key(1)]
+    public string Name { get; private set; }
+
+    public bool Equals(IdentifierClass? other)
+    {
+        if (other == null)
+        {
+            return false;
+        }
+
+        return this.Id == other.Id && this.Name == other.Name;
+    }
+
+    public override int GetHashCode() => HashCode.Combine(this.Id, this.Name);
+
+    public override string ToString() => $"Id: {this.Id} Name: {this.Name}";
+}
+
+// Alternative
+[TinyhandObject(ImplicitKeyAsName = true)]
+public partial record IdentifierClass2(int id, string name);
+```
 
 
 
