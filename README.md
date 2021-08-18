@@ -281,7 +281,69 @@ public partial class ContinuousMachine : Machine<int>
 }
 ```
 
-To improve response and share resource, heavy task should not be done at once, but divided into several smaller task.
+To improve response and share resource, heavy task should not be done at once, but divided into several smaller tasks.
+
+
+
+## Identifier
+
+`Identifier` is a key concept of `BigMachines`.
+
+Each machine has a unique identifier, and machines are identified and operated by identifiers.
+
+`Identifier` has several constraints.
+
+- Serializable with `Tinyhand ` (has `TinyhandObject` attribute).
+- Must be immutable.
+- Has proper `Equals()` implementation.
+- Has proper `GetHashCode()` implementation.
+
+
+
+This is a sample implementation of `Identifier`.
+
+```csharp
+[TinyhandObject]
+public partial class IdentifierClass : IEquatable<IdentifierClass>
+{
+    public static IdentifierClass Default { get; } = new();
+
+    public IdentifierClass()
+    {
+        this.Name = string.Empty;
+    }
+
+    public IdentifierClass(int id, string name)
+    {
+        this.Id = id;
+        this.Name = name;
+    }
+
+    [Key(0)]
+    public int Id { get; private set; }
+
+    [Key(1)]
+    public string Name { get; private set; }
+
+    public bool Equals(IdentifierClass? other)
+    {
+        if (other == null)
+        {
+            return false;
+        }
+
+        return this.Id == other.Id && this.Name == other.Name;
+    }
+
+    public override int GetHashCode() => HashCode.Combine(this.Id, this.Name);
+
+    public override string ToString() => $"Id: {this.Id} Name: {this.Name}";
+}
+
+// Alternative
+[TinyhandObject(ImplicitKeyAsName = true)]
+public partial record IdentifierClass2(int id, string name);
+```
 
 
 
@@ -302,5 +364,79 @@ These keywords in `Machine` class are reserved for source generator.
 
 
 
+## Other
 
+### Generic machine
+
+`BigMachine` and `Machine` are strongly related with `Identifier`.
+
+Normally, the type of the identifier is fixed.
+
+However you can create generic-identifier machine and machines can be used with multiple types of `BigMachine`.
+
+```csharp
+public partial class GenericMachine<TIdentifier> : Machine<TIdentifier>
+    where TIdentifier : notnull
+{
+    public static void Test(BigMachine<TIdentifier> bigMachine)
+    {
+        bigMachine.TryCreate<GenericMachine<TIdentifier>.Interface>(default!);
+    }
+
+    public GenericMachine(BigMachine<TIdentifier> bigMachine)
+        : base(bigMachine)
+    {
+        this.DefaultTimeout = TimeSpan.FromSeconds(1);
+        this.SetLifespan(TimeSpan.FromSeconds(5));
+    }
+
+    public int Count { get; set; }
+
+    [StateMethod(0)]
+    protected StateResult Initial(StateParameter parameter)
+    {
+        Console.WriteLine($"Generic ({this.Identifier.ToString()}) - {this.Count++}");
+        return StateResult.Continue;
+    }
+}
+```
+
+
+
+### Loop checker
+
+Relationships between machines can become complicated, and may lead to circular command issue.
+
+```csharp
+[MachineObject(0xb7196ebc)]
+public partial class LoopMachine : Machine<int>
+{
+    public static void Test(BigMachine<int> bigMachine)
+    {
+        var loopMachine = bigMachine.TryCreate<LoopMachine.Interface>(0);
+        loopMachine.Command(1);
+    }
+
+    public LoopMachine(BigMachine<int> bigMachine)
+        : base(bigMachine)
+    {
+    }
+
+    protected override void ProcessCommand(CommandPost<int>.Command command)
+    {
+        if (command.Message is int n)
+        {// LoopMachine
+            this.BigMachine.TryGet<Interface>(this.Identifier)?.Command(0);
+        }
+    }
+}
+```
+
+This code will cause `InvalidOperationException`.
+
+You can disable loop checker if you want (not recommended).
+
+```csharp
+bigMachine.EnableLoopChecker = false;
+```
 

@@ -10,17 +10,13 @@ using BigMachines;
 namespace ConsoleApp1
 {
     // Loop Machine
-    [MachineObject(0xb7196ebc)] // Change groups from MachineGroup<> to MachineSingle<>.
+    [MachineObject(0xb7196ebc)]
     public partial class LoopMachine : Machine<int>
     {
         public static void Test(BigMachine<int> bigMachine)
         {
             var loopMachine = bigMachine.TryCreate<LoopMachine.Interface>(0);
-            if (loopMachine != null)
-            {
-                loopMachine.Command(1);
-                // loopMachine.Command("1");
-            }
+            loopMachine.Command(1);
         }
 
         public LoopMachine(BigMachine<int> bigMachine)

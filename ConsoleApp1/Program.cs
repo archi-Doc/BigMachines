@@ -9,6 +9,8 @@ using BigMachines;
 using DryIoc;
 using Tinyhand;
 
+#pragma warning disable SA1201 // Elements should appear in the correct order
+
 namespace ConsoleApp1
 {
     public class Program
@@ -27,6 +29,14 @@ namespace ConsoleApp1
                 ThreadCore.Root.Terminate(); // Send a termination signal to the root.
             };
 
+            // await Test();
+            await Test2();
+
+            ThreadCore.Root.TerminationEvent.Set(); // The termination process is complete (#1).
+        }
+
+        public static async Task Test()
+        {
             var container = new Container(); // You can use DI container if you want.
             container.RegisterDelegate<BigMachine<int>>(x => new BigMachine<int>(ThreadCore.Root, container), Reuse.Singleton);
             container.Register<SomeService>();
@@ -49,14 +59,14 @@ namespace ConsoleApp1
             {
             }
 
-            TerminatorMachine.Test(bigMachine);
+            TerminatorMachine<int>.Test(bigMachine, 0);
 
             // PassiveMachine.Test(bigMachine);
-            IntermittentMachine.Test(bigMachine);
-            ContinuousMachine.Test(bigMachine);
+            // IntermittentMachine.Test(bigMachine);
+            // ContinuousMachine.Test(bigMachine);
 
             // Other test code.
-            // GenericMachine<int>.Test(bigMachine);
+            GenericMachine<int>.Test(bigMachine);
             // LoopMachine.Test(bigMachine);
             // SingleMachine.Test(bigMachine);
             // ServiceProviderMachine.Test(bigMachine);
@@ -69,8 +79,19 @@ namespace ConsoleApp1
             {
                 fs.Write(data);
             }
+        }
 
-            ThreadCore.Root.TerminationEvent.Set(); // The termination process is complete (#1).
+        public static async Task Test2()
+        {
+            var bigMachine = new BigMachine<IdentifierClass>(ThreadCore.Root);
+            bigMachine.TryCreate<IdentifierMachine.Interface>(new(1, "A"));
+            TerminatorMachine<IdentifierClass>.Test(bigMachine, IdentifierClass.Default);
+
+            // var bigMachine = new BigMachine<IdentifierClass2>(ThreadCore.Root);
+            // bigMachine.TryCreate<IdentifierMachine2.Interface>(new(1, "A"));
+            // TerminatorMachine<IdentifierClass2>.Test(bigMachine, default!);
+
+            await ThreadCore.Root.WaitForTermination(-1); // Wait for the termination infinitely.
         }
     }
 }

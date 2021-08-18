@@ -37,7 +37,7 @@ namespace BigMachines
 
             this.Status = new();
             this.Core = new ThreadCore(parent, this.MainLoop, false);
-            this.CommandPost = new(this.DistributeCommand, parent);
+            this.CommandPost = new(this, this.DistributeCommand, parent);
             this.ServiceProvider = serviceProvider;
             this.Continuous = new(this);
 
@@ -68,14 +68,14 @@ namespace BigMachines
         }
 
         /// <summary>
-        /// Gets or sets a value indicating whether to enable loop checker.
-        /// </summary>
-        public static bool EnableLoopChecker { get; set; } = true;
-
-        /// <summary>
         /// Gets <see cref="MachineInfo{TIdentifier}"/> from the type of Machine.Interface. Used internally.
         /// </summary>
         public static Dictionary<Type, MachineInfo<TIdentifier>> StaticInfo { get; } = new(); // typeof(Machine.Interface), MachineGroup
+
+        /// <summary>
+        /// Gets or sets a value indicating whether to enable loop checker.
+        /// </summary>
+        public bool EnableLoopChecker { get; set; } = true;
 
         /// <summary>
         /// Gets the status of <see cref="BigMachine{TIdentifier}"/>.
@@ -156,11 +156,10 @@ namespace BigMachines
 
             machine = this.CreateMachine(group);
 
-            var clone = TinyhandSerializer.Clone(identifier);
-            machine.CreateInterface(clone);
+            machine.CreateInterface(identifier);
             machine.SetParameter(parameter);
 
-            machine = group.GetOrAddMachine(clone, machine);
+            machine = group.GetOrAddMachine(identifier, machine);
             return (TMachineInterface)machine.InterfaceInstance!;
         }
 
@@ -180,8 +179,7 @@ namespace BigMachines
 
             var machine = this.CreateMachine(group);
 
-            var clone = TinyhandSerializer.Clone(identifier);
-            machine.CreateInterface(clone);
+            machine.CreateInterface(identifier);
             machine.SetParameter(parameter);
 
             group.AddMachine(identifier, machine);
