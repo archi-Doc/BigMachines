@@ -285,7 +285,22 @@ To improve response and share resource, heavy task should not be done at once, b
 
 
 
-Identifier
+## Identifier
+
+`Identifier` is a key concept of `BigMachines`.
+
+Each machine has a unique identifier, and machines are identified and operated by identifiers.
+
+`Identifier` has several constraints.
+
+- Serializable with `Tinyhand`
+- Has proper `GetHashCode()` implementation.
+
+
+
+This is a sample of `Identifier`
+
+
 
 
 
@@ -310,7 +325,38 @@ These keywords in `Machine` class are reserved for source generator.
 
 ### Generic machine
 
-`BigMachine` and `Machine` 
+`BigMachine` and `Machine` are strongly related with `Identifier`.
+
+Normally, the type of the identifier is fixed.
+
+However you can create generic-identifier machine and machines can be used with multiple types of `BigMachine`.
+
+```csharp
+public partial class GenericMachine<TIdentifier> : Machine<TIdentifier>
+    where TIdentifier : notnull
+{
+    public static void Test(BigMachine<TIdentifier> bigMachine)
+    {
+        bigMachine.TryCreate<GenericMachine<TIdentifier>.Interface>(default!);
+    }
+
+    public GenericMachine(BigMachine<TIdentifier> bigMachine)
+        : base(bigMachine)
+    {
+        this.DefaultTimeout = TimeSpan.FromSeconds(1);
+        this.SetLifespan(TimeSpan.FromSeconds(5));
+    }
+
+    public int Count { get; set; }
+
+    [StateMethod(0)]
+    protected StateResult Initial(StateParameter parameter)
+    {
+        Console.WriteLine($"Generic ({this.Identifier.ToString()}) - {this.Count++}");
+        return StateResult.Continue;
+    }
+}
+```
 
 
 

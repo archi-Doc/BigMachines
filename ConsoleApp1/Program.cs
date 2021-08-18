@@ -57,7 +57,7 @@ namespace ConsoleApp1
 
             // Other test code.
             GenericMachine<int>.Test(bigMachine);
-            LoopMachine.Test(bigMachine);
+            // LoopMachine.Test(bigMachine);
             // SingleMachine.Test(bigMachine);
             // ServiceProviderMachine.Test(bigMachine);
 

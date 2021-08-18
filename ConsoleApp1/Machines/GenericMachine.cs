@@ -12,7 +12,7 @@ namespace ConsoleApp1
     // Generic version.
     [MachineObject(0x928b319e)]
     public partial class GenericMachine<TIdentifier> : Machine<TIdentifier>
-        where TIdentifier : notnull
+    where TIdentifier : notnull
     {
         public static void Test(BigMachine<TIdentifier> bigMachine)
         {
