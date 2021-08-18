@@ -12,14 +12,15 @@ namespace ConsoleApp1
 {
     // Single Machine
     [MachineObject(0x48eb1f0f, Group = typeof(MachineSingle<>))] // Change groups from MachineGroup<> to MachineSingle<>.
-    public partial class TerminatorMachine : Machine<int>
+    public partial class TerminatorMachine<TIdentifier> : Machine<TIdentifier>
+        where TIdentifier : notnull
     {
-        public static void Test(BigMachine<int> bigMachine)
+        public static void Test(BigMachine<TIdentifier> bigMachine, TIdentifier identifier)
         {
-            bigMachine.TryCreate<TerminatorMachine.Interface>(0);
+            bigMachine.TryCreate<TerminatorMachine<TIdentifier>.Interface>(identifier);
         }
 
-        public TerminatorMachine(BigMachine<int> bigMachine)
+        public TerminatorMachine(BigMachine<TIdentifier> bigMachine)
             : base(bigMachine)
         {
             this.DefaultTimeout = TimeSpan.FromSeconds(1);
@@ -35,12 +36,12 @@ namespace ConsoleApp1
 
             foreach (var x in this.BigMachine.GetGroups())
             {
-                if (x.Info.MachineType != typeof(TerminatorMachine) &&
+                if (x.Info.MachineType != typeof(TerminatorMachine<TIdentifier>) &&
                     x.Count > 0)
                 {
                     foreach (var y in x.GetIdentifiers())
                     {
-                        if (x.TryGet<ManMachineInterface<int>>(y)?.GetDefaultTimeout() is TimeSpan ts && ts > TimeSpan.Zero)
+                        if (x.TryGet<ManMachineInterface<TIdentifier>>(y)?.GetDefaultTimeout() is TimeSpan ts && ts > TimeSpan.Zero)
                         {
                             return StateResult.Continue;
                         }

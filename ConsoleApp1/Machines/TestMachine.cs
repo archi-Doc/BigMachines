@@ -88,7 +88,7 @@ namespace ConsoleApp1
             {
                 if (command.Message is int n && n == 0)
                 {
-                    this.BigMachine.TryGet<TerminatorMachine.Interface>(0)?.CommandTwoWay<int, int>(0);
+                    this.BigMachine.TryGet<TerminatorMachine<int>.Interface>(0)?.CommandTwoWay<int, int>(0);
                     command.Response = this.Count;
                 }
                 else if (command.Message is string st)

@@ -27,6 +27,14 @@ namespace ConsoleApp1
                 ThreadCore.Root.Terminate(); // Send a termination signal to the root.
             };
 
+            // await Test();
+            await Test();
+
+            ThreadCore.Root.TerminationEvent.Set(); // The termination process is complete (#1).
+        }
+
+        public static async Task Test()
+        {
             var container = new Container(); // You can use DI container if you want.
             container.RegisterDelegate<BigMachine<int>>(x => new BigMachine<int>(ThreadCore.Root, container), Reuse.Singleton);
             container.Register<SomeService>();
@@ -49,7 +57,7 @@ namespace ConsoleApp1
             {
             }
 
-            TerminatorMachine.Test(bigMachine);
+            TerminatorMachine<int>.Test(bigMachine, 0);
 
             // PassiveMachine.Test(bigMachine);
             // IntermittentMachine.Test(bigMachine);
@@ -69,8 +77,15 @@ namespace ConsoleApp1
             {
                 fs.Write(data);
             }
+        }
 
-            ThreadCore.Root.TerminationEvent.Set(); // The termination process is complete (#1).
+        public static async Task Test2()
+        {
+            var bigMachine = new BigMachine<int>(ThreadCore.Root);
+
+            TerminatorMachine<int>.Test(bigMachine, 0);
+
+            await ThreadCore.Root.WaitForTermination(-1); // Wait for the termination infinitely.
         }
     }
 }
