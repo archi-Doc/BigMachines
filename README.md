@@ -285,6 +285,10 @@ To improve response and share resource, heavy task should not be done at once, b
 
 
 
+Identifier
+
+
+
 ## Machine Class
 
 ### Reserved keywords
@@ -302,5 +306,48 @@ These keywords in `Machine` class are reserved for source generator.
 
 
 
+## Other
 
+### Generic machine
+
+`BigMachine` and `Machine` 
+
+
+
+### Loop checker
+
+Relationships between machines can become complicated, and may lead to circular command issue.
+
+```csharp
+[MachineObject(0xb7196ebc)]
+public partial class LoopMachine : Machine<int>
+{
+    public static void Test(BigMachine<int> bigMachine)
+    {
+        var loopMachine = bigMachine.TryCreate<LoopMachine.Interface>(0);
+        loopMachine.Command(1);
+    }
+
+    public LoopMachine(BigMachine<int> bigMachine)
+        : base(bigMachine)
+    {
+    }
+
+    protected override void ProcessCommand(CommandPost<int>.Command command)
+    {
+        if (command.Message is int n)
+        {// LoopMachine
+            this.BigMachine.TryGet<Interface>(this.Identifier)?.Command(0);
+        }
+    }
+}
+```
+
+This code will cause `InvalidOperationException`.
+
+You can disable loop checker if you want (not recommended).
+
+```csharp
+bigMachine.EnableLoopChecker = false;
+```
 

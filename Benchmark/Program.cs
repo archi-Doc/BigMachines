@@ -35,10 +35,10 @@ namespace Benchmark
             await Benchmark.Design.CommandDesign8.Test();
 
             var bm = new BigMachine<int>(ThreadCore.Root);
-            BigMachine<int>.EnableLoopChecker = false;
+            // bm.EnableLoopChecker = false;
             await Benchmark.Design.SimpleBench.Test(bm);
 
-            var cp = new CommandPost<int>(x =>
+            var cp = new CommandPost<int>(bm, x =>
             {
                 if (x.Message is int i)
                 {

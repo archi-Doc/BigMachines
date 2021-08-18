@@ -77,13 +77,14 @@ namespace BigMachines
             /// <summary>
             /// Initializes a new instance of the <see cref="Command"/> class.
             /// </summary>
+            /// <param name="bigMachine">BigMachine.</param>
             /// <param name="type">CommandType.</param>
             /// <param name="channel">Channel.</param>
             /// <param name="identifier">Identifier.</param>
             /// <param name="message">Message.</param>
-            public Command(CommandType type, object? channel, TIdentifier identifier, object? message)
+            public Command(BigMachine<TIdentifier> bigMachine, CommandType type, object? channel, TIdentifier identifier, object? message)
             {
-                if (BigMachine<TIdentifier>.EnableLoopChecker && LoopChecker.Instance == null)
+                if (bigMachine.EnableLoopChecker && LoopChecker.Instance == null)
                 {// LoopChecker enabled.
                     LoopChecker.Instance = new();
                 }
@@ -111,11 +112,13 @@ namespace BigMachines
         /// <summary>
         /// Initializes a new instance of the <see cref="CommandPost{TIdentifier}"/> class.
         /// </summary>
+        /// <param name="bigMachine">BigMachine.</param>
         /// <param name="method">CommandDelegate.</param>
         /// <param name="parent">The parent.</param>
         /// <param name="millisecondInterval">The number of milliseconds to wait for each interval.</param>
-        public CommandPost(CommandDelegate method, ThreadCoreBase parent, int millisecondInterval = 10)
+        public CommandPost(BigMachine<TIdentifier> bigMachine, CommandDelegate method, ThreadCoreBase parent, int millisecondInterval = 10)
         {
+            this.BigMachine = bigMachine;
             this.commandDelegate = method;
             this.MillisecondInterval = millisecondInterval;
             this.Core = new(parent, this.MainLoop);
@@ -133,7 +136,7 @@ namespace BigMachines
         /// <param name="message">The message to send.<br/>Must be serializable by Tinyhand because the message will be cloned and passed to the receiver.</param>
         public void Send<TMessage>(CommandType commandType, object? channel, TIdentifier identifier, TMessage message)
         {
-            var m = new Command(commandType, channel, identifier, TinyhandSerializer.Clone(message));
+            var m = new Command(this.BigMachine, commandType, channel, identifier, TinyhandSerializer.Clone(message));
             this.concurrentQueue.Enqueue(m);
             this.commandAdded.Set();
         }
@@ -147,7 +150,7 @@ namespace BigMachines
             var i = identifiers.GetEnumerator();
             while (g.MoveNext() && i.MoveNext())
             {
-                var m = new Command(commandType, g.Current, i.Current, messageClone);
+                var m = new Command(this.BigMachine, commandType, g.Current, i.Current, messageClone);
                 this.concurrentQueue.Enqueue(m);
             }
 
@@ -163,7 +166,7 @@ namespace BigMachines
 
             var end = Stopwatch.GetTimestamp() + (long)((double)millisecondTimeout / 1000d * (double)Stopwatch.Frequency);
 
-            var m = new Command(commandType, channel, identifier, TinyhandSerializer.Clone(message));
+            var m = new Command(this.BigMachine, commandType, channel, identifier, TinyhandSerializer.Clone(message));
             this.concurrentQueue.Enqueue(m);
 
             var taskFlag = Thread.CurrentThread == this.Core.Thread;
@@ -234,7 +237,7 @@ namespace BigMachines
             var i = identifiers.GetEnumerator();
             while (g.MoveNext() && i.MoveNext())
             {
-                var m = new Command(commandType, g.Current, i.Current, messageClone);
+                var m = new Command(this.BigMachine, commandType, g.Current, i.Current, messageClone);
                 commandQueue.Enqueue(m);
                 this.concurrentQueue.Enqueue(m);
             }
@@ -308,6 +311,8 @@ SendGroupTwoWay_Exit:
                 return Array.Empty<KeyValuePair<TIdentifier, TResult?>>();
             }
         }
+
+        public BigMachine<TIdentifier> BigMachine { get; }
 
         public int MillisecondInterval { get; }
 

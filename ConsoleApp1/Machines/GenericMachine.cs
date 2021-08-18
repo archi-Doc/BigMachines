@@ -16,12 +16,14 @@ namespace ConsoleApp1
     {
         public static void Test(BigMachine<TIdentifier> bigMachine)
         {
+            bigMachine.TryCreate<GenericMachine<TIdentifier>.Interface>(default!);
         }
 
         public GenericMachine(BigMachine<TIdentifier> bigMachine)
             : base(bigMachine)
         {
             this.DefaultTimeout = TimeSpan.FromSeconds(1);
+            this.SetLifespan(TimeSpan.FromSeconds(5));
         }
 
         public int Count { get; set; }

@@ -52,12 +52,12 @@ namespace ConsoleApp1
             TerminatorMachine.Test(bigMachine);
 
             // PassiveMachine.Test(bigMachine);
-            IntermittentMachine.Test(bigMachine);
-            ContinuousMachine.Test(bigMachine);
+            // IntermittentMachine.Test(bigMachine);
+            // ContinuousMachine.Test(bigMachine);
 
             // Other test code.
-            // GenericMachine<int>.Test(bigMachine);
-            // LoopMachine.Test(bigMachine);
+            GenericMachine<int>.Test(bigMachine);
+            LoopMachine.Test(bigMachine);
             // SingleMachine.Test(bigMachine);
             // ServiceProviderMachine.Test(bigMachine);
 
