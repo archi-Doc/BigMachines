@@ -85,6 +85,7 @@ namespace ConsoleApp1
         {
             var bigMachine = new BigMachine<IdentifierClass>(ThreadCore.Root);
             bigMachine.TryCreate<IdentifierMachine.Interface>(new(1, "A"));
+            // bigMachine.TryCreate<GenericMachine<IdentifierClass>.Interface>(new(2, "B"));
             TerminatorMachine<IdentifierClass>.Test(bigMachine, IdentifierClass.Default);
 
             // var bigMachine = new BigMachine<IdentifierClass2>(ThreadCore.Root);
