@@ -323,6 +323,17 @@ namespace BigMachines.Generator
                 }
             }
 
+            if (this.IdentifierObject != null && this.IdentifierObject.Kind != VisceralObjectKind.TypeParameter)
+            {
+                if (this.IdentifierObject.Location.IsInSource)
+                {
+                    if (!this.IdentifierObject.AllAttributes.Any(x => x.FullName == "Tinyhand.TinyhandObjectAttribute"))
+                    {
+                        this.Body.AddDiagnostic(BigMachinesBody.Error_IdentifierIsNotSerializable, this.IdentifierObject.Location, this.IdentifierObject.FullName);
+                    }
+                }
+            }
+
             this.CheckKeyword(BigMachinesBody.StateIdentifier, this.Location);
             this.CheckKeyword(BigMachinesBody.InterfaceIdentifier, this.Location);
             this.CheckKeyword(BigMachinesBody.CreateInterfaceIdentifier, this.Location);

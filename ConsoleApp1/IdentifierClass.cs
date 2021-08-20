@@ -49,7 +49,7 @@ namespace ConsoleApp1
 
     // Alternative
     [TinyhandObject(ImplicitKeyAsName = true)]
-    public partial record IdentifierClass2(int id, string name);
+    public partial record IdentifierClass2(int Id, string Name);
 
     [MachineObject(0x084dabdd)]
     public partial class IdentifierMachine : Machine<IdentifierClass>
