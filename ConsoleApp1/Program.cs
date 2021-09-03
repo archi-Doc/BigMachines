@@ -71,7 +71,7 @@ namespace ConsoleApp1
             // SingleMachine.Test(bigMachine);
             // ServiceProviderMachine.Test(bigMachine);
 
-            await ThreadCore.Root.WaitForTermination(-1); // Wait for the termination infinitely.
+            await ThreadCore.Root.WaitForTerminationAsync(-1); // Wait for the termination infinitely.
 
             // Save
             var data = bigMachine.Serialize();
@@ -92,7 +92,7 @@ namespace ConsoleApp1
             // bigMachine.TryCreate<IdentifierMachine2.Interface>(new(1, "A"));
             // TerminatorMachine<IdentifierClass2>.Test(bigMachine, default!);
 
-            await ThreadCore.Root.WaitForTermination(-1); // Wait for the termination infinitely.
+            await ThreadCore.Root.WaitForTerminationAsync(-1); // Wait for the termination infinitely.
         }
     }
 }

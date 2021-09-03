@@ -58,7 +58,7 @@ namespace QuickStart
             var testGroup = bigMachine.GetGroup<TestMachine.Interface>(); // Group is a collection of machines.
             testMachine = testGroup.TryGet<TestMachine.Interface>(42); // Same as above
 
-            await ThreadCore.Root.WaitForTermination(-1); // Wait for the termination infinitely.
+            await ThreadCore.Root.WaitForTerminationAsync(-1); // Wait for the termination infinitely.
         }
     }
 }

@@ -112,7 +112,7 @@ namespace Sandbox
             // Continuous Watcher
             bigMachine.TryCreate<ContinuousWatcher.Interface>(0);
 
-            await ThreadCore.Root.WaitForTermination(-1); // Wait for the termination infinitely.
+            await ThreadCore.Root.WaitForTerminationAsync(-1); // Wait for the termination infinitely.
 
             // Save
             var data = bigMachine.Serialize();
