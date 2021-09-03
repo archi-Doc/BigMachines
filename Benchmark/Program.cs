@@ -30,6 +30,7 @@ namespace Benchmark
             // await Benchmark.Design.CommandDesign3.Test();
             // await Benchmark.Design.CommandDesign4.Test();
             // await Benchmark.Design.CommandDesign5.Test();
+
             await Benchmark.Design.CommandDesign6.Test();
             await Benchmark.Design.CommandDesign7.Test();
             await Benchmark.Design.CommandDesign8.Test();
