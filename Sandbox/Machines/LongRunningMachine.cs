@@ -32,7 +32,7 @@ namespace Sandbox
 
             for (var n = 0; n < 30; n++)
             {
-                this.BigMachine.Core.Wait(100, 10);
+                this.BigMachine.Core.Wait(100);
             }
 
             Console.WriteLine("Long running machine exit");
