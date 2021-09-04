@@ -68,8 +68,8 @@ namespace Sandbox
             {
             }
 
-            // Test1(bigMachine);
-            Test2(bigMachine);
+            Test1(bigMachine);
+            // Test2(bigMachine);
 
             await ThreadCore.Root.WaitForTerminationAsync(-1); // Wait for the termination infinitely.
 

@@ -63,7 +63,7 @@ namespace ConsoleApp1
 
             // PassiveMachine.Test(bigMachine);
             // IntermittentMachine.Test(bigMachine);
-            // ContinuousMachine.Test(bigMachine);
+            ContinuousMachine.Test(bigMachine);
 
             // Other test code.
             GenericMachine<int>.Test(bigMachine);

@@ -454,14 +454,11 @@ namespace BigMachines
                                 x.TryRemoveMachine(y.Identifier);
                             }
                         }
-                        else if (y.Timeout <= 0 || y.NextRun >= now)
+                        else if (y.Timeout <= 0 || y.NextRun >= now || y.RunType == RunType.NotRunning)
                         {// Screening
                             lock (y.SyncMachine)
                             {
-                                if (TryRun(y))
-                                {// Terminated
-                                    x.TryRemoveMachine(y.Identifier);
-                                }
+                                TryRun(y);
                             }
                         }
                     }
@@ -469,7 +466,7 @@ namespace BigMachines
 
                 this.Status.LastRun = now;
 
-                bool TryRun(Machine<TIdentifier> machine)
+                void TryRun(Machine<TIdentifier> machine)
                 {// locked
                     var runFlag = false;
                     if (machine.Timeout <= 0)
@@ -492,24 +489,12 @@ namespace BigMachines
                         runFlag = true;
                     }
 
-                    if (runFlag)
+                    if (!runFlag)
                     {
-StateChangedLoop:
-                        machine.StateChanged = false;
-                        var result = machine.RunInternal(new(RunType.Timer));
-                        if (result == StateResult.Terminate)
-                        {
-                            return true;
-                        }
-                        else if (machine.StateChanged)
-                        {
-                            goto StateChangedLoop;
-                        }
-
-                        machine.LastRun = now;
+                        return;
                     }
 
-                    return false;
+                    machine.RunMachine(RunType.Timer, now);
                 }
             }
 

@@ -155,15 +155,7 @@ namespace BigMachines
 
                 lock (this.SyncMachine)
                 {
-                    var result = this.RunInternal(new(RunType.Manual, command.Message));
-                    this.LastRun = DateTime.UtcNow;
-
-                    command.Response = result;
-                    if (result == StateResult.Terminate)
-                    {
-                        group.TryRemoveMachine(this.Identifier);
-                        return true;
-                    }
+                    command.Response = this.RunMachine(RunType.Manual, DateTime.UtcNow);
                 }
             }
             else if ((command.Type == CommandPost<TIdentifier>.CommandType.State ||
@@ -266,7 +258,7 @@ namespace BigMachines
         /// <param name="parameter">StateParameter.</param>
         /// <returns>StateResult.</returns>
         protected internal virtual StateResult RunInternal(StateParameter parameter)
-        {// Called: Machine.DistributeCommand(), BigMachine.MainLoop(), BigMachineContinuous.Core
+        {// Called: Machine.RunMachine()
             return StateResult.Terminate;
         }
 
@@ -283,6 +275,37 @@ namespace BigMachines
         /// </summary>
         protected internal virtual void OnTerminated()
         {
+        }
+
+        /// <summary>
+        /// Run the machine.<br/>
+        /// This code is inside 'lock (this.SyncMachine) {}'.
+        /// </summary>
+        /// <param name="runType">A trigger of the machine running.</param>
+        /// <param name="now">Current time.</param>
+        /// <returns>true: The machine is terminated.</returns>
+        protected internal StateResult RunMachine(RunType runType, DateTime now)
+        {// Called: Machine.DistributeCommand(), BigMachine.MainLoop()
+            this.RunType = runType;
+
+StateChangedLoop:
+            this.StateChanged = false;
+            var result = this.RunInternal(new(runType));
+            if (result == StateResult.Terminate)
+            {
+                this.LastRun = now;
+                this.RunType = RunType.NotRunning;
+                this.Group.TryRemoveMachine(this.Identifier);
+                return result;
+            }
+            else if (this.StateChanged)
+            {
+                goto StateChangedLoop;
+            }
+
+            this.LastRun = now;
+            this.RunType = RunType.NotRunning;
+            return result;
         }
 
         /// <summary>

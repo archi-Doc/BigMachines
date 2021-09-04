@@ -39,27 +39,14 @@ namespace BigMachines
                 var item = core.Item;
                 var machine = item.Machine;
 
-                var terminated = false;
-                try
+                while (!core.IsTerminated)
                 {
-                    var stateParameter = new StateParameter(RunType.Continuous);
-                    while (!core.IsTerminated)
+                    lock (machine.SyncMachine)
                     {
-                        lock (machine.SyncMachine)
-                        {
-                            if (machine.RunInternal(stateParameter) == StateResult.Terminate)
-                            {
-                                terminated = true;
-                                break;
-                            }
+                        if (machine.RunMachine(RunType.Continuous, DateTime.UtcNow) == StateResult.Terminate)
+                        {// Terminated
+                            break;
                         }
-                    }
-                }
-                finally
-                {
-                    if (terminated)
-                    {
-                        machine.Group.TryRemoveMachine(machine.Identifier);
                     }
                 }
             }
