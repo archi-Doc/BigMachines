@@ -119,6 +119,11 @@ namespace BigMachines
         public uint TypeId { get; internal set; }
 
         /// <summary>
+        /// Gets or sets a running state of the machine.
+        /// </summary>
+        internal RunType RunType { get; set; }
+
+        /// <summary>
         /// Receivea a command and invoke an appropriate method.<br/>
         /// </summary>
         /// <param name="group">Machine group.</param>

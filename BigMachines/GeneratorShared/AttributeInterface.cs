@@ -125,6 +125,11 @@ namespace BigMachines
         /// Machine is run by <see cref="BigMachineContinuous{TIdentifier}"/>.
         /// </summary>
         Continuous,
+
+        /// <summary>
+        /// Machine is not running. For internal use.
+        /// </summary>
+        NotRunning,
     }
 
     /// <summary>

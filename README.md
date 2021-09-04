@@ -405,7 +405,7 @@ public partial class GenericMachine<TIdentifier> : Machine<TIdentifier>
 
 ### Loop checker
 
-Relationships between machines can become complicated, and may lead to circular command issue.
+Relationships between machines can become complicated, and may lead to circular command issuing.
 
 ```csharp
 [MachineObject(0xb7196ebc)]
