@@ -261,7 +261,7 @@ namespace BigMachines
         /// <param name="parameter">StateParameter.</param>
         /// <returns>StateResult.</returns>
         protected internal virtual StateResult RunInternal(StateParameter parameter)
-        {// Called: Machine.DistributeCommand(), BigMachine.MainLoop()
+        {// Called: Machine.DistributeCommand(), BigMachine.MainLoop(), BigMachineContinuous.Core
             return StateResult.Terminate;
         }
 

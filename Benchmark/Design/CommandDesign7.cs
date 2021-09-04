@@ -54,8 +54,12 @@ namespace Benchmark.Design
             await SendTwoWay();
             Stop2();
 
-            Start("await Task.Run response");
-            await SendTwoWay();
+            Start("await Task.Run.Wait");
+            SendTwoWayWait();
+            Stop2();
+
+            Start("await Task.Run.Wait");
+            SendTwoWayWait();
             Stop2();
 
             Console.WriteLine();
@@ -126,6 +130,11 @@ namespace Benchmark.Design
                     manualEvent2.Reset();
                 }
             }*/
+        }
+
+        internal static void SendTwoWayWait()
+        {
+            Task.Run(() => ReceiveAction(new Command(false))).Wait();
         }
 
         internal static void ReceiveAction(Command command)

@@ -29,8 +29,8 @@ namespace ConsoleApp1
                 ThreadCore.Root.Terminate(); // Send a termination signal to the root.
             };
 
-            // await Test();
-            await Test2();
+            await Test();
+            // await Test2();
 
             ThreadCore.Root.TerminationEvent.Set(); // The termination process is complete (#1).
         }
