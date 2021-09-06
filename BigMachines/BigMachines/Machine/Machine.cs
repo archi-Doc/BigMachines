@@ -164,7 +164,7 @@ namespace BigMachines
             {// ChangeState
                 lock (this.SyncMachine)
                 {
-                    command.Response = this.IntChangeState(state);
+                    command.Response = this.InternalChangeState(state, true);
                 }
             }
             else
@@ -219,9 +219,9 @@ namespace BigMachines
         protected internal ManMachineInterface<TIdentifier>? InterfaceInstance { get; set; }
 
         /// <summary>
-        /// Gets or sets a value indicating whether the state is changed in <see cref="InternalRun(StateParameter)"/>.
+        /// Gets or sets a value indicating whether the machine is going to re-run.
         /// </summary>
-        protected internal bool StateChanged { get; set; }
+        protected internal bool RequireRerun { get; set; }
 
         /// <summary>
         /// Expected to be implemented on the user side.<br/>
@@ -266,8 +266,9 @@ namespace BigMachines
         /// Generated method which is called when the state changes.
         /// </summary>
         /// <param name="state">The next state.</param>
+        /// <param name="rerun">Requires rerun when the state is changed.</param>
         /// <returns><see langword="true"/>: State changed. <see langword="false"/>: Not changed (same state or denied). </returns>
-        protected internal virtual bool IntChangeState(int state) => false;
+        protected internal virtual bool InternalChangeState(int state, bool rerun) => false;
 
         /// <summary>
         /// Called when the machine is terminating.<br/>
@@ -288,8 +289,8 @@ namespace BigMachines
         {// Called: Machine.DistributeCommand(), BigMachine.MainLoop()
             this.RunType = runType;
 
-StateChangedLoop:
-            this.StateChanged = false;
+RerunLoop:
+            this.RequireRerun = false;
             var result = this.InternalRun(new(runType));
             if (result == StateResult.Terminate)
             {
@@ -298,9 +299,9 @@ StateChangedLoop:
                 this.Group.TryRemoveMachine(this.Identifier);
                 return result;
             }
-            else if (this.StateChanged)
+            else if (this.RequireRerun)
             {
-                goto StateChangedLoop;
+                goto RerunLoop;
             }
 
             this.LastRun = now;
@@ -316,7 +317,7 @@ StateChangedLoop:
         /// <param name="absoluteDateTime">Set true to specify the next execution time by adding the current time and timeout.</param>
         protected void SetTimeout(TimeSpan timeSpan, bool absoluteDateTime = false)
         {
-            this.StateChanged = false;
+            this.RequireRerun = false;
             if (timeSpan.Ticks < 0)
             {
                 Volatile.Write(ref this.Timeout, long.MaxValue);

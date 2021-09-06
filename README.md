@@ -359,7 +359,7 @@ These keywords in `Machine` class are reserved for source generator.
 - `InternalRun()`: Runs machine and process each state.
 - `ChangeState()`: Changes the state of a machine.
 - `GetState()`: Gets the current state of a machine.
-- `IntChangeState()`: Internally used to change the state.
+- `InternalChangeState()`: Internally used to change the state.
 - `RegisterBM()`: Registers the machine to `BigMachine`.
 
 

@@ -416,7 +416,7 @@ namespace Sandbox
             if (canExit && canEnter)
             {
                 this.CurrentState = state;
-                this.StateChanged = true;
+                this.RequrieRerun = true;
                 return true;
             }
             else

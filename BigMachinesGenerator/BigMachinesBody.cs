@@ -27,7 +27,7 @@ namespace BigMachines.Generator
         public const string InternalRunIdentifier = "InternalRun";
         public const string ChangeState = "ChangeState";
         public const string GetCurrentState = "GetCurrentState";
-        public const string IntChangeState = "IntChangeState";
+        public const string InternalChangeState = "InternalChangeState";
         public const string IntInitState = "IntInitState";
         public const string RegisterBM = "RegisterBM";
 
