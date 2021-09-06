@@ -337,7 +337,7 @@ namespace BigMachines.Generator
             this.CheckKeyword(BigMachinesBody.StateIdentifier, this.Location);
             this.CheckKeyword(BigMachinesBody.InterfaceIdentifier, this.Location);
             this.CheckKeyword(BigMachinesBody.CreateInterfaceIdentifier, this.Location);
-            this.CheckKeyword(BigMachinesBody.RunInternalIdentifier, this.Location);
+            this.CheckKeyword(BigMachinesBody.InternalRunIdentifier, this.Location);
             this.CheckKeyword(BigMachinesBody.ChangeState, this.Location);
             this.CheckKeyword(BigMachinesBody.GetCurrentState, this.Location);
             this.CheckKeyword(BigMachinesBody.IntChangeState, this.Location);
@@ -626,7 +626,7 @@ ModuleInitializerClass_Added:
                 return;
             }
 
-            using (var scope = ssb.ScopeBrace("protected override StateResult RunInternal(StateParameter parameter)"))
+            using (var scope = ssb.ScopeBrace("protected override StateResult InternalRun(StateParameter parameter)"))
             {
                 ssb.AppendLine($"var state = Unsafe.As<int, {this.StateName}>(ref this.CurrentState);");
                 ssb.AppendLine("return state switch");

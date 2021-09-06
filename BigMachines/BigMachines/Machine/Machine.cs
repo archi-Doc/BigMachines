@@ -219,7 +219,7 @@ namespace BigMachines
         protected internal ManMachineInterface<TIdentifier>? InterfaceInstance { get; set; }
 
         /// <summary>
-        /// Gets or sets a value indicating whether the state is changed in <see cref="RunInternal(StateParameter)"/>.
+        /// Gets or sets a value indicating whether the state is changed in <see cref="InternalRun(StateParameter)"/>.
         /// </summary>
         protected internal bool StateChanged { get; set; }
 
@@ -257,7 +257,7 @@ namespace BigMachines
         /// </summary>
         /// <param name="parameter">StateParameter.</param>
         /// <returns>StateResult.</returns>
-        protected internal virtual StateResult RunInternal(StateParameter parameter)
+        protected internal virtual StateResult InternalRun(StateParameter parameter)
         {// Called: Machine.RunMachine()
             return StateResult.Terminate;
         }
@@ -290,7 +290,7 @@ namespace BigMachines
 
 StateChangedLoop:
             this.StateChanged = false;
-            var result = this.RunInternal(new(runType));
+            var result = this.InternalRun(new(runType));
             if (result == StateResult.Terminate)
             {
                 this.LastRun = now;

@@ -379,7 +379,7 @@ namespace Sandbox
             }
         }
 
-        /*protected override StateResult RunInternal(StateParameter parameter)
+        /*protected override StateResult InternalRun(StateParameter parameter)
         {// Generated
             return this.CurrentState switch
             {
