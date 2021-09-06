@@ -229,7 +229,11 @@ namespace BigMachines.Generator
             }
             else
             {// Other (Apps)
-                assemblyId = "_" + generator.AssemblyId.ToString("x");
+                // assemblyId = "_" + generator.AssemblyId.ToString("x");
+                if (!string.IsNullOrEmpty(generator.AssemblyName))
+                {
+                    assemblyId = "_" + generator.AssemblyName;
+                }
             }
 
             info.ModuleInitializerClass.Add("BigMachines.Generator.Generated");
