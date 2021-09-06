@@ -556,7 +556,7 @@ ModuleInitializerClass_Added:
             this.Generate_State(ssb, info);
             this.Generate_Interface(ssb, info);
             this.Generate_CreateInterface(ssb, info);
-            this.Generate_RunInternal(ssb, info);
+            this.Generate_InternalRun(ssb, info);
             this.Generate_ChangeStateInternal(ssb, info);
             this.Generate_RegisterBM(ssb, info);
 
@@ -619,7 +619,7 @@ ModuleInitializerClass_Added:
             ssb.AppendLine();
         }
 
-        internal void Generate_RunInternal(ScopingStringBuilder ssb, GeneratorInformation info)
+        internal void Generate_InternalRun(ScopingStringBuilder ssb, GeneratorInformation info)
         {
             if (this.MachineObject == null || this.StateMethodList == null)
             {
