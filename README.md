@@ -356,7 +356,7 @@ These keywords in `Machine` class are reserved for source generator.
 - `Interface`: Nested class for operating a machine.
 - `State`: enum type which represents the state of a machine.
 - `CreateInterface()`: Creates an instance of machine interface.
-- `RunInternal()`: Runs machine and process each state.
+- `InternalRun()`: Runs machine and process each state.
 - `ChangeState()`: Changes the state of a machine.
 - `GetState()`: Gets the current state of a machine.
 - `IntChangeState()`: Internally used to change the state.
