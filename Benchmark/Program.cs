@@ -37,12 +37,13 @@ namespace Benchmark
 
             var bm = new BigMachine<int>(ThreadCore.Root);
             // bm.EnableLoopChecker = false;
-            await Benchmark.Design.SimpleBench.Test(bm);
+            // await Benchmark.Design.SimpleBench.Test(bm);
 
-            DebugRun<Test.AddOnlyListBenchmark>();
+            DebugRun<Test.AsyncLocalBenchmark>();
 
             var switcher = new BenchmarkSwitcher(new[]
             {
+                typeof(Test.AsyncLocalBenchmark),
                 typeof(Test.AddOnlyListBenchmark),
                 typeof(Test.LockingBenchmark),
                 typeof(LoopCheckerBenchmark),

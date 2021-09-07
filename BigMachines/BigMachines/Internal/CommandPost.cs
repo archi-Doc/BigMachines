@@ -80,16 +80,26 @@ namespace BigMachines
             /// <param name="message">Message.</param>
             public Command(BigMachine<TIdentifier> bigMachine, CommandType type, object? channel, TIdentifier identifier, object? message)
             {
-                if (bigMachine.EnableLoopChecker && LoopChecker.Instance == null)
+                LoopChecker? checker;
+                if (bigMachine.EnableLoopChecker)
                 {// LoopChecker enabled.
-                    LoopChecker.Instance = new();
+                    checker = LoopChecker.AsyncLocalInstance.Value;
+                    if (checker == null)
+                    {
+                        checker = new();
+                        LoopChecker.AsyncLocalInstance.Value = checker;
+                    }
+                }
+                else
+                {
+                    checker = null;
                 }
 
                 this.Type = type;
                 this.Channel = channel;
                 this.Identifier = identifier;
                 this.Message = message;
-                this.LoopChecker = LoopChecker.Instance;
+                this.LoopChecker = checker;
             }
 
             public CommandType Type { get; internal set; }

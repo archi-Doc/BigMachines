@@ -66,8 +66,9 @@ namespace ConsoleApp1
             ContinuousMachine.Test(bigMachine);
 
             // Other test code.
-            GenericMachine<int>.Test(bigMachine);
+            // GenericMachine<int>.Test(bigMachine);
             // LoopMachine.Test(bigMachine);
+            LoopMachine2.Test(bigMachine);
             // SingleMachine.Test(bigMachine);
             // ServiceProviderMachine.Test(bigMachine);
 

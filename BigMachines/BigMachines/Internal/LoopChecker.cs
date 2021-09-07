@@ -14,8 +14,7 @@ namespace BigMachines
     {
         public const int InitialArray = 4;
 
-        [ThreadStatic]
-        public static LoopChecker? Instance;
+        public static AsyncLocal<LoopChecker> AsyncLocalInstance = new();
 
         public LoopChecker()
         {
@@ -52,6 +51,17 @@ namespace BigMachines
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public void RemoveRunId()
+        {
+            if (this.RunIdCount == 0)
+            {
+                throw new InvalidOperationException();
+            }
+
+            this.RunIdCount--;
+        }
+
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public void AddCommandId(uint id)
         {
             if (this.CommandIdCount >= this.CommandId.Length)
@@ -60,6 +70,17 @@ namespace BigMachines
             }
 
             this.CommandId[this.CommandIdCount++] = id;
+        }
+
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public void RemoveCommandId()
+        {
+            if (this.CommandIdCount == 0)
+            {
+                throw new InvalidOperationException();
+            }
+
+            this.CommandIdCount--;
         }
 
         internal uint[] RunId;
@@ -71,6 +92,8 @@ namespace BigMachines
         internal int CommandIdCount;
 
         public LoopChecker Clone() => new(this);
+
+        public override string ToString() => $"Run {this.RunIdCount}, Command {this.CommandIdCount}";
     }
 #pragma warning restore SA1401 // Fields should be private
 }

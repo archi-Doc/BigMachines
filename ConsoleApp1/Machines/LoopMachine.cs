@@ -36,4 +36,28 @@ namespace ConsoleApp1
             }
         }
     }
+
+    // Loop Machine2 (Task.Run)
+    [MachineObject(0x2a27235e)]
+    public partial class LoopMachine2 : Machine<int>
+    {
+        public static void Test(BigMachine<int> bigMachine)
+        {
+            var loopMachine = bigMachine.TryCreate<LoopMachine2.Interface>(0);
+            loopMachine.Command(1);
+        }
+
+        public LoopMachine2(BigMachine<int> bigMachine)
+            : base(bigMachine)
+        {
+        }
+
+        protected override void ProcessCommand(CommandPost<int>.Command command)
+        {
+            if (command.Message is int n)
+            {// LoopMachine
+                Task.Run(() => this.BigMachine.TryGet<Interface>(this.Identifier)?.Command(0));
+            }
+        }
+    }
 }
