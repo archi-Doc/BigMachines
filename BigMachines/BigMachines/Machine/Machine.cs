@@ -20,7 +20,7 @@ namespace BigMachines
     /// Represents a base class for all machine classes.<br/>
     /// </summary>
     /// <typeparam name="TIdentifier">The type of an identifier.</typeparam>
-    [TinyhandObject]
+    [TinyhandObject(ReservedKeys = 10)]
     public abstract class Machine<TIdentifier>
         where TIdentifier : notnull
     {
@@ -51,10 +51,15 @@ namespace BigMachines
         public IMachineGroup<TIdentifier> Group { get; }
 
         /// <summary>
+        /// Gets <see cref="MachineInfo{TIdentifier}"/>.
+        /// </summary>
+        public MachineInfo<TIdentifier> Info => this.Group.Info;
+
+        /// <summary>
         /// Gets or sets the identifier of this machine.<br/>
         /// TIdentifier type must have <see cref="TinyhandObjectAttribute"/>.
         /// </summary>
-        [Key(0)] // Key(0) is Machine.CurrentState
+        [Key(0)]
         public TIdentifier Identifier { get; protected set; } = default!;
 
         /// <summary>
@@ -70,41 +75,41 @@ namespace BigMachines
         protected internal int CurrentState;
 
         /// <summary>
-        /// Gets or sets the default time interval at which the machine will run.<br/>
-        /// <see cref="TimeSpan.Zero"/>: No interval execution.
-        /// </summary>
-        [Key(3)]
-        public TimeSpan DefaultTimeout { get; protected internal set; }
-
-        /// <summary>
         /// The time until the machine is executed.
         /// </summary>
-        [Key(4)]
+        [Key(3)]
         protected internal long Timeout = long.MaxValue; // TimeSpan.Ticks (for interlocked)
 
         /// <summary>
         /// Gets or sets <see cref="DateTime"/> when the machine is executed last time.
         /// </summary>
-        [Key(5)]
+        [Key(4)]
         public DateTime LastRun { get; protected internal set; }
 
         /// <summary>
         /// Gets or sets <see cref="DateTime"/> when the machine is will be executed.
         /// </summary>
-        [Key(6)]
+        [Key(5)]
         public DateTime NextRun { get; protected internal set; }
 
         /// <summary>
         /// The lifespan of this machine. When this value reaches 0, the machine is terminated.
         /// </summary>
-        [Key(7)]
+        [Key(6)]
         protected internal long Lifespan = long.MaxValue; // TimeSpan.Ticks (for interlocked)
 
         /// <summary>
         /// Gets or sets <see cref="DateTime"/> when the machine will be automatically terminated.
         /// </summary>
-        [Key(8)]
+        [Key(7)]
         public DateTime TerminationDate { get; protected internal set; } = DateTime.MaxValue;
+
+        /// <summary>
+        /// Gets or sets the default time interval at which the machine will run.<br/>
+        /// <see cref="TimeSpan.Zero"/>: No interval execution.
+        /// </summary>
+        [IgnoreMember]
+        public TimeSpan DefaultTimeout { get; protected internal set; }
 
         /// <summary>
         /// Gets or sets a value indicating whether this machine is to be serialized.
