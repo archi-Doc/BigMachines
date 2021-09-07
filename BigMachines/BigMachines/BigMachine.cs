@@ -456,10 +456,13 @@ namespace BigMachines
                         }
                         else if (y.Timeout <= 0 || y.NextRun >= now || y.RunType == RunType.NotRunning)
                         {// Screening
-                            lock (y.SyncMachine)
+                            Task.Run(() =>
                             {
-                                TryRun(y);
-                            }
+                                lock (y.SyncMachine)
+                                {
+                                    TryRun(y);
+                                }
+                            }); // taskrun
                         }
                     }
                 }
