@@ -37,7 +37,7 @@ namespace BigMachines
 
             this.Status = new();
             this.Core = new ThreadCore(parent, this.MainLoop, false);
-            this.CommandPost = new(this, this.DistributeCommand, parent);
+            this.CommandPost = new(this, this.DistributeCommand);
             this.ServiceProvider = serviceProvider;
             this.Continuous = new(this);
 
@@ -312,13 +312,31 @@ namespace BigMachines
 
         internal ThreadsafeTypeKeyHashTable<IMachineGroup<TIdentifier>> MachineTypeToGroup { get; } = new();
 
-        private void DistributeCommand(CommandPost<TIdentifier>.Command command)
+        private Task DistributeCommand(CommandPost<TIdentifier>.Command? command, List<CommandPost<TIdentifier>.Command>? commandList)
         {
-            if (command.Channel is IMachineGroup<TIdentifier> group &&
-                group.TryGetMachine(command.Identifier, out var machine))
+            return Task.Run(() =>
             {
-                machine.DistributeCommand(group, command);
-            }
+                if (command != null)
+                {
+                    if (command.Channel is IMachineGroup<TIdentifier> group && group.TryGetMachine(command.Identifier, out var machine))
+                    {
+                        machine.DistributeCommand(group, command);
+                        // command.Type = CommandPost<TIdentifier>.CommandType.Responded;
+                    }
+                }
+
+                if (commandList != null)
+                {
+                    foreach (var x in commandList)
+                    {
+                        if (x.Channel is IMachineGroup<TIdentifier> group && group.TryGetMachine(x.Identifier, out var machine))
+                        {
+                            machine.DistributeCommand(group, x);
+                            // x.Type = CommandPost<TIdentifier>.CommandType.Responded;
+                        }
+                    }
+                }
+            });
         }
 
         private Machine<TIdentifier> CreateMachine(IMachineGroup<TIdentifier> group)

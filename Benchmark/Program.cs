@@ -39,14 +39,6 @@ namespace Benchmark
             // bm.EnableLoopChecker = false;
             await Benchmark.Design.SimpleBench.Test(bm);
 
-            var cp = new CommandPost<int>(bm, x =>
-            {
-                if (x.Message is int i)
-                {
-                    x.Response = i + 2;
-                }
-            }, ThreadCore.Root);
-
             DebugRun<Test.AddOnlyListBenchmark>();
 
             var switcher = new BenchmarkSwitcher(new[]

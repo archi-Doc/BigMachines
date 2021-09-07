@@ -1,14 +1,8 @@
 ﻿// Copyright (c) All contributors. All rights reserved. Licensed under the MIT license.
 
 using System;
-using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Diagnostics;
-using System.Linq;
-using System.Runtime.CompilerServices;
-using System.Threading;
-using System.Threading.Tasks;
-using Arc.Threading;
 using Tinyhand;
 
 namespace BigMachines
@@ -37,10 +31,10 @@ namespace BigMachines
             /// </summary>
             CommandTwoWay,
 
-            /// <summary>
+            /* /// <summary>
             /// Responded. Used internally.
             /// </summary>
-            Responded,
+            Responded,*/
 
             /// <summary>
             /// Changing state. Used internally.
@@ -67,7 +61,9 @@ namespace BigMachines
         /// Defines the type of delegate used to receive and process commands.
         /// </summary>
         /// <param name="command">Command.</param>
-        public delegate void CommandDelegate(Command command);
+        /// <param name="commandList">Command list.</param>
+        /// <returns>A <see cref="Task"/> representing the asynchronous operation.</returns>
+        public delegate Task CommandDelegate(Command? command, List<Command>? commandList);
 
         /// <summary>
         /// Command class contains command information.
@@ -114,15 +110,10 @@ namespace BigMachines
         /// </summary>
         /// <param name="bigMachine">BigMachine.</param>
         /// <param name="method">CommandDelegate.</param>
-        /// <param name="parent">The parent.</param>
-        /// <param name="millisecondInterval">The number of milliseconds to wait for each interval.</param>
-        public CommandPost(BigMachine<TIdentifier> bigMachine, CommandDelegate method, ThreadCoreBase parent, int millisecondInterval = 10)
+        public CommandPost(BigMachine<TIdentifier> bigMachine, CommandDelegate method)
         {
             this.BigMachine = bigMachine;
             this.commandDelegate = method;
-            this.MillisecondInterval = millisecondInterval;
-            this.Core = new(parent, this.MainLoop);
-            this.Core.Thread.Priority = ThreadPriority.AboveNormal;
         }
 
         /// <summary>
@@ -136,9 +127,8 @@ namespace BigMachines
         /// <param name="message">The message to send.<br/>Must be serializable by Tinyhand because the message will be cloned and passed to the receiver.</param>
         public void Send<TMessage>(CommandType commandType, object? channel, TIdentifier identifier, TMessage message)
         {
-            var m = new Command(this.BigMachine, commandType, channel, identifier, TinyhandSerializer.Clone(message));
-            this.concurrentQueue.Enqueue(m);
-            this.commandAdded.Set();
+            var c = new Command(this.BigMachine, commandType, channel, identifier, TinyhandSerializer.Clone(message));
+            this.commandDelegate(c, null);
         }
 
         public void SendGroup<TMessage>(CommandType commandType, IMachineGroup<TIdentifier> group, IEnumerable<TIdentifier> identifiers, TMessage message) => this.SendGroups(commandType, Enumerable.Repeat(group, identifiers.Count()), identifiers, message);
@@ -146,15 +136,16 @@ namespace BigMachines
         public void SendGroups<TMessage>(CommandType commandType, IEnumerable<IMachineGroup<TIdentifier>> groups, IEnumerable<TIdentifier> identifiers, TMessage message)
         {
             var messageClone = TinyhandSerializer.Clone(message);
+            var list = new List<Command>();
             var g = groups.GetEnumerator();
             var i = identifiers.GetEnumerator();
             while (g.MoveNext() && i.MoveNext())
             {
-                var m = new Command(this.BigMachine, commandType, g.Current, i.Current, messageClone);
-                this.concurrentQueue.Enqueue(m);
+                var c = new Command(this.BigMachine, commandType, g.Current, i.Current, messageClone);
+                list.Add(c);
             }
 
-            this.commandAdded.Set();
+            this.commandDelegate(null, list);
         }
 
         public TResult? SendTwoWay<TMessage, TResult>(CommandType commandType, object? channel, TIdentifier identifier, TMessage message, int millisecondTimeout = 100)
@@ -164,60 +155,29 @@ namespace BigMachines
                 millisecondTimeout = MaxMillisecondTimeout;
             }
 
-            var end = Stopwatch.GetTimestamp() + (long)((double)millisecondTimeout / 1000d * (double)Stopwatch.Frequency);
-
-            var m = new Command(this.BigMachine, commandType, channel, identifier, TinyhandSerializer.Clone(message));
-            this.concurrentQueue.Enqueue(m);
-
-            var taskFlag = Thread.CurrentThread == this.Core.Thread;
-            if (!taskFlag)
-            {
-                this.commandAdded.Set();
-            }
+            var c = new Command(this.BigMachine, commandType, channel, identifier, TinyhandSerializer.Clone(message));
+            var task = this.commandDelegate(c, null);
 
             if (commandType == CommandType.CommandTwoWay ||
                 commandType == CommandType.StateTwoWay ||
                 commandType == CommandType.RunTwoWay)
-            {
-                if (taskFlag)
-                {// Another thread required.
-                    Task.Run(this.MainProcess);
-                }
-
+            {// TwoWay
                 try
                 {
-                    while (true)
-                    {
-                        this.commandResponded.Wait(this.MillisecondInterval, this.Core.CancellationToken);
-                        if (m.Type == CommandType.Responded)
-                        {
-                            this.commandResponded.Reset();
-                            if (m.Response is TResult result)
-                            {
-                                return result;
-                            }
-                            else
-                            {
-                                return default;
-                            }
-                        }
-
-                        if (Stopwatch.GetTimestamp() >= end)
-                        {// Timeout
-                            Console.WriteLine("Timeout");
-                            return default;
+                    if (task.Wait(millisecondTimeout, this.BigMachine.Core.CancellationToken))
+                    {// Completed
+                        if (c.Response is TResult result)
+                        {// Valid result
+                            return result;
                         }
                     }
                 }
                 catch
                 {
-                    return default;
                 }
             }
-            else
-            {
-                return default;
-            }
+
+            return default;
         }
 
         public KeyValuePair<TIdentifier, TResult?>[] SendGroupTwoWay<TMessage, TResult>(CommandType commandType, IMachineGroup<TIdentifier> group, IEnumerable<TIdentifier> identifiers, TMessage message, int millisecondTimeout = 100) => this.SendGroupsTwoWay<TMessage, TResult>(commandType, Enumerable.Repeat(group, identifiers.Count()), identifiers, message, millisecondTimeout);
@@ -229,130 +189,54 @@ namespace BigMachines
                 millisecondTimeout = MaxMillisecondTimeout;
             }
 
-            var end = Stopwatch.GetTimestamp() + (long)((double)millisecondTimeout / 1000d * (double)Stopwatch.Frequency);
-
-            var commandQueue = new Queue<Command>();
             var messageClone = TinyhandSerializer.Clone(message);
+            var list = new List<Command>();
             var g = groups.GetEnumerator();
             var i = identifiers.GetEnumerator();
             while (g.MoveNext() && i.MoveNext())
             {
-                var m = new Command(this.BigMachine, commandType, g.Current, i.Current, messageClone);
-                commandQueue.Enqueue(m);
-                this.concurrentQueue.Enqueue(m);
+                var c = new Command(this.BigMachine, commandType, g.Current, i.Current, messageClone);
+                list.Add(c);
             }
 
-            var taskFlag = Thread.CurrentThread == this.Core.Thread;
-            if (!taskFlag)
-            {
-                this.commandAdded.Set();
-            }
+            var task = this.commandDelegate(null, list);
 
-            var responseList = new KeyValuePair<TIdentifier, TResult?>[commandQueue.Count];
-            var responseNumber = 0;
             if (commandType == CommandType.CommandTwoWay ||
                 commandType == CommandType.StateTwoWay ||
                 commandType == CommandType.RunTwoWay)
-            {
-                if (taskFlag)
-                {// Another thread required.
-                    Task.Run(this.MainProcess);
-                }
-
+            {// TwoWay
                 try
                 {
-                    while (commandQueue.Count > 0)
-                    {
-                        this.commandResponded.Wait(this.MillisecondInterval, this.Core.CancellationToken);
-                        var flag = false;
-                        while (commandQueue.TryPeek(out var c))
+                    if (task.Wait(millisecondTimeout, this.BigMachine.Core.CancellationToken))
+                    {// Completed
+                        var array = new KeyValuePair<TIdentifier, TResult?>[list.Count];
+                        var n = 0;
+                        foreach (var x in list)
                         {
-                            if (c.Type == CommandType.Responded)
-                            {
-                                flag = true;
-                                commandQueue.Dequeue();
-                                if (c.Response is TResult result)
-                                {
-                                    responseList[responseNumber++] = new(c.Identifier, result);
-                                }
-                            }
-                            else
-                            {
-                                break;
+                            if (x.Response is TResult result)
+                            {// Valid result
+                                array[n++] = new(x.Identifier, result);
                             }
                         }
 
-                        if (flag)
+                        if (array.Length != n)
                         {
-                            this.commandResponded.Reset();
+                            Array.Resize(ref array, n);
                         }
 
-                        if (Stopwatch.GetTimestamp() >= end)
-                        {// Timeout
-                            goto SendGroupTwoWay_Exit;
-                        }
+                        return array;
                     }
-
-SendGroupTwoWay_Exit:
-                    if (responseList.Length != responseNumber)
-                    {
-                        Array.Resize(ref responseList, responseNumber);
-                    }
-
-                    return responseList;
                 }
                 catch
                 {
-                    return Array.Empty<KeyValuePair<TIdentifier, TResult?>>();
                 }
             }
-            else
-            {
-                return Array.Empty<KeyValuePair<TIdentifier, TResult?>>();
-            }
+
+            return Array.Empty<KeyValuePair<TIdentifier, TResult?>>();
         }
 
         public BigMachine<TIdentifier> BigMachine { get; }
 
-        public int MillisecondInterval { get; }
-
-        public ThreadCore Core { get; }
-
-        private void MainLoop(object? parameter)
-        {
-            var core = (ThreadCore)parameter!;
-            while (!core.IsTerminated)
-            {
-                try
-                {
-                    this.commandAdded.Wait(this.MillisecondInterval, core.CancellationToken);
-                }
-                catch
-                {
-                    break;
-                }
-
-                this.commandAdded.Reset();
-
-                this.MainProcess();
-            }
-        }
-
-        private void MainProcess()
-        {
-            while (this.concurrentQueue.TryDequeue(out var command))
-            {
-                    var type = command.Type;
-                    this.commandDelegate(command);
-                    command.Type = CommandType.Responded;
-
-                    this.commandResponded.Set();
-            }
-        }
-
         private CommandDelegate commandDelegate;
-        private ManualResetEventSlim commandAdded = new(false);
-        private ManualResetEventSlim commandResponded = new(false);
-        private ConcurrentQueue<Command> concurrentQueue = new();
     }
 }
