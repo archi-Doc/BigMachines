@@ -707,7 +707,7 @@ ModuleInitializerClass_Added:
                 using (var scope2 = ssb.ScopeBrace("if (canExit && canEnter)"))
                 {
                     ssb.AppendLine($"this.CurrentState = state;");
-                    ssb.AppendLine("this.RequireRerun = rerun;");
+                    ssb.AppendLine("this.RequestRerun = rerun;");
                     ssb.AppendLine("return true;");
                 }
 

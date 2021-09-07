@@ -106,13 +106,15 @@ namespace BigMachines
 
         /// <summary>
         /// Gets or sets the default time interval at which the machine will run.<br/>
-        /// <see cref="TimeSpan.Zero"/>: No interval execution.
+        /// <see cref="TimeSpan.Zero"/>: No interval execution.<br/>
+        /// This property is NOT serialization target.
         /// </summary>
         [IgnoreMember]
         public TimeSpan DefaultTimeout { get; protected internal set; }
 
         /// <summary>
-        /// Gets or sets a value indicating whether this machine is to be serialized.
+        /// Gets or sets a value indicating whether this machine is to be serialized.<br/>
+        /// This property is NOT serialization target.
         /// </summary>
         [IgnoreMember]
         public bool IsSerializable { get; protected set; } = false;
@@ -205,7 +207,7 @@ namespace BigMachines
         internal void TerminateInternal()
         {
             this.Status = MachineStatus.Terminated;
-            if (this.Group.Info.Continuous)
+            if (this.Info.Continuous)
             {
                 this.BigMachine.Continuous.RemoveMachine(this);
             }
@@ -226,7 +228,7 @@ namespace BigMachines
         /// <summary>
         /// Gets or sets a value indicating whether the machine is going to re-run.
         /// </summary>
-        protected internal bool RequireRerun { get; set; }
+        protected internal bool RequestRerun { get; set; }
 
         /// <summary>
         /// Expected to be implemented on the user side.<br/>
@@ -295,7 +297,7 @@ namespace BigMachines
             this.RunType = runType;
 
 RerunLoop:
-            this.RequireRerun = false;
+            this.RequestRerun = false;
             var result = this.InternalRun(new(runType));
             if (result == StateResult.Terminate)
             {
@@ -304,7 +306,7 @@ RerunLoop:
                 this.Group.TryRemoveMachine(this.Identifier);
                 return result;
             }
-            else if (this.RequireRerun)
+            else if (this.RequestRerun)
             {
                 goto RerunLoop;
             }
@@ -322,7 +324,7 @@ RerunLoop:
         /// <param name="absoluteDateTime">Set true to specify the next execution time by adding the current time and timeout.</param>
         protected void SetTimeout(TimeSpan timeSpan, bool absoluteDateTime = false)
         {
-            this.RequireRerun = false;
+            this.RequestRerun = false;
             if (timeSpan.Ticks < 0)
             {
                 Volatile.Write(ref this.Timeout, long.MaxValue);
