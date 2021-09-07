@@ -31,9 +31,9 @@ namespace Benchmark
             // await Benchmark.Design.CommandDesign4.Test();
             // await Benchmark.Design.CommandDesign5.Test();
 
-            await Benchmark.Design.CommandDesign6.Test();
+            /*await Benchmark.Design.CommandDesign6.Test();
             await Benchmark.Design.CommandDesign7.Test();
-            await Benchmark.Design.CommandDesign8.Test();
+            await Benchmark.Design.CommandDesign8.Test();*/
 
             var bm = new BigMachine<int>(ThreadCore.Root);
             // bm.EnableLoopChecker = false;
@@ -47,10 +47,11 @@ namespace Benchmark
                 }
             }, ThreadCore.Root);
 
-            DebugRun<Test.LockingBenchmark>();
+            DebugRun<Test.AddOnlyListBenchmark>();
 
             var switcher = new BenchmarkSwitcher(new[]
             {
+                typeof(Test.AddOnlyListBenchmark),
                 typeof(Test.LockingBenchmark),
                 typeof(LoopCheckerBenchmark),
                 typeof(Design.ConcurrentQueueBenchmark),
