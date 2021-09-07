@@ -4,6 +4,7 @@ using System;
 using System.Buffers;
 using System.Collections.Generic;
 using System.Collections.Immutable;
+using System.Globalization;
 using System.Linq;
 using System.Reflection;
 using System.Text;
@@ -15,6 +16,95 @@ namespace Arc.Visceral
 {
     public static class VisceralHelper
     {
+        public static bool IsValidIdentifier(string identifier)
+        {
+            var span = identifier.AsSpan();
+            if (span.Length == 0)
+            {
+                return false;
+            }
+
+            if (IsValidIdentifierCharacter(span[0], true) == false)
+            {
+                return false;
+            }
+
+            for (var n = 1; n < span.Length; n++)
+            {
+                if (IsValidIdentifierCharacter(span[n], false) == false)
+                {
+                    return false;
+                }
+            }
+
+            return true;
+        }
+
+        public static bool IsValidIdentifierCharacter(char c, bool first = false)
+        {
+            if (first && c == '_')
+            {// first '_'
+                return true;
+            }
+
+            var cat = char.GetUnicodeCategory(c);
+
+            if (cat == UnicodeCategory.UppercaseLetter ||
+                cat == UnicodeCategory.LowercaseLetter ||
+                cat == UnicodeCategory.TitlecaseLetter ||
+                cat == UnicodeCategory.ModifierLetter ||
+                cat == UnicodeCategory.OtherLetter ||
+                cat == UnicodeCategory.LetterNumber)
+            {// letter-character
+                return true;
+            }
+
+            if (first)
+            {
+                if (c == '_')
+                {
+                    return true;
+                }
+            }
+            else
+            {
+                if (cat == UnicodeCategory.DecimalDigitNumber ||
+                cat == UnicodeCategory.ConnectorPunctuation ||
+                cat == UnicodeCategory.NonSpacingMark ||
+                cat == UnicodeCategory.SpacingCombiningMark ||
+                cat == UnicodeCategory.Format)
+                {
+                    return true;
+                }
+            }
+
+            return false;
+        }
+
+        public static string AssemblyNameToIdentifier(string name)
+        {
+            var span = new Span<char>(name.ToCharArray());
+            var changed = false;
+
+            for (var n = 0; n < name.Length; n++)
+            {
+                if (!IsValidIdentifierCharacter(span[n], n == 0))
+                {// Replace invalid character with '_' (though not a perfect solution)
+                    span[n] = '_';
+                    changed = true;
+                }
+            }
+
+            if (!changed)
+            {
+                return name;
+            }
+            else
+            {
+                return span.ToString();
+            }
+        }
+
         public static Type? GetUnderlyingType(this MemberInfo memberInfo) => memberInfo.MemberType switch
         {
             MemberTypes.Constructor => typeof(void), // ((ConstructorInfo)memberInfo)
