@@ -160,7 +160,7 @@ namespace BigMachines
                     checker.AddRunId(this.TypeId);
                     LoopChecker.AsyncLocalInstance.Value = checker;
 
-                    Console.WriteLine("run " + checker);
+                    // Console.WriteLine("run " + checker);
                 }
 
                 lock (this.SyncMachine)
@@ -194,7 +194,7 @@ namespace BigMachines
                     checker.AddCommandId(this.TypeId);
                     LoopChecker.AsyncLocalInstance.Value = checker;
 
-                    Console.WriteLine("command " + checker);
+                    // Console.WriteLine("command " + checker);
                 }
 
                 // lock (this.SyncMachine) // Not inside lock statement.
