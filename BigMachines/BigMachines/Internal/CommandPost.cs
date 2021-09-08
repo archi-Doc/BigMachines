@@ -37,6 +37,11 @@ namespace BigMachines
             Responded,*/
 
             /// <summary>
+            /// Exception. Used internally.
+            /// </summary>
+            Exception,
+
+            /// <summary>
             /// Changing state. Used internally.
             /// </summary>
             State,
@@ -80,14 +85,14 @@ namespace BigMachines
             /// <param name="message">Message.</param>
             public Command(BigMachine<TIdentifier> bigMachine, CommandType type, object? channel, TIdentifier identifier, object? message)
             {
-                LoopChecker? checker;
+                LoopCheckerObsolete? checker;
                 if (bigMachine.EnableLoopChecker)
                 {// LoopChecker enabled.
-                    checker = LoopChecker.AsyncLocalInstance.Value;
+                    checker = LoopCheckerObsolete.AsyncLocalInstance.Value;
                     if (checker == null)
                     {
                         checker = new();
-                        LoopChecker.AsyncLocalInstance.Value = checker;
+                        LoopCheckerObsolete.AsyncLocalInstance.Value = checker;
                     }
                 }
                 else
@@ -112,7 +117,15 @@ namespace BigMachines
 
             public object? Response { get; set; }
 
-            internal LoopChecker? LoopChecker { get; }
+            public Exception? GetException() => this.Type == CommandType.Exception ? (this.Response as Exception) : null;
+
+            internal LoopCheckerObsolete? LoopChecker { get; }
+
+            internal void SetException(Exception ex)
+            {
+                this.Type = CommandType.Exception;
+                this.Response = ex;
+            }
         }
 
         /// <summary>
@@ -172,19 +185,27 @@ namespace BigMachines
                 commandType == CommandType.StateTwoWay ||
                 commandType == CommandType.RunTwoWay)
             {// TwoWay
+                bool completed = false;
                 try
                 {
-                    if (task.Wait(millisecondTimeout, this.BigMachine.Core.CancellationToken))
-                    {// Completed
-                        if (c.Response is TResult result)
-                        {// Valid result
-                            return result;
-                        }
-                    }
+                    completed = task.Wait(millisecondTimeout, this.BigMachine.Core.CancellationToken);
                 }
                 catch
                 {
                 }
+
+                if (completed)
+                {// Completed
+                    if (c.GetException() is { } ex)
+                    {
+                        throw ex;
+                    }
+                    else if (c.Response is TResult result)
+                    {// Valid result
+                        return result;
+                    }
+                }
+
             }
 
             return default;

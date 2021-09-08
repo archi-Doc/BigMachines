@@ -43,7 +43,7 @@ namespace BigMachines
                 {
                     lock (machine.SyncMachine)
                     {
-                        if (machine.RunMachine(RunType.Continuous, DateTime.UtcNow) == StateResult.Terminate)
+                        if (machine.RunMachine(null, RunType.Continuous, DateTime.UtcNow) == StateResult.Terminate)
                         {// Terminated
                             break;
                         }

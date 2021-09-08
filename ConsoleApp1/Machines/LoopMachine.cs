@@ -16,7 +16,7 @@ namespace ConsoleApp1
         public static void Test(BigMachine<int> bigMachine)
         {
             var loopMachine = bigMachine.TryCreate<LoopMachine.Interface>(0);
-            loopMachine.Command(1);
+            loopMachine.CommandTwoWay<int, int>(1);
         }
 
         public LoopMachine(BigMachine<int> bigMachine)
@@ -28,7 +28,14 @@ namespace ConsoleApp1
         {
             if (command.Message is int n)
             {// LoopMachine
-                this.BigMachine.TryGet<Interface>(this.Identifier)?.Command(0);
+                try
+                {
+                    this.BigMachine.TryGet<Interface>(this.Identifier)?.CommandTwoWay<int, int>(0);
+                }
+                catch (Exception ex)
+                {
+                    Console.WriteLine(ex);
+                }
             }
             else if (command.Message is string st)
             {// LoopMachine -> TestMachine

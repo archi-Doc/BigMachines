@@ -314,7 +314,7 @@ namespace BigMachines
 
         private Task DistributeCommand(CommandPost<TIdentifier>.Command? command, List<CommandPost<TIdentifier>.Command>? commandList)
         {
-            return Task.Run(() =>
+            return Task.Run(() => // taskrun
             {
                 if (command != null)
                 {
@@ -337,6 +337,14 @@ namespace BigMachines
                     }
                 }
             });
+            /*.ContinueWith(
+                t =>
+                {
+                    if (t.IsFaulted && t.Exception != null)
+                    {
+                        throw t.Exception;
+                    }
+                }, TaskContinuationOptions.OnlyOnFaulted);*/
         }
 
         private Machine<TIdentifier> CreateMachine(IMachineGroup<TIdentifier> group)
@@ -474,13 +482,13 @@ namespace BigMachines
                         }
                         else if (y.Timeout <= 0 || y.NextRun >= now || y.RunType == RunType.NotRunning)
                         {// Screening
-                            Task.Run(() =>
+                            Task.Run(() => // taskrun
                             {
                                 lock (y.SyncMachine)
                                 {
                                     TryRun(y);
                                 }
-                            }); // taskrun
+                            });
                         }
                     }
                 }
@@ -515,7 +523,7 @@ namespace BigMachines
                         return;
                     }
 
-                    machine.RunMachine(RunType.Timer, now);
+                    machine.RunMachine(null, RunType.Timer, now);
                 }
             }
 

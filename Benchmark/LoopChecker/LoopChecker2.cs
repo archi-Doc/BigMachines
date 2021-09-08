@@ -143,6 +143,83 @@ public class LoopChecker2
         return false;
     }
 
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public bool FindRunId(int id)
+    {
+        if (this.RunIdCount == 0)
+        {
+            return false;
+        }
+        else if (this.RunIdCount == 1)
+        {
+            return this.RunId0 == id;
+        }
+        else if (this.RunIdCount == 2)
+        {
+            return this.RunId0 == id || this.RunId1 == id;
+        }
+        else
+        {
+            for (var n = 0; n < this.RunIdCount; n++)
+            {
+                if (this.RunId![n] == id)
+                {
+                    return true;
+                }
+            }
+        }
+
+        return false;
+    }
+
+    public IEnumerable<uint> EnumerateCommandId()
+    {
+        if (this.CommandIdCount == 0)
+        {
+            yield break;
+        }
+        else if (this.CommandIdCount == 1)
+        {
+            yield return this.CommandId0;
+        }
+        else if (this.CommandIdCount == 2)
+        {
+            yield return this.CommandId0;
+            yield return this.CommandId1;
+        }
+        else
+        {
+            for (var n = 0; n < this.CommandIdCount; n++)
+            {
+                yield return this.CommandId![n];
+            }
+        }
+    }
+
+    public IEnumerable<uint> EnumerateRunId()
+    {
+        if (this.RunIdCount == 0)
+        {
+            yield break;
+        }
+        else if (this.RunIdCount == 1)
+        {
+            yield return this.RunId0;
+        }
+        else if (this.RunIdCount == 2)
+        {
+            yield return this.RunId0;
+            yield return this.RunId1;
+        }
+        else
+        {
+            for (var n = 0; n < this.RunIdCount; n++)
+            {
+                yield return this.RunId![n];
+            }
+        }
+    }
+
     internal int RunIdCount;
     internal uint RunId0;
     internal uint RunId1;
@@ -157,4 +234,5 @@ public class LoopChecker2
 
     public override string ToString() => $"Run {this.RunIdCount}, Command {this.CommandIdCount}";
 }
+
 #pragma warning restore SA1401 // Fields should be private

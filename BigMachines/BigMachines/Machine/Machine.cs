@@ -147,25 +147,22 @@ namespace BigMachines
             {// Run
                 if (command.LoopChecker is { } checker)
                 {
-                    for (var n = 0; n < checker.RunIdCount; n++)
+                    if (checker.FindRunId(this.TypeId))
                     {
-                        if (checker.RunId[n] == this.TypeId)
-                        {
-                            var s = string.Join('-', checker.CommandId.Take(checker.CommandIdCount).Select(x => this.BigMachine.GetMachineInfoFromTypeId(x)?.MachineType.Name));
-                            throw new InvalidOperationException($"Run loop detected ({s}).");
-                        }
+                        var s = string.Join('-', checker.EnumerateRunId().Take(checker.CommandIdCount).Select(x => this.BigMachine.GetMachineInfoFromTypeId(x)?.MachineType.Name));
+                        throw new InvalidOperationException($"Run loop detected ({s}).");
                     }
 
                     checker = checker.Clone();
                     checker.AddRunId(this.TypeId);
-                    LoopChecker.AsyncLocalInstance.Value = checker;
+                    LoopCheckerObsolete.AsyncLocalInstance.Value = checker;
 
                     // Console.WriteLine("run " + checker);
                 }
 
                 lock (this.SyncMachine)
                 {
-                    command.Response = this.RunMachine(RunType.Manual, DateTime.UtcNow);
+                    this.RunMachine(command, RunType.Manual, DateTime.UtcNow);
                 }
             }
             else if ((command.Type == CommandPost<TIdentifier>.CommandType.State ||
@@ -181,18 +178,17 @@ namespace BigMachines
             {// Command
                 if (command.LoopChecker is { } checker)
                 {
-                    for (var n = 0; n < checker.CommandIdCount; n++)
+                    if (checker.FindCommandId(this.TypeId))
                     {
-                        if (checker.CommandId[n] == this.TypeId)
-                        {
-                            var s = string.Join('-', checker.CommandId.Take(checker.CommandIdCount).Select(x => this.BigMachine.GetMachineInfoFromTypeId(x)?.MachineType.Name));
-                            throw new InvalidOperationException($"Command loop detected ({s}).");
-                        }
+                        var s = string.Join('-', checker.EnumerateCommandId().Take(checker.CommandIdCount).Select(x => this.BigMachine.GetMachineInfoFromTypeId(x)?.MachineType.Name));
+                        command.SetException(new InvalidOperationException($"Command loop detected ({s})."));
+                        return false;
+                        // throw new InvalidOperationException($"Command loop detected ({s}).");
                     }
 
                     checker = checker.Clone();
                     checker.AddCommandId(this.TypeId);
-                    LoopChecker.AsyncLocalInstance.Value = checker;
+                    LoopCheckerObsolete.AsyncLocalInstance.Value = checker;
 
                     // Console.WriteLine("command " + checker);
                 }
@@ -295,16 +291,28 @@ namespace BigMachines
         /// Run the machine.<br/>
         /// This code is inside 'lock (this.SyncMachine) {}'.
         /// </summary>
+        /// <param name="command">Command.</param>
         /// <param name="runType">A trigger of the machine running.</param>
         /// <param name="now">Current time.</param>
         /// <returns>true: The machine is terminated.</returns>
-        protected internal StateResult RunMachine(RunType runType, DateTime now)
+        protected internal StateResult RunMachine(CommandPost<TIdentifier>.Command? command, RunType runType, DateTime now)
         {// Called: Machine.DistributeCommand(), BigMachine.MainLoop()
             this.RunType = runType;
 
 RerunLoop:
+            StateResult result;
             this.RequestRerun = false;
-            var result = this.InternalRun(new(runType));
+
+            try
+            {
+                result = this.InternalRun(new(runType));
+            }
+            catch (Exception ex)
+            {
+                result = StateResult.Terminate;
+                command?.SetException(ex);
+            }
+
             if (result == StateResult.Terminate)
             {
                 this.LastRun = now;

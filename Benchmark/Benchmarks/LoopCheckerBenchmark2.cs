@@ -9,7 +9,6 @@ using System.Linq;
 using System.Linq.Expressions;
 using System.Reflection;
 using BenchmarkDotNet.Attributes;
-using BigMachines;
 
 namespace Benchmark.Test
 {

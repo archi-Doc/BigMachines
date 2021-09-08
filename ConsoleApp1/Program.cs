@@ -29,6 +29,11 @@ namespace ConsoleApp1
                 ThreadCore.Root.Terminate(); // Send a termination signal to the root.
             };
 
+            /*TaskScheduler.UnobservedTaskException += (sender, e) =>
+            {
+                Console.WriteLine(e.Exception);
+            };*/
+
             await Test();
             // await Test2();
 
@@ -63,12 +68,12 @@ namespace ConsoleApp1
 
             // PassiveMachine.Test(bigMachine);
             // IntermittentMachine.Test(bigMachine);
-            ContinuousMachine.Test(bigMachine);
+            // ContinuousMachine.Test(bigMachine);
 
             // Other test code.
-            // GenericMachine<int>.Test(bigMachine);
-            // LoopMachine.Test(bigMachine);
-            LoopMachine2.Test(bigMachine);
+            GenericMachine<int>.Test(bigMachine);
+            LoopMachine.Test(bigMachine);
+            // LoopMachine2.Test(bigMachine);
             // SingleMachine.Test(bigMachine);
             // ServiceProviderMachine.Test(bigMachine);
 
