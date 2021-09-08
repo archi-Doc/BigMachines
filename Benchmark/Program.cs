@@ -39,7 +39,7 @@ namespace Benchmark
             // bm.EnableLoopChecker = false;
             // await Benchmark.Design.SimpleBench.Test(bm);
 
-            DebugRun<Test.AsyncLocalBenchmark>();
+            DebugRun<LoopCheckerBenchmark>();
 
             var switcher = new BenchmarkSwitcher(new[]
             {
