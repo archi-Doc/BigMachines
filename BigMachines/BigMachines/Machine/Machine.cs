@@ -181,9 +181,9 @@ namespace BigMachines
                     if (checker.FindCommandId(this.TypeId))
                     {
                         var s = string.Join('-', checker.EnumerateCommandId().Take(checker.CommandIdCount).Select(x => this.BigMachine.GetMachineInfoFromTypeId(x)?.MachineType.Name));
-                        command.SetException(new InvalidOperationException($"Command loop detected ({s})."));
-                        return false;
-                        // throw new InvalidOperationException($"Command loop detected ({s}).");
+                        // command.SetException(new InvalidOperationException($"Command loop detected ({s})."));
+                        // return false;
+                        throw new InvalidOperationException($"Command loop detected ({s}).");
                     }
 
                     checker = checker.Clone();

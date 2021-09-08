@@ -192,6 +192,7 @@ namespace BigMachines
                 }
                 catch
                 {
+                    throw;
                 }
 
                 if (completed)

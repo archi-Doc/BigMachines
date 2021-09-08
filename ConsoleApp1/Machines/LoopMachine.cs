@@ -28,14 +28,15 @@ namespace ConsoleApp1
         {
             if (command.Message is int n)
             {// LoopMachine
-                try
+                this.BigMachine.TryGet<Interface>(this.Identifier)?.CommandTwoWay<int, int>(0);
+                /*try
                 {
                     this.BigMachine.TryGet<Interface>(this.Identifier)?.CommandTwoWay<int, int>(0);
                 }
                 catch (Exception ex)
                 {
                     Console.WriteLine(ex);
-                }
+                }*/
             }
             else if (command.Message is string st)
             {// LoopMachine -> TestMachine
