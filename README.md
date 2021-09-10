@@ -45,61 +45,60 @@ using System.Threading.Tasks;
 using Arc.Threading;
 using BigMachines;
 
-namespace QuickStart
+namespace QuickStart;
+
+[MachineObject(0)] // Annotate MachineObject and set Machine type id (unique number).
+public partial class TestMachine : Machine<int> // Inherit Machine<TIdentifier> class. The type of an identifier is int.
 {
-    [MachineObject(0)] // Annotate MachineObject and set Machine type id (unique number).
-    public partial class TestMachine : Machine<int> // Inherit Machine<TIdentifier> class. The type of an identifier is int.
+    public TestMachine(BigMachine<int> bigMachine)
+        : base(bigMachine)
     {
-        public TestMachine(BigMachine<int> bigMachine)
-            : base(bigMachine)
-        {
-            this.DefaultTimeout = TimeSpan.FromSeconds(1); // Default time interval for machine execution.
-            this.SetLifespan(TimeSpan.FromSeconds(5)); // Time until the machine automatically terminates.
-        }
-
-        public int Count { get; set; }
-
-        [StateMethod(0)] // Annotate StateMethod attribute and set state method id (0 for default state).
-        protected StateResult Initial(StateParameter parameter) // The name of method becomes the state name.
-        {// This code is inside 'lock (this.SyncMachine) {}'.
-            Console.WriteLine($"TestMachine {this.Identifier}: Initial");
-            this.ChangeState(TestMachine.State.One); // Change to state One.
-            return StateResult.Continue; // Continue (StateResult.Terminate to terminate machine).
-        }
-
-        [StateMethod(0x6015f7a7)] // State id can be a random number.
-        protected StateResult One(StateParameter parameter)
-        {
-            Console.WriteLine($"TestMachine {this.Identifier}: One - {this.Count++}");
-            return StateResult.Continue;
-        }
-
-        protected override void OnTerminated()
-        {
-            Console.WriteLine($"TestMachine {this.Identifier}: Terminated");
-            ThreadCore.Root.Terminate(); // Send a termination signal to the root.
-        }
+        this.DefaultTimeout = TimeSpan.FromSeconds(1); // Default time interval for machine execution.
+        this.SetLifespan(TimeSpan.FromSeconds(5)); // Time until the machine automatically terminates.
     }
 
-    public class Program
+    public int Count { get; set; }
+
+    [StateMethod(0)] // Annotate StateMethod attribute and set state method id (0 for default state).
+    protected StateResult Initial(StateParameter parameter) // The name of method becomes the state name.
+    {// This code is inside 'lock (this.SyncMachine) {}'.
+        Console.WriteLine($"TestMachine {this.Identifier}: Initial");
+        this.ChangeState(TestMachine.State.One); // Change to state One.
+        return StateResult.Continue; // Continue (StateResult.Terminate to terminate machine).
+    }
+
+    [StateMethod(0x6015f7a7)] // State id can be a random number.
+    protected StateResult One(StateParameter parameter)
     {
-        public static async Task Main(string[] args)
+        Console.WriteLine($"TestMachine {this.Identifier}: One - {this.Count++}");
+        return StateResult.Continue;
+    }
+
+    protected override void OnTerminated()
+    {
+        Console.WriteLine($"TestMachine {this.Identifier}: Terminated");
+        ThreadCore.Root.Terminate(); // Send a termination signal to the root.
+    }
+}
+
+public class Program
+{
+    public static async Task Main(string[] args)
+    {
+        var bigMachine = new BigMachine<int>(ThreadCore.Root); // Create BigMachine and set thread core (parent thread).
+
+        var testMachine = bigMachine.TryCreate<TestMachine.Interface>(42); // Machine is created via the interface class and identifier, not the machine class itself.
+        if (testMachine != null)
         {
-            var bigMachine = new BigMachine<int>(ThreadCore.Root); // Create BigMachine and set thread core (parent thread).
-
-            var testMachine = bigMachine.TryCreate<TestMachine.Interface>(42); // Machine is created via the interface class and identifier, not the machine class itself.
-            if (testMachine != null)
-            {
-                var currentState = testMachine.GetCurrentState(); // Get current state. You can operate machines using interface class.
-            }
-
-            testMachine = bigMachine.TryGet<TestMachine.Interface>(42); // Get the created machine.
-
-            var testGroup = bigMachine.GetGroup<TestMachine.Interface>(); // Group is a collection of machines.
-            testMachine = testGroup.TryGet<TestMachine.Interface>(42); // Same as above
-
-            await ThreadCore.Root.WaitForTermination(-1); // Wait for the termination infinitely.
+            var currentState = testMachine.GetCurrentState(); // Get current state. You can operate machines using the interface class.
         }
+
+        testMachine = bigMachine.TryGet<TestMachine.Interface>(42); // Get the created machine.
+
+        var testGroup = bigMachine.GetGroup<TestMachine.Interface>(); // Group is a collection of machines.
+        testMachine = testGroup.TryGet<TestMachine.Interface>(42); // Same as above
+
+        await ThreadCore.Root.WaitForTerminationAsync(-1); // Wait for the termination infinitely.
     }
 }
 ```
@@ -289,7 +288,7 @@ To improve response and share resource, heavy task should not be done at once, b
 
 `Identifier` is a key concept of `BigMachines`.
 
-Each machine has a unique identifier, and machines are identified and operated by identifiers.
+Each machine in `MachineGroup<TIdentifier>` has a unique identifier, and machines are identified and operated by identifiers.
 
 `Identifier` has several constraints.
 
@@ -356,10 +355,10 @@ These keywords in `Machine` class are reserved for source generator.
 - `Interface`: Nested class for operating a machine.
 - `State`: enum type which represents the state of a machine.
 - `CreateInterface()`: Creates an instance of machine interface.
-- `RunInternal()`: Runs machine and process each state.
+- `InternalRun()`: Runs machine and process each state.
 - `ChangeState()`: Changes the state of a machine.
 - `GetState()`: Gets the current state of a machine.
-- `IntChangeState()`: Internally used to change the state.
+- `InternalChangeState()`: Internally used to change the state.
 - `RegisterBM()`: Registers the machine to `BigMachine`.
 
 
@@ -405,7 +404,7 @@ public partial class GenericMachine<TIdentifier> : Machine<TIdentifier>
 
 ### Loop checker
 
-Relationships between machines can become complicated, and may lead to circular command issue.
+Relationships between machines can become complicated, and may lead to circular command issuing.
 
 ```csharp
 [MachineObject(0xb7196ebc)]
@@ -439,4 +438,23 @@ You can disable loop checker if you want (not recommended).
 ```csharp
 bigMachine.EnableLoopChecker = false;
 ```
+
+
+
+### Exception handling
+
+Each machine is designed to run independently.
+
+So exceptions thrown in machines are handled by BigMachine's main thread (`BigMachine.Core`) not by the caller.
+
+In detail, exceptions are registered to BigMachine using `BigMachine.ReportException()`, and handled by the following method in BigMachine's main thread.
+
+```cahrp
+private static void DefaultExceptionHandler(BigMachineException exception)
+{
+    throw exception.Exception;
+}
+```
+
+You can set custom exception handler using `BigMachine.SetExceptionHandler()`.
 

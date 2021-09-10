@@ -15,9 +15,13 @@ namespace Benchmark
     [Config(typeof(BenchmarkConfig))]
     public class LoopCheckerBenchmark
     {
-        public uint[] IdArray { get; }
+        public uint[] Data { get; }
 
         public uint IdToFind { get; }
+
+        public uint[] IdArray { get; }
+
+        public int IdArrayCount = 0;
 
         public List<uint> IdList { get; }
 
@@ -27,7 +31,7 @@ namespace Benchmark
 
         public LoopCheckerBenchmark()
         {
-            this.IdArray = new uint[]
+            this.Data = new uint[]
             {
                 0xc0526b51,
                 0x1a5bb41e,
@@ -36,7 +40,8 @@ namespace Benchmark
                 0x68daeb41,
             };
 
-            this.IdToFind = this.IdArray[3];
+            this.IdToFind = this.Data[3];
+            this.IdArray = this.Prepare_Array();
             this.IdList = this.Prepare_List();
             this.IdSet = this.Prepare_HashSet();
             this.IdStack = this.Prepare_Stack();
@@ -48,10 +53,29 @@ namespace Benchmark
         }
 
         [Benchmark]
+        public uint[] Prepare_Array()
+        {
+            var array = new uint[4];
+            var count = 0;
+            foreach (var x in this.Data)
+            {
+                if (count >= array.Length)
+                {
+                    Array.Resize(ref array, array.Length + 4);
+                }
+
+                array[count++] = x;
+            }
+
+            this.IdArrayCount = count;
+            return array;
+        }
+
+        [Benchmark]
         public List<uint> Prepare_List()
         {
             var list = new List<uint>();
-            foreach (var x in this.IdArray)
+            foreach (var x in this.Data)
             {
                 list.Add(x);
             }
@@ -63,7 +87,7 @@ namespace Benchmark
         public HashSet<uint> Prepare_HashSet()
         {
             var set = new HashSet<uint>();
-            foreach (var x in this.IdArray)
+            foreach (var x in this.Data)
             {
                 set.Add(x);
             }
@@ -75,12 +99,26 @@ namespace Benchmark
         public Stack<uint> Prepare_Stack()
         {
             var s = new Stack<uint>();
-            foreach (var x in this.IdArray)
+            foreach (var x in this.Data)
             {
                 s.Push(x);
             }
 
             return s;
+        }
+
+        [Benchmark]
+        public bool Find_Array()
+        {
+            for (var n = 0; n < this.IdArrayCount ; n++)
+            {
+                if (this.IdArray[n] == this.IdToFind)
+                {
+                    return true;
+                }
+            }
+
+            return false;
         }
 
         [Benchmark]

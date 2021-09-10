@@ -43,6 +43,11 @@ namespace Sandbox
                 }
             }
 
+            if (this.BigMachine.GetExceptionCount() > 0)
+            {// Remaining exceptions.
+                return StateResult.Continue;
+            }
+
             Console.WriteLine("Terminate (no machine)");
             ThreadCore.Root.Terminate();
             return StateResult.Terminate;

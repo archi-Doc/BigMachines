@@ -31,7 +31,7 @@ namespace ConsoleApp1
             this.SetLifespan(TimeSpan.FromSeconds(10)); // Time until the machine automatically terminates.
         }
 
-        [Key(10)]
+        [Key(11)]
         public int Count { get; set; }
 
         [StateMethod(0)] // Annotate StateMethod attribute and set state method id (0 for default state).

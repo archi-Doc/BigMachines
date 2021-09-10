@@ -20,7 +20,7 @@ namespace BigMachines
     /// Represents a base class for all machine classes.<br/>
     /// </summary>
     /// <typeparam name="TIdentifier">The type of an identifier.</typeparam>
-    [TinyhandObject]
+    [TinyhandObject(ReservedKeys = 10)]
     public abstract class Machine<TIdentifier>
         where TIdentifier : notnull
     {
@@ -51,10 +51,15 @@ namespace BigMachines
         public IMachineGroup<TIdentifier> Group { get; }
 
         /// <summary>
+        /// Gets <see cref="MachineInfo{TIdentifier}"/>.
+        /// </summary>
+        public MachineInfo<TIdentifier> Info => this.Group.Info;
+
+        /// <summary>
         /// Gets or sets the identifier of this machine.<br/>
         /// TIdentifier type must have <see cref="TinyhandObjectAttribute"/>.
         /// </summary>
-        [Key(0)] // Key(0) is Machine.CurrentState
+        [Key(0)]
         public TIdentifier Identifier { get; protected set; } = default!;
 
         /// <summary>
@@ -70,44 +75,46 @@ namespace BigMachines
         protected internal int CurrentState;
 
         /// <summary>
-        /// Gets or sets the default time interval at which the machine will run.<br/>
-        /// <see cref="TimeSpan.Zero"/>: No interval execution.
-        /// </summary>
-        [Key(3)]
-        public TimeSpan DefaultTimeout { get; protected internal set; }
-
-        /// <summary>
         /// The time until the machine is executed.
         /// </summary>
-        [Key(4)]
+        [Key(3)]
         protected internal long Timeout = long.MaxValue; // TimeSpan.Ticks (for interlocked)
 
         /// <summary>
         /// Gets or sets <see cref="DateTime"/> when the machine is executed last time.
         /// </summary>
-        [Key(5)]
+        [Key(4)]
         public DateTime LastRun { get; protected internal set; }
 
         /// <summary>
         /// Gets or sets <see cref="DateTime"/> when the machine is will be executed.
         /// </summary>
-        [Key(6)]
+        [Key(5)]
         public DateTime NextRun { get; protected internal set; }
 
         /// <summary>
         /// The lifespan of this machine. When this value reaches 0, the machine is terminated.
         /// </summary>
-        [Key(7)]
+        [Key(6)]
         protected internal long Lifespan = long.MaxValue; // TimeSpan.Ticks (for interlocked)
 
         /// <summary>
         /// Gets or sets <see cref="DateTime"/> when the machine will be automatically terminated.
         /// </summary>
-        [Key(8)]
+        [Key(7)]
         public DateTime TerminationDate { get; protected internal set; } = DateTime.MaxValue;
 
         /// <summary>
-        /// Gets or sets a value indicating whether this machine is to be serialized.
+        /// Gets or sets the default time interval at which the machine will run.<br/>
+        /// <see cref="TimeSpan.Zero"/>: No interval execution.<br/>
+        /// This property is NOT serialization target.
+        /// </summary>
+        [IgnoreMember]
+        public TimeSpan DefaultTimeout { get; protected internal set; }
+
+        /// <summary>
+        /// Gets or sets a value indicating whether this machine is to be serialized.<br/>
+        /// This property is NOT serialization target.
         /// </summary>
         [IgnoreMember]
         public bool IsSerializable { get; protected set; } = false;
@@ -117,6 +124,11 @@ namespace BigMachines
         /// </summary>
         [IgnoreMember]
         public uint TypeId { get; internal set; }
+
+        /// <summary>
+        /// Gets or sets a running state of the machine.
+        /// </summary>
+        internal RunType RunType { get; set; }
 
         /// <summary>
         /// Receivea a command and invoke an appropriate method.<br/>
@@ -135,30 +147,22 @@ namespace BigMachines
             {// Run
                 if (command.LoopChecker is { } checker)
                 {
-                    for (var n = 0; n < checker.RunIdCount; n++)
+                    if (checker.FindRunId(this.TypeId))
                     {
-                        if (checker.RunId[n] == this.TypeId)
-                        {
-                            var s = string.Join('-', checker.CommandId.Take(checker.CommandIdCount).Select(x => this.BigMachine.GetMachineInfoFromTypeId(x)?.MachineType.Name));
-                            throw new InvalidOperationException($"Run loop detected ({s}).");
-                        }
+                        var s = string.Join('-', checker.EnumerateRunId().Take(checker.CommandIdCount).Select(x => this.BigMachine.GetMachineInfoFromTypeId(x)?.MachineType.Name));
+                        throw new BigMachine<TIdentifier>.CommandLoopException($"Run loop detected ({s})");
                     }
 
-                    LoopChecker.Instance = command.LoopChecker.Clone();
-                    LoopChecker.Instance.AddRunId(this.TypeId);
+                    checker = checker.Clone();
+                    checker.AddRunId(this.TypeId);
+                    LoopCheckerObsolete.AsyncLocalInstance.Value = checker;
+
+                    // Console.WriteLine("run " + checker);
                 }
 
                 lock (this.SyncMachine)
                 {
-                    var result = this.RunInternal(new(RunType.Manual, command.Message));
-                    this.LastRun = DateTime.UtcNow;
-
-                    command.Response = result;
-                    if (result == StateResult.Terminate)
-                    {
-                        group.TryRemoveMachine(this.Identifier);
-                        return true;
-                    }
+                    this.RunMachine(command, RunType.Manual, DateTime.UtcNow);
                 }
             }
             else if ((command.Type == CommandPost<TIdentifier>.CommandType.State ||
@@ -167,30 +171,28 @@ namespace BigMachines
             {// ChangeState
                 lock (this.SyncMachine)
                 {
-                    command.Response = this.IntChangeState(state);
+                    command.Response = this.InternalChangeState(state, true);
                 }
             }
             else
             {// Command
                 if (command.LoopChecker is { } checker)
                 {
-                    for (var n = 0; n < checker.CommandIdCount; n++)
+                    if (checker.FindCommandId(this.TypeId))
                     {
-                        if (checker.CommandId[n] == this.TypeId)
-                        {
-                            var s = string.Join('-', checker.CommandId.Take(checker.CommandIdCount).Select(x => this.BigMachine.GetMachineInfoFromTypeId(x)?.MachineType.Name));
-                            throw new InvalidOperationException($"Command loop detected ({s}).");
-                        }
+                        var s = string.Join('-', checker.EnumerateCommandId().Take(checker.CommandIdCount).Select(x => this.BigMachine.GetMachineInfoFromTypeId(x)?.MachineType.Name));
+                        throw new BigMachine<TIdentifier>.CommandLoopException($"Command loop detected ({s})");
                     }
 
-                    LoopChecker.Instance = command.LoopChecker.Clone();
-                    LoopChecker.Instance.AddCommandId(this.TypeId);
+                    checker = checker.Clone();
+                    checker.AddCommandId(this.TypeId);
+                    LoopCheckerObsolete.AsyncLocalInstance.Value = checker;
+
+                    // Console.WriteLine("command " + checker);
                 }
 
                 // lock (this.SyncMachine) // Not inside lock statement.
-                {
-                    this.ProcessCommand(command);
-                }
+                this.ProcessCommand(command);
             }
 
             return false;
@@ -203,7 +205,7 @@ namespace BigMachines
         internal void TerminateInternal()
         {
             this.Status = MachineStatus.Terminated;
-            if (this.Group.Info.Continuous)
+            if (this.Info.Continuous)
             {
                 this.BigMachine.Continuous.RemoveMachine(this);
             }
@@ -222,9 +224,9 @@ namespace BigMachines
         protected internal ManMachineInterface<TIdentifier>? InterfaceInstance { get; set; }
 
         /// <summary>
-        /// Gets or sets a value indicating whether the state is changed in <see cref="RunInternal(StateParameter)"/>.
+        /// Gets or sets a value indicating whether the machine is going to re-run.
         /// </summary>
-        protected internal bool StateChanged { get; set; }
+        protected internal bool RequestRerun { get; set; }
 
         /// <summary>
         /// Expected to be implemented on the user side.<br/>
@@ -260,8 +262,8 @@ namespace BigMachines
         /// </summary>
         /// <param name="parameter">StateParameter.</param>
         /// <returns>StateResult.</returns>
-        protected internal virtual StateResult RunInternal(StateParameter parameter)
-        {// Called: Machine.DistributeCommand(), BigMachine.MainLoop()
+        protected internal virtual StateResult InternalRun(StateParameter parameter)
+        {// Called: Machine.RunMachine()
             return StateResult.Terminate;
         }
 
@@ -269,8 +271,9 @@ namespace BigMachines
         /// Generated method which is called when the state changes.
         /// </summary>
         /// <param name="state">The next state.</param>
+        /// <param name="rerun">Requires rerun when the state is changed.</param>
         /// <returns><see langword="true"/>: State changed. <see langword="false"/>: Not changed (same state or denied). </returns>
-        protected internal virtual bool IntChangeState(int state) => false;
+        protected internal virtual bool InternalChangeState(int state, bool rerun) => false;
 
         /// <summary>
         /// Called when the machine is terminating.<br/>
@@ -281,6 +284,50 @@ namespace BigMachines
         }
 
         /// <summary>
+        /// Run the machine.<br/>
+        /// This code is inside 'lock (this.SyncMachine) {}'.
+        /// </summary>
+        /// <param name="command">Command.</param>
+        /// <param name="runType">A trigger of the machine running.</param>
+        /// <param name="now">Current time.</param>
+        /// <returns>true: The machine is terminated.</returns>
+        protected internal StateResult RunMachine(CommandPost<TIdentifier>.Command? command, RunType runType, DateTime now)
+        {// Called: Machine.DistributeCommand(), BigMachine.MainLoop()
+            this.RunType = runType;
+
+RerunLoop:
+            StateResult result;
+            this.RequestRerun = false;
+
+            try
+            {
+                result = this.InternalRun(new(runType));
+            }
+            catch (Exception ex)
+            {
+                result = StateResult.Terminate;
+                this.BigMachine.ReportException(new(this, ex));
+                // command?.SetException(ex);
+            }
+
+            if (result == StateResult.Terminate)
+            {
+                this.LastRun = now;
+                this.RunType = RunType.NotRunning;
+                this.Group.TryRemoveMachine(this.Identifier);
+                return result;
+            }
+            else if (this.RequestRerun)
+            {
+                goto RerunLoop;
+            }
+
+            this.LastRun = now;
+            this.RunType = RunType.NotRunning;
+            return result;
+        }
+
+        /// <summary>
         /// Set the timeout of the machine.<br/>
         /// The time decreases while the program is running, and the machine will run when it reaches zero.
         /// </summary>
@@ -288,7 +335,7 @@ namespace BigMachines
         /// <param name="absoluteDateTime">Set true to specify the next execution time by adding the current time and timeout.</param>
         protected void SetTimeout(TimeSpan timeSpan, bool absoluteDateTime = false)
         {
-            this.StateChanged = false;
+            this.RequestRerun = false;
             if (timeSpan.Ticks < 0)
             {
                 Volatile.Write(ref this.Timeout, long.MaxValue);

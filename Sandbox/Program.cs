@@ -68,6 +68,34 @@ namespace Sandbox
             {
             }
 
+            Test1(bigMachine);
+            // Test2(bigMachine);
+
+            await ThreadCore.Root.WaitForTerminationAsync(-1); // Wait for the termination infinitely.
+
+            // Save
+            var data = bigMachine.Serialize();
+            using (var fs = new FileStream("app.data", FileMode.Create))
+            {
+                fs.Write(data);
+            }
+
+            bigMachine.Deserialize(data);
+
+            ThreadCore.Root.TerminationEvent.Set(); // The termination process is complete (#1).
+        }
+
+        public static void Test2(BigMachine<int> bigMachine)
+        {
+            var m = bigMachine.TryCreate<LongRunningMachine.Interface>(0);
+
+            m.Run();
+            m.Run();
+            m.Run();
+        }
+
+        public static void Test1(BigMachine<int> bigMachine)
+        {
             bigMachine.TryCreate<TerminatorMachine.Interface>(0);
 
             var testMachine = bigMachine.TryGet<TestMachine.Interface>(3);
@@ -111,19 +139,6 @@ namespace Sandbox
 
             // Continuous Watcher
             bigMachine.TryCreate<ContinuousWatcher.Interface>(0);
-
-            await ThreadCore.Root.WaitForTermination(-1); // Wait for the termination infinitely.
-
-            // Save
-            var data = bigMachine.Serialize();
-            using (var fs = new FileStream("app.data", FileMode.Create))
-            {
-                fs.Write(data);
-            }
-
-            bigMachine.Deserialize(data);
-
-            ThreadCore.Root.TerminationEvent.Set(); // The termination process is complete (#1).
         }
     }
 }

@@ -16,7 +16,7 @@ namespace ConsoleApp1
         public static void Test(BigMachine<int> bigMachine)
         {
             bigMachine.TryCreate<SingleMachine.Interface>(0);
-            bigMachine.TryCreate<SingleMachine.Interface>(1); // Only one machine is created since SingleMachine belongs MachineSingle<> group.
+            bigMachine.TryCreate<SingleMachine.Interface>(1); // Only one machine is created since SingleMachine belongs to MachineSingle<> group.
         }
 
         public SingleMachine(BigMachine<int> bigMachine)

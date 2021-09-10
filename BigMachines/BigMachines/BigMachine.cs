@@ -27,6 +27,34 @@ namespace BigMachines
         where TIdentifier : notnull
     {
         /// <summary>
+        /// Defines the type of delegate used to handle exceptions.
+        /// </summary>
+        /// <param name="exception">Exception.</param>
+        public delegate void ExceptionHandlerDelegate(BigMachineException exception);
+
+        public class BigMachineException
+        {
+            public BigMachineException(Machine<TIdentifier> machine, Exception exception)
+                : base()
+            {
+                this.Machine = machine;
+                this.Exception = exception;
+            }
+
+            public Machine<TIdentifier> Machine { get; }
+
+            public Exception Exception { get; }
+        }
+
+        public class CommandLoopException : Exception
+        {
+            public CommandLoopException(string message)
+                : base(message)
+            {
+            }
+        }
+
+        /// <summary>
         /// Initializes a new instance of the <see cref="BigMachine{TIdentifier}"/> class.
         /// </summary>
         /// <param name="parent">The parent <see cref="ThreadCore"/>.</param>
@@ -37,7 +65,7 @@ namespace BigMachines
 
             this.Status = new();
             this.Core = new ThreadCore(parent, this.MainLoop, false);
-            this.CommandPost = new(this, this.DistributeCommand, parent);
+            this.CommandPost = new(this, this.DistributeCommand);
             this.ServiceProvider = serviceProvider;
             this.Continuous = new(this);
 
@@ -101,6 +129,13 @@ namespace BigMachines
         /// Gets <see cref="IServiceProvider"/> used to create instances of <see cref="Machine{TIdentifier}"/>.
         /// </summary>
         public IServiceProvider? ServiceProvider { get; }
+
+        public void ReportException(BigMachineException exception)
+        {
+            this.exceptionQueue.Enqueue(exception);
+        }
+
+        public int GetExceptionCount() => this.exceptionQueue.Count;
 
         /// <summary>
         /// Gets a collection of <see cref="IMachineGroup{TIdentifier}"/>.
@@ -294,6 +329,15 @@ namespace BigMachines
         }
 
         /// <summary>
+        /// Sets a exception handler.
+        /// </summary>
+        /// <param name="handler">Exception handler.</param>
+        public void SetExceptionHandler(ExceptionHandlerDelegate handler)
+        {
+            Volatile.Write(ref this.exceptionHandler, handler);
+        }
+
+        /// <summary>
         /// Gets <see cref="MachineInfo{TIdentifier}"/> associated with the type id.
         /// </summary>
         /// <param name="typeId">The type id.</param>
@@ -308,17 +352,60 @@ namespace BigMachines
             return null;
         }
 
+        private static void DefaultExceptionHandler(BigMachineException exception)
+        {
+            throw exception.Exception;
+        }
+
         internal Dictionary<uint, IMachineGroup<TIdentifier>> TypeIdToGroup { get; } = new();
 
         internal ThreadsafeTypeKeyHashTable<IMachineGroup<TIdentifier>> MachineTypeToGroup { get; } = new();
 
-        private void DistributeCommand(CommandPost<TIdentifier>.Command command)
+        private Task DistributeCommand(CommandPost<TIdentifier>.Command? command, List<CommandPost<TIdentifier>.Command>? commandList)
         {
-            if (command.Channel is IMachineGroup<TIdentifier> group &&
-                group.TryGetMachine(command.Identifier, out var machine))
+            return Task.Run(() => // taskrun
             {
-                machine.DistributeCommand(group, command);
-            }
+                if (command != null)
+                {
+                    if (command.Channel is IMachineGroup<TIdentifier> group && group.TryGetMachine(command.Identifier, out var machine))
+                    {
+                        try
+                        {
+                            machine.DistributeCommand(group, command);
+                        }
+                        catch (Exception ex)
+                        {
+                            this.ReportException(new(machine, ex));
+                        }
+                    }
+                }
+
+                if (commandList != null)
+                {
+                    foreach (var x in commandList)
+                    {
+                        if (x.Channel is IMachineGroup<TIdentifier> group && group.TryGetMachine(x.Identifier, out var machine))
+                        {
+                            try
+                            {
+                                machine.DistributeCommand(group, x);
+                            }
+                            catch (Exception ex)
+                            {
+                                this.ReportException(new(machine, ex));
+                            }
+                        }
+                    }
+                }
+            });
+            /*.ContinueWith(
+                t =>
+                {
+                    if (t.IsFaulted && t.Exception != null)
+                    {
+                        throw t.Exception;
+                    }
+                }, TaskContinuationOptions.OnlyOnFaulted);*/
         }
 
         private Machine<TIdentifier> CreateMachine(IMachineGroup<TIdentifier> group)
@@ -421,6 +508,11 @@ namespace BigMachines
                     break;
                 }
 
+                while (this.exceptionQueue.TryDequeue(out var exception))
+                {
+                    this.exceptionHandler(exception);
+                }
+
                 this.Continuous.Process();
 
                 var now = DateTime.UtcNow;
@@ -454,22 +546,22 @@ namespace BigMachines
                                 x.TryRemoveMachine(y.Identifier);
                             }
                         }
-                        else if (y.Timeout <= 0 || y.NextRun >= now)
+                        else if (y.Timeout <= 0 || y.NextRun >= now || y.RunType == RunType.NotRunning)
                         {// Screening
-                            lock (y.SyncMachine)
+                            Task.Run(() => // taskrun
                             {
-                                if (TryRun(y))
-                                {// Terminated
-                                    x.TryRemoveMachine(y.Identifier);
+                                lock (y.SyncMachine)
+                                {
+                                    TryRun(y);
                                 }
-                            }
+                            });
                         }
                     }
                 }
 
                 this.Status.LastRun = now;
 
-                bool TryRun(Machine<TIdentifier> machine)
+                void TryRun(Machine<TIdentifier> machine)
                 {// locked
                     var runFlag = false;
                     if (machine.Timeout <= 0)
@@ -492,24 +584,12 @@ namespace BigMachines
                         runFlag = true;
                     }
 
-                    if (runFlag)
+                    if (!runFlag)
                     {
-StateChangedLoop:
-                        machine.StateChanged = false;
-                        var result = machine.RunInternal(new(RunType.Timer));
-                        if (result == StateResult.Terminate)
-                        {
-                            return true;
-                        }
-                        else if (machine.StateChanged)
-                        {
-                            goto StateChangedLoop;
-                        }
-
-                        machine.LastRun = now;
+                        return;
                     }
 
-                    return false;
+                    machine.RunMachine(null, RunType.Timer, now);
                 }
             }
 
@@ -539,5 +619,7 @@ StateChangedLoop:
         private ThreadsafeTypeKeyHashTable<IMachineGroup<TIdentifier>> interfaceTypeToGroup = new();
         private IMachineGroup<TIdentifier>[] groupArray = Array.Empty<IMachineGroup<TIdentifier>>();
         private TimeSpan timerInterval = TimeSpan.FromMilliseconds(500);
+        private ExceptionHandlerDelegate exceptionHandler = DefaultExceptionHandler;
+        private ConcurrentQueue<BigMachineException> exceptionQueue = new();
     }
 }

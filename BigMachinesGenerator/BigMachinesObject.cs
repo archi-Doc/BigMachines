@@ -337,10 +337,10 @@ namespace BigMachines.Generator
             this.CheckKeyword(BigMachinesBody.StateIdentifier, this.Location);
             this.CheckKeyword(BigMachinesBody.InterfaceIdentifier, this.Location);
             this.CheckKeyword(BigMachinesBody.CreateInterfaceIdentifier, this.Location);
-            this.CheckKeyword(BigMachinesBody.RunInternalIdentifier, this.Location);
+            this.CheckKeyword(BigMachinesBody.InternalRunIdentifier, this.Location);
             this.CheckKeyword(BigMachinesBody.ChangeState, this.Location);
             this.CheckKeyword(BigMachinesBody.GetCurrentState, this.Location);
-            this.CheckKeyword(BigMachinesBody.IntChangeState, this.Location);
+            this.CheckKeyword(BigMachinesBody.InternalChangeState, this.Location);
             this.CheckKeyword(BigMachinesBody.RegisterBM, this.Location);
             // this.CheckKeyword(BigMachinesBody.IntInitState, this.Location);
 
@@ -556,7 +556,7 @@ ModuleInitializerClass_Added:
             this.Generate_State(ssb, info);
             this.Generate_Interface(ssb, info);
             this.Generate_CreateInterface(ssb, info);
-            this.Generate_RunInternal(ssb, info);
+            this.Generate_InternalRun(ssb, info);
             this.Generate_ChangeStateInternal(ssb, info);
             this.Generate_RegisterBM(ssb, info);
 
@@ -619,14 +619,14 @@ ModuleInitializerClass_Added:
             ssb.AppendLine();
         }
 
-        internal void Generate_RunInternal(ScopingStringBuilder ssb, GeneratorInformation info)
+        internal void Generate_InternalRun(ScopingStringBuilder ssb, GeneratorInformation info)
         {
             if (this.MachineObject == null || this.StateMethodList == null)
             {
                 return;
             }
 
-            using (var scope = ssb.ScopeBrace("protected override StateResult RunInternal(StateParameter parameter)"))
+            using (var scope = ssb.ScopeBrace("protected override StateResult InternalRun(StateParameter parameter)"))
             {
                 ssb.AppendLine($"var state = Unsafe.As<int, {this.StateName}>(ref this.CurrentState);");
                 ssb.AppendLine("return state switch");
@@ -653,7 +653,7 @@ ModuleInitializerClass_Added:
                 return;
             }
 
-            using (var scope = ssb.ScopeBrace("protected override bool IntChangeState(int state)"))
+            using (var scope = ssb.ScopeBrace("protected override bool InternalChangeState(int state, bool rerun)"))
             {
                 using (var scopeTerminated = ssb.ScopeBrace("if (this.Status == MachineStatus.Terminated)"))
                 {
@@ -707,7 +707,7 @@ ModuleInitializerClass_Added:
                 using (var scope2 = ssb.ScopeBrace("if (canExit && canEnter)"))
                 {
                     ssb.AppendLine($"this.CurrentState = state;");
-                    ssb.AppendLine("this.StateChanged = true;");
+                    ssb.AppendLine("this.RequestRerun = rerun;");
                     ssb.AppendLine("return true;");
                 }
 
@@ -718,7 +718,7 @@ ModuleInitializerClass_Added:
             }
 
             ssb.AppendLine();
-            ssb.AppendLine($"protected bool ChangeState({this.StateName} state) => this.IntChangeState(Unsafe.As<{this.StateName}, int>(ref state));");
+            ssb.AppendLine($"protected bool ChangeState({this.StateName} state, bool rerun = true) => this.InternalChangeState(Unsafe.As<{this.StateName}, int>(ref state), rerun);");
             ssb.AppendLine();
             ssb.AppendLine($"protected {this.StateName} GetCurrentState() => Unsafe.As<int, {this.StateName}>(ref this.CurrentState);");
             ssb.AppendLine();

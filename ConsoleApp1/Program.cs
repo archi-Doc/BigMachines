@@ -29,8 +29,13 @@ namespace ConsoleApp1
                 ThreadCore.Root.Terminate(); // Send a termination signal to the root.
             };
 
-            // await Test();
-            await Test2();
+            /*TaskScheduler.UnobservedTaskException += (sender, e) =>
+            {
+                Console.WriteLine(e.Exception);
+            };*/
+
+            await Test();
+            // await Test2();
 
             ThreadCore.Root.TerminationEvent.Set(); // The termination process is complete (#1).
         }
@@ -67,11 +72,12 @@ namespace ConsoleApp1
 
             // Other test code.
             GenericMachine<int>.Test(bigMachine);
-            // LoopMachine.Test(bigMachine);
+            LoopMachine.Test(bigMachine);
+            // LoopMachine2.Test(bigMachine);
             // SingleMachine.Test(bigMachine);
             // ServiceProviderMachine.Test(bigMachine);
 
-            await ThreadCore.Root.WaitForTermination(-1); // Wait for the termination infinitely.
+            await ThreadCore.Root.WaitForTerminationAsync(-1); // Wait for the termination infinitely.
 
             // Save
             var data = bigMachine.Serialize();
@@ -92,7 +98,7 @@ namespace ConsoleApp1
             // bigMachine.TryCreate<IdentifierMachine2.Interface>(new(1, "A"));
             // TerminatorMachine<IdentifierClass2>.Test(bigMachine, default!);
 
-            await ThreadCore.Root.WaitForTermination(-1); // Wait for the termination infinitely.
+            await ThreadCore.Root.WaitForTerminationAsync(-1); // Wait for the termination infinitely.
         }
     }
 }

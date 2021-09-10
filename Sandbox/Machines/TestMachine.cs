@@ -52,10 +52,10 @@ namespace Sandbox
             }
         }
 
-        [Key(10)]
+        [Key(11)]
         private long total;
 
-        [Key(11)]
+        [Key(12)]
         private long count;
     }
 
@@ -224,7 +224,7 @@ namespace Sandbox
                 this.DefaultTimeout = TimeSpan.FromSeconds(1);
             }
 
-            [Key(10)]
+            [Key(11)]
             public T Param { get; set; }
 
             [StateMethod(0)]
@@ -334,7 +334,7 @@ namespace Sandbox
             }
         }*/
 
-        [Key(10)]
+        [Key(11)]
         public int Dummy { get; set; }
 
         [StateMethod(99)]
@@ -379,7 +379,7 @@ namespace Sandbox
             }
         }
 
-        /*protected override StateResult RunInternal(StateParameter parameter)
+        /*protected override StateResult InternalRun(StateParameter parameter)
         {// Generated
             return this.CurrentState switch
             {
@@ -416,7 +416,7 @@ namespace Sandbox
             if (canExit && canEnter)
             {
                 this.CurrentState = state;
-                this.StateChanged = true;
+                this.RequrieRerun = true;
                 return true;
             }
             else

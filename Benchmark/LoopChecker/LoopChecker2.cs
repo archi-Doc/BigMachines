@@ -7,21 +7,21 @@ using System.Runtime.CompilerServices;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace BigMachines;
+namespace Benchmark.Test;
 
 #pragma warning disable SA1401 // Fields should be private
 
-public class LoopChecker
+public class LoopChecker2
 {
     public const int InitialArray = 4;
 
-    public static AsyncLocal<LoopChecker> AsyncLocalInstance = new();
+    public static AsyncLocal<LoopChecker2> AsyncLocalInstance = new();
 
-    public LoopChecker()
+    public LoopChecker2()
     {
     }
 
-    public LoopChecker(LoopChecker loopChecker)
+    public LoopChecker2(LoopChecker2 loopChecker)
     {
         this.RunIdCount = loopChecker.RunIdCount;
         if (loopChecker.RunId != null)
@@ -115,7 +115,7 @@ public class LoopChecker
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public bool FindCommandId(uint id)
+    public bool FindCommandId(int id)
     {
         if (this.CommandIdCount == 0)
         {
@@ -144,7 +144,7 @@ public class LoopChecker
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public bool FindRunId(uint id)
+    public bool FindRunId(int id)
     {
         if (this.RunIdCount == 0)
         {
@@ -230,7 +230,7 @@ public class LoopChecker
     internal uint CommandId1;
     internal uint[]? CommandId;
 
-    public LoopChecker Clone() => new(this);
+    public LoopChecker2 Clone() => new(this);
 
     public override string ToString() => $"Run {this.RunIdCount}, Command {this.CommandIdCount}";
 }

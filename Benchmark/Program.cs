@@ -30,26 +30,22 @@ namespace Benchmark
             // await Benchmark.Design.CommandDesign3.Test();
             // await Benchmark.Design.CommandDesign4.Test();
             // await Benchmark.Design.CommandDesign5.Test();
-            await Benchmark.Design.CommandDesign6.Test();
+
+            /*await Benchmark.Design.CommandDesign6.Test();
             await Benchmark.Design.CommandDesign7.Test();
-            await Benchmark.Design.CommandDesign8.Test();
+            await Benchmark.Design.CommandDesign8.Test();*/
 
             var bm = new BigMachine<int>(ThreadCore.Root);
-            // bm.EnableLoopChecker = false;
+            bm.EnableLoopChecker = true;
             await Benchmark.Design.SimpleBench.Test(bm);
 
-            var cp = new CommandPost<int>(bm, x =>
-            {
-                if (x.Message is int i)
-                {
-                    x.Response = i + 2;
-                }
-            }, ThreadCore.Root);
-
-            DebugRun<Test.LockingBenchmark>();
+            DebugRun<Test.LoopCheckerBenchmark2>();
 
             var switcher = new BenchmarkSwitcher(new[]
             {
+                typeof(Test.LoopCheckerBenchmark2),
+                typeof(Test.AsyncLocalBenchmark),
+                typeof(Test.AddOnlyListBenchmark),
                 typeof(Test.LockingBenchmark),
                 typeof(LoopCheckerBenchmark),
                 typeof(Design.ConcurrentQueueBenchmark),

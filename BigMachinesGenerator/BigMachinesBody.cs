@@ -24,10 +24,10 @@ namespace BigMachines.Generator
         public const string StateIdentifier = "State";
         public const string InterfaceIdentifier = "Interface";
         public const string CreateInterfaceIdentifier = "CreateInterface";
-        public const string RunInternalIdentifier = "RunInternal";
+        public const string InternalRunIdentifier = "InternalRun";
         public const string ChangeState = "ChangeState";
         public const string GetCurrentState = "GetCurrentState";
-        public const string IntChangeState = "IntChangeState";
+        public const string InternalChangeState = "InternalChangeState";
         public const string IntInitState = "IntInitState";
         public const string RegisterBM = "RegisterBM";
 
@@ -225,11 +225,15 @@ namespace BigMachines.Generator
                 generator.OutputKind != OutputKind.ConsoleApplication &&
                 generator.OutputKind != OutputKind.WindowsApplication)
             {// To avoid namespace conflicts, use assembly name for namespace.
-                ns = generator.AssemblyName;
+                ns = VisceralHelper.AssemblyNameToIdentifier(generator.AssemblyName!);
             }
             else
             {// Other (Apps)
-                assemblyId = "_" + generator.AssemblyId.ToString("x");
+                // assemblyId = "_" + generator.AssemblyId.ToString("x");
+                if (!string.IsNullOrEmpty(generator.AssemblyName))
+                {
+                    assemblyId = VisceralHelper.AssemblyNameToIdentifier("_" + generator.AssemblyName);
+                }
             }
 
             info.ModuleInitializerClass.Add("BigMachines.Generator.Generated");
