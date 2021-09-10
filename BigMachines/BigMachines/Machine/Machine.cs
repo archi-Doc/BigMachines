@@ -155,7 +155,7 @@ namespace BigMachines
 
                     checker = checker.Clone();
                     checker.AddRunId(this.TypeId);
-                    LoopCheckerObsolete.AsyncLocalInstance.Value = checker;
+                    LoopChecker.AsyncLocalInstance.Value = checker;
 
                     // Console.WriteLine("run " + checker);
                 }
@@ -186,7 +186,7 @@ namespace BigMachines
 
                     checker = checker.Clone();
                     checker.AddCommandId(this.TypeId);
-                    LoopCheckerObsolete.AsyncLocalInstance.Value = checker;
+                    LoopChecker.AsyncLocalInstance.Value = checker;
 
                     // Console.WriteLine("command " + checker);
                 }

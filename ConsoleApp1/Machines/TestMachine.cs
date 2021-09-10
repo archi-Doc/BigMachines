@@ -21,6 +21,14 @@ namespace ConsoleApp1
 
             var testGroup = bigMachine.GetGroup<TestMachine.Interface>(); // Group is a collection of machines.
             testMachine = testGroup.TryGet<TestMachine.Interface>(3); // Get machine from the group.
+
+            // LoopTest();
+
+            void LoopTest()
+            {
+                bigMachine.TryCreate<LoopMachine.Interface>(0);
+                testMachine?.Command("loop test");
+            }
         }
 
         public TestMachine(BigMachine<int> bigMachine)
