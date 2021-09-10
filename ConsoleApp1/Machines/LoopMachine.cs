@@ -15,8 +15,9 @@ namespace ConsoleApp1
     {
         public static void Test(BigMachine<int> bigMachine)
         {
+            bigMachine.EnableLoopChecker = true;
             var loopMachine = bigMachine.TryCreate<LoopMachine.Interface>(0);
-            loopMachine.CommandTwoWay<int, int>(1);
+            loopMachine.Command<int>(1);
         }
 
         public LoopMachine(BigMachine<int> bigMachine)
@@ -28,7 +29,7 @@ namespace ConsoleApp1
         {
             if (command.Message is int n)
             {// LoopMachine
-                this.BigMachine.TryGet<Interface>(this.Identifier)?.CommandTwoWay<int, int>(0);
+                this.BigMachine.TryGet<Interface>(this.Identifier)?.Command<int>(0);
                 /*try
                 {
                     this.BigMachine.TryGet<Interface>(this.Identifier)?.CommandTwoWay<int, int>(0);

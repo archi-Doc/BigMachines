@@ -31,9 +31,6 @@ namespace ConsoleApp1
         [StateMethod(0)]
         protected StateResult Initial(StateParameter parameter)
         {
-            GC.Collect();
-
-            throw new Exception();
             Console.WriteLine($"Generic ({this.Identifier.ToString()}) - {this.Count++}");
             return StateResult.Continue;
         }

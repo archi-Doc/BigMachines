@@ -150,7 +150,7 @@ namespace BigMachines
                     if (checker.FindRunId(this.TypeId))
                     {
                         var s = string.Join('-', checker.EnumerateRunId().Take(checker.CommandIdCount).Select(x => this.BigMachine.GetMachineInfoFromTypeId(x)?.MachineType.Name));
-                        throw new InvalidOperationException($"Run loop detected ({s}).");
+                        throw new BigMachine<TIdentifier>.CommandLoopException($"Run loop detected ({s})");
                     }
 
                     checker = checker.Clone();
@@ -181,9 +181,7 @@ namespace BigMachines
                     if (checker.FindCommandId(this.TypeId))
                     {
                         var s = string.Join('-', checker.EnumerateCommandId().Take(checker.CommandIdCount).Select(x => this.BigMachine.GetMachineInfoFromTypeId(x)?.MachineType.Name));
-                        // command.SetException(new InvalidOperationException($"Command loop detected ({s})."));
-                        // return false;
-                        throw new InvalidOperationException($"Command loop detected ({s}).");
+                        throw new BigMachine<TIdentifier>.CommandLoopException($"Command loop detected ({s})");
                     }
 
                     checker = checker.Clone();
@@ -194,9 +192,7 @@ namespace BigMachines
                 }
 
                 // lock (this.SyncMachine) // Not inside lock statement.
-                {
-                    this.ProcessCommand(command);
-                }
+                this.ProcessCommand(command);
             }
 
             return false;
@@ -310,7 +306,8 @@ RerunLoop:
             catch (Exception ex)
             {
                 result = StateResult.Terminate;
-                command?.SetException(ex);
+                this.BigMachine.ReportException(new(this, ex));
+                // command?.SetException(ex);
             }
 
             if (result == StateResult.Terminate)

@@ -117,15 +117,15 @@ namespace BigMachines
 
             public object? Response { get; set; }
 
-            public Exception? GetException() => this.Type == CommandType.Exception ? (this.Response as Exception) : null;
+            // public Exception? GetException() => this.Type == CommandType.Exception ? (this.Response as Exception) : null;
 
             internal LoopCheckerObsolete? LoopChecker { get; }
 
-            internal void SetException(Exception ex)
+            /*internal void SetException(Exception ex)
             {
                 this.Type = CommandType.Exception;
                 this.Response = ex;
-            }
+            }*/
         }
 
         /// <summary>
@@ -185,28 +185,19 @@ namespace BigMachines
                 commandType == CommandType.StateTwoWay ||
                 commandType == CommandType.RunTwoWay)
             {// TwoWay
-                bool completed = false;
                 try
                 {
-                    completed = task.Wait(millisecondTimeout, this.BigMachine.Core.CancellationToken);
+                    if (task.Wait(millisecondTimeout, this.BigMachine.Core.CancellationToken))
+                    {// Completed
+                        if (c.Response is TResult result)
+                        {// Valid result
+                            return result;
+                        }
+                    }
                 }
                 catch
                 {
-                    throw;
                 }
-
-                if (completed)
-                {// Completed
-                    if (c.GetException() is { } ex)
-                    {
-                        throw ex;
-                    }
-                    else if (c.Response is TResult result)
-                    {// Valid result
-                        return result;
-                    }
-                }
-
             }
 
             return default;
