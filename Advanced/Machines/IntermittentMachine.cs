@@ -7,7 +7,7 @@ using System.Text;
 using System.Threading.Tasks;
 using BigMachines;
 
-namespace ConsoleApp1
+namespace Advanced
 {
     [MachineObject(0x1b431670)]
     public partial class IntermittentMachine : Machine<int>

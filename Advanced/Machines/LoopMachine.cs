@@ -7,7 +7,7 @@ using System.Text;
 using System.Threading.Tasks;
 using BigMachines;
 
-namespace ConsoleApp1
+namespace Advanced
 {
     // Loop Machine
     [MachineObject(0xb7196ebc)]
