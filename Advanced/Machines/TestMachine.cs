@@ -8,7 +8,7 @@ using Arc.Threading;
 using BigMachines;
 using Tinyhand;
 
-namespace ConsoleApp1
+namespace Advanced
 {
     [TinyhandObject(UseServiceProvider = true)] // Annotate TinyhandObject attribute to enable serialization (and set UseServiceProvider to true to skip default constructor check).
     [MachineObject(0x6169e4ee)] // Annotate MachineObject and set Machine type id (unique number).
@@ -21,6 +21,10 @@ namespace ConsoleApp1
 
             var testGroup = bigMachine.GetGroup<TestMachine.Interface>(); // Group is a collection of machines.
             testMachine = testGroup.TryGet<TestMachine.Interface>(3); // Get machine from the group.
+
+            // Loop test
+            // bigMachine.TryCreate<LoopMachine.Interface>(0);
+            // testMachine?.Command("loop test");
         }
 
         public TestMachine(BigMachine<int> bigMachine)

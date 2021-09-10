@@ -7,20 +7,23 @@ using System.Text;
 using System.Threading.Tasks;
 using BigMachines;
 
-namespace ConsoleApp1
+namespace Advanced
 {
-    // Template machine
-    [MachineObject(0x6c51e7cf)]
-    public partial class TemplateMachine : Machine<int>
+    // Generic version.
+    [MachineObject(0x928b319e)]
+    public partial class GenericMachine<TIdentifier> : Machine<TIdentifier>
+    where TIdentifier : notnull
     {
-        public static void Test(BigMachine<int> bigMachine)
+        public static void Test(BigMachine<TIdentifier> bigMachine)
         {
+            bigMachine.TryCreate<GenericMachine<TIdentifier>.Interface>(default!);
         }
 
-        public TemplateMachine(BigMachine<int> bigMachine)
+        public GenericMachine(BigMachine<TIdentifier> bigMachine)
             : base(bigMachine)
         {
             this.DefaultTimeout = TimeSpan.FromSeconds(1);
+            this.SetLifespan(TimeSpan.FromSeconds(5));
         }
 
         public int Count { get; set; }
@@ -28,12 +31,7 @@ namespace ConsoleApp1
         [StateMethod(0)]
         protected StateResult Initial(StateParameter parameter)
         {
-            Console.WriteLine($"Template ({this.Identifier.ToString()}) - {this.Count++}");
-            if (this.Count > 5)
-            {
-                return StateResult.Terminate;
-            }
-
+            Console.WriteLine($"Generic ({this.Identifier.ToString()}) - {this.Count++}");
             return StateResult.Continue;
         }
     }

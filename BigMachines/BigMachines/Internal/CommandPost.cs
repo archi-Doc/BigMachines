@@ -85,14 +85,14 @@ namespace BigMachines
             /// <param name="message">Message.</param>
             public Command(BigMachine<TIdentifier> bigMachine, CommandType type, object? channel, TIdentifier identifier, object? message)
             {
-                LoopCheckerObsolete? checker;
+                LoopChecker? checker;
                 if (bigMachine.EnableLoopChecker)
                 {// LoopChecker enabled.
-                    checker = LoopCheckerObsolete.AsyncLocalInstance.Value;
+                    checker = LoopChecker.AsyncLocalInstance.Value;
                     if (checker == null)
                     {
                         checker = new();
-                        LoopCheckerObsolete.AsyncLocalInstance.Value = checker;
+                        LoopChecker.AsyncLocalInstance.Value = checker;
                     }
                 }
                 else
@@ -119,7 +119,7 @@ namespace BigMachines
 
             // public Exception? GetException() => this.Type == CommandType.Exception ? (this.Response as Exception) : null;
 
-            internal LoopCheckerObsolete? LoopChecker { get; }
+            internal LoopChecker? LoopChecker { get; }
 
             /*internal void SetException(Exception ex)
             {

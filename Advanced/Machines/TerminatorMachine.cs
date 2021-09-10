@@ -8,7 +8,7 @@ using System.Threading.Tasks;
 using Arc.Threading;
 using BigMachines;
 
-namespace ConsoleApp1
+namespace Advanced
 {
     // Single Machine
     [MachineObject(0x48eb1f0f, Group = typeof(MachineSingle<>))] // Change groups from MachineGroup<> to MachineSingle<>.

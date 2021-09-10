@@ -7,7 +7,7 @@ using System.Text;
 using System.Threading.Tasks;
 using BigMachines;
 
-namespace ConsoleApp1
+namespace Advanced
 {
     // Loop Machine
     [MachineObject(0xb7196ebc)]
@@ -30,14 +30,6 @@ namespace ConsoleApp1
             if (command.Message is int n)
             {// LoopMachine
                 this.BigMachine.TryGet<Interface>(this.Identifier)?.Command<int>(0);
-                /*try
-                {
-                    this.BigMachine.TryGet<Interface>(this.Identifier)?.CommandTwoWay<int, int>(0);
-                }
-                catch (Exception ex)
-                {
-                    Console.WriteLine(ex);
-                }*/
             }
             else if (command.Message is string st)
             {// LoopMachine -> TestMachine

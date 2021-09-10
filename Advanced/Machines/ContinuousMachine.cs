@@ -8,7 +8,7 @@ using System.Threading;
 using System.Threading.Tasks;
 using BigMachines;
 
-namespace ConsoleApp1
+namespace Advanced
 {
     [MachineObject(0xb579a7d8, Continuous = true)] // Set Continuous property to true.
     public partial class ContinuousMachine : Machine<int>

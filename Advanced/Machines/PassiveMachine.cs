@@ -7,7 +7,7 @@ using System.Text;
 using System.Threading.Tasks;
 using BigMachines;
 
-namespace ConsoleApp1
+namespace Advanced
 {
     [MachineObject(0xffd829b4)]
     public partial class PassiveMachine : Machine<int>
