@@ -503,7 +503,7 @@ namespace BigMachines
 
             while (!core.IsTerminated)
             {
-                if (!core.Wait(this.timerInterval, TimeSpan.FromMilliseconds(10)))
+                if (!core.Sleep(this.timerInterval, TimeSpan.FromMilliseconds(10)))
                 {// Terminated
                     break;
                 }
