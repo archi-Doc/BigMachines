@@ -175,10 +175,10 @@ namespace BigMachines
         /// </summary>
         /// <typeparam name="TMachineInterface"><see cref="ManMachineInterface{TIdentifier, TState}"/>of the machine (e.g TestMachine.Interface).</typeparam>
         /// <param name="identifier">The identifier.</param>
-        /// <param name="parameter">The parameter.</param>
+        /// <param name="createParam">The parameter passed when a machine is newly created.</param>
         /// <returns>An instance of <see cref="ManMachineInterface{TIdentifier, TState}"/><br/>
         /// <see langword="null"/>: Machine is not available.</returns>
-        public TMachineInterface TryCreate<TMachineInterface>(TIdentifier identifier, object? parameter = null)
+        public TMachineInterface TryCreate<TMachineInterface>(TIdentifier identifier, object? createParam = null)
             where TMachineInterface : ManMachineInterface<TIdentifier>
         {
             this.GetMachineGroup(typeof(TMachineInterface), out var group);
@@ -192,7 +192,7 @@ namespace BigMachines
             machine = this.CreateMachine(group);
 
             machine.CreateInterface(identifier);
-            machine.SetParameter(parameter);
+            machine.SetParameter(createParam);
 
             machine = group.GetOrAddMachine(identifier, machine);
             return (TMachineInterface)machine.InterfaceInstance!;
@@ -204,10 +204,10 @@ namespace BigMachines
         /// </summary>
         /// <typeparam name="TMachineInterface"><see cref="ManMachineInterface{TIdentifier, TState}"/>of the machine (e.g TestMachine.Interface).</typeparam>
         /// <param name="identifier">The identifier.</param>
-        /// <param name="parameter">The parameter.</param>
+        /// <param name="createParam">The parameter passed when a machine is newly created.</param>
         /// <returns>An instance of <see cref="ManMachineInterface{TIdentifier, TState}"/><br/>
         /// <see langword="null"/>: Machine is not available.</returns>
-        public TMachineInterface Create<TMachineInterface>(TIdentifier identifier, object? parameter = null)
+        public TMachineInterface Create<TMachineInterface>(TIdentifier identifier, object? createParam = null)
             where TMachineInterface : ManMachineInterface<TIdentifier>
         {
             this.GetMachineGroup(typeof(TMachineInterface), out var group);
@@ -215,7 +215,7 @@ namespace BigMachines
             var machine = this.CreateMachine(group);
 
             machine.CreateInterface(identifier);
-            machine.SetParameter(parameter);
+            machine.SetParameter(createParam);
 
             group.AddMachine(identifier, machine);
             return (TMachineInterface)machine.InterfaceInstance!;

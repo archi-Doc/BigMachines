@@ -48,7 +48,7 @@ public class Program
         container.Register<ServiceProviderMachine>(Reuse.Transient);
         // container.Register<TestMachine>(Reuse.Transient); BigMachine will use default constructor if not registered.
         var bigMachine = container.Resolve<BigMachine<int>>(); // Create BigMachine.
-                                                               // var bigMachine = new BigMachine<int>(ThreadCore.Root);
+        // var bigMachine = new BigMachine<int>(ThreadCore.Root);
 
         // Load
         try
@@ -76,7 +76,7 @@ public class Program
         // LoopMachine.Test(bigMachine);
         // LoopMachine2.Test(bigMachine);
         // SingleMachine.Test(bigMachine);
-        // ServiceProviderMachine.Test(bigMachine);
+        ServiceProviderMachine.Test(bigMachine);
 
         await ThreadCore.Root.WaitForTerminationAsync(-1); // Wait for the termination infinitely.
 
