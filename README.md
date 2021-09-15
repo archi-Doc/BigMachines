@@ -17,7 +17,13 @@
 - [Requirements](#requirements)
 - [Quick Start](#quick-start)
 - [Machine Types](#machine-types)
+- [Identifier](#identifier)
 - [Machine Class](#machine-class)
+- [Other](#other)
+  - [Service provider](#service-provider)
+  - [[Generic machine](#generic-machine)
+  - [Loop checker](#loop-checker)
+  - [Exception handling](#exception-handling)
 
 
 
@@ -367,6 +373,67 @@ These keywords in `Machine` class are reserved for source generator.
 
 ## Other
 
+### Service provider
+
+Since the machine is independent, you cannot pass parameters directly when creating an instance (and mainly for the deserialization process).
+
+Consider using a DI container (service provider) or `Machine<TIdentifier>.SetParameter(object? createParam)` method.
+
+```csharp
+var container = new Container(); // DryIoc
+container.RegisterDelegate<BigMachine<int>>(x => new BigMachine<int>(ThreadCore.Root, container), Reuse.Singleton);
+container.Register<SomeService>(); // Register some service.
+container.Register<ServiceProviderMachine>(Reuse.Transient); // Register machine.
+```
+
+```csharp
+using System;
+using BigMachines;
+
+namespace Advanced;
+
+public class SomeService
+{
+    public void Print(string? text) => Console.WriteLine($"Some service : {text}");
+}
+
+// Machine depends on SomeService.
+[MachineObject(0x4f8f7256)]
+public partial class ServiceProviderMachine : Machine<int>
+{
+    public static void Test(BigMachine<int> bigMachine)
+    {
+        bigMachine.TryCreate<ServiceProviderMachine.Interface>(0, "A"); // Create a machine and set a parameter.
+    }
+
+    public ServiceProviderMachine(BigMachine<int> bigMachine, SomeService service)
+        : base(bigMachine)
+    {
+        this.Service = service;
+        this.DefaultTimeout = TimeSpan.FromSeconds(1);
+        this.SetLifespan(TimeSpan.FromSeconds(3));
+    }
+
+    protected override void SetParameter(object? createParam)
+    {// Receives a parameter. Note that this method is NOT called during deserialization.
+        this.Text = (string?)createParam;
+    }
+
+    public SomeService Service { get; }
+
+    public string? Text { get; set; }
+
+    [StateMethod(0)]
+    protected StateResult Initial(StateParameter parameter)
+    {
+        this.Service.Print(this.Text);
+        return StateResult.Continue;
+    }
+}
+```
+
+
+
 ### Generic machine
 
 `BigMachine` and `Machine` are strongly related with `Identifier`.
@@ -447,7 +514,7 @@ bigMachine.EnableLoopChecker = false;
 
 Each machine is designed to run independently.
 
-So exceptions thrown in machines are handled by BigMachine's main thread (`BigMachine.Core`) not by the caller.
+So exceptions thrown in machines are handled by BigMachine's main thread (`BigMachine.Core`), not by the caller.
 
 In detail, exceptions are registered to BigMachine using `BigMachine.ReportException()`, and handled by the following method in BigMachine's main thread.
 
@@ -458,5 +525,5 @@ private static void DefaultExceptionHandler(BigMachineException exception)
 }
 ```
 
-You can set custom exception handler using `BigMachine.SetExceptionHandler()`.
+You can set a custom exception handler using `BigMachine.SetExceptionHandler()`.
 
