@@ -175,7 +175,8 @@ namespace BigMachines
         /// </summary>
         /// <typeparam name="TMachineInterface"><see cref="ManMachineInterface{TIdentifier, TState}"/>of the machine (e.g TestMachine.Interface).</typeparam>
         /// <param name="identifier">The identifier.</param>
-        /// <param name="createParam">The parameter passed when a machine is newly created.</param>
+        /// <param name="createParam">The parameter passed to the machine when the machine is newly created.<br/>
+        /// Override <see cref="Machine{TIdentifier}.SetParameter(object?)"/> to receive the parameter.</param>
         /// <returns>An instance of <see cref="ManMachineInterface{TIdentifier, TState}"/><br/>
         /// <see langword="null"/>: Machine is not available.</returns>
         public TMachineInterface TryCreate<TMachineInterface>(TIdentifier identifier, object? createParam = null)
@@ -204,7 +205,8 @@ namespace BigMachines
         /// </summary>
         /// <typeparam name="TMachineInterface"><see cref="ManMachineInterface{TIdentifier, TState}"/>of the machine (e.g TestMachine.Interface).</typeparam>
         /// <param name="identifier">The identifier.</param>
-        /// <param name="createParam">The parameter passed when a machine is newly created.</param>
+        /// <param name="createParam">The parameter passed to the machine when the machine is newly created.<br/>
+        /// Override <see cref="Machine{TIdentifier}.SetParameter(object?)"/> to receive the parameter.</param>
         /// <returns>An instance of <see cref="ManMachineInterface{TIdentifier, TState}"/><br/>
         /// <see langword="null"/>: Machine is not available.</returns>
         public TMachineInterface Create<TMachineInterface>(TIdentifier identifier, object? createParam = null)

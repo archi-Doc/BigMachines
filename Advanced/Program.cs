@@ -44,8 +44,8 @@ public class Program
     {
         var container = new Container(); // You can use DI container if you want.
         container.RegisterDelegate<BigMachine<int>>(x => new BigMachine<int>(ThreadCore.Root, container), Reuse.Singleton);
-        container.Register<SomeService>();
-        container.Register<ServiceProviderMachine>(Reuse.Transient);
+        container.Register<SomeService>(); // Register some service.
+        container.Register<ServiceProviderMachine>(Reuse.Transient); // Register machine.
         // container.Register<TestMachine>(Reuse.Transient); BigMachine will use default constructor if not registered.
         var bigMachine = container.Resolve<BigMachine<int>>(); // Create BigMachine.
         // var bigMachine = new BigMachine<int>(ThreadCore.Root);

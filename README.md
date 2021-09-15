@@ -375,23 +375,26 @@ These keywords in `Machine` class are reserved for source generator.
 
 ### Service provider
 
-Since the machine is independent, you cannot pass parameters directly when creating an instance.
+Since the machine is independent, you cannot pass parameters directly when creating an instance (and mainly for the deserialization process).
+
+Consider using a DI container (service provider) or `Machine<TIdentifier>.SetParameter(object? createParam)` method.
 
 ```csharp
 var container = new Container(); // DryIoc
 container.RegisterDelegate<BigMachine<int>>(x => new BigMachine<int>(ThreadCore.Root, container), Reuse.Singleton);
-container.Register<SomeService>();
-container.Register<ServiceProviderMachine>(Reuse.Transient);
+container.Register<SomeService>(); // Register some service.
+container.Register<ServiceProviderMachine>(Reuse.Transient); // Register machine.
 ```
 
 ```csharp
+using System;
 using BigMachines;
 
 namespace Advanced;
 
 public class SomeService
 {
-    public void Print() => Console.WriteLine("Some service");
+    public void Print(string? text) => Console.WriteLine($"Some service : {text}");
 }
 
 // Machine depends on SomeService.
@@ -400,7 +403,7 @@ public partial class ServiceProviderMachine : Machine<int>
 {
     public static void Test(BigMachine<int> bigMachine)
     {
-        bigMachine.TryCreate<ServiceProviderMachine.Interface>(0);
+        bigMachine.TryCreate<ServiceProviderMachine.Interface>(0, "A"); // Create a machine and set a parameter.
     }
 
     public ServiceProviderMachine(BigMachine<int> bigMachine, SomeService service)
@@ -411,18 +414,23 @@ public partial class ServiceProviderMachine : Machine<int>
         this.SetLifespan(TimeSpan.FromSeconds(3));
     }
 
+    protected override void SetParameter(object? createParam)
+    {// Receives a parameter. Note that this method is NOT called during deserialization.
+        this.Text = (string?)createParam;
+    }
+
     public SomeService Service { get; }
+
+    public string? Text { get; set; }
 
     [StateMethod(0)]
     protected StateResult Initial(StateParameter parameter)
     {
-        this.Service.Print();
+        this.Service.Print(this.Text);
         return StateResult.Continue;
     }
 }
 ```
-
-
 
 
 

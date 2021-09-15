@@ -241,7 +241,7 @@ namespace BigMachines
         /// <summary>
         /// Expected to be implemented on the user side.<br/>
         /// Set a parameter of the machine during <see cref="BigMachine{TIdentifier}.TryCreate{TMachineInterface}(TIdentifier, object?)"/>.<br/>
-        /// Note that this method is not called during deserialization.
+        /// Note that this method is NOT called during deserialization.
         /// </summary>
         /// <param name="createParam">The parameter passed when a machine is newly created.</param>
         protected internal virtual void SetParameter(object? createParam)
