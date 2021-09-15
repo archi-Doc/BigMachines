@@ -21,7 +21,7 @@
 - [Machine Class](#machine-class)
 - [Other](#other)
   - [Service provider](#service-provider)
-  - [[Generic machine](#generic-machine)
+  - [Generic machine](#generic-machine)
   - [Loop checker](#loop-checker)
   - [Exception handling](#exception-handling)
 
