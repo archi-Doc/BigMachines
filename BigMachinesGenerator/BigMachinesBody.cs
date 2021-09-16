@@ -221,12 +221,6 @@ namespace BigMachines.Generator
             {// Custom namespace.
                 ns = generator.CustomNamespace;
             }
-            else if (!string.IsNullOrEmpty(generator.AssemblyName) &&
-                generator.OutputKind != OutputKind.ConsoleApplication &&
-                generator.OutputKind != OutputKind.WindowsApplication)
-            {// To avoid namespace conflicts, use assembly name for namespace.
-                ns = VisceralHelper.AssemblyNameToIdentifier(generator.AssemblyName!);
-            }
             else
             {// Other (Apps)
                 // assemblyId = "_" + generator.AssemblyId.ToString("x");
