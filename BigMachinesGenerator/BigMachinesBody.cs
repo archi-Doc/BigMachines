@@ -238,7 +238,10 @@ namespace BigMachines.Generator
             {
                 ssb.AppendLine("private static bool Initialized;");
                 ssb.AppendLine();
-                ssb.AppendLine("[ModuleInitializer]");
+                if (generator.UseModuleInitializer)
+                {
+                    ssb.AppendLine("[ModuleInitializer]");
+                }
 
                 using (var scopeMethod = ssb.ScopeBrace("public static void Initialize()"))
                 {

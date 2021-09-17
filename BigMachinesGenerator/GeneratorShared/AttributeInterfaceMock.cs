@@ -119,6 +119,8 @@ namespace BigMachines.Generator
 
         public string? CustomNamespace { get; set; }
 
+        public bool UseModuleInitializer { get; set; } = true;
+
         public BigMachinesGeneratorOptionAttributeMock()
         {
         }
@@ -144,6 +146,12 @@ namespace BigMachines.Generator
             if (val != null)
             {
                 attribute.CustomNamespace = (string)val;
+            }
+
+            val = AttributeHelper.GetValue(-1, nameof(UseModuleInitializer), constructorArguments, namedArguments);
+            if (val != null)
+            {
+                attribute.UseModuleInitializer = (bool)val;
             }
 
             return attribute;

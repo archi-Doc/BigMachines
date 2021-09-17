@@ -21,6 +21,8 @@ namespace BigMachines.Generator
 
         public string? CustomNamespace { get; private set; }
 
+        public bool UseModuleInitializer { get; set; } = true;
+
         public string? AssemblyName { get; private set; }
 
         public int AssemblyId { get; private set; }
@@ -157,6 +159,7 @@ namespace BigMachines.Generator
                     this.AttachDebugger = ta.AttachDebugger;
                     this.GenerateToFile = ta.GenerateToFile;
                     this.CustomNamespace = ta.CustomNamespace;
+                    this.UseModuleInitializer = ta.UseModuleInitializer;
                     this.TargetFolder = System.IO.Path.Combine(System.IO.Path.GetDirectoryName(receiver.GeneratorOptionSyntax.SyntaxTree.FilePath), "Generated");
                 }
             }
