@@ -5,7 +5,7 @@ using BenchmarkDotNet.Attributes;
 using System.Linq;
 using System.Diagnostics;
 using System.Collections.Generic;
-using Arc.Collection;
+using Arc.Collections;
 using BigMachines;
 
 namespace Benchmark.Test
