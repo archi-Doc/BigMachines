@@ -46,66 +46,72 @@ namespace BigMachines.Generator
 
         public void Execute(GeneratorExecutionContext context)
         {
-            this.Context = context;
-
-            if (!(context.SyntaxReceiver is BigMachinesSyntaxReceiver receiver))
+            try
             {
-                return;
-            }
+                this.Context = context;
 
-            var compilation = context.Compilation;
-
-            this.machineObjectAttributeSymbol = compilation.GetTypeByMetadataName(MachineObjectAttributeMock.FullName);
-            if (this.machineObjectAttributeSymbol == null)
-            {
-                return;
-            }
-
-            this.bigMachinesGeneratorOptionAttributeSymbol = compilation.GetTypeByMetadataName(BigMachinesGeneratorOptionAttributeMock.FullName);
-            if (this.bigMachinesGeneratorOptionAttributeSymbol == null)
-            {
-                return;
-            }
-
-            this.ProcessGeneratorOption(receiver, compilation);
-            if (this.AttachDebugger)
-            {
-                System.Diagnostics.Debugger.Launch();
-            }
-
-            this.Prepare(context, compilation);
-
-            this.body = new BigMachinesBody(context);
-            // receiver.Generics.Prepare(compilation);
-
-            // IN: type declaration
-            foreach (var x in receiver.CandidateSet)
-            {
-                var model = compilation.GetSemanticModel(x.SyntaxTree);
-                if (model.GetDeclaredSymbol(x) is INamedTypeSymbol s)
+                if (!(context.SyntaxReceiver is BigMachinesSyntaxReceiver receiver))
                 {
-                    this.ProcessSymbol(s);
+                    return;
                 }
-            }
 
-            // IN: close generic (member, expression)
-            /*foreach (var ts in receiver.Generics.ItemDictionary.Values.Where(a => a.GenericsKind == VisceralGenericsKind.ClosedGeneric).Select(a => a.TypeSymbol))
-            {
-                if (ts != null)
+                var compilation = context.Compilation;
+
+                this.machineObjectAttributeSymbol = compilation.GetTypeByMetadataName(MachineObjectAttributeMock.FullName);
+                if (this.machineObjectAttributeSymbol == null)
                 {
-                    this.ProcessSymbol(ts);
+                    return;
                 }
+
+                this.bigMachinesGeneratorOptionAttributeSymbol = compilation.GetTypeByMetadataName(BigMachinesGeneratorOptionAttributeMock.FullName);
+                if (this.bigMachinesGeneratorOptionAttributeSymbol == null)
+                {
+                    return;
+                }
+
+                this.ProcessGeneratorOption(receiver, compilation);
+                if (this.AttachDebugger)
+                {
+                    System.Diagnostics.Debugger.Launch();
+                }
+
+                this.Prepare(context, compilation);
+
+                this.body = new BigMachinesBody(context);
+                // receiver.Generics.Prepare(compilation);
+
+                // IN: type declaration
+                foreach (var x in receiver.CandidateSet)
+                {
+                    var model = compilation.GetSemanticModel(x.SyntaxTree);
+                    if (model.GetDeclaredSymbol(x) is INamedTypeSymbol s)
+                    {
+                        this.ProcessSymbol(s);
+                    }
+                }
+
+                // IN: close generic (member, expression)
+                /*foreach (var ts in receiver.Generics.ItemDictionary.Values.Where(a => a.GenericsKind == VisceralGenericsKind.ClosedGeneric).Select(a => a.TypeSymbol))
+                {
+                    if (ts != null)
+                    {
+                        this.ProcessSymbol(ts);
+                    }
+                }
+
+                this.SalvageCloseGeneric(receiver.Generics);*/
+
+                this.body.Prepare();
+                if (this.body.Abort)
+                {
+                    return;
+                }
+
+                this.body.Generate(this);
             }
-
-            this.SalvageCloseGeneric(receiver.Generics);*/
-
-            this.body.Prepare();
-            if (this.body.Abort)
+            catch
             {
-                return;
             }
-
-            this.body.Generate(this);
         }
 
         public void Initialize(GeneratorInitializationContext context)
