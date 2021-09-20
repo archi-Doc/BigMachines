@@ -427,7 +427,14 @@ namespace BigMachines
                 }
                 else
                 {
-                    throw new InvalidOperationException("ServiceProvider is required to create an instance of class which does not have default constructor.");
+                    if (this.ServiceProvider == null)
+                    {
+                        throw new InvalidOperationException("ServiceProvider is required to create an instance of machine which does not have default constructor.");
+                    }
+                    else
+                    {
+                        throw new InvalidOperationException("ServiceProvider could not create an instance of machine (the machine is not registered).");
+                    }
                 }
             }
 
