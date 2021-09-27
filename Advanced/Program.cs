@@ -66,17 +66,18 @@ public class Program
 
         TerminatorMachine<int>.Test(bigMachine, 0);
 
-        TestMachine.Test(bigMachine);
+        // TestMachine.Test(bigMachine);
         // PassiveMachine.Test(bigMachine);
         // IntermittentMachine.Test(bigMachine);
         // ContinuousMachine.Test(bigMachine);
 
         // Other test code.
-        GenericMachine<int>.Test(bigMachine);
+        DerivedMachine.Test2(bigMachine);
+        // GenericMachine<int>.Test(bigMachine);
         // LoopMachine.Test(bigMachine);
         // LoopMachine2.Test(bigMachine);
         // SingleMachine.Test(bigMachine);
-        ServiceProviderMachine.Test(bigMachine);
+        // ServiceProviderMachine.Test(bigMachine);
 
         await ThreadCore.Root.WaitForTerminationAsync(-1); // Wait for the termination infinitely.
 
