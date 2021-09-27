@@ -80,6 +80,8 @@ namespace BigMachines.Generator
 
         public string? GroupType { get; private set; }
 
+        public string NewIfDerived { get; private set; } = string.Empty;
+
         public Arc.Visceral.NullableAnnotation NullableAnnotationIfReferenceType
         {
             get
@@ -288,14 +290,24 @@ namespace BigMachines.Generator
 
             // Machine<TIdentifier>
             var machineObject = this.BaseObject;
+            var derivedMachine = false;
             while (machineObject != null)
             {
                 if (machineObject.OriginalDefinition?.FullName == "BigMachines.Machine<TIdentifier>")
                 {
                     break;
                 }
+                else if (machineObject.ObjectAttribute != null)
+                {
+                    derivedMachine = true;
+                }
 
                 machineObject = machineObject.BaseObject;
+            }
+
+            if (derivedMachine)
+            {
+                this.NewIfDerived = "new ";
             }
 
             if (machineObject == null)
@@ -570,7 +582,7 @@ ModuleInitializerClass_Added:
                 return;
             }
 
-            using (var scope = ssb.ScopeBrace("public enum State"))
+            using (var scope = ssb.ScopeBrace($"public {this.NewIfDerived}enum State"))
             {
                 foreach (var x in this.StateMethodList)
                 {
@@ -589,7 +601,7 @@ ModuleInitializerClass_Added:
             }
 
             var identifierName = this.IdentifierObject!.FullName;
-            using (var scope = ssb.ScopeBrace($"public class Interface : ManMachineInterface<{identifierName}, {this.StateName}>"))
+            using (var scope = ssb.ScopeBrace($"public {this.NewIfDerived}class Interface : ManMachineInterface<{identifierName}, {this.StateName}>"))
             {
                 using (var scope2 = ssb.ScopeBrace($"public Interface(IMachineGroup<{identifierName}> group, {identifierName} identifier) : base(group, identifier)"))
                 {
@@ -720,7 +732,7 @@ ModuleInitializerClass_Added:
             ssb.AppendLine();
             ssb.AppendLine($"protected bool ChangeState({this.StateName} state, bool rerun = true) => this.InternalChangeState(Unsafe.As<{this.StateName}, int>(ref state), rerun);");
             ssb.AppendLine();
-            ssb.AppendLine($"protected {this.StateName} GetCurrentState() => Unsafe.As<int, {this.StateName}>(ref this.CurrentState);");
+            ssb.AppendLine($"protected {this.NewIfDerived}{this.StateName} GetCurrentState() => Unsafe.As<int, {this.StateName}>(ref this.CurrentState);");
             ssb.AppendLine();
 
             /*if (this.DefaultStateMethod != null)
@@ -737,7 +749,7 @@ ModuleInitializerClass_Added:
                 return;
             }
 
-            using (var scope = ssb.ScopeBrace("public static void RegisterBM(uint typeId)"))
+            using (var scope = ssb.ScopeBrace($"public static {this.NewIfDerived}void RegisterBM(uint typeId)"))
             {
                 var constructor = this.ObjectFlag.HasFlag(BigMachinesObjectFlag.HasSimpleConstructor) ? $"x => new {this.FullName}(x)" : "null";
                 var group = this.GroupType == null ? "null" : $"typeof({this.GroupType})";
