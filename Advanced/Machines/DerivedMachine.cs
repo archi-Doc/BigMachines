@@ -24,7 +24,7 @@ namespace Advanced
             this.SetLifespan(TimeSpan.FromSeconds(5)); // Time until the machine automatically terminates.
         }
 
-        // [StateMethod(2)]
+        // [StateMethod(0)]
         protected new StateResult Initial(StateParameter parameter)
         {
             Console.WriteLine($"DerivedMachine: Initial - {this.Count++}");
@@ -32,6 +32,42 @@ namespace Advanced
             {
                 this.ChangeState(State.First);
             }
+
+            return StateResult.Continue;
+        }
+    }
+
+    public class EmptyMachineBase : Machine<int>
+    {
+        public EmptyMachineBase(BigMachine<int> bigMachine)
+            : base(bigMachine)
+        {
+        }
+
+        public int Count { get; set; }
+
+        public string Text { get; set; } = "EmptyMachine";
+    }
+
+    [MachineObject(0x609284ed)]
+    public partial class DerivedMachine2 : EmptyMachineBase
+    {
+        public static void Test(BigMachine<int> bigMachine)
+        {
+            var m = bigMachine.TryCreate<DerivedMachine2.Interface>(0);
+        }
+
+        public DerivedMachine2(BigMachine<int> bigMachine)
+            : base(bigMachine)
+        {
+            this.DefaultTimeout = TimeSpan.FromSeconds(1); // Default time interval for machine execution.
+            this.SetLifespan(TimeSpan.FromSeconds(3)); // Time until the machine automatically terminates.
+        }
+
+        [StateMethod(0)]
+        protected StateResult Initial(StateParameter parameter)
+        {
+            Console.WriteLine($"{this.Text} - DerivedMachine2: Initial - {this.Count++}");
 
             return StateResult.Continue;
         }

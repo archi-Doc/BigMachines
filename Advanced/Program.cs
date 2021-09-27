@@ -73,6 +73,7 @@ public class Program
 
         // Other test code.
         DerivedMachine.Test2(bigMachine);
+        DerivedMachine2.Test(bigMachine);
         // GenericMachine<int>.Test(bigMachine);
         // LoopMachine.Test(bigMachine);
         // LoopMachine2.Test(bigMachine);
