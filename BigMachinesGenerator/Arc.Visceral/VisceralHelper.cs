@@ -126,6 +126,28 @@ namespace Arc.Visceral
             _ => string.Empty,
         };
 
+        public static string AccessibilityToStringPlusSpace(this Accessibility accessibility) => accessibility switch
+        {
+            Accessibility.Private => "private ",
+            Accessibility.ProtectedAndInternal => "private protected ",
+            Accessibility.Protected => "protected ",
+            Accessibility.Internal => "internal ",
+            Accessibility.ProtectedOrInternal => "protected internal ",
+            Accessibility.Public => "public ",
+            _ => string.Empty,
+        };
+
+        public static (string property, string getter, string setter) GetterSetterAccessibilityToPropertyString(Accessibility getter, Accessibility setter)
+        {
+            var max = getter;
+            max = max > setter ? max : setter;
+
+            var p = max.AccessibilityToStringPlusSpace();
+            return (p,
+                getter == max ? string.Empty : getter.AccessibilityToStringPlusSpace(),
+                setter == max ? string.Empty : setter.AccessibilityToStringPlusSpace());
+        }
+
         public static bool IsInternal(this Accessibility accessibility) => accessibility switch
         {
             Accessibility.ProtectedAndInternal => true,
