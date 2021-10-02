@@ -156,6 +156,42 @@ namespace Arc.Visceral
             _ => false,
         };
 
+        public static Accessibility FieldInfoToAccessibility(FieldInfo? fi)
+        {
+            if (fi == null)
+            {
+                return Accessibility.NotApplicable;
+            }
+            else if (fi.IsPrivate)
+            {
+                return Accessibility.Private;
+            }
+            else if (fi.IsFamilyAndAssembly)
+            {
+                return Accessibility.ProtectedAndInternal;
+            }
+            else if (fi.IsFamily)
+            {
+                return Accessibility.Protected;
+            }
+            else if (fi.IsAssembly)
+            {
+                return Accessibility.Internal;
+            }
+            else if (fi.IsFamilyOrAssembly)
+            {
+                return Accessibility.ProtectedOrInternal;
+            }
+            else if (fi.IsPublic)
+            {
+                return Accessibility.Public;
+            }
+            else
+            {
+                return Accessibility.NotApplicable;
+            }
+        }
+
         public static Accessibility MethodBaseToAccessibility(MethodBase? mb)
         {
             if (mb == null)
