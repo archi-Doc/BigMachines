@@ -2521,6 +2521,42 @@ namespace Arc.Visceral
             }
         }
 
+        public Accessibility Field_Accessibility
+        {
+            get
+            {
+                if (this.symbol is IFieldSymbol fs)
+                {
+                    return fs.DeclaredAccessibility;
+                }
+                else if (this.memberInfo is FieldInfo fi)
+                {
+                    return VisceralHelper.FieldInfoToAccessibility(fi);
+                }
+
+                return Accessibility.NotApplicable;
+            }
+        }
+
+        public (Accessibility getter, Accessibility setter) Property_Accessibility
+        {
+            get
+            {
+                if (this.symbol is IPropertySymbol ps)
+                {
+                    return (ps.GetMethod == null ? Accessibility.NotApplicable : ps.GetMethod.DeclaredAccessibility,
+                        ps.SetMethod == null ? Accessibility.NotApplicable : ps.SetMethod.DeclaredAccessibility);
+                }
+                else if (this.memberInfo is PropertyInfo pi)
+                {
+                    return (VisceralHelper.MethodBaseToAccessibility(pi.GetMethod),
+                        VisceralHelper.MethodBaseToAccessibility(pi.SetMethod));
+                }
+
+                return (Accessibility.NotApplicable, Accessibility.NotApplicable);
+            }
+        }
+
         public bool Property_IsPrivateGetter
         {
             get

@@ -126,6 +126,28 @@ namespace Arc.Visceral
             _ => string.Empty,
         };
 
+        public static string AccessibilityToStringPlusSpace(this Accessibility accessibility) => accessibility switch
+        {
+            Accessibility.Private => "private ",
+            Accessibility.ProtectedAndInternal => "private protected ",
+            Accessibility.Protected => "protected ",
+            Accessibility.Internal => "internal ",
+            Accessibility.ProtectedOrInternal => "protected internal ",
+            Accessibility.Public => "public ",
+            _ => string.Empty,
+        };
+
+        public static (string property, string getter, string setter) GetterSetterAccessibilityToPropertyString(Accessibility getter, Accessibility setter)
+        {
+            var max = getter;
+            max = max > setter ? max : setter;
+
+            var p = max.AccessibilityToStringPlusSpace();
+            return (p,
+                getter == max ? string.Empty : getter.AccessibilityToStringPlusSpace(),
+                setter == max ? string.Empty : setter.AccessibilityToStringPlusSpace());
+        }
+
         public static bool IsInternal(this Accessibility accessibility) => accessibility switch
         {
             Accessibility.ProtectedAndInternal => true,
@@ -133,6 +155,42 @@ namespace Arc.Visceral
             Accessibility.ProtectedOrInternal => false,
             _ => false,
         };
+
+        public static Accessibility FieldInfoToAccessibility(FieldInfo? fi)
+        {
+            if (fi == null)
+            {
+                return Accessibility.NotApplicable;
+            }
+            else if (fi.IsPrivate)
+            {
+                return Accessibility.Private;
+            }
+            else if (fi.IsFamilyAndAssembly)
+            {
+                return Accessibility.ProtectedAndInternal;
+            }
+            else if (fi.IsFamily)
+            {
+                return Accessibility.Protected;
+            }
+            else if (fi.IsAssembly)
+            {
+                return Accessibility.Internal;
+            }
+            else if (fi.IsFamilyOrAssembly)
+            {
+                return Accessibility.ProtectedOrInternal;
+            }
+            else if (fi.IsPublic)
+            {
+                return Accessibility.Public;
+            }
+            else
+            {
+                return Accessibility.NotApplicable;
+            }
+        }
 
         public static Accessibility MethodBaseToAccessibility(MethodBase? mb)
         {

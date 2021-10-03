@@ -91,7 +91,8 @@ public class Program
 {
     public static async Task Main(string[] args)
     {
-        var bigMachine = new BigMachine<int>(ThreadCore.Root); // Create BigMachine and set thread core (parent thread).
+        var bigMachine = new BigMachine<int>(); // Create BigMachine.
+        bigMachine.Start(); // Start BigMachine threads.
 
         var testMachine = bigMachine.TryCreate<TestMachine.Interface>(42); // Machine is created via the interface class and identifier, not the machine class itself.
         if (testMachine != null)
@@ -381,7 +382,7 @@ Consider using a DI container (service provider) or `Machine<TIdentifier>.SetPar
 
 ```csharp
 var container = new Container(); // DryIoc
-container.RegisterDelegate<BigMachine<int>>(x => new BigMachine<int>(ThreadCore.Root, container), Reuse.Singleton);
+container.RegisterDelegate<BigMachine<int>>(x => new BigMachine<int>(container), Reuse.Singleton);
 container.Register<SomeService>(); // Register some service.
 container.Register<ServiceProviderMachine>(Reuse.Transient); // Register machine.
 ```
