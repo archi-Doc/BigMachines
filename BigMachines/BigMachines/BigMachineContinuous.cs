@@ -78,7 +78,7 @@ namespace BigMachines
         public BigMachineContinuous(BigMachine<TIdentifier> bigMachine)
         {
             this.BigMachine = bigMachine;
-            this.CoreGroup = new ThreadCoreGroup(this.BigMachine.Core);
+            // this.CoreGroup = new ThreadCoreGroup(this.BigMachine.Core);
             this.maxThreads = DefaultMaxThreads;
         }
 
@@ -144,7 +144,7 @@ namespace BigMachines
 
         public BigMachine<TIdentifier> BigMachine { get; }
 
-        public ThreadCoreGroup CoreGroup { get; }
+        // public ThreadCoreGroup CoreGroup { get; }
 
         internal bool AddMachine(Machine<TIdentifier> machine)
         {
@@ -202,7 +202,7 @@ namespace BigMachines
                         return;
                     }
 
-                    i.Core = new Core(this.CoreGroup, i);
+                    i.Core = new Core(this.BigMachine.Core, i); // new Core(this.CoreGroup, i);
                     this.cores.Add(i.Core);
                     i.Core.Start();
                 }

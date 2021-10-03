@@ -45,7 +45,8 @@ public class Program
 {
     public static async Task Main(string[] args)
     {
-        var bigMachine = new BigMachine<int>(ThreadCore.Root); // Create BigMachine and set thread core (parent thread).
+        var bigMachine = new BigMachine<int>(); // Create BigMachine and set thread core (parent thread).
+        bigMachine.Start();
 
         var testMachine = bigMachine.TryCreate<TestMachine.Interface>(42); // Machine is created via the interface class and identifier, not the machine class itself.
         if (testMachine != null)

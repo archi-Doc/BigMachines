@@ -43,7 +43,7 @@ public class Program
     public static async Task Test()
     {
         var container = new Container(); // You can use DI container if you want.
-        container.RegisterDelegate<BigMachine<int>>(x => new BigMachine<int>(ThreadCore.Root, container), Reuse.Singleton);
+        container.RegisterDelegate<BigMachine<int>>(x => new BigMachine<int>(container), Reuse.Singleton);
         container.Register<SomeService>(); // Register some service.
         container.Register<ServiceProviderMachine>(Reuse.Transient); // Register machine.
         // container.Register<TestMachine>(Reuse.Transient); BigMachine will use default constructor if not registered.
@@ -63,6 +63,8 @@ public class Program
         catch
         {
         }
+
+        bigMachine.Start(); // Start BigMachine.
 
         TerminatorMachine<int>.Test(bigMachine, 0);
 
@@ -92,7 +94,9 @@ public class Program
 
     public static async Task Test2()
     {
-        var bigMachine = new BigMachine<IdentifierClass>(ThreadCore.Root);
+        var bigMachine = new BigMachine<IdentifierClass>();
+        bigMachine.Start();
+
         bigMachine.TryCreate<IdentifierMachine.Interface>(new(1, "A"));
         // bigMachine.TryCreate<GenericMachine<IdentifierClass>.Interface>(new(2, "B"));
         TerminatorMachine<IdentifierClass>.Test(bigMachine, IdentifierClass.Default);

@@ -57,14 +57,14 @@ namespace BigMachines
         /// <summary>
         /// Initializes a new instance of the <see cref="BigMachine{TIdentifier}"/> class.
         /// </summary>
-        /// <param name="parent">The parent <see cref="ThreadCore"/>.</param>
         /// <param name="serviceProvider"><see cref="IServiceProvider"/> used to create instances of <see cref="Machine{TIdentifier}"/>.</param>
-        public BigMachine(ThreadCoreBase parent, IServiceProvider? serviceProvider = null)
+        public BigMachine(IServiceProvider? serviceProvider = null)
         {
             MachineLoader.Load<TIdentifier>(); // Load generic machine information.
 
             this.Status = new();
-            this.Core = new ThreadCore(parent, this.MainLoop, false);
+            this.Core = new ThreadCoreGroup(ThreadCore.Root);
+            var mainCore = new ThreadCore(this.Core, this.MainLoop, false);
             this.CommandPost = new(this, this.DistributeCommand);
             this.ServiceProvider = serviceProvider;
             this.Continuous = new(this);
@@ -91,8 +91,6 @@ namespace BigMachines
                     throw new InvalidOperationException($"Machine: {x.Info.MachineType} is already registered.");
                 }
             }
-
-            this.Core.Start();
         }
 
         /// <summary>
@@ -111,9 +109,9 @@ namespace BigMachines
         public BigMachineStatus Status { get; }
 
         /// <summary>
-        /// Gets <see cref="ThreadCore"/> of <see cref="BigMachine{TIdentifier}"/>.
+        /// Gets <see cref="ThreadCoreBase"/> of <see cref="BigMachine{TIdentifier}"/>.
         /// </summary>
-        public ThreadCore Core { get; }
+        public ThreadCoreBase Core { get; }
 
         /// <summary>
         /// Gets <see cref="CommandPost"/> (message distributing class).
@@ -129,6 +127,11 @@ namespace BigMachines
         /// Gets <see cref="IServiceProvider"/> used to create instances of <see cref="Machine{TIdentifier}"/>.
         /// </summary>
         public IServiceProvider? ServiceProvider { get; }
+
+        /// <summary>
+        /// Start BigMachine's <see cref="ThreadCore"/>.
+        /// </summary>
+        public void Start() => this.Core.Start(true);
 
         public void ReportException(BigMachineException exception)
         {

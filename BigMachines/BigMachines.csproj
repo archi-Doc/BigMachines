@@ -24,7 +24,7 @@
   </ItemGroup>
 
   <ItemGroup>
-    <PackageReference Include="Arc.Threading" Version="0.8.0" />
+    <PackageReference Include="Arc.Threading" Version="0.8.1" />
     <PackageReference Include="Tinyhand" Version="0.23.0" />
     <PackageReference Include="StyleCop.Analyzers" Version="1.1.118">
       <PrivateAssets>all</PrivateAssets>

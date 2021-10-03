@@ -45,7 +45,7 @@ namespace Sandbox
             // MachineLoader.Add(typeof(TestMachineLoader<>));
 
             var container = new Container();
-            container.RegisterDelegate<BigMachine<int>>(x => new BigMachine<int>(ThreadCore.Root, container), Reuse.Singleton);
+            container.RegisterDelegate<BigMachine<int>>(x => new BigMachine<int>(container), Reuse.Singleton);
             container.Register<TestMachine>(Reuse.Singleton);
             // container.Register<Sandbox.ParentClassT<>.NestedMachineT>(Reuse.Singleton);
             container.Register(typeof(Sandbox.ParentClassT<>.NestedMachineT));
@@ -67,6 +67,8 @@ namespace Sandbox
             catch
             {
             }
+
+            bigMachine.Start();
 
             Test1(bigMachine);
             // Test2(bigMachine);
