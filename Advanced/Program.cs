@@ -69,7 +69,7 @@ public class Program
         // TestMachine.Test(bigMachine);
         // PassiveMachine.Test(bigMachine);
         // IntermittentMachine.Test(bigMachine);
-        // ContinuousMachine.Test(bigMachine);
+        ContinuousMachine.Test(bigMachine);
 
         // Other test code.
         DerivedMachine.Test2(bigMachine);
