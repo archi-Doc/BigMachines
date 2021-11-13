@@ -1608,7 +1608,7 @@ namespace Arc.Visceral
                             {
                                 if (x.GetSyntax() is TypeDeclarationSyntax syntax)
                                 {
-                                    if (syntax.Modifiers.Any(a => a.Kind() == SyntaxKind.PartialKeyword))
+                                    if (syntax.Modifiers.Any(a => a.IsKind(SyntaxKind.PartialKeyword)))
                                     {
                                         this.isPartial = true;
                                         break;
