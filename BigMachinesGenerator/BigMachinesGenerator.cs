@@ -111,7 +111,7 @@ namespace BigMachines.Generator
                     return;
                 }
 
-                this.body.Generate(this, CancellationToken);
+                this.body.Generate(this, context.CancellationToken);
             }
             catch
             {
