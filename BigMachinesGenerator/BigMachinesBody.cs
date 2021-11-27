@@ -5,6 +5,7 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Text;
+using System.Threading;
 using Arc.Visceral;
 using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.Text;
@@ -125,7 +126,7 @@ namespace BigMachines.Generator
             }
         }
 
-        public void Generate(BigMachinesGenerator generator)
+        public void Generate(BigMachinesGenerator generator, CancellationToken cancellationToken)
         {
             ScopingStringBuilder ssb = new();
             GeneratorInformation info = new();
@@ -134,6 +135,7 @@ namespace BigMachines.Generator
             // Namespace
             foreach (var x in this.Namespaces)
             {
+                cancellationToken.ThrowIfCancellationRequested();
                 this.GenerateHeader(ssb);
                 var ns = ssb.ScopeNamespace(x.Key);
 
@@ -164,6 +166,7 @@ namespace BigMachines.Generator
                 }
             }
 
+            cancellationToken.ThrowIfCancellationRequested();
             this.GenerateLoader(generator, info, rootObjects);
 
             this.FlushDiagnostic();

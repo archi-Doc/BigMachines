@@ -69,18 +69,21 @@ namespace BigMachines.Generator
                     return;
                 }
 
+                context.CancellationToken.ThrowIfCancellationRequested();
                 this.ProcessGeneratorOption(receiver, compilation);
                 if (this.AttachDebugger)
                 {
                     System.Diagnostics.Debugger.Launch();
                 }
 
+                context.CancellationToken.ThrowIfCancellationRequested();
                 this.Prepare(context, compilation);
 
                 this.body = new BigMachinesBody(context);
                 // receiver.Generics.Prepare(compilation);
 
                 // IN: type declaration
+                context.CancellationToken.ThrowIfCancellationRequested();
                 foreach (var x in receiver.CandidateSet)
                 {
                     var model = compilation.GetSemanticModel(x.SyntaxTree);
@@ -101,13 +104,14 @@ namespace BigMachines.Generator
 
                 this.SalvageCloseGeneric(receiver.Generics);*/
 
+                context.CancellationToken.ThrowIfCancellationRequested();
                 this.body.Prepare();
                 if (this.body.Abort)
                 {
                     return;
                 }
 
-                this.body.Generate(this);
+                this.body.Generate(this, CancellationToken);
             }
             catch
             {
