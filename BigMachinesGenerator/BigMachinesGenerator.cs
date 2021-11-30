@@ -1,6 +1,7 @@
 ﻿// Copyright (c) All contributors. All rights reserved. Licensed under the MIT license.
 
 using System.Collections.Generic;
+using System.Collections.Immutable;
 using System.Linq;
 using Arc.Visceral;
 using Microsoft.CodeAnalysis;
@@ -13,15 +14,148 @@ using Microsoft.CodeAnalysis.CSharp.Syntax;
 namespace BigMachines.Generator
 {
     [Generator]
-    public class BigMachinesGenerator : ISourceGenerator
+    public class BigMachinesGeneratorV2 : IIncrementalGenerator, IGeneratorInformation
+    {
+        public bool AttachDebugger { get; private set; }
+
+        public bool GenerateToFile { get; private set; }
+
+        public string? CustomNamespace { get; private set; }
+
+        public string? AssemblyName { get; private set; }
+
+        public int AssemblyId { get; private set; }
+
+        public OutputKind OutputKind { get; private set; }
+
+        public string? TargetFolder { get; private set; }
+
+        public void Initialize(IncrementalGeneratorInitializationContext context)
+        {
+            var provider = context.SyntaxProvider
+
+                // Find all MethodDeclarationSyntax nodes attributed with RegexGenerator
+                .CreateSyntaxProvider(static (s, _) => IsSyntaxTargetForGeneration(s), (ctx, _) => this.GetSemanticTargetForGeneration(ctx))
+                .Combine(context.CompilationProvider)
+                .Collect();
+
+            context.RegisterImplementationSourceOutput(provider, this.Emit);
+        }
+
+        private static bool IsSyntaxTargetForGeneration(SyntaxNode node) =>
+            node is TypeDeclarationSyntax m && m.AttributeLists.Count > 0;
+
+        private TypeDeclarationSyntax? GetSemanticTargetForGeneration(GeneratorSyntaxContext context)
+        {
+            var typeSyntax = (TypeDeclarationSyntax)context.Node;
+            foreach (var attributeList in typeSyntax.AttributeLists)
+            {
+                foreach (var attribute in attributeList.Attributes)
+                {
+                    var name = attribute.Name.ToString();
+                    if (name.EndsWith(BigMachinesGeneratorOptionAttributeMock.StandardName) ||
+                        name.EndsWith(BigMachinesGeneratorOptionAttributeMock.SimpleName))
+                    {
+                        return typeSyntax;
+                    }
+                    else if (name.EndsWith(MachineObjectAttributeMock.StandardName) ||
+                        name.EndsWith(MachineObjectAttributeMock.SimpleName))
+                    {
+                        return typeSyntax;
+                    }
+                }
+            }
+
+            return null;
+        }
+
+        private void Emit(SourceProductionContext context, ImmutableArray<(TypeDeclarationSyntax? type, Compilation compilation)> sources)
+        {
+            if (sources.Length == 0)
+            {
+                return;
+            }
+
+            var compilation = sources[0].compilation;
+            var machineObjectAttributeSymbol = compilation.GetTypeByMetadataName(MachineObjectAttributeMock.FullName);
+            if (machineObjectAttributeSymbol == null)
+            {
+                return;
+            }
+
+            var bigMachinesGeneratorOptionAttributeSymbol = compilation.GetTypeByMetadataName(BigMachinesGeneratorOptionAttributeMock.FullName);
+            if (bigMachinesGeneratorOptionAttributeSymbol == null)
+            {
+                return;
+            }
+
+            this.AssemblyName = compilation.AssemblyName ?? string.Empty;
+            this.AssemblyId = this.AssemblyName.GetHashCode();
+            this.OutputKind = compilation.Options.OutputKind;
+
+            var body = new BigMachinesBody(context);
+#pragma warning disable RS1024 // Symbols should be compared for equality
+            var processed = new HashSet<INamedTypeSymbol?>();
+#pragma warning restore RS1024 // Symbols should be compared for equality
+
+            var generatorOptionSet = false;
+            foreach (var x in sources)
+            {
+                if (x.type == null)
+                {
+                    continue;
+                }
+
+                context.CancellationToken.ThrowIfCancellationRequested();
+
+                var model = compilation.GetSemanticModel(x.type.SyntaxTree);
+                if (model.GetDeclaredSymbol(x.type) is INamedTypeSymbol s &&
+                    !processed.Contains(s))
+                {
+                    processed.Add(s);
+                    foreach (var y in s.GetAttributes())
+                    {
+                        if (SymbolEqualityComparer.Default.Equals(y.AttributeClass, machineObjectAttributeSymbol))
+                        { // MachineObject
+                            body.Add(s);
+                            break;
+                        }
+                        else if (!generatorOptionSet &&
+                            SymbolEqualityComparer.Default.Equals(y.AttributeClass, bigMachinesGeneratorOptionAttributeSymbol))
+                        {
+                            generatorOptionSet = true;
+                            var va = new VisceralAttribute(BigMachinesGeneratorOptionAttributeMock.FullName, y);
+                            var ta = BigMachinesGeneratorOptionAttributeMock.FromArray(va.ConstructorArguments, va.NamedArguments);
+
+                            this.AttachDebugger = ta.AttachDebugger;
+                            this.GenerateToFile = ta.GenerateToFile;
+                            this.CustomNamespace = ta.CustomNamespace;
+                            this.TargetFolder = System.IO.Path.Combine(System.IO.Path.GetDirectoryName(x.type.SyntaxTree.FilePath), "Generated");
+                        }
+                    }
+                }
+            }
+
+            context.CancellationToken.ThrowIfCancellationRequested();
+            body.Prepare();
+            if (body.Abort)
+            {
+                return;
+            }
+
+            context.CancellationToken.ThrowIfCancellationRequested();
+            body.Generate(this, context.CancellationToken);
+        }
+    }
+
+    // [Generator]
+    public class BigMachinesGenerator : ISourceGenerator, IGeneratorInformation
     {
         public bool AttachDebugger { get; private set; } = false;
 
         public bool GenerateToFile { get; private set; } = false;
 
         public string? CustomNamespace { get; private set; }
-
-        public bool UseModuleInitializer { get; set; } = true;
 
         public string? AssemblyName { get; private set; }
 
@@ -169,7 +303,6 @@ namespace BigMachines.Generator
                     this.AttachDebugger = ta.AttachDebugger;
                     this.GenerateToFile = ta.GenerateToFile;
                     this.CustomNamespace = ta.CustomNamespace;
-                    this.UseModuleInitializer = ta.UseModuleInitializer;
                     this.TargetFolder = System.IO.Path.Combine(System.IO.Path.GetDirectoryName(receiver.GeneratorOptionSyntax.SyntaxTree.FilePath), "Generated");
                 }
             }
