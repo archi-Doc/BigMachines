@@ -13,28 +13,9 @@ using Microsoft.CodeAnalysis.CSharp.Syntax;
 
 namespace BigMachines.Generator
 {
-    public interface IBigMachinesGenerator
-    {
-        public bool AttachDebugger { get; }
-
-        public bool GenerateToFile { get; }
-
-        public string? CustomNamespace { get; }
-
-        public string? AssemblyName { get; }
-
-        public int AssemblyId { get; }
-
-        public OutputKind OutputKind { get; }
-
-        public string? TargetFolder { get; }
-    }
-
     [Generator]
-    public class BigMachinesGeneratorV2 : IIncrementalGenerator, IBigMachinesGenerator
+    public class BigMachinesGeneratorV2 : IIncrementalGenerator, IGeneratorInformation
     {
-        // public TypeDeclarationSyntax? GeneratorOptionSyntax { get; private set; }
-
         public bool AttachDebugger { get; private set; }
 
         public bool GenerateToFile { get; private set; }
@@ -72,15 +53,12 @@ namespace BigMachines.Generator
                 foreach (var attribute in attributeList.Attributes)
                 {
                     var name = attribute.Name.ToString();
-                    /*if (this.GeneratorOptionSyntax == null)
+                    if (name.EndsWith(BigMachinesGeneratorOptionAttributeMock.StandardName) ||
+                        name.EndsWith(BigMachinesGeneratorOptionAttributeMock.SimpleName))
                     {
-                        if (name.EndsWith(BigMachinesGeneratorOptionAttributeMock.StandardName) || name.EndsWith(BigMachinesGeneratorOptionAttributeMock.SimpleName))
-                        {
-                            this.GeneratorOptionSyntax = typeSyntax;
-                        }
-                    }*/
-
-                    if (name.EndsWith(MachineObjectAttributeMock.StandardName) ||
+                        return typeSyntax;
+                    }
+                    else if (name.EndsWith(MachineObjectAttributeMock.StandardName) ||
                         name.EndsWith(MachineObjectAttributeMock.SimpleName))
                     {
                         return typeSyntax;
@@ -105,6 +83,12 @@ namespace BigMachines.Generator
                 return;
             }
 
+            var bigMachinesGeneratorOptionAttributeSymbol = compilation.GetTypeByMetadataName(BigMachinesGeneratorOptionAttributeMock.FullName);
+            if (bigMachinesGeneratorOptionAttributeSymbol == null)
+            {
+                return;
+            }
+
             this.AssemblyName = compilation.AssemblyName ?? string.Empty;
             this.AssemblyId = this.AssemblyName.GetHashCode();
             this.OutputKind = compilation.Options.OutputKind;
@@ -114,6 +98,7 @@ namespace BigMachines.Generator
             var processed = new HashSet<INamedTypeSymbol?>();
 #pragma warning restore RS1024 // Symbols should be compared for equality
 
+            var generatorOptionSet = false;
             foreach (var x in sources)
             {
                 if (x.type == null)
@@ -135,6 +120,18 @@ namespace BigMachines.Generator
                             body.Add(s);
                             break;
                         }
+                        else if (!generatorOptionSet &&
+                            SymbolEqualityComparer.Default.Equals(y.AttributeClass, bigMachinesGeneratorOptionAttributeSymbol))
+                        {
+                            generatorOptionSet = true;
+                            var va = new VisceralAttribute(BigMachinesGeneratorOptionAttributeMock.FullName, y);
+                            var ta = BigMachinesGeneratorOptionAttributeMock.FromArray(va.ConstructorArguments, va.NamedArguments);
+
+                            this.AttachDebugger = ta.AttachDebugger;
+                            this.GenerateToFile = ta.GenerateToFile;
+                            this.CustomNamespace = ta.CustomNamespace;
+                            this.TargetFolder = System.IO.Path.Combine(System.IO.Path.GetDirectoryName(x.type.SyntaxTree.FilePath), "Generated");
+                        }
                     }
                 }
             }
@@ -152,7 +149,7 @@ namespace BigMachines.Generator
     }
 
     // [Generator]
-    public class BigMachinesGenerator : ISourceGenerator, IBigMachinesGenerator
+    public class BigMachinesGenerator : ISourceGenerator, IGeneratorInformation
     {
         public bool AttachDebugger { get; private set; } = false;
 

@@ -131,7 +131,7 @@ namespace BigMachines.Generator
             }
         }
 
-        public void Generate(IBigMachinesGenerator generator, CancellationToken cancellationToken)
+        public void Generate(IGeneratorInformation generator, CancellationToken cancellationToken)
         {
             ScopingStringBuilder ssb = new();
             GeneratorInformation info = new();
@@ -192,7 +192,7 @@ namespace BigMachines.Generator
             ssb.AppendLine();
         }
 
-        private void GenerateLoader(IBigMachinesGenerator generator, GeneratorInformation info, List<BigMachinesObject> rootObjects)
+        private void GenerateLoader(IGeneratorInformation generator, GeneratorInformation info, List<BigMachinesObject> rootObjects)
         {
             var ssb = new ScopingStringBuilder();
             this.GenerateHeader(ssb);
@@ -222,7 +222,7 @@ namespace BigMachines.Generator
             }
         }
 
-        private void GenerateInitializer(IBigMachinesGenerator generator, ScopingStringBuilder ssb, GeneratorInformation info)
+        private void GenerateInitializer(IGeneratorInformation generator, ScopingStringBuilder ssb, GeneratorInformation info)
         {
             // Namespace
             var ns = "BigMachines";
