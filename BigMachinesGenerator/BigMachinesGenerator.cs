@@ -32,12 +32,10 @@ namespace BigMachines.Generator
 
         public void Initialize(IncrementalGeneratorInitializationContext context)
         {
-            var provider = context.SyntaxProvider
-
-                // Find all MethodDeclarationSyntax nodes attributed with RegexGenerator
-                .CreateSyntaxProvider(static (s, _) => IsSyntaxTargetForGeneration(s), (ctx, _) => this.GetSemanticTargetForGeneration(ctx))
-                .Combine(context.CompilationProvider)
-                .Collect();
+            var provider = context.CompilationProvider.Combine(
+                context.SyntaxProvider
+                .CreateSyntaxProvider(static (s, _) => IsSyntaxTargetForGeneration(s), static (ctx, _) => GetSemanticTargetForGeneration(ctx))
+                .Collect());
 
             context.RegisterImplementationSourceOutput(provider, this.Emit);
         }
@@ -45,7 +43,7 @@ namespace BigMachines.Generator
         private static bool IsSyntaxTargetForGeneration(SyntaxNode node) =>
             node is TypeDeclarationSyntax m && m.AttributeLists.Count > 0;
 
-        private TypeDeclarationSyntax? GetSemanticTargetForGeneration(GeneratorSyntaxContext context)
+        private static TypeDeclarationSyntax? GetSemanticTargetForGeneration(GeneratorSyntaxContext context)
         {
             var typeSyntax = (TypeDeclarationSyntax)context.Node;
             foreach (var attributeList in typeSyntax.AttributeLists)
@@ -69,14 +67,9 @@ namespace BigMachines.Generator
             return null;
         }
 
-        private void Emit(SourceProductionContext context, ImmutableArray<(TypeDeclarationSyntax? type, Compilation compilation)> sources)
+        private void Emit(SourceProductionContext context, (Compilation compilation, ImmutableArray<TypeDeclarationSyntax?> types) source)
         {
-            if (sources.Length == 0)
-            {
-                return;
-            }
-
-            var compilation = sources[0].compilation;
+            var compilation = source.compilation;
             var machineObjectAttributeSymbol = compilation.GetTypeByMetadataName(MachineObjectAttributeMock.FullName);
             if (machineObjectAttributeSymbol == null)
             {
@@ -99,17 +92,17 @@ namespace BigMachines.Generator
 #pragma warning restore RS1024 // Symbols should be compared for equality
 
             var generatorOptionSet = false;
-            foreach (var x in sources)
+            foreach (var x in source.types)
             {
-                if (x.type == null)
+                if (x == null)
                 {
                     continue;
                 }
 
                 context.CancellationToken.ThrowIfCancellationRequested();
 
-                var model = compilation.GetSemanticModel(x.type.SyntaxTree);
-                if (model.GetDeclaredSymbol(x.type) is INamedTypeSymbol s &&
+                var model = compilation.GetSemanticModel(x.SyntaxTree);
+                if (model.GetDeclaredSymbol(x) is INamedTypeSymbol s &&
                     !processed.Contains(s))
                 {
                     processed.Add(s);
@@ -130,7 +123,7 @@ namespace BigMachines.Generator
                             this.AttachDebugger = ta.AttachDebugger;
                             this.GenerateToFile = ta.GenerateToFile;
                             this.CustomNamespace = ta.CustomNamespace;
-                            this.TargetFolder = System.IO.Path.Combine(System.IO.Path.GetDirectoryName(x.type.SyntaxTree.FilePath), "Generated");
+                            this.TargetFolder = System.IO.Path.Combine(System.IO.Path.GetDirectoryName(x.SyntaxTree.FilePath), "Generated");
                         }
                     }
                 }
