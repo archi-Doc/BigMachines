@@ -22,6 +22,11 @@ namespace Arc.Visceral
             this.Context = context;
         }
 
+        public VisceralBody(SourceProductionContext? context)
+        {
+            this.Context2 = context;
+        }
+
         public static readonly DiagnosticDescriptor Error_DebugAssert = new DiagnosticDescriptor(
             id: "TG000", title: "Debug.Assert()", messageFormat: "{0}",
             category: "TinyhandGenerator", DiagnosticSeverity.Error, isEnabledByDefault: true);
@@ -38,6 +43,7 @@ namespace Arc.Visceral
         public void ReportDiagnostic(Diagnostic diagnostic)
         {
             this.Context?.ReportDiagnostic(diagnostic);
+            this.Context2?.ReportDiagnostic(diagnostic);
             if (diagnostic.Severity == DiagnosticSeverity.Error)
             {
                 this.Abort = true; // Abort the process if an error occurred.
@@ -183,6 +189,8 @@ namespace Arc.Visceral
         }
 
         public GeneratorExecutionContext? Context { get; }
+
+        public SourceProductionContext? Context2 { get; }
 
         public bool Abort { get; set; } // Set true to abort Prepare/Generate process.
 

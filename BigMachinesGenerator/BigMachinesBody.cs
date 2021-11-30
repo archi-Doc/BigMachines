@@ -88,6 +88,11 @@ namespace BigMachines.Generator
         {
         }
 
+        public BigMachinesBody(SourceProductionContext context)
+            : base(context)
+        {
+        }
+
         internal Dictionary<uint, BigMachinesObject> Machines = new();
 
         internal Dictionary<string, List<BigMachinesObject>> Namespaces = new();
@@ -126,7 +131,7 @@ namespace BigMachines.Generator
             }
         }
 
-        public void Generate(BigMachinesGenerator generator, CancellationToken cancellationToken)
+        public void Generate(IBigMachinesGenerator generator, CancellationToken cancellationToken)
         {
             ScopingStringBuilder ssb = new();
             GeneratorInformation info = new();
@@ -163,6 +168,7 @@ namespace BigMachines.Generator
                 else
                 {
                     this.Context?.AddSource($"gen.BigMachines.{x.Key}", SourceText.From(result, Encoding.UTF8));
+                    this.Context2?.AddSource($"gen.BigMachines.{x.Key}", SourceText.From(result, Encoding.UTF8));
                 }
             }
 
@@ -186,7 +192,7 @@ namespace BigMachines.Generator
             ssb.AppendLine();
         }
 
-        private void GenerateLoader(BigMachinesGenerator generator, GeneratorInformation info, List<BigMachinesObject> rootObjects)
+        private void GenerateLoader(IBigMachinesGenerator generator, GeneratorInformation info, List<BigMachinesObject> rootObjects)
         {
             var ssb = new ScopingStringBuilder();
             this.GenerateHeader(ssb);
@@ -212,10 +218,11 @@ namespace BigMachines.Generator
             else
             {
                 this.Context?.AddSource($"gen.BigMachinesLoader", SourceText.From(result, Encoding.UTF8));
+                this.Context2?.AddSource($"gen.BigMachinesLoader", SourceText.From(result, Encoding.UTF8));
             }
         }
 
-        private void GenerateInitializer(BigMachinesGenerator generator, ScopingStringBuilder ssb, GeneratorInformation info)
+        private void GenerateInitializer(IBigMachinesGenerator generator, ScopingStringBuilder ssb, GeneratorInformation info)
         {
             // Namespace
             var ns = "BigMachines";
@@ -241,10 +248,7 @@ namespace BigMachines.Generator
             {
                 ssb.AppendLine("private static bool Initialized;");
                 ssb.AppendLine();
-                if (generator.UseModuleInitializer)
-                {
-                    ssb.AppendLine("[ModuleInitializer]");
-                }
+                ssb.AppendLine("[ModuleInitializer]");
 
                 using (var scopeMethod = ssb.ScopeBrace("public static void Initialize()"))
                 {

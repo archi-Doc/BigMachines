@@ -1,0 +1,8 @@
+{
+  "profiles": {
+    "BigMachinesGenerator": {
+      "commandName": "DebugRoslynComponent",
+      "targetProject": "..\\Advanced\\Advanced.csproj"
+    }
+  }
+}
