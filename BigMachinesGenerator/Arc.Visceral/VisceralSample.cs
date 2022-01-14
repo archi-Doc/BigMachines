@@ -2,22 +2,21 @@
 
 using Microsoft.CodeAnalysis;
 
-namespace Arc.Visceral
-{
-    public class VisceralSampleObject : VisceralObjectBase<VisceralSampleObject>
-    {
-        public VisceralSampleObject()
-        {
-        }
+namespace Arc.Visceral;
 
-        public new VisceralSampleBody Body => (VisceralSampleBody)((VisceralObjectBase<VisceralSampleObject>)this).Body;
+public class VisceralSampleObject : VisceralObjectBase<VisceralSampleObject>
+{
+    public VisceralSampleObject()
+    {
     }
 
-    public class VisceralSampleBody : VisceralBody<VisceralSampleObject>
+    public new VisceralSampleBody Body => (VisceralSampleBody)((VisceralObjectBase<VisceralSampleObject>)this).Body;
+}
+
+public class VisceralSampleBody : VisceralBody<VisceralSampleObject>
+{
+    public VisceralSampleBody(GeneratorExecutionContext? context)
+        : base(context)
     {
-        public VisceralSampleBody(GeneratorExecutionContext? context)
-            : base(context)
-        {
-        }
     }
 }
