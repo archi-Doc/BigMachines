@@ -73,7 +73,52 @@ public class VisceralAttribute : IComparable<VisceralAttribute>
         this.NamedArguments = new KeyValuePair<string, object?>[attributeData.NamedArguments.Length];
         foreach (var x in attributeData.NamedArguments)
         {
-            this.NamedArguments[n++] = new KeyValuePair<string, object?>(x.Key, x.Value.Value);
+            if (x.Value.Kind != TypedConstantKind.Array)
+            {
+                this.NamedArguments[n++] = new KeyValuePair<string, object?>(x.Key, x.Value.Value);
+            }
+            else
+            {
+                var str = ValueToString(x.Value);
+                this.NamedArguments[n++] = new KeyValuePair<string, object?>(x.Key, str);
+
+                string ValueToString(TypedConstant value)
+                {
+                    if (value.Kind != TypedConstantKind.Array)
+                    {
+                        return value.ToCSharpString();
+                    }
+
+                    var sb = new StringBuilder("new ");
+                    if (value.Type == null)
+                    {
+                        sb.Append("object[]");
+                    }
+                    else
+                    {
+                        sb.Append(value.Type.ToDisplayString());
+                    }
+
+                    sb.Append(" { ");
+
+                    foreach (var y in value.Values)
+                    {
+                        if (y.Kind != TypedConstantKind.Array)
+                        {
+                            sb.Append(y.ToCSharpString());
+                        }
+                        else
+                        {
+                            sb.Append(ValueToString(y));
+                        }
+
+                        sb.Append(", ");
+                    }
+
+                    sb.Append("}");
+                    return sb.ToString();
+                }
+            }
         }
 
         this.attributeData = attributeData;
