@@ -1,6 +1,7 @@
 ﻿using System;
 using System.IO;
 using System.Linq;
+using System.Threading;
 using System.Threading.Tasks;
 using Arc.Threading;
 using BigMachines;
@@ -96,8 +97,22 @@ namespace Sandbox
             m.Run();
             m.Run();
 
-            var ca = m.Group.Serialize();
             var ba = m.Serialize();
+
+            const int N = 1;
+            /*var array = new object[N];
+            for (var i = 0; i < N; i++)
+            {
+                array[i] = new object();
+            }*/
+
+            var array = new SemaphoreSlim[N];
+            for (var i = 0; i < N; i++)
+            {
+                array[i] = new SemaphoreSlim(1, 1);
+            }
+
+            var array2 = array;
         }
 
         public static void Test2(BigMachine<int> bigMachine)
