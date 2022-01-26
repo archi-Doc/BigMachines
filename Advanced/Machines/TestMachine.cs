@@ -83,7 +83,21 @@ namespace Advanced
                 return StateResult.Terminate;
             }
 
+            var task = System.Threading.Tasks.Task.Delay(1000);
+
+            task.ContinueWith(x => { this.ChangeState(State.Two); }); // 1
+
+            this.ReleaseAndInvoke(System.Threading.Tasks.Task.Delay(1000)); // 2
+
             return StateResult.Continue; // Continue
+        }
+
+        protected async System.Threading.Tasks.Task ReleaseAndInvoke(System.Threading.Tasks.Task task)
+        {
+            var semaphore = new System.Threading.SemaphoreSlim(1, 1);
+            semaphore.Release();
+            await task;
+            semaphore.Wait();
         }
 
         protected override void ProcessCommand(CommandPost<int>.Command command)
