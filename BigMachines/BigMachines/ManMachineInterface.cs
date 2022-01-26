@@ -120,6 +120,36 @@ namespace BigMachines
         /// <param name="millisecondTimeout">Timeout in milliseconds.</param>
         /// <returns>The response.</returns>
         public TResponse? CommandTwoWay<TMessage, TResponse>(TMessage message, int millisecondTimeout = 100) => this.BigMachine.CommandPost.SendTwoWay<TMessage, TResponse>(CommandPost<TIdentifier>.CommandType.CommandTwoWay, this.Group, this.Identifier, message, millisecondTimeout);
+
+        /// <summary>
+        /// Serialize the machines to a byte array.
+        /// </summary>
+        /// <param name="options">Serializer options.</param>
+        /// <returns>A byte array with the serialized value.</returns>
+        public byte[]? Serialize(TinyhandSerializerOptions? options = null)
+        {
+            if (!this.Group.TryGetMachine(this.Identifier, out var machine))
+            {
+                return null;
+            }
+
+            if (machine.IsSerializable && machine is ITinyhandSerialize serializer)
+            {
+                options ??= TinyhandSerializer.DefaultOptions;
+                var writer = default(Tinyhand.IO.TinyhandWriter);
+
+                lock (machine.SyncMachine)
+                {
+                    writer.WriteArrayHeader(2); // Header
+                    writer.Write(machine.TypeId); // Id
+                    serializer.Serialize(ref writer, options); // Data
+                }
+
+                return writer.FlushAndGetArray();
+            }
+
+            return null;
+        }
     }
 
     /// <summary>

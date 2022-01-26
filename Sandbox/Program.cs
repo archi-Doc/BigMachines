@@ -70,8 +70,9 @@ namespace Sandbox
 
             bigMachine.Start();
 
-            Test1(bigMachine);
+            // Test1(bigMachine);
             // Test2(bigMachine);
+            Test3(bigMachine);
 
             await ThreadCore.Root.WaitForTerminationAsync(-1); // Wait for the termination infinitely.
 
@@ -85,6 +86,18 @@ namespace Sandbox
             bigMachine.Deserialize(data);
 
             ThreadCore.Root.TerminationEvent.Set(); // The termination process is complete (#1).
+        }
+
+        public static void Test3(BigMachine<int> bigMachine)
+        {
+            var m = bigMachine.TryCreate<TestMachine.Interface>(0);
+
+            m.Run();
+            m.Run();
+            m.Run();
+
+            var ca = m.Group.Serialize();
+            var ba = m.Serialize();
         }
 
         public static void Test2(BigMachine<int> bigMachine)

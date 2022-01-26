@@ -7,6 +7,7 @@ using System.Diagnostics.CodeAnalysis;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using Tinyhand;
 
 namespace BigMachines
 {
@@ -50,6 +51,19 @@ namespace BigMachines
         public KeyValuePair<TIdentifier, TResponse?>[] CommandGroupTwoWay<TMessage, TResponse>(TMessage message, int millisecondTimeout = 100);
 
         /// <summary>
+        /// Serialize a group of machines to a byte array.
+        /// </summary>
+        /// <param name="options">Serializer options.</param>
+        /// <returns>A byte array with the serialized value.</returns>
+        public byte[] Serialize(TinyhandSerializerOptions? options = null)
+        {
+            options ??= TinyhandSerializer.DefaultOptions;
+            var writer = default(Tinyhand.IO.TinyhandWriter);
+            this.Serialize(ref writer, options);
+            return writer.FlushAndGetArray();
+        }
+
+        /// <summary>
         /// Gets an instance of <see cref="BigMachine{TIdentifier}"/>.
         /// </summary>
         public BigMachine<TIdentifier> BigMachine { get; }
@@ -83,5 +97,21 @@ namespace BigMachines
         internal void AddMachine(TIdentifier identifier, Machine<TIdentifier> machine);
 
         internal bool TryRemoveMachine(TIdentifier identifier);
+
+        internal void Serialize(ref Tinyhand.IO.TinyhandWriter writer, TinyhandSerializerOptions options)
+        {
+            foreach (var machine in this.GetMachines().Where(a => a.IsSerializable))
+            {
+                if (machine is ITinyhandSerialize serializer)
+                {
+                    lock (machine.SyncMachine)
+                    {
+                        writer.WriteArrayHeader(2); // Header
+                        writer.Write(machine.TypeId); // Id
+                        serializer.Serialize(ref writer, options); // Data
+                    }
+                }
+            }
+        }
     }
 }

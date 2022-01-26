@@ -250,10 +250,11 @@ namespace BigMachines
 
             foreach (var x in this.groupArray)
             {
-                SerializeGroup(ref writer, x);
+                x.Serialize(ref writer, options);
+                // SerializeGroup(ref writer, x);
             }
 
-            void SerializeGroup(ref Tinyhand.IO.TinyhandWriter writer, IMachineGroup<TIdentifier> group)
+            /*void SerializeGroup(ref Tinyhand.IO.TinyhandWriter writer, IMachineGroup<TIdentifier> group)
             {
                 foreach (var machine in group.GetMachines().Where(a => a.IsSerializable))
                 {
@@ -267,7 +268,7 @@ namespace BigMachines
                         }
                     }
                 }
-            }
+            }*/
 
             return writer.FlushAndGetArray();
         }
