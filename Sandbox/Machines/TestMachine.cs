@@ -363,9 +363,23 @@ namespace Sandbox
         {
             Console.WriteLine($"TestMachine(First) : {this.Dummy++}");
 
+            /*var task = System.Threading.Tasks.Task.Delay(1000);
+            task.ContinueWith(x => { this.ChangeState(State.Two); }); // 1
+            this.ReleaseAndInvoke(Task.Delay(1000)); // 2*/
+
+            Task.Delay(1000).WithoutLock(this).Wait();
+
             // this.SetTimeout(44.5);
             // this.ChangeStateInternal(State.First);
             return StateResult.Continue;
+        }
+
+        protected async System.Threading.Tasks.Task ReleaseAndInvoke(System.Threading.Tasks.Task task)
+        {
+            var semaphore = new System.Threading.SemaphoreSlim(1, 1);
+            semaphore.Release();
+            await task;
+            semaphore.Wait();
         }
 
         protected bool FirstCanEnter() => true;
