@@ -235,7 +235,7 @@ namespace BigMachines
         public bool Remove<TMachineInterface>(TIdentifier identifier)
         {
             this.GetMachineGroup(typeof(TMachineInterface), out var group);
-            return group.TryRemoveMachine(identifier);
+            return group.RemoveFromGroup(identifier);
         }
 
         /// <summary>
@@ -377,7 +377,7 @@ namespace BigMachines
                     {
                         try
                         {
-                            await machine.DistributeCommand(command.Group, command);
+                            await machine.DistributeCommand(command);
                         }
                         catch (Exception ex)
                         {
@@ -394,7 +394,7 @@ namespace BigMachines
                         {
                             try
                             {
-                                await machine.DistributeCommand(x.Group, x);
+                                await machine.DistributeCommand(x);
                             }
                             catch (Exception ex)
                             {
@@ -554,18 +554,24 @@ namespace BigMachines
 
                         if (y.Lifespan <= 0 || y.TerminationDate <= now)
                         {// Terminate
-                            lock (y.SyncMachine)
-                            {
-                                x.TryRemoveMachine(y.Identifier);
-                            }
+                            y.TerminateAndRemoveFromGroup().Wait();
                         }
                         else if (y.Timeout <= 0 || y.NextRun >= now || y.RunType == RunType.NotRunning)
                         {// Screening
                             Task.Run(() => // taskrun
                             {
-                                lock (y.SyncMachine)
+                                try
                                 {
+                                    y.LockMachine();
                                     TryRun(y);
+                                }
+                                finally
+                                {
+                                    y.UnlockMachine();
+                                    if (y.Status == MachineStatus.Terminated)
+                                    {
+                                        y.RemoveFromGroup();
+                                    }
                                 }
                             });
                         }
@@ -602,7 +608,11 @@ namespace BigMachines
                         return;
                     }
 
-                    machine.RunMachine(null, RunType.Timer, now);
+                    if (machine.RunMachine(null, RunType.Timer, now) == StateResult.Terminate)
+                    {
+                        machine.Status = MachineStatus.Terminated;
+                        machine.OnTerminated();
+                    }
                 }
             }
 

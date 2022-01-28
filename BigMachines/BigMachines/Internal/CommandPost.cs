@@ -42,6 +42,11 @@ public class CommandPost<TIdentifier>
         Run,
 
         /// <summary>
+        /// Terminate the machine.
+        /// </summary>
+        Terminate,
+
+        /// <summary>
         /// Report an exception. Used internally.
         /// </summary>
         Exception,
@@ -143,6 +148,12 @@ public class CommandPost<TIdentifier>
     {
         var c = new Command(this.BigMachine, group, commandType, identifier, data, TinyhandSerializer.Clone(message));
         return this.commandDelegate(c, null);
+    }
+
+    public void SendTerminate(IMachineGroup<TIdentifier> group, TIdentifier identifier)
+    {
+        var c = new Command(this.BigMachine, group, CommandType.Terminate, identifier, 0, null);
+        this.commandDelegate(c, null);
     }
 
     public Task SendAsync(IMachineGroup<TIdentifier> group, CommandType commandType, TIdentifier identifier, int data)

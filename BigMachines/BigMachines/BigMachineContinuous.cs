@@ -42,12 +42,17 @@ namespace BigMachines
 
                 while (!core.IsTerminated)
                 {
-                    lock (machine.SyncMachine)
+                    try
                     {
+                        machine.LockMachine();
                         if (machine.RunMachine(null, RunType.Continuous, DateTime.UtcNow) == StateResult.Terminate)
                         {// Terminated
                             break;
                         }
+                    }
+                    finally
+                    {
+                        machine.UnlockMachine();
                     }
                 }
             }

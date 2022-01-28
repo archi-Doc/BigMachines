@@ -134,10 +134,7 @@ namespace BigMachines
             var m = Interlocked.Exchange(ref this.machine1, machine);
             if (m != null)
             {
-                lock (m.SyncMachine)
-                {
-                    m.TerminateInternal();
-                }
+                this.BigMachine.CommandPost.SendTerminate(this, identifier);
             }
         }
 
@@ -175,16 +172,11 @@ namespace BigMachines
             }
         }
 
-        bool IMachineGroup<TIdentifier>.TryRemoveMachine(TIdentifier identifier)
+        bool IMachineGroup<TIdentifier>.RemoveFromGroup(TIdentifier identifier)
         {
             var m = Volatile.Read(ref this.machine1);
             if (m != null && EqualityComparer<TIdentifier>.Default.Equals(m.Identifier, identifier))
             {
-                lock (m.SyncMachine)
-                {
-                    m.TerminateInternal();
-                }
-
                 Volatile.Write(ref this.machine1, null);
                 return true;
             }

@@ -14,7 +14,7 @@ public static class BigMachineTaskExtensions
     public static async Task WithoutLock<TIdentifier>(this Task task, Machine<TIdentifier> machine)
         where TIdentifier : notnull
     {
-        if (machine.SyncMachine is SemaphoreSlim semaphore)
+        if (machine.SyncObjectOrSemaphore is SemaphoreSlim semaphore)
         {// Semaphore does not have thread affinity.
             try
             {

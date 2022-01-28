@@ -69,24 +69,17 @@ namespace BigMachines
 
             if (machineToRemove != null)
             {
-                lock (machineToRemove.SyncMachine)
-                {
-                    machineToRemove.TerminateInternal();
-                }
+                machineToRemove.TryTerminate();
+                this.BigMachine.CommandPost.SendTerminate(this, machineToRemove.Identifier);
             }
         }
 
         bool IMachineGroup<TIdentifier>.TryGetMachine(TIdentifier identifier, [MaybeNullWhen(false)] out Machine<TIdentifier> machine) => this.IdentificationToMachine.TryGetValue(identifier, out machine);
 
-        bool IMachineGroup<TIdentifier>.TryRemoveMachine(TIdentifier identifier)
+        bool IMachineGroup<TIdentifier>.RemoveFromGroup(TIdentifier identifier)
         {
             if (this.IdentificationToMachine.TryRemove(identifier, out var machine))
             {
-                lock (machine.SyncMachine)
-                {
-                    machine.TerminateInternal();
-                }
-
                 return true;
             }
             else

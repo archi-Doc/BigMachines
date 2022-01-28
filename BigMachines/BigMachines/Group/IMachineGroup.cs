@@ -102,7 +102,7 @@ namespace BigMachines
 
         internal void AddMachine(TIdentifier identifier, Machine<TIdentifier> machine);
 
-        internal bool TryRemoveMachine(TIdentifier identifier);
+        internal bool RemoveFromGroup(TIdentifier identifier);
 
         internal void Serialize(ref Tinyhand.IO.TinyhandWriter writer, TinyhandSerializerOptions options)
         {// tempcode
@@ -110,7 +110,7 @@ namespace BigMachines
             {
                 if (machine is ITinyhandSerialize serializer)
                 {
-                    lock (machine.SyncMachine)
+                    // lock (machine.SyncMachine)
                     {
                         writer.WriteArrayHeader(2); // Header
                         writer.Write(machine.TypeId); // Id

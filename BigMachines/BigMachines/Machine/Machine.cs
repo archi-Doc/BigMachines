@@ -4,6 +4,7 @@ using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Linq;
+using System.Runtime.CompilerServices;
 using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
@@ -133,10 +134,9 @@ namespace BigMachines
         /// <summary>
         /// Receivea a command and invoke an appropriate method.<br/>
         /// </summary>
-        /// <param name="group">Machine group.</param>
         /// <param name="command">Command.</param>
         /// <returns><see langword="true"/>: Terminated, <see langword="false"/>: Continue.</returns>
-        internal async Task DistributeCommand(IMachineGroup<TIdentifier> group, CommandPost<TIdentifier>.Command command)
+        internal async Task DistributeCommand(CommandPost<TIdentifier>.Command command)
         {
             if (this.Status == MachineStatus.Terminated)
             {// Terminated
@@ -159,17 +159,39 @@ namespace BigMachines
                     // Console.WriteLine("run " + checker);
                 }
 
-                lock (this.SyncMachine)
+                try
                 {
-                    this.RunMachine(command, RunType.Manual, DateTime.UtcNow);
+                    await this.LockMachineAsync();
+                    if (this.RunMachine(command, RunType.Manual, DateTime.UtcNow) == StateResult.Terminate)
+                    {
+                        this.Status = MachineStatus.Terminated;
+                        this.OnTerminated();
+                    }
+                }
+                finally
+                {
+                    this.UnlockMachine();
+                    if (this.Status == MachineStatus.Terminated)
+                    {
+                        this.RemoveFromGroup();
+                    }
                 }
             }
             else if (command.Type == CommandPost<TIdentifier>.CommandType.ChangeState)
             {// ChangeState
-                lock (this.SyncMachine)
+                try
                 {
+                    await this.LockMachineAsync();
                     command.Response = this.InternalChangeState(command.Data);
                 }
+                finally
+                {
+                    this.UnlockMachine();
+                }
+            }
+            else if (command.Type == CommandPost<TIdentifier>.CommandType.Terminate)
+            {// Terminate
+                await this.TerminateAndRemoveFromGroup();
             }
             else
             {// Command
@@ -199,28 +221,44 @@ namespace BigMachines
 
                 // lock (this.SyncMachine) // Not inside lock statement.
                 this.ProcessCommand(command);
+
+                if (this.Status == MachineStatus.Terminated)
+                {
+                    await this.TerminateAndRemoveFromGroup();
+                }
             }
         }
 
-        /// <summary>
-        /// Called when the machine is terminating.<br/>
-        /// This code is inside 'lock (this.SyncMachine) {}'.
-        /// </summary>
-        internal void TerminateInternal()
+        internal void TryTerminate()
         {
-            this.Status = MachineStatus.Terminated;
+            Task.Run(() => this.TerminateAndRemoveFromGroup());
+        }
+
+        internal async Task TerminateAndRemoveFromGroup()
+        {
+            try
+            {
+                await this.LockMachineAsync();
+
+                this.Status = MachineStatus.Terminated;
+                this.OnTerminated();
+            }
+            finally
+            {
+                this.UnlockMachine();
+                this.RemoveFromGroup();
+            }
+        }
+
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        internal void RemoveFromGroup()
+        {
+            this.Group.RemoveFromGroup(this.Identifier);
             if (this.Info.Continuous)
             {
                 this.BigMachine.Continuous.RemoveMachine(this);
             }
-
-            this.OnTerminated();
         }
-
-        /// <summary>
-        /// Gets an object that can be used to synchronize access to the machine.
-        /// </summary>
-        protected internal object SyncMachine { get; } = new();
 
         /// <summary>
         /// Gets or sets ManMachineInterface.
@@ -231,6 +269,51 @@ namespace BigMachines
         /// Gets or sets a value indicating whether the machine is going to re-run.
         /// </summary>
         protected internal bool RequestRerun { get; set; }
+
+        /// <summary>
+        /// For locking the machine.
+        /// Do not touch this unless absolutely necessary.
+        /// </summary>
+        internal object SyncObjectOrSemaphore = default!;
+
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        protected internal void LockMachine()
+        {
+            if (this.SyncObjectOrSemaphore is SemaphoreSlim semaphore)
+            {
+                semaphore.Wait();
+            }
+            else
+            {
+                Monitor.Enter(this.SyncObjectOrSemaphore);
+            }
+        }
+
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        protected internal async Task LockMachineAsync()
+        {
+            if (this.SyncObjectOrSemaphore is SemaphoreSlim semaphore)
+            {
+                await semaphore.WaitAsync();
+            }
+            else
+            {
+                Monitor.Enter(this.SyncObjectOrSemaphore);
+            }
+        }
+
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        protected internal void UnlockMachine()
+        {
+            if (this.SyncObjectOrSemaphore is SemaphoreSlim semaphore)
+            {
+                semaphore.Release();
+            }
+            else
+            {
+                Monitor.Exit(this.SyncObjectOrSemaphore);
+            }
+        }
 
         /// <summary>
         /// Expected to be implemented on the user side.<br/>
@@ -326,7 +409,7 @@ RerunLoop:
             {
                 this.LastRun = now;
                 this.RunType = RunType.NotRunning;
-                this.Group.TryRemoveMachine(this.Identifier);
+                // tempcode this.Group.TryRemoveMachine(this.Identifier);
                 return result;
             }
             else if (this.RequestRerun)

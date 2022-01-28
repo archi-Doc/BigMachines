@@ -113,7 +113,8 @@ namespace BigMachines
                 options ??= TinyhandSerializer.DefaultOptions;
                 var writer = default(Tinyhand.IO.TinyhandWriter);
 
-                lock (machine.SyncMachine)
+                // tempcode
+                // lock (machine.SyncMachine)
                 {
                     writer.WriteArrayHeader(2); // Header
                     writer.Write(machine.TypeId); // Id
