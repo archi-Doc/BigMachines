@@ -31,9 +31,12 @@ namespace BigMachines.Generator
         public const string InternalChangeState = "InternalChangeState";
         public const string IntInitState = "IntInitState";
         public const string RegisterBM = "RegisterBM";
+        public const string CommandIdentifier = "Command";
 
         public const string StateResultFullName = "BigMachines.StateResult";
         public const string StateParameterFullName = "BigMachines.StateParameter";
+        public const string TaskFullName = "System.Threading.Tasks.Task";
+        public const string CommandParameterFullName = "BigMachines.CommandPost<TIdentifier>.Command";
 
         public static readonly DiagnosticDescriptor Error_NotPartial = new DiagnosticDescriptor(
             id: "BMG001", title: "Not a partial class", messageFormat: "MachineObject '{0}' is not a partial class",
@@ -68,7 +71,7 @@ namespace BigMachines.Generator
             category: "BigMachinesGenerator", DiagnosticSeverity.Error, isEnabledByDefault: true);
 
         public static readonly DiagnosticDescriptor Error_DuplicateStateId = new DiagnosticDescriptor(
-            id: "BMG009", title: "Duplicate state id", messageFormat: "State method id must be unique",
+            id: "BMG009", title: "Duplicate state id", messageFormat: "State id must be unique",
             category: "BigMachinesGenerator", DiagnosticSeverity.Error, isEnabledByDefault: true);
 
         public static readonly DiagnosticDescriptor Error_NoDefaultStateMethod = new DiagnosticDescriptor(
@@ -82,6 +85,14 @@ namespace BigMachines.Generator
         public static readonly DiagnosticDescriptor Error_IdentifierIsNotSerializable = new DiagnosticDescriptor(
             id: "BMG012", title: "Identifier not serializable", messageFormat: "Identifier type '{0}' must be serializable (have TinyhandObject attribute)",
             category: "BigMachinesGenerator", DiagnosticSeverity.Error, isEnabledByDefault: true);
+
+        public static readonly DiagnosticDescriptor Error_DuplicateCommandId = new DiagnosticDescriptor(
+            id: "BMG013", title: "Duplicate command id", messageFormat: "Command id must be unique",
+            category: "BigMachinesGenerator", DiagnosticSeverity.Error, isEnabledByDefault: true);
+
+        public static readonly DiagnosticDescriptor Error_MethodFormat2 = new DiagnosticDescriptor(
+            id: "BMG014", title: "Invalid method", messageFormat: "Command method must be in the format of `void TestMethod(StateParameter parameter)'",
+            category: "BigMachinesGenerator", DiagnosticSeverity.Error, isEnabledByDefault: true); // tempcode
 
         public BigMachinesBody(GeneratorExecutionContext context)
             : base(context)

@@ -58,6 +58,8 @@ namespace BigMachines.Generator
 
         public List<StateMethod>? StateMethodList { get; private set; }
 
+        public List<CommandMethod>? CommandMethodList { get; private set; }
+
         public StateMethod? DefaultStateMethod { get; private set; }
 
         public string? LoaderIdentifier { get; private set; }
@@ -355,13 +357,17 @@ namespace BigMachines.Generator
             this.CheckKeyword(BigMachinesBody.InternalChangeState, this.Location);
             this.CheckKeyword(BigMachinesBody.RegisterBM, this.Location);
             // this.CheckKeyword(BigMachinesBody.IntInitState, this.Location);
+            this.CheckKeyword(BigMachinesBody.CommandIdentifier, this.Location);
 
+            // State method, Command method
             this.StateMethodList = new();
             var idToStateMethod = new Dictionary<uint, StateMethod>();
+            this.CommandMethodList = new();
+            var idToCommandMethod = new Dictionary<uint, CommandMethod>();
             foreach (var x in this.GetMembers(VisceralTarget.Method))
             {
                 if (x.AllAttributes.FirstOrDefault(x => x.FullName == StateMethodAttributeMock.FullName) is { } attribute)
-                {
+                {// State method
                     var stateMethod = StateMethod.Create(this, x, attribute);
                     if (stateMethod != null)
                     {// Add
@@ -375,6 +381,24 @@ namespace BigMachines.Generator
                         else
                         {
                             idToStateMethod.Add(stateMethod.Id, stateMethod);
+                        }
+                    }
+                }
+                else if (x.AllAttributes.FirstOrDefault(x => x.FullName == CommandMethodAttributeMock.FullName) is { } attribute2)
+                {// Command method
+                    var commandMethod = CommandMethod.Create(this, x, attribute2);
+                    if (commandMethod != null)
+                    {// Add
+                        this.CommandMethodList.Add(commandMethod);
+
+                        if (idToCommandMethod.TryGetValue(commandMethod.Id, out var s))
+                        {// Duplicated
+                            commandMethod.DuplicateId = true;
+                            s.DuplicateId = true;
+                        }
+                        else
+                        {
+                            idToCommandMethod.Add(commandMethod.Id, commandMethod);
                         }
                     }
                 }
@@ -396,6 +420,11 @@ namespace BigMachines.Generator
             foreach (var x in this.StateMethodList.Where(a => a.DuplicateId))
             {// Duplicate state method
                 this.Body.AddDiagnostic(BigMachinesBody.Error_DuplicateStateId, x.Location);
+            }
+
+            foreach (var x in this.CommandMethodList.Where(a => a.DuplicateId))
+            {// Duplicate command method
+                this.Body.AddDiagnostic(BigMachinesBody.Error_DuplicateCommandId, x.Location);
             }
         }
 

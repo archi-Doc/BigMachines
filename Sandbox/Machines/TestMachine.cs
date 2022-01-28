@@ -384,6 +384,12 @@ namespace Sandbox
 
         protected bool FirstCanEnter() => true;
 
+        [CommandMethod(33)]
+        protected void GetInfo(CommandPost<int>.Command command)
+        {// void, Task
+            command.Response = 4;
+        }
+
         protected override void ProcessCommand(CommandPost<int>.Command command)
         {// Custom
             if (command.Message is int x)
