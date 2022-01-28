@@ -30,8 +30,7 @@ namespace Sandbox
 
             foreach (var x in this.BigMachine.GetGroups())
             {
-                if (x.Info.MachineType != typeof(TerminatorMachine) &&
-                    x.Count > 0)
+                if (x.Info.MachineType != typeof(TerminatorMachine) && x.Count > 0)
                 {
                     foreach (var y in x.GetIdentifiers())
                     {

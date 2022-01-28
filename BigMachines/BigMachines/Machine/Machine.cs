@@ -170,7 +170,7 @@ public abstract class Machine<TIdentifier>
             try
             {
                 await this.LockMachineAsync();
-                if (this.RunMachine(command, RunType.Manual, DateTime.UtcNow) == StateResult.Terminate)
+                if (await this.RunMachine(command, RunType.Manual, DateTime.UtcNow, this.BigMachine.Core.CancellationToken) == StateResult.Terminate)
                 {
                     this.Status = MachineStatus.Terminated;
                     this.OnTerminated();
@@ -357,9 +357,9 @@ public abstract class Machine<TIdentifier>
     /// </summary>
     /// <param name="parameter">StateParameter.</param>
     /// <returns>StateResult.</returns>
-    protected internal virtual StateResult InternalRun(StateParameter parameter)
+    protected internal virtual Task<StateResult> InternalRun(StateParameter parameter)
     {// Called: Machine.RunMachine()
-        return StateResult.Terminate;
+        return Task.FromResult(StateResult.Terminate);
     }
 
     /// <summary>
@@ -393,8 +393,9 @@ public abstract class Machine<TIdentifier>
     /// <param name="command">Command.</param>
     /// <param name="runType">A trigger of the machine running.</param>
     /// <param name="now">Current time.</param>
+    /// <param name="cancellationToken">CancellationToken.</param>
     /// <returns>true: The machine is terminated.</returns>
-    protected internal StateResult RunMachine(CommandPost<TIdentifier>.Command? command, RunType runType, DateTime now)
+    protected internal async Task<StateResult> RunMachine(CommandPost<TIdentifier>.Command? command, RunType runType, DateTime now, CancellationToken cancellationToken)
     {// Called: Machine.DistributeCommand(), BigMachine.MainLoop()
         this.RunType = runType;
 
@@ -404,7 +405,7 @@ RerunLoop:
 
         try
         {
-            result = this.InternalRun(new(runType));
+            result = await this.InternalRun(new(runType, cancellationToken));
         }
         catch (Exception ex)
         {

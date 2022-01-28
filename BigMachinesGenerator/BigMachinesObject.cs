@@ -697,7 +697,7 @@ ModuleInitializerClass_Added:
                 return;
             }
 
-            using (var scope = ssb.ScopeBrace("protected override StateResult InternalRun(StateParameter parameter)"))
+            using (var scope = ssb.ScopeBrace($"protected override async Task<StateResult> {BigMachinesBody.InternalRunIdentifier}(StateParameter parameter)"))
             {
                 ssb.AppendLine($"var state = Unsafe.As<int, {this.StateName}>(ref this.CurrentState);");
                 ssb.AppendLine("return state switch");

@@ -197,10 +197,12 @@ namespace BigMachines.Generator
             ssb.AddUsing("System.Collections.Generic");
             ssb.AddUsing("System.Diagnostics.CodeAnalysis");
             ssb.AddUsing("System.Runtime.CompilerServices");
+            ssb.AddUsing("System.Threading.Tasks");
             ssb.AddUsing("BigMachines");
 
             ssb.AppendLine("#nullable enable", false);
             ssb.AppendLine("#pragma warning disable CS1591", false);
+            ssb.AppendLine("#pragma warning disable CS1998", false);
             ssb.AppendLine();
         }
 

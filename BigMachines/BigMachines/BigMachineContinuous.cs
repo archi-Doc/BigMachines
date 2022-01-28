@@ -45,7 +45,7 @@ namespace BigMachines
                     try
                     {
                         machine.LockMachine();
-                        if (machine.RunMachine(null, RunType.Continuous, DateTime.UtcNow) == StateResult.Terminate)
+                        if (machine.RunMachine(null, RunType.Continuous, DateTime.UtcNow, core.CancellationToken).Result == StateResult.Terminate)
                         {// Terminated
                             machine.Status = MachineStatus.Terminated;
                             machine.OnTerminated();

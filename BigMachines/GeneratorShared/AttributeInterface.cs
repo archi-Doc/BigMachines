@@ -1,6 +1,7 @@
 ﻿// Copyright (c) All contributors. All rights reserved. Licensed under the MIT license.
 
 using System;
+using System.Threading;
 
 #pragma warning disable SA1602 // Enumeration items should be documented
 
@@ -170,7 +171,7 @@ namespace BigMachines
     /// </summary>
     public struct StateParameter
     {
-        /// <summary>
+        /*/// <summary>
         /// Initializes a new instance of the <see cref="StateParameter"/> struct.
         /// </summary>
         /// <param name="type">RunType.</param>
@@ -179,16 +180,18 @@ namespace BigMachines
         {
             this.RunType = type;
             this.Message = message;
-        }
+        }*/
 
         /// <summary>
         /// Initializes a new instance of the <see cref="StateParameter"/> struct.
         /// </summary>
         /// <param name="type">RunType.</param>
-        public StateParameter(RunType type)
+        /// <param name="calcellationToken">CancellationToken.</param>
+        public StateParameter(RunType type, CancellationToken calcellationToken)
         {
             this.RunType = type;
-            this.Message = null;
+            this.CancellationToken = calcellationToken;
+            // this.Message = null;
         }
 
         /// <summary>
@@ -197,9 +200,14 @@ namespace BigMachines
         public RunType RunType { get; }
 
         /// <summary>
+        /// Gets a CancellationToken.
+        /// </summary>
+        public CancellationToken CancellationToken { get; }
+
+        /*/// <summary>
         /// Gets a message.
         /// </summary>
-        public object? Message { get; }
+        public object? Message { get; }*/
     }
 
     [AttributeUsage(AttributeTargets.Class | AttributeTargets.Struct, AllowMultiple = false, Inherited = true)]
