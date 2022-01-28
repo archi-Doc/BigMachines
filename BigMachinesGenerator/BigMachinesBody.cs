@@ -36,7 +36,7 @@ namespace BigMachines.Generator
 
         public const string StateResultFullName = "BigMachines.StateResult";
         public const string StateParameterFullName = "BigMachines.StateParameter";
-        public const string TaskFullName = "System.Threading.Tasks.Task";
+        public const string TaskFullName = "System.Threading.Tasks.Task<TResult>";
         public const string CommandParameterFullName = "BigMachines.CommandPost<TIdentifier>.Command";
 
         public static readonly DiagnosticDescriptor Error_NotPartial = new DiagnosticDescriptor(
@@ -60,7 +60,7 @@ namespace BigMachines.Generator
             category: "BigMachinesGenerator", DiagnosticSeverity.Error, isEnabledByDefault: true);
 
         public static readonly DiagnosticDescriptor Error_MethodFormat = new DiagnosticDescriptor(
-            id: "BMG006", title: "Invalid method", messageFormat: "State method must be in the format of 'protected StateResult TestMethod(StateParameter parameter)'",
+            id: "BMG006", title: "Invalid method", messageFormat: "State method must be in the format of 'protected StateResult TestMethod(StateParameter parameter)' or 'protected Task<StateResult> TestMethod(StateParameter parameter)'",
             category: "BigMachinesGenerator", DiagnosticSeverity.Error, isEnabledByDefault: true);
 
         public static readonly DiagnosticDescriptor Error_OpenGenericClass = new DiagnosticDescriptor(

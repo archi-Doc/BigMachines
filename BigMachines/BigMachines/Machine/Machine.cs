@@ -397,8 +397,12 @@ public abstract class Machine<TIdentifier>
     /// <returns>true: The machine is terminated.</returns>
     protected internal async Task<StateResult> RunMachine(CommandPost<TIdentifier>.Command? command, RunType runType, DateTime now, CancellationToken cancellationToken)
     {// Called: Machine.DistributeCommand(), BigMachine.MainLoop()
-        this.RunType = runType;
+        if (this.RunType != RunType.NotRunning)
+        {// Machine is running
+            return StateResult.Continue;
+        }
 
+        this.RunType = runType;
 RerunLoop:
         StateResult result;
         this.RequestRerun = false;

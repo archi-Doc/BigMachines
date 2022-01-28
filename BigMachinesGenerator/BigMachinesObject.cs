@@ -706,7 +706,14 @@ ModuleInitializerClass_Added:
 
                 foreach (var x in this.StateMethodList)
                 {
-                    ssb.AppendLine($"State.{x.Name} => this.{x.Name}(parameter),");
+                    if (x.ReturnTask)
+                    {
+                        ssb.AppendLine($"State.{x.Name} => await this.{x.Name}(parameter),");
+                    }
+                    else
+                    {
+                        ssb.AppendLine($"State.{x.Name} => this.{x.Name}(parameter),");
+                    }
                 }
 
                 ssb.AppendLine("_ => StateResult.Terminate,");
@@ -811,7 +818,8 @@ ModuleInitializerClass_Added:
             {
                 var constructor = this.ObjectFlag.HasFlag(BigMachinesObjectFlag.HasSimpleConstructor) ? $"x => new {this.FullName}(x)" : "null";
                 var group = this.GroupType == null ? "null" : $"typeof({this.GroupType})";
-                var hasAsync = "false";
+                var hasAsyncMethod = this.StateMethodList?.Any(a => a.ReturnTask) == true || this.CommandMethodList?.Any(a => a.ReturnTask) == true;
+                var hasAsync = hasAsyncMethod ? "true" : "false";
                 var continuous = this.ObjectAttribute.Continuous ? "true" : "false";
                 ssb.AppendLine($"{BigMachinesBody.BigMachineIdentifier}<{this.IdentifierObject.FullName}>.StaticInfo[typeof({this.FullName}.{BigMachinesBody.InterfaceIdentifier})] = new(typeof({this.FullName}), typeId, {hasAsync}, {continuous}, {constructor}, {group});");
             }

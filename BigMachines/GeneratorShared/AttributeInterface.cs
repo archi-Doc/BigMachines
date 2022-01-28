@@ -146,6 +146,11 @@ namespace BigMachines
     public enum RunType
     {
         /// <summary>
+        /// Machine is not running.
+        /// </summary>
+        NotRunning,
+
+        /// <summary>
         /// Machine is run by <see cref="ManMachineInterface{TIdentifier}.RunAsync"/> method.
         /// </summary>
         Manual,
@@ -159,11 +164,6 @@ namespace BigMachines
         /// Machine is run by <see cref="BigMachineContinuous{TIdentifier}"/>.
         /// </summary>
         Continuous,
-
-        /// <summary>
-        /// Machine is not running. For internal use.
-        /// </summary>
-        NotRunning,
     }
 
     /// <summary>
