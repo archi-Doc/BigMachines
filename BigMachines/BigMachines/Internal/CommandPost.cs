@@ -145,6 +145,12 @@ public class CommandPost<TIdentifier>
         return this.commandDelegate(c, null);
     }
 
+    public Task SendAsync(IMachineGroup<TIdentifier> group, CommandType commandType, TIdentifier identifier, int data)
+    {
+        var c = new Command(this.BigMachine, group, commandType, identifier, data, null);
+        return this.commandDelegate(c, null);
+    }
+
     public Task SendGroupAsync<TMessage>(IMachineGroup<TIdentifier> group, CommandType commandType, IEnumerable<TIdentifier> identifiers, int data, TMessage message) => this.SendGroupsAsync(Enumerable.Repeat(group, identifiers.Count()), commandType, identifiers, data, message);
 
     public Task SendGroupsAsync<TMessage>(IEnumerable<IMachineGroup<TIdentifier>> groups, CommandType commandType, IEnumerable<TIdentifier> identifiers, int data, TMessage message)

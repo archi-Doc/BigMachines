@@ -88,20 +88,20 @@ public partial class TestMachine : Machine<int> // Inherit Machine<TIdentifier> 
         return StateResult.Continue; // Continue
     }
 
-    protected override void ProcessCommand(CommandPost<int>.Command command)
+    [CommandMethod(0)]
+    protected void GetCount(CommandPost<int>.Command command)
     {
-        lock (this.SyncMachine)
+        if (command.Message is int n && n == 0)
         {
-            if (command.Message is int n && n == 0)
-            {
-                this.BigMachine.TryGet<TerminatorMachine<int>.Interface>(0)?.CommandTwoWay<int, int>(0);
-                command.Response = this.Count;
-            }
-            else if (command.Message is string st)
-            {
-                this.BigMachine.TryGet<LoopMachine.Interface>(0)?.Command(st);
-            }
+            // this.BigMachine.TryGet<TerminatorMachine<int>.Interface>(0)?.CommandAndReceiveAsync(TerminatorMachine<int>.Command)<int, int>(0);
+            command.Response = this.Count;
         }
+    }
+
+    [CommandMethod(1)]
+    protected void CommandString(CommandPost<int>.Command command)
+    {
+        // this.BigMachine.TryGet<LoopMachine.Interface>(0)?.Command(st);
     }
 
     protected override void OnTerminated()

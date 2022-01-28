@@ -635,9 +635,16 @@ ModuleInitializerClass_Added:
 
             using (var scope = ssb.ScopeBrace($"public {this.NewIfDerived}enum {BigMachinesBody.CommandIdentifier}"))
             {
-                foreach (var x in this.CommandMethodList)
+                if (this.CommandMethodList.Count == 0)
                 {
-                    ssb.AppendLine($"{x.Name} = {x.Id},");
+                    ssb.AppendLine("NoCommand = 0,");
+                }
+                else
+                {
+                    foreach (var x in this.CommandMethodList)
+                    {
+                        ssb.AppendLine($"{x.Name} = {x.Id},");
+                    }
                 }
             }
 

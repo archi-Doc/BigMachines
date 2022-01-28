@@ -16,7 +16,7 @@ namespace Advanced
         {
             var m = bigMachine.CreateOrGet<PassiveMachine.Interface>(0);
 
-            m.Command("message 1"); // Send command.
+            m.CommandAsync(Command.ReceiveString, "message 1"); // Send command.
 
             m.RunAsync(); // Manually run machine.
 
@@ -71,7 +71,8 @@ namespace Advanced
             return result;
         }
 
-        protected override void ProcessCommand(CommandPost<int>.Command command)
+        [CommandMethod(0)]
+        protected void ReceiveString(CommandPost<int>.Command command)
         {
             if (command.Message is string message)
             {

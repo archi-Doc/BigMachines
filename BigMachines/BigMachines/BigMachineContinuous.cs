@@ -3,6 +3,7 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Runtime.CompilerServices;
 using System.Text;
 using System.Threading.Tasks;
 using Arc.Threading;
@@ -100,17 +101,28 @@ namespace BigMachines
             }
         }
 
-        /* /// <summary>
+        /// <summary>
         /// Sends a command to each continuous machine.
         /// </summary>
+        /// <typeparam name="TCommand">The type of the command.</typeparam>
         /// <typeparam name="TMessage">The type of the message.</typeparam>
         /// <param name="running">Sends message to running machines only.</param>
+        /// <param name="command">The command.</param>
         /// <param name="message">The message.</param>
-        public void Command<TMessage>(bool running, TMessage message)
+        /// <returns>The task object representing the asynchronous operation.</returns>
+        public Task CommandAsync<TCommand, TMessage>(bool running, TCommand command, TMessage message)
+            where TCommand : struct
         {
             (var groups, var identifiers) = this.GetGroupsAndIdentifiers(running);
-            this.BigMachine.CommandPost.SendGroupsAsync(groups, CommandPost<TIdentifier>.CommandType.Command, identifiers, message);
-        }*/
+            return this.BigMachine.CommandPost.SendGroupsAsync(groups, CommandPost<TIdentifier>.CommandType.Command, identifiers, Unsafe.As<TCommand, int>(ref command), message);
+        }
+
+        public Task<KeyValuePair<TIdentifier, TResult?>[]> CommandAndReceiveAsync<TCommand, TMessage, TResult>(bool running, TCommand command, TMessage message)
+            where TCommand : struct
+        {
+            (var groups, var identifiers) = this.GetGroupsAndIdentifiers(running);
+            return this.BigMachine.CommandPost.SendAndReceiveGroupsAsync<TMessage, TResult>(groups, CommandPost<TIdentifier>.CommandType.Command, identifiers, Unsafe.As<TCommand, int>(ref command), message);
+        }
 
         /// <summary>
         /// Sets the maximum number of threads used for continuous machines.<br/>

@@ -150,7 +150,7 @@ namespace Sandbox
 
             var testGroup = bigMachine.GetGroup<TestMachine.Interface>();
 
-            var res = testGroup.CommandGroupTwoWay<int, int>(4);
+            var res = testGroup.CommandAndReceiveAsync<int, int, int>(4, 4);
             // var result = testMachine?.RunTwoWay(33);
 
             var identifiers = testGroup.GetIdentifiers().ToArray();

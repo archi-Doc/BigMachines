@@ -17,7 +17,7 @@ namespace Advanced
         {
             bigMachine.EnableLoopChecker = true;
             var loopMachine = bigMachine.CreateOrGet<LoopMachine.Interface>(0);
-            loopMachine.CommandAsync<int>(Command., 1);
+            // loopMachine.CommandAsync<int>(Command.), 1);
         }
 
         public LoopMachine(BigMachine<int> bigMachine)
@@ -29,11 +29,11 @@ namespace Advanced
         {
             if (command.Message is int n)
             {// LoopMachine
-                this.BigMachine.TryGet<Interface>(this.Identifier)?.Command<int>(0);
+                // this.BigMachine.TryGet<Interface>(this.Identifier)?.Command<int>(0);
             }
             else if (command.Message is string st)
             {// LoopMachine -> TestMachine
-                this.BigMachine.TryGet<TestMachine.Interface>(3)?.Command(st);
+                // this.BigMachine.TryGet<TestMachine.Interface>(3)?.Command(st);
             }
         }
     }
@@ -45,7 +45,7 @@ namespace Advanced
         public static void Test(BigMachine<int> bigMachine)
         {
             var loopMachine = bigMachine.CreateOrGet<LoopMachine2.Interface>(0);
-            loopMachine.Command(1);
+            // loopMachine.CommandAsync().1);
         }
 
         public LoopMachine2(BigMachine<int> bigMachine)
@@ -57,7 +57,7 @@ namespace Advanced
         {
             if (command.Message is int n)
             {// LoopMachine
-                Task.Run(() => this.BigMachine.TryGet<Interface>(this.Identifier)?.Command(0));
+                // Task.Run(() => this.BigMachine.TryGet<Interface>(this.Identifier)?.Command(0));
             }
         }
     }
