@@ -358,6 +358,7 @@ namespace BigMachines.Generator
             this.CheckKeyword(BigMachinesBody.ChangeState, this.Location);
             this.CheckKeyword(BigMachinesBody.GetCurrentState, this.Location);
             this.CheckKeyword(BigMachinesBody.InternalChangeState, this.Location);
+            this.CheckKeyword(BigMachinesBody.InternalCommand, this.Location);
             this.CheckKeyword(BigMachinesBody.RegisterBM, this.Location);
             // this.CheckKeyword(BigMachinesBody.IntInitState, this.Location);
             this.CheckKeyword(BigMachinesBody.CommandIdentifier, this.Location);

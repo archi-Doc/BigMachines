@@ -279,6 +279,15 @@ namespace BigMachines
         protected internal virtual bool InternalChangeState(int state) => false;
 
         /// <summary>
+        /// Generated method which is called when processing a command.
+        /// </summary>
+        /// <param name="command">A command.</param>
+        protected internal virtual void InternalCommand(CommandPost<TIdentifier>.Command command)
+        {
+            return;
+        }
+
+        /// <summary>
         /// Called when the machine is terminating.<br/>
         /// This code is inside 'lock (this.SyncMachine) {}'.
         /// </summary>
