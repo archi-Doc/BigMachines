@@ -24,23 +24,23 @@ namespace BigMachines.Generator
             }
 
             var flag = false;
-            // tempcode
-            /*if (method.Method_Parameters.Length == 1 &&
-                method.Method_Parameters[0] == BigMachinesBody.StateParameterFullName)
+            if (machine.IdentifierObject != null &&
+                method.Method_Parameters.Length == 1 &&
+                method.Method_Parameters[0] == string.Format(BigMachinesBody.CommandParameterFullName, machine.IdentifierObject.FullName))
             {
             }
             else
             {// Invalid parameter
                 flag = true;
-            }*/
+            }
 
             var returnTypeName = method.Method_ReturnObject?.FullName;
             var returnTask = false;
             if (returnTypeName == "void")
-            {
+            {// void
             }
             else if (returnTypeName == BigMachinesBody.TaskFullName)
-            {
+            {// Task
                 returnTask = true;
             }
             else
@@ -50,7 +50,7 @@ namespace BigMachines.Generator
 
             if (flag)
             {
-                method.Body.ReportDiagnostic(BigMachinesBody.Error_MethodFormat, attribute.Location);
+                method.Body.ReportDiagnostic(BigMachinesBody.Error_MethodFormat2, attribute.Location);
             }
 
             if (method.Body.Abort)
@@ -63,6 +63,7 @@ namespace BigMachines.Generator
             commandMethod.Name = method.SimpleName;
             commandMethod.Id = methodAttribute.Id;
             commandMethod.ReturnTask = returnTask;
+            commandMethod.WithoutLock = methodAttribute.WithoutLock;
 
             return commandMethod;
         }
@@ -76,5 +77,7 @@ namespace BigMachines.Generator
         public bool DuplicateId { get; internal set; }
 
         public bool ReturnTask { get; internal set; }
+
+        public bool WithoutLock { get; internal set; }
     }
 }

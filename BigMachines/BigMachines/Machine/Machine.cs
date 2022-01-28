@@ -220,7 +220,7 @@ public abstract class Machine<TIdentifier>
 
             try
             {
-                // this.InternalCommand(command);
+                await this.InternalCommand(command);
             }
             catch (Exception ex)
             {
@@ -373,9 +373,10 @@ public abstract class Machine<TIdentifier>
     /// Generated method which is called when processing a command.
     /// </summary>
     /// <param name="command">A command.</param>
-    protected internal virtual void InternalCommand(CommandPost<TIdentifier>.Command command)
+    /// <returns>The task object representing the asynchronous operation.</returns>
+    protected internal virtual Task InternalCommand(CommandPost<TIdentifier>.Command command)
     {
-        return;
+        return Task.CompletedTask;
     }
 
     /// <summary>

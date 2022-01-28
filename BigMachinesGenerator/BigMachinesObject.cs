@@ -603,6 +603,7 @@ ModuleInitializerClass_Added:
             this.Generate_Interface(ssb, info);
             this.Generate_CreateInterface(ssb, info);
             this.Generate_InternalRun(ssb, info);
+            this.Generate_InternalCommand(ssb, info);
             this.Generate_ChangeStateInternal(ssb, info);
             this.Generate_RegisterBM(ssb, info);
 
@@ -719,6 +720,46 @@ ModuleInitializerClass_Added:
                 ssb.AppendLine("_ => StateResult.Terminate,");
                 ssb.DecrementIndent();
                 ssb.AppendLine("};");
+            }
+
+            ssb.AppendLine();
+        }
+
+        internal void Generate_InternalCommand(ScopingStringBuilder ssb, GeneratorInformation info)
+        {
+            if (this.MachineObject == null || this.IdentifierObject == null || this.CommandMethodList == null)
+            {
+                return;
+            }
+
+            using (var scope = ssb.ScopeBrace($"protected override async Task {BigMachinesBody.InternalCommand}(CommandPost<{this.IdentifierObject.FullName}>.Command command)"))
+            {
+                for (var i = 0; i < this.CommandMethodList.Count; i++)
+                {
+                    var method = this.CommandMethodList[i];
+                    var prefix = i == 0 ? "if" : "else if";
+                    using (var scopeIf = ssb.ScopeBrace($"{prefix} (command.Data == {method.Id})"))
+                    {
+                        ScopingStringBuilder.IScope? scopeTry = null;
+                        if (!method.WithoutLock)
+                        {
+                            scopeTry = ssb.ScopeBrace("try");
+                            ssb.AppendLine("await this.LockMachineAsync();");
+                        }
+
+                        var prefix2 = method.ReturnTask ? "await " : string.Empty;
+                        ssb.AppendLine($"{prefix2}this.{method.Name}(command);");
+
+                        if (scopeTry != null)
+                        {
+                            scopeTry.Dispose();
+                            using (var scopeFinally = ssb.ScopeBrace("finally"))
+                            {
+                                ssb.AppendLine("this.UnlockMachine();");
+                            }
+                        }
+                    }
+                }
             }
 
             ssb.AppendLine();

@@ -36,8 +36,9 @@ namespace BigMachines.Generator
 
         public const string StateResultFullName = "BigMachines.StateResult";
         public const string StateParameterFullName = "BigMachines.StateParameter";
-        public const string TaskFullName = "System.Threading.Tasks.Task<TResult>";
-        public const string CommandParameterFullName = "BigMachines.CommandPost<TIdentifier>.Command";
+        public const string TaskFullName = "System.Threading.Tasks.Task";
+        public const string TaskFullName2 = "System.Threading.Tasks.Task<TResult>";
+        public const string CommandParameterFullName = "BigMachines.CommandPost<{0}>.Command";
 
         public static readonly DiagnosticDescriptor Error_NotPartial = new DiagnosticDescriptor(
             id: "BMG001", title: "Not a partial class", messageFormat: "MachineObject '{0}' is not a partial class",
@@ -92,7 +93,7 @@ namespace BigMachines.Generator
             category: "BigMachinesGenerator", DiagnosticSeverity.Error, isEnabledByDefault: true);
 
         public static readonly DiagnosticDescriptor Error_MethodFormat2 = new DiagnosticDescriptor(
-            id: "BMG014", title: "Invalid method", messageFormat: "Command method must be in the format of `void TestMethod(StateParameter parameter)'",
+            id: "BMG014", title: "Invalid method", messageFormat: "Command method must be in the format of `void TestMethod(StateParameter parameter)' or `Task TestMethod(StateParameter parameter)'",
             category: "BigMachinesGenerator", DiagnosticSeverity.Error, isEnabledByDefault: true); // tempcode
 
         public BigMachinesBody(GeneratorExecutionContext context)

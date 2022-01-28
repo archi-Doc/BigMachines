@@ -245,14 +245,14 @@ namespace Sandbox
         }
     }
 
-    public partial class ParentClassT2<T, TIdentifier>
-        where TIdentifier : notnull
+    public partial class ParentClassT2<T, TIdentifier2>
+        where TIdentifier2 : notnull
     {
         [TinyhandObject(UseServiceProvider = true)]
         [MachineObject(123)]
-        public partial class NestedMachineT2 : Machine<TIdentifier>
+        public partial class NestedMachineT2 : Machine<TIdentifier2>
         {
-            public NestedMachineT2(BigMachine<TIdentifier> bigMachine)
+            public NestedMachineT2(BigMachine<TIdentifier2> bigMachine)
             : base(bigMachine)
             {
                 this.Param = default!;
@@ -267,6 +267,11 @@ namespace Sandbox
             {
                 Console.WriteLine("T2" + this.Param?.ToString());
                 return StateResult.Continue;
+            }
+
+            [CommandMethod(0)]
+            protected async Task TestCommand(CommandPost<TIdentifier2>.Command command)
+            {
             }
         }
     }
@@ -389,6 +394,15 @@ namespace Sandbox
 
         [CommandMethod(33, WithoutLock = false)]
         protected void GetInfo(CommandPost<int>.Command command)
+        {// void, Task
+            if (command.Message is int n)
+            {
+                command.Response = 4;
+            }
+        }
+
+        [CommandMethod(3, WithoutLock = false)]
+        protected async Task GetInfo2(CommandPost<int>.Command command)
         {// void, Task
             if (command.Message is int n)
             {

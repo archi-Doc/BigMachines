@@ -46,7 +46,7 @@ namespace BigMachines.Generator
             {// StateResult
             }
             else if (returnObject.Generics_Arguments.Length == 1 &&
-                returnObject.OriginalDefinition?.FullName == BigMachinesBody.TaskFullName &&
+                returnObject.OriginalDefinition?.FullName == BigMachinesBody.TaskFullName2 &&
                 returnObject.Generics_Arguments[0].FullName == BigMachinesBody.StateResultFullName)
             {// Task<StateResult>
                 returnTask = true;
