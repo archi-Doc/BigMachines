@@ -36,10 +36,10 @@ namespace BigMachines.Generator
 
             var returnTypeName = method.Method_ReturnObject?.FullName;
             var returnTask = false;
-            if (returnTypeName != "void")
+            if (returnTypeName == "void")
             {
             }
-            else if (returnTypeName != BigMachinesBody.TaskFullName)
+            else if (returnTypeName == BigMachinesBody.TaskFullName)
             {
                 returnTask = true;
             }

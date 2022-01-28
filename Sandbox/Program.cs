@@ -94,9 +94,11 @@ namespace Sandbox
             var m = bigMachine.TryCreate<TestMachine.Interface>(0);
 
             m.Run();
+            m.ChangeState(TestMachine.State.First);
             m.Run();
             m.Run();
 
+            m.Command(TestMachine.Command.GetInfo);
             var ba = m.Serialize();
 
             const int N = 1;

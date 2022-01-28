@@ -595,6 +595,7 @@ ModuleInitializerClass_Added:
         internal void Generate2(ScopingStringBuilder ssb, GeneratorInformation info)
         {
             this.Generate_State(ssb, info);
+            this.Generate_Command(ssb, info);
             this.Generate_Interface(ssb, info);
             this.Generate_CreateInterface(ssb, info);
             this.Generate_InternalRun(ssb, info);
@@ -611,9 +612,27 @@ ModuleInitializerClass_Added:
                 return;
             }
 
-            using (var scope = ssb.ScopeBrace($"public {this.NewIfDerived}enum State"))
+            using (var scope = ssb.ScopeBrace($"public {this.NewIfDerived}enum {BigMachinesBody.StateIdentifier}"))
             {
                 foreach (var x in this.StateMethodList)
+                {
+                    ssb.AppendLine($"{x.Name} = {x.Id},");
+                }
+            }
+
+            ssb.AppendLine();
+        }
+
+        internal void Generate_Command(ScopingStringBuilder ssb, GeneratorInformation info)
+        {
+            if (this.CommandMethodList == null)
+            {
+                return;
+            }
+
+            using (var scope = ssb.ScopeBrace($"public {this.NewIfDerived}enum {BigMachinesBody.CommandIdentifier}"))
+            {
+                foreach (var x in this.CommandMethodList)
                 {
                     ssb.AppendLine($"{x.Name} = {x.Id},");
                 }
