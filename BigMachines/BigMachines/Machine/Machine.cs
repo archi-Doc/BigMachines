@@ -188,6 +188,15 @@ namespace BigMachines
                     // Console.WriteLine("command " + checker);
                 }
 
+                try
+                {
+                    // this.InternalCommand(command);
+                }
+                catch (Exception ex)
+                {
+                    this.BigMachine.ReportException(new(this, ex));
+                }
+
                 // lock (this.SyncMachine) // Not inside lock statement.
                 this.ProcessCommand(command);
             }
