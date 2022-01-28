@@ -61,6 +61,14 @@ public class CommandPost<TIdentifier>
         RunTwoWay,
     }
 
+    public static bool IsTwoWay(CommandType commandType) => commandType switch
+    {
+        CommandType.CommandTwoWay => true,
+        CommandType.StateTwoWay => true,
+        CommandType.RunTwoWay => true,
+        _ => false,
+    };
+
     /// <summary>
     /// Defines the type of delegate used to receive and process commands.
     /// </summary>
@@ -147,15 +155,16 @@ public class CommandPost<TIdentifier>
     /// <param name="commandType">CommandType of a message.</param>
     /// <param name="identifier">The identifier of a message.</param>
     /// <param name="message">The message to send.<br/>Must be serializable by Tinyhand because the message will be cloned and passed to the receiver.</param>
-    public void Send<TMessage>(IMachineGroup<TIdentifier> group, CommandType commandType, TIdentifier identifier, TMessage message)
+    /// <returns>The task object representing the asynchronous operation.</returns>
+    public Task SendAsync<TMessage>(IMachineGroup<TIdentifier> group, CommandType commandType, TIdentifier identifier, TMessage message)
     {
         var c = new Command(this.BigMachine, group, commandType, identifier, TinyhandSerializer.Clone(message));
-        this.commandDelegate(c, null);
+        return this.commandDelegate(c, null);
     }
 
-    public void SendGroup<TMessage>(CommandType commandType, IMachineGroup<TIdentifier> group, IEnumerable<TIdentifier> identifiers, TMessage message) => this.SendGroups(commandType, Enumerable.Repeat(group, identifiers.Count()), identifiers, message);
+    public Task SendGroupAsync<TMessage>(CommandType commandType, IMachineGroup<TIdentifier> group, IEnumerable<TIdentifier> identifiers, TMessage message) => this.SendGroupsAsync(commandType, Enumerable.Repeat(group, identifiers.Count()), identifiers, message);
 
-    public void SendGroups<TMessage>(CommandType commandType, IEnumerable<IMachineGroup<TIdentifier>> groups, IEnumerable<TIdentifier> identifiers, TMessage message)
+    public Task SendGroupsAsync<TMessage>(CommandType commandType, IEnumerable<IMachineGroup<TIdentifier>> groups, IEnumerable<TIdentifier> identifiers, TMessage message)
     {
         var messageClone = TinyhandSerializer.Clone(message);
         var list = new List<Command>();
@@ -167,7 +176,24 @@ public class CommandPost<TIdentifier>
             list.Add(c);
         }
 
-        this.commandDelegate(null, list);
+        return this.commandDelegate(null, list);
+    }
+
+    public async Task<TResult?> SendAndReceiveAsync<TMessage, TResult>(IMachineGroup<TIdentifier> group, CommandType commandType, TIdentifier identifier, TMessage message)
+    {
+        var c = new Command(this.BigMachine, group, commandType, identifier, TinyhandSerializer.Clone(message));
+        var task = this.commandDelegate(c, null);
+
+        if (IsTwoWay(commandType))
+        {
+            await task;
+            if (c.Response is TResult result)
+            {// Valid result
+                return result;
+            }
+        }
+
+        return default;
     }
 
     public TResult? SendTwoWay<TMessage, TResult>(IMachineGroup<TIdentifier> group, CommandType commandType, TIdentifier identifier, TMessage message, int millisecondTimeout = 100)

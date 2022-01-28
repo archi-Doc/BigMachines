@@ -75,7 +75,7 @@ namespace BigMachines
             var m = Volatile.Read(ref this.machine1);
             if (m != null)
             {
-                this.BigMachine.CommandPost.Send(this, CommandPost<TIdentifier>.CommandType.Command, m.Identifier, message);
+                this.BigMachine.CommandPost.SendAsync(this, CommandPost<TIdentifier>.CommandType.Command, m.Identifier, message);
             }
         }
 

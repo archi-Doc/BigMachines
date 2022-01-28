@@ -2,6 +2,7 @@
 
 using System;
 using System.Runtime.CompilerServices;
+using System.Threading.Tasks;
 using Tinyhand;
 
 namespace BigMachines
@@ -92,7 +93,7 @@ namespace BigMachines
         /// Runs the machine manually.<br/>
         /// This function does not change <see cref="Machine{TIdentifier}.Timeout"/> or <see cref="Machine{TIdentifier}.NextRun"/>.
         /// </summary>
-        public void Run() => this.BigMachine.CommandPost.Send(this.Group, CommandPost<TIdentifier>.CommandType.Run, this.Identifier, 0);
+        public void Run() => this.BigMachine.CommandPost.SendAsync(this.Group, CommandPost<TIdentifier>.CommandType.Run, this.Identifier, 0);
 
         /// <summary>
         /// Runs the machine manually and receives the result.<br/>
@@ -109,7 +110,7 @@ namespace BigMachines
         /// </summary>
         /// <typeparam name="TMessage">The type of the message.</typeparam>
         /// <param name="message">Message.</param>
-        public void Command<TMessage>(TMessage message) => this.BigMachine.CommandPost.Send(this.Group, CommandPost<TIdentifier>.CommandType.Command, this.Identifier, message);
+        public void Command<TMessage>(TMessage message) => this.BigMachine.CommandPost.SendAsync(this.Group, CommandPost<TIdentifier>.CommandType.Command, this.Identifier, message);
 
         /// <summary>
         /// Sends a command to the machine and receives the result.
@@ -197,7 +198,7 @@ namespace BigMachines
         /// Changes the state of the machine.
         /// </summary>
         /// <param name="state">The next machine state.</param>
-        public void ChangeState(TState state) => this.BigMachine.CommandPost.Send(this.Group, CommandPost<TIdentifier>.CommandType.State, this.Identifier, Unsafe.As<TState, int>(ref state));
+        public void ChangeState(TState state) => this.BigMachine.CommandPost.SendAsync(this.Group, CommandPost<TIdentifier>.CommandType.State, this.Identifier, Unsafe.As<TState, int>(ref state));
 
         /// <summary>
         /// Changes the state of the machine and receives the result.
@@ -208,9 +209,14 @@ namespace BigMachines
         /// <see langword="false"/>: Not changed (change denied or the machine is not available.)</returns>
         public bool ChangeStateTwoWay(TState state, int millisecondTimeout = 100) => this.BigMachine.CommandPost.SendTwoWay<int, bool>(this.Group, CommandPost<TIdentifier>.CommandType.StateTwoWay, this.Identifier, Unsafe.As<TState, int>(ref state), millisecondTimeout);
 
-        public void Command<TMessage>(TCommand command, TMessage message)
+        public Task CommandAsync<TMessage>(TCommand command, TMessage message)
         {
-            this.BigMachine.CommandPost.Send<TMessage>(this.Group, CommandPost<TIdentifier>.CommandType.Command, this.Identifier, message);
+            return this.BigMachine.CommandPost.SendAsync<TMessage>(this.Group, CommandPost<TIdentifier>.CommandType.Command, this.Identifier, message);
+        }
+
+        public Task<TResult?> CommandAndReceiveAsync<TMessage, TResult>(TCommand command, TMessage message)
+        {
+            return this.BigMachine.CommandPost.SendAndReceiveAsync<TMessage, TResult>(this.Group, CommandPost<TIdentifier>.CommandType.CommandTwoWay, this.Identifier, message);
         }
     }
 }

@@ -109,7 +109,7 @@ namespace BigMachines
         public void Command<TMessage>(bool running, TMessage message)
         {
             (var groups, var identifiers) = this.GetGroupsAndIdentifiers(running);
-            this.BigMachine.CommandPost.SendGroups(CommandPost<TIdentifier>.CommandType.Command, groups, identifiers, message);
+            this.BigMachine.CommandPost.SendGroupsAsync(CommandPost<TIdentifier>.CommandType.Command, groups, identifiers, message);
         }
 
         /// <summary>

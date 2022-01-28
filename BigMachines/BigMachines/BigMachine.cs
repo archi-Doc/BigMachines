@@ -369,7 +369,7 @@ namespace BigMachines
 
         private Task DistributeCommand(CommandPost<TIdentifier>.Command? command, List<CommandPost<TIdentifier>.Command>? commandList)
         {
-            return Task.Run(() => // taskrun
+            return Task.Run(() =>
             {
                 if (command != null)
                 {
