@@ -51,7 +51,7 @@ public class Program
         var testMachine = bigMachine.CreateOrGet<TestMachine.Interface>(42); // Machine is created via the interface class and identifier, not the machine class itself.
         if (testMachine != null)
         {
-            var currentState = testMachine.GetCurrentState(); // Get current state. You can operate machines using the interface class.
+            testMachine.TryGetState(out var currentState); // Get current state. You can operate machines using the interface class.
         }
 
         testMachine = bigMachine.TryGet<TestMachine.Interface>(42); // Get the created machine.

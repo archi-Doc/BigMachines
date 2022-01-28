@@ -811,8 +811,9 @@ ModuleInitializerClass_Added:
             {
                 var constructor = this.ObjectFlag.HasFlag(BigMachinesObjectFlag.HasSimpleConstructor) ? $"x => new {this.FullName}(x)" : "null";
                 var group = this.GroupType == null ? "null" : $"typeof({this.GroupType})";
+                var hasAsync = "false";
                 var continuous = this.ObjectAttribute.Continuous ? "true" : "false";
-                ssb.AppendLine($"{BigMachinesBody.BigMachineIdentifier}<{this.IdentifierObject.FullName}>.StaticInfo[typeof({this.FullName}.{BigMachinesBody.InterfaceIdentifier})] = new(typeof({this.FullName}), typeId, {continuous}, {constructor}, {group});");
+                ssb.AppendLine($"{BigMachinesBody.BigMachineIdentifier}<{this.IdentifierObject.FullName}>.StaticInfo[typeof({this.FullName}.{BigMachinesBody.InterfaceIdentifier})] = new(typeof({this.FullName}), typeId, {hasAsync}, {continuous}, {constructor}, {group});");
             }
         }
     }

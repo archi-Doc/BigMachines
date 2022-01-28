@@ -94,7 +94,6 @@ namespace Sandbox
             var m = bigMachine.CreateOrGet<TestMachine.Interface>(0);
 
             m.RunAsync();
-            m.ChangeStateAsync(TestMachine.State.First);
             m.RunAsync();
             m.RunAsync();
 
@@ -136,16 +135,16 @@ namespace Sandbox
             if (testMachine != null)
             {
                 // var b = testMachine.ChangeStateTwoWay(TestMachine.State.First);
-                if (testMachine.GetCurrentState() == TestMachine.State.First)
+                if (testMachine.TryGetState(out var state) && state == TestMachine.State.First)
                 {
                 }
             }
 
             if (testMachine != null)
             {
-                var state = testMachine.GetCurrentState();
+                testMachine.TryGetState(out var state);
                 // testMachine.ChangeStateTwoWay(TestMachine.State.ErrorState);
-                state = testMachine.GetCurrentState();
+                testMachine.TryGetState(out state);
             }
 
             var testGroup = bigMachine.GetGroup<TestMachine.Interface>();

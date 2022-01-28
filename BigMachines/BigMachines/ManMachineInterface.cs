@@ -94,7 +94,7 @@ namespace BigMachines
         /// This function does not change <see cref="Machine{TIdentifier}.Timeout"/> or <see cref="Machine{TIdentifier}.NextRun"/>.
         /// </summary>
         /// <returns>The task object representing the asynchronous operation.</returns>
-        public Task RunAsync() => this.BigMachine.CommandPost.SendAsync(this.Group, CommandPost<TIdentifier>.CommandType.Run, this.Identifier, 0, 0);
+        public Task RunAsync() => this.BigMachine.CommandPost.SendAsync(this.Group, CommandPost<TIdentifier>.CommandType.Run, this.Identifier, 0);
 
         /// <summary>
         /// Serialize the machines to a byte array.
@@ -154,19 +154,22 @@ namespace BigMachines
         /// <summary>
         /// Gets the current state of the machine.
         /// </summary>
-        /// <returns>The state of the machine..<br/>
-        /// <see langword="null"/>: Machine is not available.</returns>
-        public TState? GetCurrentState()
+        /// <param name="state">The state of the machine.</param>
+        /// <returns>
+        /// <see langword="true"/>: the state is successfully retrieved; otherwise <see langword="false"/>.</returns>
+        public bool TryGetState(out TState state)
         {
             if (this.Group.TryGetMachine(this.Identifier, out var machine))
             {
                 if (machine is Machine<TIdentifier> m && m.Status != MachineStatus.Terminated)
                 {
-                    return System.Runtime.CompilerServices.Unsafe.As<int, TState>(ref m.CurrentState);
+                    state = Unsafe.As<int, TState>(ref m.CurrentState);
+                    return true;
                 }
             }
 
-            return null;
+            state = default;
+            return false;
         }
 
         /// <summary>
@@ -174,10 +177,10 @@ namespace BigMachines
         /// </summary>
         /// <param name="state">The next machine state.</param>
         /// <returns>The task object representing the asynchronous operation.</returns>
-        public Task ChangeStateAsync(TState state)
+        public Task<bool> ChangeStateAsync(TState state)
         {
             var i = Unsafe.As<TState, int>(ref state);
-            return this.BigMachine.CommandPost.SendAsync(this.Group, CommandPost<TIdentifier>.CommandType.ChangeState, this.Identifier, i, i);
+            return this.BigMachine.CommandPost.SendAndReceiveAsync<bool>(this.Group, CommandPost<TIdentifier>.CommandType.ChangeState, this.Identifier, i);
         }
 
         public Task CommandAsync<TMessage>(TCommand command, TMessage message)

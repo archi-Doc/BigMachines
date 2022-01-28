@@ -192,6 +192,19 @@ public class CommandPost<TIdentifier>
         return default;
     }
 
+    public async Task<TResponse?> SendAndReceiveAsync<TResponse>(IMachineGroup<TIdentifier> group, CommandType commandType, TIdentifier identifier, int data)
+    {
+        var c = new Command(this.BigMachine, group, commandType, identifier, data, null);
+
+        await this.commandDelegate(c, null);
+        if (c.Response is TResponse result)
+        {// Valid result
+            return result;
+        }
+
+        return default;
+    }
+
     public Task<KeyValuePair<TIdentifier, TResponse?>[]> SendAndReceiveGroupAsync<TMessage, TResponse>(IMachineGroup<TIdentifier> group, CommandType commandType, IEnumerable<TIdentifier> identifiers, int data, TMessage message) => this.SendAndReceiveGroupsAsync<TMessage, TResponse>(Enumerable.Repeat(group, identifiers.Count()), commandType, identifiers, data, message);
 
     public async Task<KeyValuePair<TIdentifier, TResponse?>[]> SendAndReceiveGroupsAsync<TMessage, TResponse>(IEnumerable<IMachineGroup<TIdentifier>> groups, CommandType commandType, IEnumerable<TIdentifier> identifiers, int data, TMessage message)
