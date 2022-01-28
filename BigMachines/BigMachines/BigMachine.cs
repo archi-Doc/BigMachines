@@ -369,7 +369,7 @@ namespace BigMachines
 
         private Task DistributeCommand(CommandPost<TIdentifier>.Command? command, List<CommandPost<TIdentifier>.Command>? commandList)
         {
-            return Task.Run(() =>
+            return Task.Run(async () =>
             {
                 if (command != null)
                 {
@@ -377,7 +377,7 @@ namespace BigMachines
                     {
                         try
                         {
-                            machine.DistributeCommand(command.Group, command);
+                            await machine.DistributeCommand(command.Group, command);
                         }
                         catch (Exception ex)
                         {
@@ -394,7 +394,7 @@ namespace BigMachines
                         {
                             try
                             {
-                                machine.DistributeCommand(x.Group, x);
+                                await machine.DistributeCommand(x.Group, x);
                             }
                             catch (Exception ex)
                             {

@@ -136,11 +136,11 @@ namespace BigMachines
         /// <param name="group">Machine group.</param>
         /// <param name="command">Command.</param>
         /// <returns><see langword="true"/>: Terminated, <see langword="false"/>: Continue.</returns>
-        internal bool DistributeCommand(IMachineGroup<TIdentifier> group, CommandPost<TIdentifier>.Command command)
+        internal async Task DistributeCommand(IMachineGroup<TIdentifier> group, CommandPost<TIdentifier>.Command command)
         {
             if (this.Status == MachineStatus.Terminated)
             {// Terminated
-                return true;
+                return;
             }
             else if (command.Type == CommandPost<TIdentifier>.CommandType.Run)
             {// Run
@@ -168,7 +168,7 @@ namespace BigMachines
             {// ChangeState
                 lock (this.SyncMachine)
                 {
-                    command.Response = this.InternalChangeState(command.Data, true);
+                    command.Response = this.InternalChangeState(command.Data);
                 }
             }
             else
@@ -200,8 +200,6 @@ namespace BigMachines
                 // lock (this.SyncMachine) // Not inside lock statement.
                 this.ProcessCommand(command);
             }
-
-            return false;
         }
 
         /// <summary>
@@ -277,9 +275,8 @@ namespace BigMachines
         /// Generated method which is called when the state changes.
         /// </summary>
         /// <param name="state">The next state.</param>
-        /// <param name="rerun">Requires rerun when the state is changed.</param>
         /// <returns><see langword="true"/>: State changed. <see langword="false"/>: Not changed (same state or denied). </returns>
-        protected internal virtual bool InternalChangeState(int state, bool rerun) => false;
+        protected internal virtual bool InternalChangeState(int state) => false;
 
         /// <summary>
         /// Called when the machine is terminating.<br/>
