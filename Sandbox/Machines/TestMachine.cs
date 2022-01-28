@@ -374,20 +374,15 @@ namespace Sandbox
             return StateResult.Continue;
         }
 
-        protected async System.Threading.Tasks.Task ReleaseAndInvoke(System.Threading.Tasks.Task task)
-        {
-            var semaphore = new System.Threading.SemaphoreSlim(1, 1);
-            semaphore.Release();
-            await task;
-            semaphore.Wait();
-        }
-
         protected bool FirstCanEnter() => true;
 
-        [CommandMethod(33)]
+        [CommandMethod(33, WithoutLock = false)]
         protected void GetInfo(CommandPost<int>.Command command)
         {// void, Task
-            command.Response = 4;
+            if (command.Message is int n)
+            {
+                command.Response = 4;
+            }
         }
 
         protected override void ProcessCommand(CommandPost<int>.Command command)

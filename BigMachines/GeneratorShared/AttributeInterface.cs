@@ -55,7 +55,7 @@ namespace BigMachines
         /// </summary>
         /// <param name="id">The identifier used for serialization.<br/>
         /// 0: Default state method.<br/>
-        /// Id can be a random number, but it must be unique.</param>
+        /// Id must be a unique number (can be a random number).</param>
         public StateMethodAttribute(uint id)
         {
             this.Id = id;
@@ -64,14 +64,14 @@ namespace BigMachines
         /// <summary>
         /// Gets an identifier used for serialization.<br/>
         /// 0: Default state method.<br/>
-        /// Id can be a random number, but it must be unique.
+        /// Id must be a unique number (can be a random number).
         /// </summary>
         public uint Id { get; }
     }
 
 #pragma warning disable SA1629
     /// <summary>
-    /// Adds a command method to the state machine.<br/>
+    /// Adds a command method to the machine.<br/>
     /// The format of a method must be: <br/>
     /// <see langword="protected"/> <see cref="StateResult"/> SampleCommand(<see cref="StateParameter"/> parameter)<br/>
     /// { <see langword="return"/> <see cref="StateResult.Continue"/>; }
@@ -91,15 +91,15 @@ namespace BigMachines
         }
 
         /// <summary>
-        /// Gets an identifier used for serialization.<br/>
-        /// Id can be a random number, but it must be unique.
+        /// Gets an identifier of the command.<br/>
+        /// Id must be a unique number (can be a random number).
         /// </summary>
         public uint Id { get; }
 
         /// <summary>
-        /// Gets a value indicating whether the command method executes without locking the machine.
+        /// Gets a value indicating whether the command method executes without locking the machine [the default is false].
         /// </summary>
-        public bool WithoutLock { get; } = false;
+        public bool WithoutLock { get; set; } = false;
     }
 
     /// <summary>
