@@ -197,10 +197,6 @@ public abstract class Machine<TIdentifier>
                 this.UnlockMachine();
             }
         }
-        else if (command.Type == CommandPost<TIdentifier>.CommandType.Terminate)
-        {// Terminate
-            await this.TerminateAndRemoveFromGroup();
-        }
         else
         {// Command
             if (command.LoopChecker is { } checker)

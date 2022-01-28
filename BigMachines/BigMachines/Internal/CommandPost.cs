@@ -42,11 +42,6 @@ public class CommandPost<TIdentifier>
         Run,
 
         /// <summary>
-        /// Terminate the machine.
-        /// </summary>
-        Terminate,
-
-        /// <summary>
         /// Report an exception. Used internally.
         /// </summary>
         Exception,

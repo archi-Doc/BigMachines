@@ -147,6 +147,18 @@ public partial class BigMachine<TIdentifier>
     public IEnumerable<IMachineGroup<TIdentifier>> GetGroups() => this.groupArray;
 
     /// <summary>
+    /// Gets a machine group associated with <typeparamref name="TMachineInterface"/>.
+    /// </summary>
+    /// <typeparam name="TMachineInterface"><see cref="ManMachineInterface{TIdentifier, TState, TCommand}"/>of the machine (e.g TestMachine.Interface).</typeparam>
+    /// <returns>An instance of <see cref="IMachineGroup{TIdentifier}"/>.</returns>
+    public IMachineGroup<TIdentifier> GetGroup<TMachineInterface>()
+        where TMachineInterface : ManMachineInterface<TIdentifier>
+    {
+        this.GetMachineGroup(typeof(TMachineInterface), out var group);
+        return group;
+    }
+
+    /// <summary>
     /// Gets a machine interface associated with the identifier.
     /// </summary>
     /// <typeparam name="TMachineInterface"><see cref="ManMachineInterface{TIdentifier, TState, TCommand}"/>of the machine (e.g TestMachine.Interface).</typeparam>
@@ -158,18 +170,6 @@ public partial class BigMachine<TIdentifier>
     {
         this.GetMachineGroup(typeof(TMachineInterface), out var group);
         return group.TryGet<TMachineInterface>(identifier);
-    }
-
-    /// <summary>
-    /// Gets a machine group associated with <typeparamref name="TMachineInterface"/>.
-    /// </summary>
-    /// <typeparam name="TMachineInterface"><see cref="ManMachineInterface{TIdentifier, TState, TCommand}"/>of the machine (e.g TestMachine.Interface).</typeparam>
-    /// <returns>An instance of <see cref="IMachineGroup{TIdentifier}"/>.</returns>
-    public IMachineGroup<TIdentifier> GetGroup<TMachineInterface>()
-        where TMachineInterface : ManMachineInterface<TIdentifier>
-    {
-        this.GetMachineGroup(typeof(TMachineInterface), out var group);
-        return group;
     }
 
     /// <summary>
@@ -235,7 +235,14 @@ public partial class BigMachine<TIdentifier>
     public bool Remove<TMachineInterface>(TIdentifier identifier)
     {
         this.GetMachineGroup(typeof(TMachineInterface), out var group);
-        return group.RemoveFromGroup(identifier);
+        if (group.TryGetMachine(identifier, out var machine))
+        {// Found
+            group.RemoveFromGroup(identifier);
+            machine.TaskRunAndTerminate();
+            return true;
+        }
+
+        return false;
     }
 
     /// <summary>
