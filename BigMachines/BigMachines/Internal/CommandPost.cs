@@ -4,6 +4,7 @@ using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
+using System.Runtime.CompilerServices;
 using System.Threading.Tasks;
 using Tinyhand;
 
@@ -26,48 +27,25 @@ public class CommandPost<TIdentifier>
     public enum CommandType
     {
         /// <summary>
-        /// One-way command.
+        /// Issue a command to the machine.
         /// </summary>
         Command,
 
         /// <summary>
-        /// Two-way command which requires a response
+        /// Change the state of the machine.
         /// </summary>
-        CommandTwoWay,
+        ChangeState,
 
         /// <summary>
-        /// Exception. Used internally.
-        /// </summary>
-        Exception,
-
-        /// <summary>
-        /// Changing state. Used internally.
-        /// </summary>
-        State,
-
-        /// <summary>
-        /// Changing state. Used internally.
-        /// </summary>
-        StateTwoWay,
-
-        /// <summary>
-        /// Run. Used internally.
+        /// Run the machine.
         /// </summary>
         Run,
 
         /// <summary>
-        /// Run. Used internally.
+        /// Report an exception. Used internally.
         /// </summary>
-        RunTwoWay,
+        Exception,
     }
-
-    public static bool IsTwoWay(CommandType commandType) => commandType switch
-    {
-        CommandType.CommandTwoWay => true,
-        CommandType.StateTwoWay => true,
-        CommandType.RunTwoWay => true,
-        _ => false,
-    };
 
     /// <summary>
     /// Defines the type of delegate used to receive and process commands.
@@ -90,7 +68,7 @@ public class CommandPost<TIdentifier>
         /// <param name="type">CommandType.</param>
         /// <param name="identifier">Identifier.</param>
         /// <param name="message">Message.</param>
-        public Command(BigMachine<TIdentifier> bigMachine, IMachineGroup<TIdentifier> group, CommandType type, TIdentifier identifier, object? message)
+        public Command(BigMachine<TIdentifier> bigMachine, IMachineGroup<TIdentifier> group, CommandType type, TIdentifier identifier, int data, object? message)
         {
             LoopChecker? checker;
             if (bigMachine.EnableLoopChecker)
@@ -110,6 +88,7 @@ public class CommandPost<TIdentifier>
             this.Group = group;
             this.Type = type;
             this.Identifier = identifier;
+            this.Data = data;
             this.Message = message;
             this.LoopChecker = checker;
         }
@@ -119,6 +98,8 @@ public class CommandPost<TIdentifier>
         public CommandType Type { get; internal set; }
 
         public TIdentifier Identifier { get; }
+
+        public int Data { get; set; }
 
         public object? Message { get; }
 
@@ -151,20 +132,22 @@ public class CommandPost<TIdentifier>
     /// Caution! TMessage must be serializable by Tinyhand because the message will be cloned and passed to the receiver.
     /// </summary>
     /// <typeparam name="TMessage">The type of a message.</typeparam>
-    /// <param name="group">The channel to receive message.</param>
-    /// <param name="commandType">CommandType of a message.</param>
-    /// <param name="identifier">The identifier of a message.</param>
+    /// <param name="group">Machine group</param>
+    /// <param name="commandType">CommandType of the message.</param>
+    /// <param name="identifier">The identifier of the message.</param>
+    /// <param name="data"><see langword="int"/> type data included in the message.</param>
     /// <param name="message">The message to send.<br/>Must be serializable by Tinyhand because the message will be cloned and passed to the receiver.</param>
     /// <returns>The task object representing the asynchronous operation.</returns>
-    public Task SendAsync<TMessage>(IMachineGroup<TIdentifier> group, CommandType commandType, TIdentifier identifier, TMessage message)
+    public Task SendAsync<TMessage>(IMachineGroup<TIdentifier> group, CommandType commandType, TIdentifier identifier, int data, TMessage message)
     {
-        var c = new Command(this.BigMachine, group, commandType, identifier, TinyhandSerializer.Clone(message));
+        Unsafe.As<TMessage, int>(ref message);
+        var c = new Command(this.BigMachine, group, commandType, identifier, data, TinyhandSerializer.Clone(message));
         return this.commandDelegate(c, null);
     }
 
-    public Task SendGroupAsync<TMessage>(CommandType commandType, IMachineGroup<TIdentifier> group, IEnumerable<TIdentifier> identifiers, TMessage message) => this.SendGroupsAsync(commandType, Enumerable.Repeat(group, identifiers.Count()), identifiers, message);
+    public Task SendGroupAsync<TMessage>(CommandType commandType, IMachineGroup<TIdentifier> group, IEnumerable<TIdentifier> identifiers, int data, TMessage message) => this.SendGroupsAsync(commandType, Enumerable.Repeat(group, identifiers.Count()), identifiers, data, message);
 
-    public Task SendGroupsAsync<TMessage>(CommandType commandType, IEnumerable<IMachineGroup<TIdentifier>> groups, IEnumerable<TIdentifier> identifiers, TMessage message)
+    public Task SendGroupsAsync<TMessage>(CommandType commandType, IEnumerable<IMachineGroup<TIdentifier>> groups, IEnumerable<TIdentifier> identifiers, int data, TMessage message)
     {
         var messageClone = TinyhandSerializer.Clone(message);
         var list = new List<Command>();
@@ -172,115 +155,58 @@ public class CommandPost<TIdentifier>
         var i = identifiers.GetEnumerator();
         while (g.MoveNext() && i.MoveNext())
         {
-            var c = new Command(this.BigMachine, g.Current, commandType, i.Current, messageClone);
+            var c = new Command(this.BigMachine, g.Current, commandType, i.Current, data, messageClone);
             list.Add(c);
         }
 
         return this.commandDelegate(null, list);
     }
 
-    public async Task<TResult?> SendAndReceiveAsync<TMessage, TResult>(IMachineGroup<TIdentifier> group, CommandType commandType, TIdentifier identifier, TMessage message)
+    public async Task<TResult?> SendAndReceiveAsync<TMessage, TResult>(IMachineGroup<TIdentifier> group, CommandType commandType, TIdentifier identifier, int data, TMessage message)
     {
-        var c = new Command(this.BigMachine, group, commandType, identifier, TinyhandSerializer.Clone(message));
-        var task = this.commandDelegate(c, null);
+        var c = new Command(this.BigMachine, group, commandType, identifier, data, TinyhandSerializer.Clone(message));
 
-        if (IsTwoWay(commandType))
-        {
-            await task;
-            if (c.Response is TResult result)
-            {// Valid result
-                return result;
-            }
+        await this.commandDelegate(c, null);
+        if (c.Response is TResult result)
+        {// Valid result
+            return result;
         }
 
         return default;
     }
 
-    public TResult? SendTwoWay<TMessage, TResult>(IMachineGroup<TIdentifier> group, CommandType commandType, TIdentifier identifier, TMessage message, int millisecondTimeout = 100)
+    public Task<KeyValuePair<TIdentifier, TResult?>[]> SendAndReceiveGroupAsync<TMessage, TResult>(CommandType commandType, IMachineGroup<TIdentifier> group, IEnumerable<TIdentifier> identifiers, int data, TMessage message) => this.SendAndReceiveGroupsAsync<TMessage, TResult>(commandType, Enumerable.Repeat(group, identifiers.Count()), identifiers, data, message);
+
+    public async Task<KeyValuePair<TIdentifier, TResult?>[]> SendAndReceiveGroupsAsync<TMessage, TResult>(CommandType commandType, IEnumerable<IMachineGroup<TIdentifier>> groups, IEnumerable<TIdentifier> identifiers, int data, TMessage message)
     {
-        if (millisecondTimeout < 0 || millisecondTimeout > MaxMillisecondTimeout)
-        {
-            millisecondTimeout = MaxMillisecondTimeout;
-        }
-
-        var c = new Command(this.BigMachine, group, commandType, identifier, TinyhandSerializer.Clone(message));
-        var task = this.commandDelegate(c, null);
-
-        if (commandType == CommandType.CommandTwoWay ||
-            commandType == CommandType.StateTwoWay ||
-            commandType == CommandType.RunTwoWay)
-        {// TwoWay
-            try
-            {
-                if (task.Wait(millisecondTimeout, this.BigMachine.Core.CancellationToken))
-                {// Completed
-                    if (c.Response is TResult result)
-                    {// Valid result
-                        return result;
-                    }
-                }
-            }
-            catch
-            {
-            }
-        }
-
-        return default;
-    }
-
-    public KeyValuePair<TIdentifier, TResult?>[] SendGroupTwoWay<TMessage, TResult>(CommandType commandType, IMachineGroup<TIdentifier> group, IEnumerable<TIdentifier> identifiers, TMessage message, int millisecondTimeout = 100) => this.SendGroupsTwoWay<TMessage, TResult>(commandType, Enumerable.Repeat(group, identifiers.Count()), identifiers, message, millisecondTimeout);
-
-    public KeyValuePair<TIdentifier, TResult?>[] SendGroupsTwoWay<TMessage, TResult>(CommandType commandType, IEnumerable<IMachineGroup<TIdentifier>> groups, IEnumerable<TIdentifier> identifiers, TMessage message, int millisecondTimeout = 100)
-    {
-        if (millisecondTimeout < 0 || millisecondTimeout > MaxMillisecondTimeout)
-        {
-            millisecondTimeout = MaxMillisecondTimeout;
-        }
-
         var messageClone = TinyhandSerializer.Clone(message);
         var list = new List<Command>();
         var g = groups.GetEnumerator();
         var i = identifiers.GetEnumerator();
         while (g.MoveNext() && i.MoveNext())
         {
-            var c = new Command(this.BigMachine, g.Current, commandType, i.Current, messageClone);
+            var c = new Command(this.BigMachine, g.Current, commandType, i.Current, data, messageClone);
             list.Add(c);
         }
 
-        var task = this.commandDelegate(null, list);
+        await this.commandDelegate(null, list);
 
-        if (commandType == CommandType.CommandTwoWay ||
-            commandType == CommandType.StateTwoWay ||
-            commandType == CommandType.RunTwoWay)
-        {// TwoWay
-            try
-            {
-                if (task.Wait(millisecondTimeout, this.BigMachine.Core.CancellationToken))
-                {// Completed
-                    var array = new KeyValuePair<TIdentifier, TResult?>[list.Count];
-                    var n = 0;
-                    foreach (var x in list)
-                    {
-                        if (x.Response is TResult result)
-                        {// Valid result
-                            array[n++] = new(x.Identifier, result);
-                        }
-                    }
-
-                    if (array.Length != n)
-                    {
-                        Array.Resize(ref array, n);
-                    }
-
-                    return array;
-                }
-            }
-            catch
-            {
+        var array = new KeyValuePair<TIdentifier, TResult?>[list.Count];
+        var n = 0;
+        foreach (var x in list)
+        {
+            if (x.Response is TResult result)
+            {// Valid result
+                array[n++] = new(x.Identifier, result);
             }
         }
 
-        return Array.Empty<KeyValuePair<TIdentifier, TResult?>>();
+        if (array.Length != n)
+        {
+            Array.Resize(ref array, n);
+        }
+
+        return array;
     }
 
     public BigMachine<TIdentifier> BigMachine { get; }

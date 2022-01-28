@@ -142,8 +142,7 @@ namespace BigMachines
             {// Terminated
                 return true;
             }
-            else if (command.Type == CommandPost<TIdentifier>.CommandType.Run ||
-                command.Type == CommandPost<TIdentifier>.CommandType.RunTwoWay)
+            else if (command.Type == CommandPost<TIdentifier>.CommandType.Run)
             {// Run
                 if (command.LoopChecker is { } checker)
                 {
@@ -165,13 +164,11 @@ namespace BigMachines
                     this.RunMachine(command, RunType.Manual, DateTime.UtcNow);
                 }
             }
-            else if ((command.Type == CommandPost<TIdentifier>.CommandType.State ||
-                command.Type == CommandPost<TIdentifier>.CommandType.StateTwoWay) &&
-                command.Message is int state)
+            else if (command.Type == CommandPost<TIdentifier>.CommandType.ChangeState)
             {// ChangeState
                 lock (this.SyncMachine)
                 {
-                    command.Response = this.InternalChangeState(state, true);
+                    command.Response = this.InternalChangeState(command.Data, true);
                 }
             }
             else

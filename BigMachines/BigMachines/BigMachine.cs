@@ -174,7 +174,7 @@ namespace BigMachines
 
         /// <summary>
         /// Create a machine by specifying the identifier and parameter.<br/>
-        /// Returns the existing machine if the machine with the identifier is already created.
+        /// Returns the existing machine if the machine with the same identifier is already created.
         /// </summary>
         /// <typeparam name="TMachineInterface"><see cref="ManMachineInterface{TIdentifier, TState, TCommand}"/>of the machine (e.g TestMachine.Interface).</typeparam>
         /// <param name="identifier">The identifier.</param>

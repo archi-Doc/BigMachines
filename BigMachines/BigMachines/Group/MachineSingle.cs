@@ -70,7 +70,16 @@ namespace BigMachines
 
         IEnumerable<Machine<TIdentifier>> IMachineGroup<TIdentifier>.GetMachines() => new Enumerator(this);
 
-        public void CommandGroup<TMessage>(TMessage message)
+        public Task CommandAsync<TCommand, TMessage>(TCommand command, TMessage message)
+        {
+            var m = Volatile.Read(ref this.machine1);
+            if (m != null)
+            {
+                this.BigMachine.CommandPost.SendAsync(this, CommandPost<TIdentifier>.CommandType.Command, m.Identifier, message);
+            }
+        }
+
+        public void CommandAsync<TMessage>(TMessage message)
         {
             var m = Volatile.Read(ref this.machine1);
             if (m != null)

@@ -36,19 +36,20 @@ namespace BigMachines
         /// <summary>
         /// Sends a command to each machine in the group.
         /// </summary>
+        /// <typeparam name="TCommand">The command.</typeparam>
         /// <typeparam name="TMessage">The type of the message.</typeparam>
         /// <param name="message">The message.</param>
-        public void CommandGroup<TMessage>(TMessage message);
+        public Task CommandAsync<TCommand, TMessage>(TCommand command, TMessage message);
 
         /// <summary>
         /// Sends a message to each machine in the group and receives the result.
         /// </summary>
+        /// <typeparam name="TCommand">The command.</typeparam>
         /// <typeparam name="TMessage">The type of the message.</typeparam>
         /// <typeparam name="TResponse">The type of the response.</typeparam>
         /// <param name="message">The message.</param>
-        /// <param name="millisecondTimeout">Timeout in milliseconds.</param>
         /// <returns>The response.</returns>
-        public KeyValuePair<TIdentifier, TResponse?>[] CommandGroupTwoWay<TMessage, TResponse>(TMessage message, int millisecondTimeout = 100);
+        public Task<KeyValuePair<TIdentifier, TResponse?>[]> CommandAndReceiveAsync<TCommand, TMessage, TResponse>(TCommand command, TMessage message);
 
         /// <summary>
         /// Serialize a group of machines to a byte array.
@@ -56,7 +57,7 @@ namespace BigMachines
         /// <param name="options">Serializer options.</param>
         /// <returns>A byte array with the serialized value.</returns>
         public byte[] Serialize(TinyhandSerializerOptions? options = null)
-        {
+        {// tempcode
             options ??= TinyhandSerializer.DefaultOptions;
             var writer = default(Tinyhand.IO.TinyhandWriter);
             this.Serialize(ref writer, options);
@@ -99,7 +100,7 @@ namespace BigMachines
         internal bool TryRemoveMachine(TIdentifier identifier);
 
         internal void Serialize(ref Tinyhand.IO.TinyhandWriter writer, TinyhandSerializerOptions options)
-        {
+        {// tempcode
             foreach (var machine in this.GetMachines().Where(a => a.IsSerializable))
             {
                 if (machine is ITinyhandSerialize serializer)

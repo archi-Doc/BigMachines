@@ -198,7 +198,7 @@ namespace BigMachines
         /// Changes the state of the machine.
         /// </summary>
         /// <param name="state">The next machine state.</param>
-        public void ChangeState(TState state) => this.BigMachine.CommandPost.SendAsync(this.Group, CommandPost<TIdentifier>.CommandType.State, this.Identifier, Unsafe.As<TState, int>(ref state));
+        public void ChangeState(TState state) => this.BigMachine.CommandPost.SendAsync(this.Group, CommandPost<TIdentifier>.CommandType.ChangeState, this.Identifier, Unsafe.As<TState, int>(ref state));
 
         /// <summary>
         /// Changes the state of the machine and receives the result.
@@ -207,7 +207,7 @@ namespace BigMachines
         /// <param name="millisecondTimeout">Timeout in milliseconds.</param>
         /// <returns><see langword="true"/>: The state is successfully changed.<br/>
         /// <see langword="false"/>: Not changed (change denied or the machine is not available.)</returns>
-        public bool ChangeStateTwoWay(TState state, int millisecondTimeout = 100) => this.BigMachine.CommandPost.SendTwoWay<int, bool>(this.Group, CommandPost<TIdentifier>.CommandType.StateTwoWay, this.Identifier, Unsafe.As<TState, int>(ref state), millisecondTimeout);
+        public bool ChangeStateTwoWay(TState state, int millisecondTimeout = 100) => this.BigMachine.CommandPost.SendTwoWay<int, bool>(this.Group, CommandPost<TIdentifier>.CommandType.ChangeStateTwoWay, this.Identifier, Unsafe.As<TState, int>(ref state), millisecondTimeout);
 
         public Task CommandAsync<TMessage>(TCommand command, TMessage message)
         {
