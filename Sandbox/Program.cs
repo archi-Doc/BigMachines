@@ -91,14 +91,14 @@ namespace Sandbox
 
         public static void Test3(BigMachine<int> bigMachine)
         {
-            var m = bigMachine.TryCreate<TestMachine.Interface>(0);
+            var m = bigMachine.CreateOrGet<TestMachine.Interface>(0);
 
-            m.Run();
-            m.ChangeState(TestMachine.State.First);
-            m.Run();
-            m.Run();
+            m.RunAsync();
+            m.ChangeStateAsync(TestMachine.State.First);
+            m.RunAsync();
+            m.RunAsync();
 
-            m.Command(TestMachine.Command.GetInfo);
+            m.CommandAsync(TestMachine.Command.GetInfo, 0);
             var ba = m.Serialize();
 
             const int N = 1;
@@ -119,20 +119,20 @@ namespace Sandbox
 
         public static void Test2(BigMachine<int> bigMachine)
         {
-            var m = bigMachine.TryCreate<LongRunningMachine.Interface>(0);
+            var m = bigMachine.CreateOrGet<LongRunningMachine.Interface>(0);
 
-            m.Run();
-            m.Run();
-            m.Run();
+            m.RunAsync();
+            m.RunAsync();
+            m.RunAsync();
         }
 
         public static void Test1(BigMachine<int> bigMachine)
         {
-            bigMachine.TryCreate<TerminatorMachine.Interface>(0);
+            bigMachine.CreateOrGet<TerminatorMachine.Interface>(0);
 
             var testMachine = bigMachine.TryGet<TestMachine.Interface>(3);
-            testMachine = bigMachine.TryCreate<TestMachine.Interface>(4, null);
-            testMachine = bigMachine.TryCreate<TestMachine.Interface>(3, null);
+            testMachine = bigMachine.CreateOrGet<TestMachine.Interface>(4, null);
+            testMachine = bigMachine.CreateOrGet<TestMachine.Interface>(3, null);
             if (testMachine != null)
             {
                 // var b = testMachine.ChangeStateTwoWay(TestMachine.State.First);
@@ -165,12 +165,12 @@ namespace Sandbox
             // bigMachine.TryCreate<ParentClassT2<byte, int>.NestedMachineT2.Interface>(11);
 
             // Continuous
-            bigMachine.TryCreate<ContinuousMachine.Interface>(0);
-            bigMachine.TryCreate<ContinuousMachine.Interface>(1);
-            bigMachine.TryCreate<ContinuousMachine.Interface>(2);
+            bigMachine.CreateOrGet<ContinuousMachine.Interface>(0);
+            bigMachine.CreateOrGet<ContinuousMachine.Interface>(1);
+            bigMachine.CreateOrGet<ContinuousMachine.Interface>(2);
 
             // Continuous Watcher
-            bigMachine.TryCreate<ContinuousWatcher.Interface>(0);
+            bigMachine.CreateOrGet<ContinuousWatcher.Interface>(0);
         }
     }
 }

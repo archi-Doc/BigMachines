@@ -145,7 +145,7 @@ namespace BigMachines
     public enum RunType
     {
         /// <summary>
-        /// Machine is run by <see cref="ManMachineInterface{TIdentifier}.Run"/> method.
+        /// Machine is run by <see cref="ManMachineInterface{TIdentifier}.RunAsync"/> method.
         /// </summary>
         Manual,
 

@@ -16,7 +16,7 @@ namespace Advanced
         public static void Test(BigMachine<int> bigMachine)
         {
             bigMachine.Continuous.SetMaxThreads(2); // Set the maximum number of threads used for continuous machines.
-            var m = bigMachine.TryCreate<ContinuousMachine.Interface>(0);
+            var m = bigMachine.CreateOrGet<ContinuousMachine.Interface>(0);
 
             // The machine will run until the task is complete.
         }

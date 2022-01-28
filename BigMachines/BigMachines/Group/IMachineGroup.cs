@@ -38,8 +38,11 @@ namespace BigMachines
         /// </summary>
         /// <typeparam name="TCommand">The command.</typeparam>
         /// <typeparam name="TMessage">The type of the message.</typeparam>
+        /// <param name="command">The commmand.</param>
         /// <param name="message">The message.</param>
-        public Task CommandAsync<TCommand, TMessage>(TCommand command, TMessage message);
+        /// <returns>The task object representing the asynchronous operation.</returns>
+        public Task CommandAsync<TCommand, TMessage>(TCommand command, TMessage message)
+            where TCommand : struct;
 
         /// <summary>
         /// Sends a message to each machine in the group and receives the result.
@@ -47,9 +50,11 @@ namespace BigMachines
         /// <typeparam name="TCommand">The command.</typeparam>
         /// <typeparam name="TMessage">The type of the message.</typeparam>
         /// <typeparam name="TResponse">The type of the response.</typeparam>
+        /// <param name="command">The commmand.</param>
         /// <param name="message">The message.</param>
         /// <returns>The response.</returns>
-        public Task<KeyValuePair<TIdentifier, TResponse?>[]> CommandAndReceiveAsync<TCommand, TMessage, TResponse>(TCommand command, TMessage message);
+        public Task<KeyValuePair<TIdentifier, TResponse?>[]> CommandAndReceiveAsync<TCommand, TMessage, TResponse>(TCommand command, TMessage message)
+            where TCommand : struct;
 
         /// <summary>
         /// Serialize a group of machines to a byte array.

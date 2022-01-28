@@ -22,6 +22,11 @@ namespace Benchmark.Design
         {
             var message = command.Message;
         }
+
+        [CommandMethod(0)]
+        public void Test(CommandPost<int>.Command command)
+        {
+        }
     }
 
     internal class SimpleBench
@@ -32,7 +37,7 @@ namespace Benchmark.Design
 
         internal static async Task Test(BigMachine<int> bigMachine)
         {
-            machine = bigMachine.Create<SimpleBenchMachine.Interface>(0);
+            machine = bigMachine.CreateNew<SimpleBenchMachine.Interface>(0);
             var sw = new Stopwatch();
 
             Start("Command");
@@ -68,7 +73,7 @@ namespace Benchmark.Design
         {
             for (var i = 0; i < 1000_000; i++)
             {
-                machine.Command(0);
+                _ = machine.CommandAsync(SimpleBenchMachine.Command.Test, 0);
             }
         }
 
@@ -76,7 +81,7 @@ namespace Benchmark.Design
         {
             for (var i = 0; i < 1000_000; i++)
             {
-                machine.CommandTwoWay<int, int>(0);
+                _ = machine.CommandAndReceiveAsync<int, int>(SimpleBenchMachine.Command.Test, 0);
             }
         }
     }

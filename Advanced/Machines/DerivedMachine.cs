@@ -14,7 +14,7 @@ namespace Advanced
     {
         public static void Test2(BigMachine<int> bigMachine)
         {
-            var m = bigMachine.TryCreate<DerivedMachine.Interface>(0);
+            var m = bigMachine.CreateOrGet<DerivedMachine.Interface>(0);
         }
 
         public DerivedMachine(BigMachine<int> bigMachine)
@@ -54,7 +54,7 @@ namespace Advanced
     {
         public static void Test(BigMachine<int> bigMachine)
         {
-            var m = bigMachine.TryCreate<DerivedMachine2.Interface>(0);
+            var m = bigMachine.CreateOrGet<DerivedMachine2.Interface>(0);
         }
 
         public DerivedMachine2(BigMachine<int> bigMachine)

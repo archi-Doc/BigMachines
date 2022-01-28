@@ -97,7 +97,7 @@ public class Program
         var bigMachine = new BigMachine<IdentifierClass>();
         bigMachine.Start();
 
-        bigMachine.TryCreate<IdentifierMachine.Interface>(new(1, "A"));
+        bigMachine.CreateOrGet<IdentifierMachine.Interface>(new(1, "A"));
         // bigMachine.TryCreate<GenericMachine<IdentifierClass>.Interface>(new(2, "B"));
         TerminatorMachine<IdentifierClass>.Test(bigMachine, IdentifierClass.Default);
 

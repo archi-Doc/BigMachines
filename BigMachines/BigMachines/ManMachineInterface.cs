@@ -93,34 +93,8 @@ namespace BigMachines
         /// Runs the machine manually.<br/>
         /// This function does not change <see cref="Machine{TIdentifier}.Timeout"/> or <see cref="Machine{TIdentifier}.NextRun"/>.
         /// </summary>
-        public void Run() => this.BigMachine.CommandPost.SendAsync(this.Group, CommandPost<TIdentifier>.CommandType.Run, this.Identifier, 0);
-
-        /// <summary>
-        /// Runs the machine manually and receives the result.<br/>
-        /// This function does not change <see cref="Machine{TIdentifier}.Timeout"/> or <see cref="Machine{TIdentifier}.NextRun"/>.
-        /// </summary>
-        /// <typeparam name="TMessage">The type of the message.</typeparam>
-        /// <param name="message">Message.</param>
-        /// <param name="millisecondTimeout">Timeout in milliseconds.</param>
-        /// <returns>The result.</returns>
-        public StateResult? RunTwoWay<TMessage>(TMessage message, int millisecondTimeout = 100) => this.BigMachine.CommandPost.SendTwoWay<TMessage, StateResult>(this.Group, CommandPost<TIdentifier>.CommandType.RunTwoWay, this.Identifier, message, millisecondTimeout);
-
-        /// <summary>
-        /// Sends a command to the machine.
-        /// </summary>
-        /// <typeparam name="TMessage">The type of the message.</typeparam>
-        /// <param name="message">Message.</param>
-        public void Command<TMessage>(TMessage message) => this.BigMachine.CommandPost.SendAsync(this.Group, CommandPost<TIdentifier>.CommandType.Command, this.Identifier, message);
-
-        /// <summary>
-        /// Sends a command to the machine and receives the result.
-        /// </summary>
-        /// <typeparam name="TMessage">The type of the message.</typeparam>
-        /// <typeparam name="TResponse">The type of the response.</typeparam>
-        /// <param name="message">Message.</param>
-        /// <param name="millisecondTimeout">Timeout in milliseconds.</param>
-        /// <returns>The response.</returns>
-        public TResponse? CommandTwoWay<TMessage, TResponse>(TMessage message, int millisecondTimeout = 100) => this.BigMachine.CommandPost.SendTwoWay<TMessage, TResponse>(this.Group, CommandPost<TIdentifier>.CommandType.CommandTwoWay, this.Identifier, message, millisecondTimeout);
+        /// <returns>The task object representing the asynchronous operation.</returns>
+        public Task RunAsync() => this.BigMachine.CommandPost.SendAsync(this.Group, CommandPost<TIdentifier>.CommandType.Run, this.Identifier, 0, 0);
 
         /// <summary>
         /// Serialize the machines to a byte array.
@@ -198,25 +172,23 @@ namespace BigMachines
         /// Changes the state of the machine.
         /// </summary>
         /// <param name="state">The next machine state.</param>
-        public void ChangeState(TState state) => this.BigMachine.CommandPost.SendAsync(this.Group, CommandPost<TIdentifier>.CommandType.ChangeState, this.Identifier, Unsafe.As<TState, int>(ref state));
-
-        /// <summary>
-        /// Changes the state of the machine and receives the result.
-        /// </summary>
-        /// <param name="state">The next machine state.</param>
-        /// <param name="millisecondTimeout">Timeout in milliseconds.</param>
-        /// <returns><see langword="true"/>: The state is successfully changed.<br/>
-        /// <see langword="false"/>: Not changed (change denied or the machine is not available.)</returns>
-        public bool ChangeStateTwoWay(TState state, int millisecondTimeout = 100) => this.BigMachine.CommandPost.SendTwoWay<int, bool>(this.Group, CommandPost<TIdentifier>.CommandType.ChangeStateTwoWay, this.Identifier, Unsafe.As<TState, int>(ref state), millisecondTimeout);
+        /// <returns>The task object representing the asynchronous operation.</returns>
+        public Task ChangeStateAsync(TState state)
+        {
+            var i = Unsafe.As<TState, int>(ref state);
+            return this.BigMachine.CommandPost.SendAsync(this.Group, CommandPost<TIdentifier>.CommandType.ChangeState, this.Identifier, i, i);
+        }
 
         public Task CommandAsync<TMessage>(TCommand command, TMessage message)
         {
-            return this.BigMachine.CommandPost.SendAsync<TMessage>(this.Group, CommandPost<TIdentifier>.CommandType.Command, this.Identifier, message);
+            var data = Unsafe.As<TCommand, int>(ref command);
+            return this.BigMachine.CommandPost.SendAsync<TMessage>(this.Group, CommandPost<TIdentifier>.CommandType.Command, this.Identifier, data, message);
         }
 
         public Task<TResult?> CommandAndReceiveAsync<TMessage, TResult>(TCommand command, TMessage message)
         {
-            return this.BigMachine.CommandPost.SendAndReceiveAsync<TMessage, TResult>(this.Group, CommandPost<TIdentifier>.CommandType.CommandTwoWay, this.Identifier, message);
+            var data = Unsafe.As<TCommand, int>(ref command);
+            return this.BigMachine.CommandPost.SendAndReceiveAsync<TMessage, TResult>(this.Group, CommandPost<TIdentifier>.CommandType.Command, this.Identifier, data, message);
         }
     }
 }

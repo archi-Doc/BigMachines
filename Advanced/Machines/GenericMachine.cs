@@ -16,7 +16,7 @@ namespace Advanced
     {
         public static void Test(BigMachine<TIdentifier> bigMachine)
         {
-            bigMachine.TryCreate<GenericMachine<TIdentifier>.Interface>(default!);
+            bigMachine.CreateOrGet<GenericMachine<TIdentifier>.Interface>(default!);
         }
 
         public GenericMachine(BigMachine<TIdentifier> bigMachine)

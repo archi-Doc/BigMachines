@@ -14,20 +14,20 @@ namespace Advanced
     {
         public static void Test(BigMachine<int> bigMachine)
         {
-            var m = bigMachine.TryCreate<PassiveMachine.Interface>(0);
+            var m = bigMachine.CreateOrGet<PassiveMachine.Interface>(0);
 
             m.Command("message 1"); // Send command.
 
-            m.Run(); // Manually run machine.
+            m.RunAsync(); // Manually run machine.
 
-            m.ChangeState(State.First); // Change state from State.Initial to State.First
-            m.Run(); // Manually run machine.
+            m.ChangeStateAsync(State.First); // Change state from State.Initial to State.First
+            m.RunAsync(); // Manually run machine.
 
-            m.ChangeState(State.Second); // Change state from State.First to State.Second (denied)
-            m.Run(); // Manually run machine.
+            m.ChangeStateAsync(State.Second); // Change state from State.First to State.Second (denied)
+            m.RunAsync(); // Manually run machine.
 
-            m.ChangeState(State.Second); // Change state from State.First to State.Second (approved)
-            m.Run(); // Manually run machine.
+            m.ChangeStateAsync(State.Second); // Change state from State.First to State.Second (approved)
+            m.RunAsync(); // Manually run machine.
         }
 
         public PassiveMachine(BigMachine<int> bigMachine)

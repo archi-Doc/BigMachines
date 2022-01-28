@@ -14,7 +14,7 @@ namespace Advanced
     {
         public static void Test(BigMachine<int> bigMachine)
         {
-            var m = bigMachine.TryCreate<IntermittentMachine.Interface>(0);
+            var m = bigMachine.CreateOrGet<IntermittentMachine.Interface>(0);
 
             // The machine will run at regular intervals (1 second).
         }

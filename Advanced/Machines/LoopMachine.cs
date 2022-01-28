@@ -16,8 +16,8 @@ namespace Advanced
         public static void Test(BigMachine<int> bigMachine)
         {
             bigMachine.EnableLoopChecker = true;
-            var loopMachine = bigMachine.TryCreate<LoopMachine.Interface>(0);
-            loopMachine.Command<int>(1);
+            var loopMachine = bigMachine.CreateOrGet<LoopMachine.Interface>(0);
+            loopMachine.CommandAsync<int>(Command., 1);
         }
 
         public LoopMachine(BigMachine<int> bigMachine)
@@ -44,7 +44,7 @@ namespace Advanced
     {
         public static void Test(BigMachine<int> bigMachine)
         {
-            var loopMachine = bigMachine.TryCreate<LoopMachine2.Interface>(0);
+            var loopMachine = bigMachine.CreateOrGet<LoopMachine2.Interface>(0);
             loopMachine.Command(1);
         }
 

@@ -100,7 +100,7 @@ namespace BigMachines
             }
         }
 
-        /// <summary>
+        /* /// <summary>
         /// Sends a command to each continuous machine.
         /// </summary>
         /// <typeparam name="TMessage">The type of the message.</typeparam>
@@ -109,23 +109,8 @@ namespace BigMachines
         public void Command<TMessage>(bool running, TMessage message)
         {
             (var groups, var identifiers) = this.GetGroupsAndIdentifiers(running);
-            this.BigMachine.CommandPost.SendGroupsAsync(CommandPost<TIdentifier>.CommandType.Command, groups, identifiers, message);
-        }
-
-        /// <summary>
-        /// Sends a message to each machine in the group and receives the result.
-        /// </summary>
-        /// <typeparam name="TMessage">The type of the message.</typeparam>
-        /// <typeparam name="TResponse">The type of the response.</typeparam>
-        /// <param name="running">Sends message to running machines only.</param>
-        /// <param name="message">The message.</param>
-        /// <param name="millisecondTimeout">Timeout in milliseconds.</param>
-        /// <returns>The response.</returns>
-        public KeyValuePair<TIdentifier, TResponse?>[] CommandTwoWay<TMessage, TResponse>(bool running, TMessage message, int millisecondTimeout = 100)
-        {
-            (var groups, var identifiers) = this.GetGroupsAndIdentifiers(running);
-            return this.BigMachine.CommandPost.SendGroupsTwoWay<TMessage, TResponse>(CommandPost<TIdentifier>.CommandType.CommandTwoWay, groups, identifiers, message, millisecondTimeout);
-        }
+            this.BigMachine.CommandPost.SendGroupsAsync(groups, CommandPost<TIdentifier>.CommandType.Command, identifiers, message);
+        }*/
 
         /// <summary>
         /// Sets the maximum number of threads used for continuous machines.<br/>

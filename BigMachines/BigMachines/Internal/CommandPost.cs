@@ -67,6 +67,7 @@ public class CommandPost<TIdentifier>
         /// <param name="group">Machine group.</param>
         /// <param name="type">CommandType.</param>
         /// <param name="identifier">Identifier.</param>
+        /// <param name="data">Data.</param>
         /// <param name="message">Message.</param>
         public Command(BigMachine<TIdentifier> bigMachine, IMachineGroup<TIdentifier> group, CommandType type, TIdentifier identifier, int data, object? message)
         {
@@ -132,7 +133,7 @@ public class CommandPost<TIdentifier>
     /// Caution! TMessage must be serializable by Tinyhand because the message will be cloned and passed to the receiver.
     /// </summary>
     /// <typeparam name="TMessage">The type of a message.</typeparam>
-    /// <param name="group">Machine group</param>
+    /// <param name="group">Machine group.</param>
     /// <param name="commandType">CommandType of the message.</param>
     /// <param name="identifier">The identifier of the message.</param>
     /// <param name="data"><see langword="int"/> type data included in the message.</param>
@@ -140,14 +141,13 @@ public class CommandPost<TIdentifier>
     /// <returns>The task object representing the asynchronous operation.</returns>
     public Task SendAsync<TMessage>(IMachineGroup<TIdentifier> group, CommandType commandType, TIdentifier identifier, int data, TMessage message)
     {
-        Unsafe.As<TMessage, int>(ref message);
         var c = new Command(this.BigMachine, group, commandType, identifier, data, TinyhandSerializer.Clone(message));
         return this.commandDelegate(c, null);
     }
 
-    public Task SendGroupAsync<TMessage>(CommandType commandType, IMachineGroup<TIdentifier> group, IEnumerable<TIdentifier> identifiers, int data, TMessage message) => this.SendGroupsAsync(commandType, Enumerable.Repeat(group, identifiers.Count()), identifiers, data, message);
+    public Task SendGroupAsync<TMessage>(IMachineGroup<TIdentifier> group, CommandType commandType, IEnumerable<TIdentifier> identifiers, int data, TMessage message) => this.SendGroupsAsync(Enumerable.Repeat(group, identifiers.Count()), commandType, identifiers, data, message);
 
-    public Task SendGroupsAsync<TMessage>(CommandType commandType, IEnumerable<IMachineGroup<TIdentifier>> groups, IEnumerable<TIdentifier> identifiers, int data, TMessage message)
+    public Task SendGroupsAsync<TMessage>(IEnumerable<IMachineGroup<TIdentifier>> groups, CommandType commandType, IEnumerable<TIdentifier> identifiers, int data, TMessage message)
     {
         var messageClone = TinyhandSerializer.Clone(message);
         var list = new List<Command>();
@@ -175,9 +175,9 @@ public class CommandPost<TIdentifier>
         return default;
     }
 
-    public Task<KeyValuePair<TIdentifier, TResult?>[]> SendAndReceiveGroupAsync<TMessage, TResult>(CommandType commandType, IMachineGroup<TIdentifier> group, IEnumerable<TIdentifier> identifiers, int data, TMessage message) => this.SendAndReceiveGroupsAsync<TMessage, TResult>(commandType, Enumerable.Repeat(group, identifiers.Count()), identifiers, data, message);
+    public Task<KeyValuePair<TIdentifier, TResult?>[]> SendAndReceiveGroupAsync<TMessage, TResult>(IMachineGroup<TIdentifier> group, CommandType commandType, IEnumerable<TIdentifier> identifiers, int data, TMessage message) => this.SendAndReceiveGroupsAsync<TMessage, TResult>(Enumerable.Repeat(group, identifiers.Count()), commandType, identifiers, data, message);
 
-    public async Task<KeyValuePair<TIdentifier, TResult?>[]> SendAndReceiveGroupsAsync<TMessage, TResult>(CommandType commandType, IEnumerable<IMachineGroup<TIdentifier>> groups, IEnumerable<TIdentifier> identifiers, int data, TMessage message)
+    public async Task<KeyValuePair<TIdentifier, TResult?>[]> SendAndReceiveGroupsAsync<TMessage, TResult>(IEnumerable<IMachineGroup<TIdentifier>> groups, CommandType commandType, IEnumerable<TIdentifier> identifiers, int data, TMessage message)
     {
         var messageClone = TinyhandSerializer.Clone(message);
         var list = new List<Command>();

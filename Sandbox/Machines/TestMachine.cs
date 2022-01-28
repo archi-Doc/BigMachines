@@ -83,7 +83,7 @@ namespace Sandbox
                 Console.WriteLine($"ContinuousMachine: {d * 100:F2}%");
             }*/
 
-            var results = this.BigMachine.Continuous.CommandTwoWay<double, double>(true, 0);
+            var results = this.BigMachine.Continuous.Comma<double, double>(true, 0);
             if (results.Length == 0)
             {
                 Console.WriteLine("ContinuousMachine: none");

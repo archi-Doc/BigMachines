@@ -182,7 +182,7 @@ namespace BigMachines
         /// Override <see cref="Machine{TIdentifier}.SetParameter(object?)"/> to receive the parameter.</param>
         /// <returns>An instance of <see cref="ManMachineInterface{TIdentifier, TState, TCommand}"/><br/>
         /// <see langword="null"/>: Machine is not available.</returns>
-        public TMachineInterface TryCreate<TMachineInterface>(TIdentifier identifier, object? createParam = null)
+        public TMachineInterface CreateOrGet<TMachineInterface>(TIdentifier identifier, object? createParam = null)
             where TMachineInterface : ManMachineInterface<TIdentifier>
         {
             this.GetMachineGroup(typeof(TMachineInterface), out var group);
@@ -212,7 +212,7 @@ namespace BigMachines
         /// Override <see cref="Machine{TIdentifier}.SetParameter(object?)"/> to receive the parameter.</param>
         /// <returns>An instance of <see cref="ManMachineInterface{TIdentifier, TState, TCommand}"/><br/>
         /// <see langword="null"/>: Machine is not available.</returns>
-        public TMachineInterface Create<TMachineInterface>(TIdentifier identifier, object? createParam = null)
+        public TMachineInterface CreateNew<TMachineInterface>(TIdentifier identifier, object? createParam = null)
             where TMachineInterface : ManMachineInterface<TIdentifier>
         {
             this.GetMachineGroup(typeof(TMachineInterface), out var group);

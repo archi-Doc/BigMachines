@@ -6,6 +6,7 @@ using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
 using System.Linq;
+using System.Runtime.CompilerServices;
 using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
@@ -71,36 +72,27 @@ namespace BigMachines
         IEnumerable<Machine<TIdentifier>> IMachineGroup<TIdentifier>.GetMachines() => new Enumerator(this);
 
         public Task CommandAsync<TCommand, TMessage>(TCommand command, TMessage message)
+            where TCommand : struct
         {
             var m = Volatile.Read(ref this.machine1);
             if (m != null)
             {
-                this.BigMachine.CommandPost.SendAsync(this, CommandPost<TIdentifier>.CommandType.Command, m.Identifier, message);
+                return this.BigMachine.CommandPost.SendAsync(this, CommandPost<TIdentifier>.CommandType.Command, m.Identifier, Unsafe.As<TCommand, int>(ref command), message);
             }
+
+            return Task.CompletedTask;
         }
 
-        public void CommandAsync<TMessage>(TMessage message)
+        public Task<KeyValuePair<TIdentifier, TResponse?>[]> CommandAndReceiveAsync<TCommand, TMessage, TResponse>(TCommand command, TMessage message)
+            where TCommand : struct
         {
             var m = Volatile.Read(ref this.machine1);
             if (m != null)
             {
-                this.BigMachine.CommandPost.SendAsync(this, CommandPost<TIdentifier>.CommandType.Command, m.Identifier, message);
-            }
-        }
-
-        public KeyValuePair<TIdentifier, TResponse?>[] CommandGroupTwoWay<TMessage, TResponse>(TMessage message, int millisecondTimeout = 100)
-        {
-            var m = Volatile.Read(ref this.machine1);
-            if (m != null)
-            {
-                var result = this.BigMachine.CommandPost.SendTwoWay<TMessage, TResponse>(this, CommandPost<TIdentifier>.CommandType.CommandTwoWay, m.Identifier, message, millisecondTimeout);
-                if (result != null)
-                {
-                    return new[] { new KeyValuePair<TIdentifier, TResponse?>(m.Identifier, result) };
-                }
+                return this.BigMachine.CommandPost.SendAndReceiveGroupAsync<TMessage, TResponse>(this, CommandPost<TIdentifier>.CommandType.Command, new[] { m.Identifier }, Unsafe.As<TCommand, int>(ref command), message);
             }
 
-            return Array.Empty<KeyValuePair<TIdentifier, TResponse?>>();
+            return Task.FromResult(Array.Empty<KeyValuePair<TIdentifier, TResponse?>>());
         }
 
         public BigMachine<TIdentifier> BigMachine { get; }

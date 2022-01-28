@@ -5,6 +5,7 @@ using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
 using System.Linq;
+using System.Runtime.CompilerServices;
 using System.Text;
 using System.Threading.Tasks;
 
@@ -30,9 +31,17 @@ namespace BigMachines
             return null;
         }
 
-        public void CommandAsync<TMessage>(TMessage message) => this.BigMachine.CommandPost.SendGroupAsync(CommandPost<TIdentifier>.CommandType.Command, this, this.IdentificationToMachine.Keys, message);
+        public Task CommandAsync<TCommand, TMessage>(TCommand command, TMessage message)
+            where TCommand : struct
+        {
+            return this.BigMachine.CommandPost.SendGroupAsync(this, CommandPost<TIdentifier>.CommandType.Command, this.IdentificationToMachine.Keys, Unsafe.As<TCommand, int>(ref command), message);
+        }
 
-        public Task<KeyValuePair<TIdentifier, TResponse?>[]> CommandGroupTwoWay<TMessage, TResponse>(TMessage message) => this.BigMachine.CommandPost.SendAndReceiveGroupAsync<TMessage, TResponse>(CommandPost<TIdentifier>.CommandType.Command, this, this.IdentificationToMachine.Keys, message);
+        public Task<KeyValuePair<TIdentifier, TResponse?>[]> CommandAndReceiveAsync<TCommand, TMessage, TResponse>(TCommand command, TMessage message)
+            where TCommand : struct
+        {
+            return this.BigMachine.CommandPost.SendAndReceiveGroupAsync<TMessage, TResponse>(this, CommandPost<TIdentifier>.CommandType.Command, this.IdentificationToMachine.Keys, Unsafe.As<TCommand, int>(ref command), message);
+        }
 
         public BigMachine<TIdentifier> BigMachine { get; }
 

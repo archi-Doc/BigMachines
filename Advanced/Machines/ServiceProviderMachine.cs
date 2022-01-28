@@ -16,7 +16,7 @@ public partial class ServiceProviderMachine : Machine<int>
 {
     public static void Test(BigMachine<int> bigMachine)
     {
-        bigMachine.TryCreate<ServiceProviderMachine.Interface>(0, "A"); // Create a machine and set a parameter.
+        bigMachine.CreateOrGet<ServiceProviderMachine.Interface>(0, "A"); // Create a machine and set a parameter.
     }
 
     public ServiceProviderMachine(BigMachine<int> bigMachine, SomeService service)

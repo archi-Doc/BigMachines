@@ -17,7 +17,7 @@ namespace Advanced
     {
         public static void Test(BigMachine<TIdentifier> bigMachine, TIdentifier identifier)
         {
-            bigMachine.TryCreate<TerminatorMachine<TIdentifier>.Interface>(identifier);
+            bigMachine.CreateOrGet<TerminatorMachine<TIdentifier>.Interface>(identifier);
         }
 
         public TerminatorMachine(BigMachine<TIdentifier> bigMachine)
