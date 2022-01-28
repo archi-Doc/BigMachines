@@ -69,6 +69,39 @@ namespace BigMachines
         public uint Id { get; }
     }
 
+#pragma warning disable SA1629
+    /// <summary>
+    /// Adds a command method to the state machine.<br/>
+    /// The format of a method must be: <br/>
+    /// <see langword="protected"/> <see cref="StateResult"/> SampleCommand(<see cref="StateParameter"/> parameter)<br/>
+    /// { <see langword="return"/> <see cref="StateResult.Continue"/>; }
+    /// </summary>
+#pragma warning restore SA1629
+    [AttributeUsage(AttributeTargets.Method, AllowMultiple = false, Inherited = true)]
+    public sealed class CommandMethodAttribute : Attribute
+    {
+        /// <summary>
+        /// Initializes a new instance of the <see cref="CommandMethodAttribute"/> class.
+        /// </summary>
+        /// <param name="id">The identifier used for serialization.<br/>
+        /// Id can be a random number, but it must be unique.</param>
+        public CommandMethodAttribute(uint id)
+        {
+            this.Id = id;
+        }
+
+        /// <summary>
+        /// Gets an identifier used for serialization.<br/>
+        /// Id can be a random number, but it must be unique.
+        /// </summary>
+        public uint Id { get; }
+
+        /// <summary>
+        /// Gets a value indicating whether the command method executes without locking the machine.
+        /// </summary>
+        public bool WithoutLock { get; } = false;
+    }
+
     /// <summary>
     /// Represents the result of a state method.
     /// </summary>

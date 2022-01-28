@@ -106,6 +106,42 @@ namespace BigMachines.Generator
         }
     }
 
+    [AttributeUsage(AttributeTargets.Method, AllowMultiple = false, Inherited = true)]
+    public sealed class CommandMethodAttributeMock : Attribute
+    {
+        public static readonly string SimpleName = "CommandMethod";
+        public static readonly string StandardName = SimpleName + "Attribute";
+        public static readonly string FullName = "BigMachines." + StandardName;
+
+        public CommandMethodAttributeMock()
+        {
+        }
+
+        public uint Id { get; set; }
+
+        public bool WithoutLock { get; set; }
+
+        public static CommandMethodAttributeMock FromArray(object?[] constructorArguments, KeyValuePair<string, object?>[] namedArguments)
+        {
+            var attribute = new CommandMethodAttributeMock();
+            object? val;
+
+            val = AttributeHelper.GetValue(0, nameof(Id), constructorArguments, namedArguments);
+            if (val != null)
+            {
+                attribute.Id = (uint)val;
+            }
+
+            val = AttributeHelper.GetValue(-1, nameof(WithoutLock), constructorArguments, namedArguments);
+            if (val != null)
+            {
+                attribute.WithoutLock = (bool)val;
+            }
+
+            return attribute;
+        }
+    }
+
     [AttributeUsage(AttributeTargets.Class | AttributeTargets.Struct, AllowMultiple = false, Inherited = true)]
     public sealed class BigMachinesGeneratorOptionAttributeMock : Attribute
     {
