@@ -149,9 +149,9 @@ namespace BigMachines
         /// <summary>
         /// Gets a machine interface associated with the identifier.
         /// </summary>
-        /// <typeparam name="TMachineInterface"><see cref="ManMachineInterface{TIdentifier, TState}"/>of the machine (e.g TestMachine.Interface).</typeparam>
+        /// <typeparam name="TMachineInterface"><see cref="ManMachineInterface{TIdentifier, TState, TCommand}"/>of the machine (e.g TestMachine.Interface).</typeparam>
         /// <param name="identifier">The identifier.</param>
-        /// <returns>An instance of <see cref="ManMachineInterface{TIdentifier, TState}"/><br/>
+        /// <returns>An instance of <see cref="ManMachineInterface{TIdentifier, TState, TCommand}"/><br/>
         /// <see langword="null"/>: Machine is not available.</returns>
         public TMachineInterface? TryGet<TMachineInterface>(TIdentifier identifier)
             where TMachineInterface : ManMachineInterface<TIdentifier>
@@ -163,7 +163,7 @@ namespace BigMachines
         /// <summary>
         /// Gets a machine group associated with <typeparamref name="TMachineInterface"/>.
         /// </summary>
-        /// <typeparam name="TMachineInterface"><see cref="ManMachineInterface{TIdentifier, TState}"/>of the machine (e.g TestMachine.Interface).</typeparam>
+        /// <typeparam name="TMachineInterface"><see cref="ManMachineInterface{TIdentifier, TState, TCommand}"/>of the machine (e.g TestMachine.Interface).</typeparam>
         /// <returns>An instance of <see cref="IMachineGroup{TIdentifier}"/>.</returns>
         public IMachineGroup<TIdentifier> GetGroup<TMachineInterface>()
             where TMachineInterface : ManMachineInterface<TIdentifier>
@@ -176,11 +176,11 @@ namespace BigMachines
         /// Create a machine by specifying the identifier and parameter.<br/>
         /// Returns the existing machine if the machine with the identifier is already created.
         /// </summary>
-        /// <typeparam name="TMachineInterface"><see cref="ManMachineInterface{TIdentifier, TState}"/>of the machine (e.g TestMachine.Interface).</typeparam>
+        /// <typeparam name="TMachineInterface"><see cref="ManMachineInterface{TIdentifier, TState, TCommand}"/>of the machine (e.g TestMachine.Interface).</typeparam>
         /// <param name="identifier">The identifier.</param>
         /// <param name="createParam">The parameter passed to the machine when the machine is newly created.<br/>
         /// Override <see cref="Machine{TIdentifier}.SetParameter(object?)"/> to receive the parameter.</param>
-        /// <returns>An instance of <see cref="ManMachineInterface{TIdentifier, TState}"/><br/>
+        /// <returns>An instance of <see cref="ManMachineInterface{TIdentifier, TState, TCommand}"/><br/>
         /// <see langword="null"/>: Machine is not available.</returns>
         public TMachineInterface TryCreate<TMachineInterface>(TIdentifier identifier, object? createParam = null)
             where TMachineInterface : ManMachineInterface<TIdentifier>
@@ -206,11 +206,11 @@ namespace BigMachines
         /// Create a machine by specifying the identifier and parameter.<br/>
         /// Removes the existing machine if the machine with the identifier is already created.
         /// </summary>
-        /// <typeparam name="TMachineInterface"><see cref="ManMachineInterface{TIdentifier, TState}"/>of the machine (e.g TestMachine.Interface).</typeparam>
+        /// <typeparam name="TMachineInterface"><see cref="ManMachineInterface{TIdentifier, TState, TCommand}"/>of the machine (e.g TestMachine.Interface).</typeparam>
         /// <param name="identifier">The identifier.</param>
         /// <param name="createParam">The parameter passed to the machine when the machine is newly created.<br/>
         /// Override <see cref="Machine{TIdentifier}.SetParameter(object?)"/> to receive the parameter.</param>
-        /// <returns>An instance of <see cref="ManMachineInterface{TIdentifier, TState}"/><br/>
+        /// <returns>An instance of <see cref="ManMachineInterface{TIdentifier, TState, TCommand}"/><br/>
         /// <see langword="null"/>: Machine is not available.</returns>
         public TMachineInterface Create<TMachineInterface>(TIdentifier identifier, object? createParam = null)
             where TMachineInterface : ManMachineInterface<TIdentifier>
@@ -229,7 +229,7 @@ namespace BigMachines
         /// <summary>
         /// Remove a machine associated with the identifier.
         /// </summary>
-        /// <typeparam name="TMachineInterface"><see cref="ManMachineInterface{TIdentifier, TState}"/>of the machine (e.g TestMachine.Interface).</typeparam>
+        /// <typeparam name="TMachineInterface"><see cref="ManMachineInterface{TIdentifier, TState, TCommand}"/>of the machine (e.g TestMachine.Interface).</typeparam>
         /// <param name="identifier">The identifier.</param>
         /// <returns><see langword="true"/>: The machine is successfully removed.</returns>
         public bool Remove<TMachineInterface>(TIdentifier identifier)
@@ -616,7 +616,7 @@ namespace BigMachines
             {
                 /*if (interfaceType.BaseType is { } baseType)
                 {
-                    if (baseType.GetGenericTypeDefinition() == typeof(ManMachineInterface<,>))
+                    if (baseType.GetGenericTypeDefinition() == typeof(ManMachineInterface<,,>))
                     {
                         if (baseType.GenericTypeArguments.Length > 0 &&
                             baseType.GenericTypeArguments[0] != typeof(TIdentifier))

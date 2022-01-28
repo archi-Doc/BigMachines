@@ -21,9 +21,9 @@ namespace BigMachines
         /// <summary>
         /// Gets a machine interface associated with the identifier.
         /// </summary>
-        /// <typeparam name="TMachineInterface"><see cref="ManMachineInterface{TIdentifier, TState}"/>of the machine (e.g TestMachine.Interface).</typeparam>
+        /// <typeparam name="TMachineInterface"><see cref="ManMachineInterface{TIdentifier, TState, TCommand}"/>of the machine (e.g TestMachine.Interface).</typeparam>
         /// <param name="identifier">The identifier.</param>
-        /// <returns>An instance of <see cref="ManMachineInterface{TIdentifier, TState}"/>.</returns>
+        /// <returns>An instance of <see cref="ManMachineInterface{TIdentifier, TState, TCommand}"/>.</returns>
         public TMachineInterface? TryGet<TMachineInterface>(TIdentifier identifier)
             where TMachineInterface : ManMachineInterface<TIdentifier>;
 

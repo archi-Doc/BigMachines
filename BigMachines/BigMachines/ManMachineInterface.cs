@@ -8,7 +8,7 @@ namespace BigMachines
 {
     /// <summary>
     /// Class for operating a machine.<br/>
-    /// To achieve lock-free operation, you need to use <see cref="ManMachineInterface{TIdentifier, TState}"/> instead of using machines directly.
+    /// To achieve lock-free operation, you need to use <see cref="ManMachineInterface{TIdentifier, TState, TCommand}"/> instead of using machines directly.
     /// </summary>
     /// <typeparam name="TIdentifier">The type of an identifier.</typeparam>
     public abstract class ManMachineInterface<TIdentifier>
@@ -154,17 +154,19 @@ namespace BigMachines
 
     /// <summary>
     /// Class for operating a machine.<br/>
-    /// To achieve lock-free operation, you need to use <see cref="ManMachineInterface{TIdentifier, TState}"/> instead of using machines directly.<br/>
-    /// <see cref="ManMachineInterface{TIdentifier, TState}"/> = <see cref="ManMachineInterface{TIdentifier}"/> + TState.
+    /// To achieve lock-free operation, you need to use <see cref="ManMachineInterface{TIdentifier, TState, TCommand}"/> instead of using machines directly.<br/>
+    /// <see cref="ManMachineInterface{TIdentifier, TState, TCommand}"/> = <see cref="ManMachineInterface{TIdentifier}"/> + TState.
     /// </summary>
     /// <typeparam name="TIdentifier">The type of an identifier.</typeparam>
     /// <typeparam name="TState">The type of machine state.</typeparam>
-    public abstract class ManMachineInterface<TIdentifier, TState> : ManMachineInterface<TIdentifier>
+    /// <typeparam name="TCommand">The type of machine command.</typeparam>
+    public abstract class ManMachineInterface<TIdentifier, TState, TCommand> : ManMachineInterface<TIdentifier>
         where TIdentifier : notnull
         where TState : struct
+        where TCommand : struct
     {
         /// <summary>
-        /// Initializes a new instance of the <see cref="ManMachineInterface{TIdentifier, TState}"/> class.
+        /// Initializes a new instance of the <see cref="ManMachineInterface{TIdentifier, TState, TCommand}"/> class.
         /// </summary>
         /// <param name="group">The group to which the machine belongs.</param>
         /// <param name="identifier">The identifier.</param>
@@ -205,5 +207,10 @@ namespace BigMachines
         /// <returns><see langword="true"/>: The state is successfully changed.<br/>
         /// <see langword="false"/>: Not changed (change denied or the machine is not available.)</returns>
         public bool ChangeStateTwoWay(TState state, int millisecondTimeout = 100) => this.BigMachine.CommandPost.SendTwoWay<int, bool>(CommandPost<TIdentifier>.CommandType.StateTwoWay, this.Group, this.Identifier, Unsafe.As<TState, int>(ref state), millisecondTimeout);
+
+        public void Command<TMessage>(TCommand command, TMessage message)
+        {
+            this.BigMachine.CommandPost.Send<TMessage>(CommandPost<TIdentifier>.CommandType.Command, this.Group, this.Identifier, message);
+        }
     }
 }

@@ -97,7 +97,7 @@ namespace BigMachines
         public uint Id { get; }
 
         /// <summary>
-        /// Gets a value indicating whether the command method executes without locking the machine [the default is false].
+        /// Gets or sets a value indicating whether the command method executes without locking the machine [the default is false].
         /// </summary>
         public bool WithoutLock { get; set; } = false;
     }

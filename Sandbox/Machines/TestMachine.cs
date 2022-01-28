@@ -145,6 +145,15 @@ namespace Sandbox
             Console.WriteLine("Generic");
             return StateResult.Continue;
         }
+
+        [CommandMethod(3)]
+        protected void GetInfo(CommandPost<TIdentifier>.Command command)
+        {// void, Task
+            if (command.Message is int n)
+            {
+                command.Response = 4;
+            }
+        }
     }
 
     [TinyhandObject(UseServiceProvider = true)]

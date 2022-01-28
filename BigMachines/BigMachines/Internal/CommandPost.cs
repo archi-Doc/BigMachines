@@ -33,11 +33,6 @@ namespace BigMachines
             /// </summary>
             CommandTwoWay,
 
-            /* /// <summary>
-            /// Responded. Used internally.
-            /// </summary>
-            Responded,*/
-
             /// <summary>
             /// Exception. Used internally.
             /// </summary>

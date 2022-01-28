@@ -249,7 +249,7 @@ namespace BigMachines
         }
 
         /// <summary>
-        /// Generated method which is called when creating <see cref="ManMachineInterface{TIdentifier, TState}"/>.
+        /// Generated method which is called when creating <see cref="ManMachineInterface{TIdentifier, TState, TCommand}"/>.
         /// </summary>
         /// <param name="identifier">The identifier of the machine.</param>
         protected internal virtual void CreateInterface(TIdentifier identifier)

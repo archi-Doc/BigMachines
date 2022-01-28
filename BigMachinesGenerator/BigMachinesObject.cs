@@ -56,6 +56,8 @@ namespace BigMachines.Generator
 
         public string StateName { get; private set; } = string.Empty;
 
+        public string CommandName { get; private set; } = string.Empty;
+
         public List<StateMethod>? StateMethodList { get; private set; }
 
         public List<CommandMethod>? CommandMethodList { get; private set; }
@@ -323,7 +325,8 @@ namespace BigMachines.Generator
                 {
                     this.MachineObject = machineObject;
                     this.IdentifierObject = machineObject.Generics_Arguments[0];
-                    this.StateName = this.FullName + ".State";
+                    this.StateName = this.FullName + "." + BigMachinesBody.StateIdentifier;
+                    this.CommandName = this.FullName + "." + BigMachinesBody.CommandIdentifier;
                 }
 
                 if (this.Generics_Kind == VisceralGenericsKind.OpenGeneric)
@@ -649,7 +652,7 @@ ModuleInitializerClass_Added:
             }
 
             var identifierName = this.IdentifierObject!.FullName;
-            using (var scope = ssb.ScopeBrace($"public {this.NewIfDerived}class Interface : ManMachineInterface<{identifierName}, {this.StateName}>"))
+            using (var scope = ssb.ScopeBrace($"public {this.NewIfDerived}class Interface : ManMachineInterface<{identifierName}, {this.StateName}, {this.CommandName}>"))
             {
                 using (var scope2 = ssb.ScopeBrace($"public Interface(IMachineGroup<{identifierName}> group, {identifierName} identifier) : base(group, identifier)"))
                 {
