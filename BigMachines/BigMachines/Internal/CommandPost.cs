@@ -150,12 +150,6 @@ public class CommandPost<TIdentifier>
         return this.commandDelegate(c, null);
     }
 
-    public void SendTerminate(IMachineGroup<TIdentifier> group, TIdentifier identifier)
-    {
-        var c = new Command(this.BigMachine, group, CommandType.Terminate, identifier, 0, null);
-        this.commandDelegate(c, null);
-    }
-
     public Task SendAsync(IMachineGroup<TIdentifier> group, CommandType commandType, TIdentifier identifier, int data)
     {
         var c = new Command(this.BigMachine, group, commandType, identifier, data, null);

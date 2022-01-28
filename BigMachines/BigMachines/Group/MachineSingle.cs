@@ -134,7 +134,7 @@ namespace BigMachines
             var m = Interlocked.Exchange(ref this.machine1, machine);
             if (m != null)
             {
-                this.BigMachine.CommandPost.SendTerminate(this, identifier);
+                m.TaskRunAndTerminate();
             }
         }
 

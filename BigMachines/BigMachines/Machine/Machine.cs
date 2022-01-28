@@ -237,9 +237,9 @@ public abstract class Machine<TIdentifier>
         }
     }
 
-    internal void TryTerminate()
+    internal Task TaskRunAndTerminate()
     {
-        Task.Run(() => this.TerminateAndRemoveFromGroup());
+        return Task.Run(() => this.TerminateAndRemoveFromGroup());
     }
 
     internal async Task TerminateAndRemoveFromGroup()

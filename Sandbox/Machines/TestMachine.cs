@@ -376,7 +376,7 @@ namespace Sandbox
             task.ContinueWith(x => { this.ChangeState(State.Two); }); // 1
             this.ReleaseAndInvoke(Task.Delay(1000)); // 2*/
 
-            Task.Delay(1000).WithoutLock(this).Wait();
+            // Task.Delay(1000).WithoutLock(this).Wait();
 
             // this.SetTimeout(44.5);
             // this.ChangeStateInternal(State.First);

@@ -69,8 +69,7 @@ namespace BigMachines
 
             if (machineToRemove != null)
             {
-                machineToRemove.TryTerminate();
-                this.BigMachine.CommandPost.SendTerminate(this, machineToRemove.Identifier);
+                machineToRemove.TaskRunAndTerminate();
             }
         }
 
