@@ -185,10 +185,10 @@ namespace BigMachines
             return this.BigMachine.CommandPost.SendAsync<TMessage>(this.Group, CommandPost<TIdentifier>.CommandType.Command, this.Identifier, data, message);
         }
 
-        public Task<TResult?> CommandAndReceiveAsync<TMessage, TResult>(TCommand command, TMessage message)
+        public Task<TResponse?> CommandAndReceiveAsync<TMessage, TResponse>(TCommand command, TMessage message)
         {
             var data = Unsafe.As<TCommand, int>(ref command);
-            return this.BigMachine.CommandPost.SendAndReceiveAsync<TMessage, TResult>(this.Group, CommandPost<TIdentifier>.CommandType.Command, this.Identifier, data, message);
+            return this.BigMachine.CommandPost.SendAndReceiveAsync<TMessage, TResponse>(this.Group, CommandPost<TIdentifier>.CommandType.Command, this.Identifier, data, message);
         }
     }
 }

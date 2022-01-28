@@ -168,12 +168,12 @@ public class CommandPost<TIdentifier>
         return this.commandDelegate(null, list);
     }
 
-    public async Task<TResult?> SendAndReceiveAsync<TMessage, TResult>(IMachineGroup<TIdentifier> group, CommandType commandType, TIdentifier identifier, int data, TMessage message)
+    public async Task<TResponse?> SendAndReceiveAsync<TMessage, TResponse>(IMachineGroup<TIdentifier> group, CommandType commandType, TIdentifier identifier, int data, TMessage message)
     {
         var c = new Command(this.BigMachine, group, commandType, identifier, data, TinyhandSerializer.Clone(message));
 
         await this.commandDelegate(c, null);
-        if (c.Response is TResult result)
+        if (c.Response is TResponse result)
         {// Valid result
             return result;
         }
@@ -181,9 +181,9 @@ public class CommandPost<TIdentifier>
         return default;
     }
 
-    public Task<KeyValuePair<TIdentifier, TResult?>[]> SendAndReceiveGroupAsync<TMessage, TResult>(IMachineGroup<TIdentifier> group, CommandType commandType, IEnumerable<TIdentifier> identifiers, int data, TMessage message) => this.SendAndReceiveGroupsAsync<TMessage, TResult>(Enumerable.Repeat(group, identifiers.Count()), commandType, identifiers, data, message);
+    public Task<KeyValuePair<TIdentifier, TResponse?>[]> SendAndReceiveGroupAsync<TMessage, TResponse>(IMachineGroup<TIdentifier> group, CommandType commandType, IEnumerable<TIdentifier> identifiers, int data, TMessage message) => this.SendAndReceiveGroupsAsync<TMessage, TResponse>(Enumerable.Repeat(group, identifiers.Count()), commandType, identifiers, data, message);
 
-    public async Task<KeyValuePair<TIdentifier, TResult?>[]> SendAndReceiveGroupsAsync<TMessage, TResult>(IEnumerable<IMachineGroup<TIdentifier>> groups, CommandType commandType, IEnumerable<TIdentifier> identifiers, int data, TMessage message)
+    public async Task<KeyValuePair<TIdentifier, TResponse?>[]> SendAndReceiveGroupsAsync<TMessage, TResponse>(IEnumerable<IMachineGroup<TIdentifier>> groups, CommandType commandType, IEnumerable<TIdentifier> identifiers, int data, TMessage message)
     {
         var messageClone = TinyhandSerializer.Clone(message);
         var list = new List<Command>();
@@ -197,11 +197,11 @@ public class CommandPost<TIdentifier>
 
         await this.commandDelegate(null, list);
 
-        var array = new KeyValuePair<TIdentifier, TResult?>[list.Count];
+        var array = new KeyValuePair<TIdentifier, TResponse?>[list.Count];
         var n = 0;
         foreach (var x in list)
         {
-            if (x.Response is TResult result)
+            if (x.Response is TResponse result)
             {// Valid result
                 array[n++] = new(x.Identifier, result);
             }

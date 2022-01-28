@@ -45,7 +45,7 @@ namespace Advanced
         public static void Test(BigMachine<int> bigMachine)
         {
             var loopMachine = bigMachine.CreateOrGet<LoopMachine2.Interface>(0);
-            // loopMachine.CommandAsync().1);
+            loopMachine.CommandAsync(Command.NoCommand, 1);
         }
 
         public LoopMachine2(BigMachine<int> bigMachine)

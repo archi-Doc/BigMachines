@@ -117,11 +117,11 @@ namespace BigMachines
             return this.BigMachine.CommandPost.SendGroupsAsync(groups, CommandPost<TIdentifier>.CommandType.Command, identifiers, Unsafe.As<TCommand, int>(ref command), message);
         }
 
-        public Task<KeyValuePair<TIdentifier, TResult?>[]> CommandAndReceiveAsync<TCommand, TMessage, TResult>(bool running, TCommand command, TMessage message)
+        public Task<KeyValuePair<TIdentifier, TResponse?>[]> CommandAndReceiveAsync<TCommand, TMessage, TResponse>(bool running, TCommand command, TMessage message)
             where TCommand : struct
         {
             (var groups, var identifiers) = this.GetGroupsAndIdentifiers(running);
-            return this.BigMachine.CommandPost.SendAndReceiveGroupsAsync<TMessage, TResult>(groups, CommandPost<TIdentifier>.CommandType.Command, identifiers, Unsafe.As<TCommand, int>(ref command), message);
+            return this.BigMachine.CommandPost.SendAndReceiveGroupsAsync<TMessage, TResponse>(groups, CommandPost<TIdentifier>.CommandType.Command, identifiers, Unsafe.As<TCommand, int>(ref command), message);
         }
 
         /// <summary>
