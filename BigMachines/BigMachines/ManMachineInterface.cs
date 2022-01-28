@@ -92,7 +92,7 @@ namespace BigMachines
         /// Runs the machine manually.<br/>
         /// This function does not change <see cref="Machine{TIdentifier}.Timeout"/> or <see cref="Machine{TIdentifier}.NextRun"/>.
         /// </summary>
-        public void Run() => this.BigMachine.CommandPost.Send(CommandPost<TIdentifier>.CommandType.Run, this.Group, this.Identifier, 0);
+        public void Run() => this.BigMachine.CommandPost.Send(this.Group, CommandPost<TIdentifier>.CommandType.Run, this.Identifier, 0);
 
         /// <summary>
         /// Runs the machine manually and receives the result.<br/>
@@ -102,14 +102,14 @@ namespace BigMachines
         /// <param name="message">Message.</param>
         /// <param name="millisecondTimeout">Timeout in milliseconds.</param>
         /// <returns>The result.</returns>
-        public StateResult? RunTwoWay<TMessage>(TMessage message, int millisecondTimeout = 100) => this.BigMachine.CommandPost.SendTwoWay<TMessage, StateResult>(CommandPost<TIdentifier>.CommandType.RunTwoWay, this.Group, this.Identifier, message, millisecondTimeout);
+        public StateResult? RunTwoWay<TMessage>(TMessage message, int millisecondTimeout = 100) => this.BigMachine.CommandPost.SendTwoWay<TMessage, StateResult>(this.Group, CommandPost<TIdentifier>.CommandType.RunTwoWay, this.Identifier, message, millisecondTimeout);
 
         /// <summary>
         /// Sends a command to the machine.
         /// </summary>
         /// <typeparam name="TMessage">The type of the message.</typeparam>
         /// <param name="message">Message.</param>
-        public void Command<TMessage>(TMessage message) => this.BigMachine.CommandPost.Send(CommandPost<TIdentifier>.CommandType.Command, this.Group, this.Identifier, message);
+        public void Command<TMessage>(TMessage message) => this.BigMachine.CommandPost.Send(this.Group, CommandPost<TIdentifier>.CommandType.Command, this.Identifier, message);
 
         /// <summary>
         /// Sends a command to the machine and receives the result.
@@ -119,7 +119,7 @@ namespace BigMachines
         /// <param name="message">Message.</param>
         /// <param name="millisecondTimeout">Timeout in milliseconds.</param>
         /// <returns>The response.</returns>
-        public TResponse? CommandTwoWay<TMessage, TResponse>(TMessage message, int millisecondTimeout = 100) => this.BigMachine.CommandPost.SendTwoWay<TMessage, TResponse>(CommandPost<TIdentifier>.CommandType.CommandTwoWay, this.Group, this.Identifier, message, millisecondTimeout);
+        public TResponse? CommandTwoWay<TMessage, TResponse>(TMessage message, int millisecondTimeout = 100) => this.BigMachine.CommandPost.SendTwoWay<TMessage, TResponse>(this.Group, CommandPost<TIdentifier>.CommandType.CommandTwoWay, this.Identifier, message, millisecondTimeout);
 
         /// <summary>
         /// Serialize the machines to a byte array.
@@ -197,7 +197,7 @@ namespace BigMachines
         /// Changes the state of the machine.
         /// </summary>
         /// <param name="state">The next machine state.</param>
-        public void ChangeState(TState state) => this.BigMachine.CommandPost.Send(CommandPost<TIdentifier>.CommandType.State, this.Group, this.Identifier, Unsafe.As<TState, int>(ref state));
+        public void ChangeState(TState state) => this.BigMachine.CommandPost.Send(this.Group, CommandPost<TIdentifier>.CommandType.State, this.Identifier, Unsafe.As<TState, int>(ref state));
 
         /// <summary>
         /// Changes the state of the machine and receives the result.
@@ -206,11 +206,11 @@ namespace BigMachines
         /// <param name="millisecondTimeout">Timeout in milliseconds.</param>
         /// <returns><see langword="true"/>: The state is successfully changed.<br/>
         /// <see langword="false"/>: Not changed (change denied or the machine is not available.)</returns>
-        public bool ChangeStateTwoWay(TState state, int millisecondTimeout = 100) => this.BigMachine.CommandPost.SendTwoWay<int, bool>(CommandPost<TIdentifier>.CommandType.StateTwoWay, this.Group, this.Identifier, Unsafe.As<TState, int>(ref state), millisecondTimeout);
+        public bool ChangeStateTwoWay(TState state, int millisecondTimeout = 100) => this.BigMachine.CommandPost.SendTwoWay<int, bool>(this.Group, CommandPost<TIdentifier>.CommandType.StateTwoWay, this.Identifier, Unsafe.As<TState, int>(ref state), millisecondTimeout);
 
         public void Command<TMessage>(TCommand command, TMessage message)
         {
-            this.BigMachine.CommandPost.Send<TMessage>(CommandPost<TIdentifier>.CommandType.Command, this.Group, this.Identifier, message);
+            this.BigMachine.CommandPost.Send<TMessage>(this.Group, CommandPost<TIdentifier>.CommandType.Command, this.Identifier, message);
         }
     }
 }

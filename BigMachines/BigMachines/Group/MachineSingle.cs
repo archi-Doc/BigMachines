@@ -75,7 +75,7 @@ namespace BigMachines
             var m = Volatile.Read(ref this.machine1);
             if (m != null)
             {
-                this.BigMachine.CommandPost.Send(CommandPost<TIdentifier>.CommandType.Command, this, m.Identifier, message);
+                this.BigMachine.CommandPost.Send(this, CommandPost<TIdentifier>.CommandType.Command, m.Identifier, message);
             }
         }
 
@@ -84,7 +84,7 @@ namespace BigMachines
             var m = Volatile.Read(ref this.machine1);
             if (m != null)
             {
-                var result = this.BigMachine.CommandPost.SendTwoWay<TMessage, TResponse>(CommandPost<TIdentifier>.CommandType.CommandTwoWay, this, m.Identifier, message, millisecondTimeout);
+                var result = this.BigMachine.CommandPost.SendTwoWay<TMessage, TResponse>(this, CommandPost<TIdentifier>.CommandType.CommandTwoWay, m.Identifier, message, millisecondTimeout);
                 if (result != null)
                 {
                     return new[] { new KeyValuePair<TIdentifier, TResponse?>(m.Identifier, result) };

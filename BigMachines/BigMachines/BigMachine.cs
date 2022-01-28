@@ -373,11 +373,11 @@ namespace BigMachines
             {
                 if (command != null)
                 {
-                    if (command.Channel is IMachineGroup<TIdentifier> group && group.TryGetMachine(command.Identifier, out var machine))
+                    if (command.Group.TryGetMachine(command.Identifier, out var machine))
                     {
                         try
                         {
-                            machine.DistributeCommand(group, command);
+                            machine.DistributeCommand(command.Group, command);
                         }
                         catch (Exception ex)
                         {
@@ -390,11 +390,11 @@ namespace BigMachines
                 {
                     foreach (var x in commandList)
                     {
-                        if (x.Channel is IMachineGroup<TIdentifier> group && group.TryGetMachine(x.Identifier, out var machine))
+                        if (x.Group.TryGetMachine(x.Identifier, out var machine))
                         {
                             try
                             {
-                                machine.DistributeCommand(group, x);
+                                machine.DistributeCommand(x.Group, x);
                             }
                             catch (Exception ex)
                             {
