@@ -14,22 +14,21 @@ public static class BigMachineTaskExtensions
     public static async Task WithoutLock<TIdentifier>(this Task task, Machine<TIdentifier> machine)
         where TIdentifier : notnull
     {
-        // Monitor.Enter(machine.SyncMachine);
-        var semaphore = new System.Threading.SemaphoreSlim(0, 1);
-        try
-        {
-            Console.WriteLine("a");
-            semaphore.Release();
-            await task;
-            Console.WriteLine("b");
-
+        if (machine.SyncMachine is SemaphoreSlim semaphore)
+        {// Semaphore does not have thread affinity.
+            try
+            {
+                semaphore.Release();
+                await task;
+            }
+            finally
+            {
+                semaphore.Wait();
+            }
         }
-        finally
-        {
-            Console.WriteLine("c");
-
-            // Monitor.Exit(machine.SyncMachine);
-            semaphore.Wait();
+        else
+        {// lock() is not supported.
+            await task;
         }
     }
 }
