@@ -95,25 +95,11 @@ namespace Sandbox
 
             m.RunAsync();
             m.RunAsync();
-            m.RunAsync();
+
+            var gorup = m.Group;
 
             m.CommandAsync(TestMachine.Command.GetInfo, 0);
             var ba = m.Serialize();
-
-            const int N = 1;
-            /*var array = new object[N];
-            for (var i = 0; i < N; i++)
-            {
-                array[i] = new object();
-            }*/
-
-            var array = new SemaphoreSlim[N];
-            for (var i = 0; i < N; i++)
-            {
-                array[i] = new SemaphoreSlim(1, 1);
-            }
-
-            var array2 = array;
         }
 
         public static void Test2(BigMachine<int> bigMachine)
