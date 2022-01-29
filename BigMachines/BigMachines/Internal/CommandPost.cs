@@ -153,6 +153,7 @@ public class CommandPost<TIdentifier>
     /// </summary>
     /// <param name="bigMachine">BigMachine.</param>
     /// <param name="method">CommandDelegate.</param>
+    /// <param name="processBatchCommand">Delegate for batch command.</param>
     public CommandPost(BigMachine<TIdentifier> bigMachine, CommandDelegate method, ProcessBatchCommandDelegate processBatchCommand)
     {
         this.BigMachine = bigMachine;

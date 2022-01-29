@@ -70,6 +70,8 @@ namespace Sandbox
             }
 
             bigMachine.Start();
+            var terminator = bigMachine.CreateOrGet<TerminatorMachine.Interface>(0);
+            terminator.RunAsync().Wait();
 
             // Test1(bigMachine);
             // Test2(bigMachine);
@@ -116,8 +118,6 @@ namespace Sandbox
 
         public static void Test1(BigMachine<int> bigMachine)
         {
-            bigMachine.CreateOrGet<TerminatorMachine.Interface>(0);
-
             var testMachine = bigMachine.TryGet<TestMachine.Interface>(3);
             testMachine = bigMachine.CreateOrGet<TestMachine.Interface>(4, null);
             testMachine = bigMachine.CreateOrGet<TestMachine.Interface>(3, null);

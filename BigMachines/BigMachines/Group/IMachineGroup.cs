@@ -57,17 +57,12 @@ public interface IMachineGroup<TIdentifier>
         where TCommand : struct;
 
     /// <summary>
-    /// Serialize a group of machines to a byte array.
+    /// Serialize the machines to a byte array.
     /// </summary>
     /// <param name="options">Serializer options.</param>
     /// <returns>A byte array with the serialized value.</returns>
-    public byte[] Serialize(TinyhandSerializerOptions? options = null)
-    {// tempcode
-        options ??= TinyhandSerializer.DefaultOptions;
-        var writer = default(Tinyhand.IO.TinyhandWriter);
-        this.Serialize(ref writer, options);
-        return writer.FlushAndGetArray();
-    }
+    public Task<byte[]?> SerializeAsync(TinyhandSerializerOptions? options = null)
+        => this.BigMachine.CommandPost.BatchGroupAsync<byte[]>(CommandPost<TIdentifier>.BatchCommandType.Serialize, this, options);
 
     /// <summary>
     /// Gets an instance of <see cref="BigMachine{TIdentifier}"/>.
@@ -83,14 +78,6 @@ public interface IMachineGroup<TIdentifier>
     /// Gets the number of machines in the group.
     /// </summary>
     public int Count { get; }
-
-    /// <summary>
-    /// Serialize the machines to a byte array.
-    /// </summary>
-    /// <param name="options">Serializer options.</param>
-    /// <returns>A byte array with the serialized value.</returns>
-    public Task<byte[]?> SerializeAsync(TinyhandSerializerOptions? options = null)
-        => this.BigMachine.CommandPost.BatchGroupAsync<byte[]>(CommandPost<TIdentifier>.BatchCommandType.Serialize, this, options);
 
     /// <summary>
     /// Sets <see cref="MachineInfo{TIdentifier}"/> to this group.
@@ -111,22 +98,6 @@ public interface IMachineGroup<TIdentifier>
     internal void AddMachine(TIdentifier identifier, Machine<TIdentifier> machine);
 
     internal bool RemoveFromGroup(TIdentifier identifier);
-
-    internal void Serialize(ref Tinyhand.IO.TinyhandWriter writer, TinyhandSerializerOptions options)
-    {// tempcode
-        foreach (var machine in this.GetMachines().Where(a => a.IsSerializable))
-        {
-            if (machine is ITinyhandSerialize serializer)
-            {
-                // lock (machine.SyncMachine)
-                {
-                    writer.WriteArrayHeader(2); // Header
-                    writer.Write(machine.TypeId); // Id
-                    serializer.Serialize(ref writer, options); // Data
-                }
-            }
-        }
-    }
 }
 
 /*public class MachineGroup<TIdentifier, TState, TCommand> : IMachineGroup<TIdentifier>

@@ -401,7 +401,7 @@ namespace Sandbox
             }
         }
 
-        [CommandMethod(3, WithoutLock = false)]
+        [CommandMethod(3, WithoutLock = true)]
         protected async Task GetInfo2(CommandPost<int>.Command command)
         {// void, Task
             if (command.Message is int n)

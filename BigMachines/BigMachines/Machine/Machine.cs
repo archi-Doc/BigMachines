@@ -419,7 +419,6 @@ RerunLoop:
         {
             this.LastRun = now;
             this.RunType = RunType.NotRunning;
-            // tempcode this.Group.TryRemoveMachine(this.Identifier);
             return result;
         }
         else if (this.RequestRerun)
