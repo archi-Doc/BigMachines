@@ -85,10 +85,13 @@ public class Program
         await ThreadCore.Root.WaitForTerminationAsync(-1); // Wait for the termination infinitely.
 
         // Save
-        var data = bigMachine.Serialize();
-        using (var fs = new FileStream("app.data", FileMode.Create))
+        var data = await bigMachine.SerializeAsync();
+        if (data != null)
         {
-            fs.Write(data);
+            using (var fs = new FileStream("app.data", FileMode.Create))
+            {
+                fs.Write(data);
+            }
         }
     }
 

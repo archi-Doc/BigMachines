@@ -1,6 +1,7 @@
 ﻿// Copyright (c) All contributors. All rights reserved. Licensed under the MIT license.
 
 using System;
+using System.Collections.Generic;
 using System.Runtime.CompilerServices;
 using System.Threading.Tasks;
 using Tinyhand;
@@ -101,31 +102,8 @@ namespace BigMachines
         /// </summary>
         /// <param name="options">Serializer options.</param>
         /// <returns>A byte array with the serialized value.</returns>
-        public byte[]? Serialize(TinyhandSerializerOptions? options = null)
-        {
-            if (!this.Group.TryGetMachine(this.Identifier, out var machine))
-            {
-                return null;
-            }
-
-            if (machine.IsSerializable && machine is ITinyhandSerialize serializer)
-            {
-                options ??= TinyhandSerializer.DefaultOptions;
-                var writer = default(Tinyhand.IO.TinyhandWriter);
-
-                // tempcode
-                // lock (machine.SyncMachine)
-                {
-                    writer.WriteArrayHeader(2); // Header
-                    writer.Write(machine.TypeId); // Id
-                    serializer.Serialize(ref writer, options); // Data
-                }
-
-                return writer.FlushAndGetArray();
-            }
-
-            return null;
-        }
+        public Task<byte[]?> SerializeAsync(TinyhandSerializerOptions? options = null)
+            => this.BigMachine.CommandPost.BatchSingleAsync<byte[]>(CommandPost<TIdentifier>.BatchCommandType.Serialize, this.Group, this.Identifier, options);
     }
 
     /// <summary>
@@ -176,7 +154,7 @@ namespace BigMachines
         /// Changes the state of the machine.
         /// </summary>
         /// <param name="state">The next machine state.</param>
-        /// <returns>The task object representing the asynchronous operation.</returns>
+        /// <returns><see langword="true"/> if the state is successfully changed.</returns>
         public Task<bool> ChangeStateAsync(TState state)
         {
             var i = Unsafe.As<TState, int>(ref state);
@@ -194,5 +172,17 @@ namespace BigMachines
             var data = Unsafe.As<TCommand, int>(ref command);
             return this.BigMachine.CommandPost.SendAndReceiveAsync<TMessage, TResponse>(this.Group, CommandPost<TIdentifier>.CommandType.Command, this.Identifier, data, message);
         }
+
+        /*public Task CommandGroupAsync<TMessage>(TCommand command, TMessage message)
+        {
+            var data = Unsafe.As<TCommand, int>(ref command);
+            return this.BigMachine.CommandPost.SendGroupAsync<TMessage>(this.Group, CommandPost<TIdentifier>.CommandType.Command, this.Group.GetIdentifiers(), data, message);
+        }
+
+        public Task<KeyValuePair<TIdentifier, TResponse?>[]> CommandAndReceiveGroupAsync<TMessage, TResponse>(TCommand command, TMessage message)
+        {
+            var data = Unsafe.As<TCommand, int>(ref command);
+            return this.BigMachine.CommandPost.SendAndReceiveGroupAsync<TMessage, TResponse>(this.Group, CommandPost<TIdentifier>.CommandType.Command, this.Group.GetIdentifiers(), data, message);
+        }*/
     }
 }

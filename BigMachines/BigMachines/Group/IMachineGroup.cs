@@ -85,6 +85,14 @@ public interface IMachineGroup<TIdentifier>
     public int Count { get; }
 
     /// <summary>
+    /// Serialize the machines to a byte array.
+    /// </summary>
+    /// <param name="options">Serializer options.</param>
+    /// <returns>A byte array with the serialized value.</returns>
+    public Task<byte[]?> SerializeAsync(TinyhandSerializerOptions? options = null)
+        => this.BigMachine.CommandPost.BatchGroupAsync<byte[]>(CommandPost<TIdentifier>.BatchCommandType.Serialize, this, options);
+
+    /// <summary>
     /// Sets <see cref="MachineInfo{TIdentifier}"/> to this group.
     /// </summary>
     /// <param name="info">The machine info.</param>

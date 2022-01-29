@@ -65,7 +65,7 @@ public partial class BigMachine<TIdentifier>
         this.Status = new();
         this.Core = new ThreadCoreGroup(ThreadCore.Root);
         var mainCore = new ThreadCore(this.Core, this.MainLoop, false);
-        this.CommandPost = new(this, this.DistributeCommand);
+        this.CommandPost = new(this, this.DistributeCommand, this.ProcessBatchCommand);
         this.ServiceProvider = serviceProvider;
         this.Continuous = new(this);
 
@@ -250,72 +250,54 @@ public partial class BigMachine<TIdentifier>
     /// </summary>
     /// <param name="options">Serializer options.</param>
     /// <returns>A byte array with the serialized value.</returns>
-    public byte[] Serialize(TinyhandSerializerOptions? options = null)
-    {
-        options ??= TinyhandSerializer.DefaultOptions;
-        var writer = default(Tinyhand.IO.TinyhandWriter);
-
-        foreach (var x in this.groupArray)
-        {
-            x.Serialize(ref writer, options);
-            // SerializeGroup(ref writer, x);
-        }
-
-        /*void SerializeGroup(ref Tinyhand.IO.TinyhandWriter writer, IMachineGroup<TIdentifier> group)
-        {
-            foreach (var machine in group.GetMachines().Where(a => a.IsSerializable))
-            {
-                if (machine is ITinyhandSerialize serializer)
-                {
-                    lock (machine.SyncMachine)
-                    {
-                        writer.WriteArrayHeader(2); // Header
-                        writer.Write(machine.TypeId); // Id
-                        serializer.Serialize(ref writer, options!); // Data
-                    }
-                }
-            }
-        }*/
-
-        return writer.FlushAndGetArray();
-    }
+    public Task<byte[]?> SerializeAsync(TinyhandSerializerOptions? options = null)
+        => this.CommandPost.BatchAllAsync<byte[]>(CommandPost<TIdentifier>.BatchCommandType.Serialize, options);
 
     /// <summary>
-    /// Serialize machines from a byte array.
+    /// Deserialize a byte array into machines.
     /// </summary>
     /// <param name="byteArray">A byte array.</param>
-    public void Deserialize(byte[] byteArray)
+    /// <returns><see langword="true"/>: if data is successfully deserialized.</returns>
+    public bool Deserialize(byte[] byteArray)
     {
         var reader = new Tinyhand.IO.TinyhandReader(byteArray);
         var options = TinyhandSerializer.DefaultOptions;
 
-        while (!reader.End)
+        try
         {
-            if (reader.TryReadNil())
+            while (!reader.End)
             {
-                break;
-            }
-
-            if (reader.ReadArrayHeader() != 2)
-            {
-                throw new TinyhandException("Invalid Union data was detected.");
-            }
-
-            if (reader.TryReadNil())
-            {
-                reader.ReadNil();
-                continue;
-            }
-
-            var key = reader.ReadUInt32();
-            if (this.TypeIdToGroup.TryGetValue(key, out var group))
-            {
-                var machine = this.CreateMachine(group);
-                if (machine is ITinyhandSerialize serializer)
+                if (reader.TryReadNil())
                 {
-                    serializer.Deserialize(ref reader, options);
-                    machine.CreateInterface(machine.Identifier);
-                    group.GetOrAddMachine(machine.Identifier, machine);
+                    break;
+                }
+
+                if (reader.ReadArrayHeader() != 2)
+                {
+                    throw new TinyhandException("Invalid data.");
+                }
+
+                if (reader.TryReadNil())
+                {
+                    reader.ReadNil();
+                    continue;
+                }
+
+                var key = reader.ReadUInt32();
+                if (this.TypeIdToGroup.TryGetValue(key, out var group))
+                {
+                    var machine = this.CreateMachine(group);
+                    if (machine is ITinyhandSerialize serializer)
+                    {
+                        serializer.Deserialize(ref reader, options);
+                        machine.CreateInterface(machine.Identifier);
+                        group.GetOrAddMachine(machine.Identifier, machine);
+                    }
+                    else
+                    {
+                        reader.Skip();
+                        continue;
+                    }
                 }
                 else
                 {
@@ -323,11 +305,12 @@ public partial class BigMachine<TIdentifier>
                     continue;
                 }
             }
-            else
-            {
-                reader.Skip();
-                continue;
-            }
+
+            return true;
+        }
+        catch
+        {
+            return false;
         }
     }
 
@@ -355,7 +338,7 @@ public partial class BigMachine<TIdentifier>
     /// </summary>
     /// <param name="typeId">The type id.</param>
     /// <returns>The Machine information.</returns>
-    public MachineInfo<TIdentifier>? GetMachineInfoFromTypeId(uint typeId)
+    internal MachineInfo<TIdentifier>? GetMachineInfoFromTypeId(uint typeId)
     {
         if (this.TypeIdToGroup.TryGetValue(typeId, out var group))
         {
@@ -419,6 +402,86 @@ public partial class BigMachine<TIdentifier>
                     throw t.Exception;
                 }
             }, TaskContinuationOptions.OnlyOnFaulted);*/
+    }
+
+    private Task ProcessBatchCommand(CommandPost<TIdentifier>.BatchCommand command)
+    {
+        return Task.Run(async () =>
+        {
+            if (command.Type == CommandPost<TIdentifier>.BatchCommandType.Serialize)
+            {// Serialize
+                this.ProcessBatchCommand_Serialize(command);
+            }
+        });
+    }
+
+    private void ProcessBatchCommand_Serialize(CommandPost<TIdentifier>.BatchCommand command)
+    {
+        var writer = new Tinyhand.IO.TinyhandWriter() { CancellationToken = this.Core.CancellationToken, };
+        var options = command.Option as TinyhandSerializerOptions;
+        options ??= TinyhandSerializer.DefaultOptions;
+
+        try
+        {
+            if (command.Group != null)
+            {// Group or Single
+                if (command.Identifier != null)
+                {// Single
+                    if (command.Group.TryGetMachine(command.Identifier, out var machine) && machine is ITinyhandSerialize serializer)
+                    {
+                        try
+                        {
+                            machine.LockMachine();
+                            writer.WriteArrayHeader(2); // Header
+                            writer.Write(machine.TypeId); // Id
+                            serializer.Serialize(ref writer, options); // Data
+                        }
+                        finally
+                        {
+                            machine.UnlockMachine();
+                        }
+                    }
+                }
+                else
+                {// Group
+                    Serialize(ref writer, options, command.Group);
+                }
+            }
+            else
+            {// All
+                foreach (var x in this.groupArray)
+                {
+                    Serialize(ref writer, options, x);
+                }
+            }
+
+            command.Response = writer.FlushAndGetArray();
+        }
+        finally
+        {
+            writer.Dispose();
+        }
+
+        static void Serialize(ref Tinyhand.IO.TinyhandWriter writer, TinyhandSerializerOptions options, IMachineGroup<TIdentifier> group)
+        {
+            foreach (var machine in group.GetMachines().Where(a => a.IsSerializable))
+            {
+                if (machine is ITinyhandSerialize serializer)
+                {
+                    try
+                    {
+                        machine.LockMachine();
+                        writer.WriteArrayHeader(2); // Header
+                        writer.Write(machine.TypeId); // Id
+                        serializer.Serialize(ref writer, options); // Data
+                    }
+                    finally
+                    {
+                        machine.UnlockMachine();
+                    }
+                }
+            }
+        }
     }
 
     private Machine<TIdentifier> CreateMachine(IMachineGroup<TIdentifier> group)

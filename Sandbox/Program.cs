@@ -78,13 +78,16 @@ namespace Sandbox
             await ThreadCore.Root.WaitForTerminationAsync(-1); // Wait for the termination infinitely.
 
             // Save
-            var data = bigMachine.Serialize();
-            using (var fs = new FileStream("app.data", FileMode.Create))
+            var data = await bigMachine.SerializeAsync();
+            if (data != null)
             {
-                fs.Write(data);
-            }
+                using (var fs = new FileStream("app.data", FileMode.Create))
+                {
+                    fs.Write(data);
+                }
 
-            bigMachine.Deserialize(data);
+                bigMachine.Deserialize(data);
+            }
 
             ThreadCore.Root.TerminationEvent.Set(); // The termination process is complete (#1).
         }
@@ -99,7 +102,7 @@ namespace Sandbox
             var gorup = m.Group;
 
             m.CommandAsync(TestMachine.Command.GetInfo, 0);
-            var ba = m.Serialize();
+            var ba = m.SerializeAsync().Result;
         }
 
         public static void Test2(BigMachine<int> bigMachine)

@@ -47,6 +47,14 @@ public class CommandPost<TIdentifier>
         Exception,
     }
 
+    public enum BatchCommandType
+    {
+        /// <summary>
+        /// Serialize machines.
+        /// </summary>
+        Serialize,
+    }
+
     /// <summary>
     /// Defines the type of delegate used to receive and process commands.
     /// </summary>
@@ -54,6 +62,8 @@ public class CommandPost<TIdentifier>
     /// <param name="commandList">Command list.</param>
     /// <returns>A <see cref="Task"/> representing the asynchronous operation.</returns>
     public delegate Task CommandDelegate(Command? command, List<Command>? commandList);
+
+    public delegate Task ProcessBatchCommandDelegate(BatchCommand command);
 
     /// <summary>
     /// Command class contains command information.
@@ -117,15 +127,37 @@ public class CommandPost<TIdentifier>
         }*/
     }
 
+    public class BatchCommand
+    {
+        public BatchCommand(BatchCommandType type, IMachineGroup<TIdentifier>? group, TIdentifier? identifier, object? option)
+        {
+            this.Type = type;
+            this.Group = group;
+            this.Identifier = identifier;
+            this.Option = option;
+        }
+
+        public BatchCommandType Type { get; internal set; }
+
+        internal IMachineGroup<TIdentifier>? Group { get; }
+
+        internal TIdentifier? Identifier { get; }
+
+        public object? Option { get; }
+
+        public object? Response { get; set; }
+    }
+
     /// <summary>
     /// Initializes a new instance of the <see cref="CommandPost{TIdentifier}"/> class.
     /// </summary>
     /// <param name="bigMachine">BigMachine.</param>
     /// <param name="method">CommandDelegate.</param>
-    public CommandPost(BigMachine<TIdentifier> bigMachine, CommandDelegate method)
+    public CommandPost(BigMachine<TIdentifier> bigMachine, CommandDelegate method, ProcessBatchCommandDelegate processBatchCommand)
     {
         this.BigMachine = bigMachine;
         this.commandDelegate = method;
+        this.processBatchCommand = processBatchCommand;
     }
 
     /// <summary>
@@ -228,7 +260,47 @@ public class CommandPost<TIdentifier>
         return array;
     }
 
+    public async Task<TResponse?> BatchSingleAsync<TResponse>(BatchCommandType type, IMachineGroup<TIdentifier> group, TIdentifier identifier, object? option)
+    {
+        var c = new BatchCommand(type, group, identifier, option);
+
+        await this.processBatchCommand(c);
+        if (c.Response is TResponse result)
+        {// Valid result
+            return result;
+        }
+
+        return default;
+    }
+
+    public async Task<TResponse?> BatchGroupAsync<TResponse>(BatchCommandType type, IMachineGroup<TIdentifier> group, object? option)
+    {
+        var c = new BatchCommand(type, group, default, option);
+
+        await this.processBatchCommand(c);
+        if (c.Response is TResponse result)
+        {// Valid result
+            return result;
+        }
+
+        return default;
+    }
+
+    public async Task<TResponse?> BatchAllAsync<TResponse>(BatchCommandType type, object? option)
+    {
+        var c = new BatchCommand(type, null, default, option);
+
+        await this.processBatchCommand(c);
+        if (c.Response is TResponse result)
+        {// Valid result
+            return result;
+        }
+
+        return default;
+    }
+
     public BigMachine<TIdentifier> BigMachine { get; }
 
     private CommandDelegate commandDelegate;
+    private ProcessBatchCommandDelegate processBatchCommand;
 }
