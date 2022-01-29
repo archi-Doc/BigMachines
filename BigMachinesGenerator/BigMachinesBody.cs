@@ -61,7 +61,7 @@ namespace BigMachines.Generator
             category: "BigMachinesGenerator", DiagnosticSeverity.Error, isEnabledByDefault: true);
 
         public static readonly DiagnosticDescriptor Error_MethodFormat = new DiagnosticDescriptor(
-            id: "BMG006", title: "Invalid method", messageFormat: "State method must be in the format of 'protected StateResult TestMethod(StateParameter parameter)' or 'protected Task<StateResult> TestMethod(StateParameter parameter)'",
+            id: "BMG006", title: "Invalid method", messageFormat: "State method must be in the format of 'protected StateResult {0}(StateParameter parameter)' or 'protected Task<StateResult> {0}(StateParameter parameter)'",
             category: "BigMachinesGenerator", DiagnosticSeverity.Error, isEnabledByDefault: true);
 
         public static readonly DiagnosticDescriptor Error_OpenGenericClass = new DiagnosticDescriptor(
@@ -93,8 +93,8 @@ namespace BigMachines.Generator
             category: "BigMachinesGenerator", DiagnosticSeverity.Error, isEnabledByDefault: true);
 
         public static readonly DiagnosticDescriptor Error_MethodFormat2 = new DiagnosticDescriptor(
-            id: "BMG014", title: "Invalid method", messageFormat: "Command method must be in the format of `void TestMethod(CommandPost<TIdentifier>.Command command)' or `Task TestMethod(CommandPost<TIdentifier>.Command command)'",
-            category: "BigMachinesGenerator", DiagnosticSeverity.Error, isEnabledByDefault: true); // tempcode
+            id: "BMG014", title: "Invalid method", messageFormat: "Command method must be in the format of `void {0}(CommandPost<{1}>.Command command)' or `Task {0}(CommandPost<{1}>.Command command)'",
+            category: "BigMachinesGenerator", DiagnosticSeverity.Error, isEnabledByDefault: true);
 
         public BigMachinesBody(GeneratorExecutionContext context)
             : base(context)

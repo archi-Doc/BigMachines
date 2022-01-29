@@ -58,7 +58,7 @@ namespace BigMachines.Generator
 
             if (flag)
             {
-                method.Body.ReportDiagnostic(BigMachinesBody.Error_MethodFormat, attribute.Location);
+                method.Body.ReportDiagnostic(BigMachinesBody.Error_MethodFormat, attribute.Location, method.SimpleName);
             }
 
             if (method.Body.Abort)

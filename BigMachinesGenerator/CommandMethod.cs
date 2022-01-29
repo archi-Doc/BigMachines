@@ -50,7 +50,13 @@ namespace BigMachines.Generator
 
             if (flag)
             {
-                method.Body.ReportDiagnostic(BigMachinesBody.Error_MethodFormat2, attribute.Location);
+                string? identifierTypeName = string.Empty;
+                if (machine.IdentifierObject != null)
+                {
+                    identifierTypeName = machine.IdentifierObject.SimpleName;
+                }
+
+                method.Body.ReportDiagnostic(BigMachinesBody.Error_MethodFormat2, attribute.Location, method.SimpleName, identifierTypeName);
             }
 
             if (method.Body.Abort)
