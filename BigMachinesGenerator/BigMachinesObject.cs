@@ -774,12 +774,7 @@ ModuleInitializerClass_Added:
 
             using (var scope = ssb.ScopeBrace($"protected override bool {BigMachinesBody.InternalChangeState}(int state)"))
             {
-                using (var scopeTerminated = ssb.ScopeBrace("if (this.Status == MachineStatus.Terminated)"))
-                {
-                    ssb.AppendLine("return false;");
-                }
-
-                using (var scopeElse = ssb.ScopeBrace("else if (this.CurrentState == state)"))
+                using (var scopeElse = ssb.ScopeBrace("if (this.CurrentState == state)"))
                 {
                     ssb.AppendLine("return true;");
                 }
