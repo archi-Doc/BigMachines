@@ -42,7 +42,7 @@ public partial class TestMachine : Machine<int> // Inherit Machine<TIdentifier> 
 
     [StateMethod(0)] // Annotate StateMethod attribute and set state method id (0 for default state).
     protected StateResult Initial(StateParameter parameter)
-    {// This code is inside 'lock (this.SyncMachine) {}'.
+    {// This code is inside 'lock (this.Machine)' statement.
         Console.WriteLine($"TestMachine {this.Identifier}: Initial");
 
         this.ChangeState(TestMachine.State.One); // Change to state One (The method name becomes the state name).

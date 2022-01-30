@@ -322,7 +322,7 @@ public abstract class Machine<TIdentifier>
     /// <summary>
     /// Expected to be implemented on the user side.<br/>
     /// Receives commands and respond if necessary.<br/>
-    /// This code is NOT inside 'lock (this.SyncMachine) {}'.
+    /// This code is NOT inside 'lock (this.Machine)' statement.
     /// </summary>
     /// <param name="command">The command.</param>
     protected internal virtual void ProcessCommand(CommandPost<TIdentifier>.Command command)
@@ -377,7 +377,7 @@ public abstract class Machine<TIdentifier>
 
     /// <summary>
     /// Called when the machine is terminating.<br/>
-    /// This code is inside 'lock (this.SyncMachine) {}'.
+    /// This code is inside 'lock (this.Machine)' statement.
     /// </summary>
     protected internal virtual void OnTerminated()
     {
@@ -385,7 +385,7 @@ public abstract class Machine<TIdentifier>
 
     /// <summary>
     /// Run the machine.<br/>
-    /// This code is inside 'lock (this.SyncMachine) {}'.
+    /// This code is inside 'lock (this.Machine)' statement.
     /// </summary>
     /// <param name="command">Command.</param>
     /// <param name="runType">A trigger of the machine running.</param>

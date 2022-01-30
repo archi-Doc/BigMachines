@@ -92,7 +92,7 @@ namespace BigMachines
 
         /// <summary>
         /// Runs the machine manually.<br/>
-        /// This function does not change <see cref="Machine{TIdentifier}.Timeout"/> or <see cref="Machine{TIdentifier}.NextRun"/>.
+        /// This method does not change <see cref="Machine{TIdentifier}.Timeout"/> or <see cref="Machine{TIdentifier}.NextRun"/>.
         /// </summary>
         /// <returns>The task object representing the asynchronous operation.</returns>
         public Task RunAsync() => this.BigMachine.CommandPost.SendAsync(this.Group, CommandPost<TIdentifier>.CommandType.Run, this.Identifier, 0);
