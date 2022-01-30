@@ -1,6 +1,7 @@
 ﻿// Copyright (c) All contributors. All rights reserved. Licensed under the MIT license.
 
 using System;
+using System.Threading;
 
 #pragma warning disable SA1602 // Enumeration items should be documented
 
@@ -55,7 +56,7 @@ namespace BigMachines
         /// </summary>
         /// <param name="id">The identifier used for serialization.<br/>
         /// 0: Default state method.<br/>
-        /// Id can be a random number, but it must be unique.</param>
+        /// Id must be a unique number (can be a random number).</param>
         public StateMethodAttribute(uint id)
         {
             this.Id = id;
@@ -64,9 +65,42 @@ namespace BigMachines
         /// <summary>
         /// Gets an identifier used for serialization.<br/>
         /// 0: Default state method.<br/>
-        /// Id can be a random number, but it must be unique.
+        /// Id must be a unique number (can be a random number).
         /// </summary>
         public uint Id { get; }
+    }
+
+#pragma warning disable SA1629
+    /// <summary>
+    /// Adds a command method to the machine.<br/>
+    /// The format of a method must be: <br/>
+    /// <see langword="protected"/> <see cref="StateResult"/> SampleCommand(<see cref="StateParameter"/> parameter)<br/>
+    /// { <see langword="return"/> <see cref="StateResult.Continue"/>; }
+    /// </summary>
+#pragma warning restore SA1629
+    [AttributeUsage(AttributeTargets.Method, AllowMultiple = false, Inherited = true)]
+    public sealed class CommandMethodAttribute : Attribute
+    {
+        /// <summary>
+        /// Initializes a new instance of the <see cref="CommandMethodAttribute"/> class.
+        /// </summary>
+        /// <param name="id">The identifier used for serialization.<br/>
+        /// Id can be a random number, but it must be unique.</param>
+        public CommandMethodAttribute(uint id)
+        {
+            this.Id = id;
+        }
+
+        /// <summary>
+        /// Gets an identifier of the command.<br/>
+        /// Id must be a unique number (can be a random number).
+        /// </summary>
+        public uint Id { get; }
+
+        /// <summary>
+        /// Gets or sets a value indicating whether the command method executes without locking the machine [the default is false].
+        /// </summary>
+        public bool WithoutLock { get; set; } = false;
     }
 
     /// <summary>
@@ -112,7 +146,12 @@ namespace BigMachines
     public enum RunType
     {
         /// <summary>
-        /// Machine is run by <see cref="ManMachineInterface{TIdentifier}.Run"/> method.
+        /// Machine is not running.
+        /// </summary>
+        NotRunning,
+
+        /// <summary>
+        /// Machine is run by <see cref="ManMachineInterface{TIdentifier}.RunAsync"/> method.
         /// </summary>
         Manual,
 
@@ -125,11 +164,6 @@ namespace BigMachines
         /// Machine is run by <see cref="BigMachineContinuous{TIdentifier}"/>.
         /// </summary>
         Continuous,
-
-        /// <summary>
-        /// Machine is not running. For internal use.
-        /// </summary>
-        NotRunning,
     }
 
     /// <summary>
@@ -137,7 +171,7 @@ namespace BigMachines
     /// </summary>
     public struct StateParameter
     {
-        /// <summary>
+        /*/// <summary>
         /// Initializes a new instance of the <see cref="StateParameter"/> struct.
         /// </summary>
         /// <param name="type">RunType.</param>
@@ -146,16 +180,18 @@ namespace BigMachines
         {
             this.RunType = type;
             this.Message = message;
-        }
+        }*/
 
         /// <summary>
         /// Initializes a new instance of the <see cref="StateParameter"/> struct.
         /// </summary>
         /// <param name="type">RunType.</param>
-        public StateParameter(RunType type)
+        /// <param name="calcellationToken">CancellationToken.</param>
+        public StateParameter(RunType type, CancellationToken calcellationToken)
         {
             this.RunType = type;
-            this.Message = null;
+            this.CancellationToken = calcellationToken;
+            // this.Message = null;
         }
 
         /// <summary>
@@ -164,9 +200,14 @@ namespace BigMachines
         public RunType RunType { get; }
 
         /// <summary>
+        /// Gets a CancellationToken.
+        /// </summary>
+        public CancellationToken CancellationToken { get; }
+
+        /*/// <summary>
         /// Gets a message.
         /// </summary>
-        public object? Message { get; }
+        public object? Message { get; }*/
     }
 
     [AttributeUsage(AttributeTargets.Class | AttributeTargets.Struct, AllowMultiple = false, Inherited = true)]

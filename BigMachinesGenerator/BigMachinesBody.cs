@@ -29,11 +29,16 @@ namespace BigMachines.Generator
         public const string ChangeState = "ChangeState";
         public const string GetCurrentState = "GetCurrentState";
         public const string InternalChangeState = "InternalChangeState";
+        public const string InternalCommand = "InternalCommand";
         public const string IntInitState = "IntInitState";
         public const string RegisterBM = "RegisterBM";
+        public const string CommandIdentifier = "Command";
 
         public const string StateResultFullName = "BigMachines.StateResult";
         public const string StateParameterFullName = "BigMachines.StateParameter";
+        public const string TaskFullName = "System.Threading.Tasks.Task";
+        public const string TaskFullName2 = "System.Threading.Tasks.Task<TResult>";
+        public const string CommandParameterFullName = "BigMachines.CommandPost<{0}>.Command";
 
         public static readonly DiagnosticDescriptor Error_NotPartial = new DiagnosticDescriptor(
             id: "BMG001", title: "Not a partial class", messageFormat: "MachineObject '{0}' is not a partial class",
@@ -56,7 +61,7 @@ namespace BigMachines.Generator
             category: "BigMachinesGenerator", DiagnosticSeverity.Error, isEnabledByDefault: true);
 
         public static readonly DiagnosticDescriptor Error_MethodFormat = new DiagnosticDescriptor(
-            id: "BMG006", title: "Invalid method", messageFormat: "State method must be in the format of 'protected StateResult TestMethod(StateParameter parameter)'",
+            id: "BMG006", title: "Invalid method", messageFormat: "State method must be in the format of 'protected StateResult {0}(StateParameter parameter)' or 'protected Task<StateResult> {0}(StateParameter parameter)'",
             category: "BigMachinesGenerator", DiagnosticSeverity.Error, isEnabledByDefault: true);
 
         public static readonly DiagnosticDescriptor Error_OpenGenericClass = new DiagnosticDescriptor(
@@ -68,7 +73,7 @@ namespace BigMachines.Generator
             category: "BigMachinesGenerator", DiagnosticSeverity.Error, isEnabledByDefault: true);
 
         public static readonly DiagnosticDescriptor Error_DuplicateStateId = new DiagnosticDescriptor(
-            id: "BMG009", title: "Duplicate state id", messageFormat: "State method id must be unique",
+            id: "BMG009", title: "Duplicate state id", messageFormat: "State id must be unique",
             category: "BigMachinesGenerator", DiagnosticSeverity.Error, isEnabledByDefault: true);
 
         public static readonly DiagnosticDescriptor Error_NoDefaultStateMethod = new DiagnosticDescriptor(
@@ -81,6 +86,14 @@ namespace BigMachines.Generator
 
         public static readonly DiagnosticDescriptor Error_IdentifierIsNotSerializable = new DiagnosticDescriptor(
             id: "BMG012", title: "Identifier not serializable", messageFormat: "Identifier type '{0}' must be serializable (have TinyhandObject attribute)",
+            category: "BigMachinesGenerator", DiagnosticSeverity.Error, isEnabledByDefault: true);
+
+        public static readonly DiagnosticDescriptor Error_DuplicateCommandId = new DiagnosticDescriptor(
+            id: "BMG013", title: "Duplicate command id", messageFormat: "Command id must be unique",
+            category: "BigMachinesGenerator", DiagnosticSeverity.Error, isEnabledByDefault: true);
+
+        public static readonly DiagnosticDescriptor Error_MethodFormat2 = new DiagnosticDescriptor(
+            id: "BMG014", title: "Invalid method", messageFormat: "Command method must be in the format of `void {0}(CommandPost<{1}>.Command command)' or `Task {0}(CommandPost<{1}>.Command command)'",
             category: "BigMachinesGenerator", DiagnosticSeverity.Error, isEnabledByDefault: true);
 
         public BigMachinesBody(GeneratorExecutionContext context)
@@ -185,10 +198,12 @@ namespace BigMachines.Generator
             ssb.AddUsing("System.Collections.Generic");
             ssb.AddUsing("System.Diagnostics.CodeAnalysis");
             ssb.AddUsing("System.Runtime.CompilerServices");
+            ssb.AddUsing("System.Threading.Tasks");
             ssb.AddUsing("BigMachines");
 
             ssb.AppendLine("#nullable enable", false);
             ssb.AppendLine("#pragma warning disable CS1591", false);
+            ssb.AppendLine("#pragma warning disable CS1998", false);
             ssb.AppendLine();
         }
 

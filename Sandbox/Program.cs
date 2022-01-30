@@ -1,6 +1,7 @@
 ﻿using System;
 using System.IO;
 using System.Linq;
+using System.Threading;
 using System.Threading.Tasks;
 using Arc.Threading;
 using BigMachines;
@@ -69,6 +70,8 @@ namespace Sandbox
             }
 
             bigMachine.Start();
+            var terminator = bigMachine.CreateOrGet<TerminatorMachine.Interface>(0);
+            terminator.RunAsync().Wait();
 
             // Test1(bigMachine);
             // Test2(bigMachine);
@@ -77,63 +80,65 @@ namespace Sandbox
             await ThreadCore.Root.WaitForTerminationAsync(-1); // Wait for the termination infinitely.
 
             // Save
-            var data = bigMachine.Serialize();
-            using (var fs = new FileStream("app.data", FileMode.Create))
+            var data = await bigMachine.SerializeAsync();
+            if (data != null)
             {
-                fs.Write(data);
-            }
+                using (var fs = new FileStream("app.data", FileMode.Create))
+                {
+                    fs.Write(data);
+                }
 
-            bigMachine.Deserialize(data);
+                bigMachine.Deserialize(data);
+            }
 
             ThreadCore.Root.TerminationEvent.Set(); // The termination process is complete (#1).
         }
 
         public static void Test3(BigMachine<int> bigMachine)
         {
-            var m = bigMachine.TryCreate<TestMachine.Interface>(0);
+            var m = bigMachine.CreateOrGet<TestMachine.Interface>(0);
 
-            m.Run();
-            m.Run();
-            m.Run();
+            m.RunAsync();
+            m.RunAsync();
 
-            var ca = m.Group.Serialize();
-            var ba = m.Serialize();
+            var gorup = m.Group;
+
+            m.CommandAsync(TestMachine.Command.GetInfo, 0);
+            var ba = m.SerializeAsync().Result;
         }
 
         public static void Test2(BigMachine<int> bigMachine)
         {
-            var m = bigMachine.TryCreate<LongRunningMachine.Interface>(0);
+            var m = bigMachine.CreateOrGet<LongRunningMachine.Interface>(0);
 
-            m.Run();
-            m.Run();
-            m.Run();
+            m.RunAsync();
+            m.RunAsync();
+            m.RunAsync();
         }
 
         public static void Test1(BigMachine<int> bigMachine)
         {
-            bigMachine.TryCreate<TerminatorMachine.Interface>(0);
-
             var testMachine = bigMachine.TryGet<TestMachine.Interface>(3);
-            testMachine = bigMachine.TryCreate<TestMachine.Interface>(4, null);
-            testMachine = bigMachine.TryCreate<TestMachine.Interface>(3, null);
+            testMachine = bigMachine.CreateOrGet<TestMachine.Interface>(4, null);
+            testMachine = bigMachine.CreateOrGet<TestMachine.Interface>(3, null);
             if (testMachine != null)
             {
                 // var b = testMachine.ChangeStateTwoWay(TestMachine.State.First);
-                if (testMachine.GetCurrentState() == TestMachine.State.First)
+                if (testMachine.TryGetState(out var state) && state == TestMachine.State.First)
                 {
                 }
             }
 
             if (testMachine != null)
             {
-                var state = testMachine.GetCurrentState();
+                testMachine.TryGetState(out var state);
                 // testMachine.ChangeStateTwoWay(TestMachine.State.ErrorState);
-                state = testMachine.GetCurrentState();
+                testMachine.TryGetState(out state);
             }
 
             var testGroup = bigMachine.GetGroup<TestMachine.Interface>();
 
-            var res = testGroup.CommandGroupTwoWay<int, int>(4);
+            var res = testGroup.CommandAndReceiveAsync<int, int, int>(4, 4);
             // var result = testMachine?.RunTwoWay(33);
 
             var identifiers = testGroup.GetIdentifiers().ToArray();
@@ -148,12 +153,12 @@ namespace Sandbox
             // bigMachine.TryCreate<ParentClassT2<byte, int>.NestedMachineT2.Interface>(11);
 
             // Continuous
-            bigMachine.TryCreate<ContinuousMachine.Interface>(0);
-            bigMachine.TryCreate<ContinuousMachine.Interface>(1);
-            bigMachine.TryCreate<ContinuousMachine.Interface>(2);
+            bigMachine.CreateOrGet<ContinuousMachine.Interface>(0);
+            bigMachine.CreateOrGet<ContinuousMachine.Interface>(1);
+            bigMachine.CreateOrGet<ContinuousMachine.Interface>(2);
 
             // Continuous Watcher
-            bigMachine.TryCreate<ContinuousWatcher.Interface>(0);
+            bigMachine.CreateOrGet<ContinuousWatcher.Interface>(0);
         }
     }
 }

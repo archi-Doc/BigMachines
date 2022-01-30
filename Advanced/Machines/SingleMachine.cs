@@ -15,8 +15,8 @@ namespace Advanced
     {
         public static void Test(BigMachine<int> bigMachine)
         {
-            bigMachine.TryCreate<SingleMachine.Interface>(0);
-            bigMachine.TryCreate<SingleMachine.Interface>(1); // Only one machine is created since SingleMachine belongs to MachineSingle<> group.
+            bigMachine.CreateOrGet<SingleMachine.Interface>(0);
+            bigMachine.CreateOrGet<SingleMachine.Interface>(1); // Only one machine is created since SingleMachine belongs to MachineSingle<> group.
         }
 
         public SingleMachine(BigMachine<int> bigMachine)
@@ -38,12 +38,10 @@ namespace Advanced
                 var machine = testGroup.TryGet<TestMachine.Interface>(x);
                 if (machine != null)
                 {
-                    var result = machine.CommandTwoWay<int, int>(0);
+                    var result = machine.CommandAndReceiveAsync<int, int>(TestMachine.Command.GetCount, 0).Result;
                     Console.WriteLine($"Single: TestMachine found {x} - {result}");
                 }
             }
-
-            var results = testGroup.CommandGroupTwoWay<int, int>(0);
 
             if (this.Count >= 5)
             {

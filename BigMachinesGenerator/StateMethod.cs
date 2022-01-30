@@ -36,14 +36,29 @@ namespace BigMachines.Generator
                 flag = true;
             }
 
-            if (method.Method_ReturnObject?.FullName != BigMachinesBody.StateResultFullName)
+            var returnObject = method.Method_ReturnObject;
+            var returnTask = false;
+            if (returnObject == null)
+            {
+                flag = true;
+            }
+            else if (returnObject.Generics_Arguments.Length == 0 && returnObject.FullName == BigMachinesBody.StateResultFullName)
+            {// StateResult
+            }
+            else if (returnObject.Generics_Arguments.Length == 1 &&
+                returnObject.OriginalDefinition?.FullName == BigMachinesBody.TaskFullName2 &&
+                returnObject.Generics_Arguments[0].FullName == BigMachinesBody.StateResultFullName)
+            {// Task<StateResult>
+                returnTask = true;
+            }
+            else
             {// Invalid return type
                 flag = true;
             }
 
             if (flag)
             {
-                method.Body.ReportDiagnostic(BigMachinesBody.Error_MethodFormat, attribute.Location);
+                method.Body.ReportDiagnostic(BigMachinesBody.Error_MethodFormat, attribute.Location, method.SimpleName);
             }
 
             if (method.Body.Abort)
@@ -55,6 +70,7 @@ namespace BigMachines.Generator
             stateMethod.Location = attribute.Location;
             stateMethod.Name = method.SimpleName;
             stateMethod.Id = methodAttribute.Id;
+            stateMethod.ReturnTask = returnTask;
 
             foreach (var x in machine.GetMembers(VisceralTarget.Method))
             {
@@ -86,5 +102,7 @@ namespace BigMachines.Generator
         public uint Id { get; internal set; }
 
         public bool DuplicateId { get; internal set; }
+
+        public bool ReturnTask { get; internal set; }
     }
 }

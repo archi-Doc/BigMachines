@@ -14,14 +14,14 @@ namespace Advanced
     {
         public static void Test2(BigMachine<int> bigMachine)
         {
-            var m = bigMachine.TryCreate<DerivedMachine.Interface>(0);
+            var m = bigMachine.CreateOrGet<DerivedMachine.Interface>(0);
         }
 
         public DerivedMachine(BigMachine<int> bigMachine)
             : base(bigMachine)
         {
             this.DefaultTimeout = TimeSpan.FromSeconds(1); // Default time interval for machine execution.
-            this.SetLifespan(TimeSpan.FromSeconds(5)); // Time until the machine automatically terminates.
+            this.SetLifespan(TimeSpan.FromSeconds(5)); // The time until the machine automatically terminates.
         }
 
         // [StateMethod(0)]
@@ -54,14 +54,14 @@ namespace Advanced
     {
         public static void Test(BigMachine<int> bigMachine)
         {
-            var m = bigMachine.TryCreate<DerivedMachine2.Interface>(0);
+            var m = bigMachine.CreateOrGet<DerivedMachine2.Interface>(0);
         }
 
         public DerivedMachine2(BigMachine<int> bigMachine)
             : base(bigMachine)
         {
             this.DefaultTimeout = TimeSpan.FromSeconds(1); // Default time interval for machine execution.
-            this.SetLifespan(TimeSpan.FromSeconds(3)); // Time until the machine automatically terminates.
+            this.SetLifespan(TimeSpan.FromSeconds(3)); // The time until the machine automatically terminates.
         }
 
         [StateMethod(0)]

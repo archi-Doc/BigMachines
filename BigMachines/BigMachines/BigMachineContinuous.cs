@@ -3,6 +3,7 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Runtime.CompilerServices;
 using System.Text;
 using System.Threading.Tasks;
 using Arc.Threading;
@@ -41,13 +42,25 @@ namespace BigMachines
 
                 while (!core.IsTerminated)
                 {
-                    lock (machine.SyncMachine)
+                    try
                     {
-                        if (machine.RunMachine(null, RunType.Continuous, DateTime.UtcNow) == StateResult.Terminate)
+                        machine.LockMachine();
+                        if (machine.RunMachine(null, RunType.Continuous, DateTime.UtcNow, core.CancellationToken).Result == StateResult.Terminate)
                         {// Terminated
+                            machine.Status = MachineStatus.Terminated;
+                            machine.OnTerminated();
                             break;
                         }
                     }
+                    finally
+                    {
+                        machine.UnlockMachine();
+                    }
+                }
+
+                if (machine.Status == MachineStatus.Terminated)
+                {
+                    machine.RemoveFromGroup();
                 }
             }
 
@@ -103,28 +116,24 @@ namespace BigMachines
         /// <summary>
         /// Sends a command to each continuous machine.
         /// </summary>
+        /// <typeparam name="TCommand">The type of the command.</typeparam>
         /// <typeparam name="TMessage">The type of the message.</typeparam>
         /// <param name="running">Sends message to running machines only.</param>
+        /// <param name="command">The command.</param>
         /// <param name="message">The message.</param>
-        public void Command<TMessage>(bool running, TMessage message)
+        /// <returns>The task object representing the asynchronous operation.</returns>
+        public Task CommandAsync<TCommand, TMessage>(bool running, TCommand command, TMessage message)
+            where TCommand : struct
         {
             (var groups, var identifiers) = this.GetGroupsAndIdentifiers(running);
-            this.BigMachine.CommandPost.SendGroups(CommandPost<TIdentifier>.CommandType.Command, groups, identifiers, message);
+            return this.BigMachine.CommandPost.SendGroupsAsync(groups, CommandPost<TIdentifier>.CommandType.Command, identifiers, Unsafe.As<TCommand, int>(ref command), message);
         }
 
-        /// <summary>
-        /// Sends a message to each machine in the group and receives the result.
-        /// </summary>
-        /// <typeparam name="TMessage">The type of the message.</typeparam>
-        /// <typeparam name="TResponse">The type of the response.</typeparam>
-        /// <param name="running">Sends message to running machines only.</param>
-        /// <param name="message">The message.</param>
-        /// <param name="millisecondTimeout">Timeout in milliseconds.</param>
-        /// <returns>The response.</returns>
-        public KeyValuePair<TIdentifier, TResponse?>[] CommandTwoWay<TMessage, TResponse>(bool running, TMessage message, int millisecondTimeout = 100)
+        public Task<KeyValuePair<TIdentifier, TResponse?>[]> CommandAndReceiveAsync<TCommand, TMessage, TResponse>(bool running, TCommand command, TMessage message)
+            where TCommand : struct
         {
             (var groups, var identifiers) = this.GetGroupsAndIdentifiers(running);
-            return this.BigMachine.CommandPost.SendGroupsTwoWay<TMessage, TResponse>(CommandPost<TIdentifier>.CommandType.CommandTwoWay, groups, identifiers, message, millisecondTimeout);
+            return this.BigMachine.CommandPost.SendAndReceiveGroupsAsync<TMessage, TResponse>(groups, CommandPost<TIdentifier>.CommandType.Command, identifiers, Unsafe.As<TCommand, int>(ref command), message);
         }
 
         /// <summary>

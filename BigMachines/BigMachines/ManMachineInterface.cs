@@ -1,14 +1,16 @@
 ﻿// Copyright (c) All contributors. All rights reserved. Licensed under the MIT license.
 
 using System;
+using System.Collections.Generic;
 using System.Runtime.CompilerServices;
+using System.Threading.Tasks;
 using Tinyhand;
 
 namespace BigMachines
 {
     /// <summary>
     /// Class for operating a machine.<br/>
-    /// To achieve lock-free operation, you need to use <see cref="ManMachineInterface{TIdentifier, TState}"/> instead of using machines directly.
+    /// To achieve lock-free operation, you need to use <see cref="ManMachineInterface{TIdentifier, TState, TCommand}"/> instead of using machines directly.
     /// </summary>
     /// <typeparam name="TIdentifier">The type of an identifier.</typeparam>
     public abstract class ManMachineInterface<TIdentifier>
@@ -90,81 +92,35 @@ namespace BigMachines
 
         /// <summary>
         /// Runs the machine manually.<br/>
-        /// This function does not change <see cref="Machine{TIdentifier}.Timeout"/> or <see cref="Machine{TIdentifier}.NextRun"/>.
+        /// This method does not change <see cref="Machine{TIdentifier}.Timeout"/> or <see cref="Machine{TIdentifier}.NextRun"/>.
         /// </summary>
-        public void Run() => this.BigMachine.CommandPost.Send(CommandPost<TIdentifier>.CommandType.Run, this.Group, this.Identifier, 0);
-
-        /// <summary>
-        /// Runs the machine manually and receives the result.<br/>
-        /// This function does not change <see cref="Machine{TIdentifier}.Timeout"/> or <see cref="Machine{TIdentifier}.NextRun"/>.
-        /// </summary>
-        /// <typeparam name="TMessage">The type of the message.</typeparam>
-        /// <param name="message">Message.</param>
-        /// <param name="millisecondTimeout">Timeout in milliseconds.</param>
-        /// <returns>The result.</returns>
-        public StateResult? RunTwoWay<TMessage>(TMessage message, int millisecondTimeout = 100) => this.BigMachine.CommandPost.SendTwoWay<TMessage, StateResult>(CommandPost<TIdentifier>.CommandType.RunTwoWay, this.Group, this.Identifier, message, millisecondTimeout);
-
-        /// <summary>
-        /// Sends a command to the machine.
-        /// </summary>
-        /// <typeparam name="TMessage">The type of the message.</typeparam>
-        /// <param name="message">Message.</param>
-        public void Command<TMessage>(TMessage message) => this.BigMachine.CommandPost.Send(CommandPost<TIdentifier>.CommandType.Command, this.Group, this.Identifier, message);
-
-        /// <summary>
-        /// Sends a command to the machine and receives the result.
-        /// </summary>
-        /// <typeparam name="TMessage">The type of the message.</typeparam>
-        /// <typeparam name="TResponse">The type of the response.</typeparam>
-        /// <param name="message">Message.</param>
-        /// <param name="millisecondTimeout">Timeout in milliseconds.</param>
-        /// <returns>The response.</returns>
-        public TResponse? CommandTwoWay<TMessage, TResponse>(TMessage message, int millisecondTimeout = 100) => this.BigMachine.CommandPost.SendTwoWay<TMessage, TResponse>(CommandPost<TIdentifier>.CommandType.CommandTwoWay, this.Group, this.Identifier, message, millisecondTimeout);
+        /// <returns>The task object representing the asynchronous operation.</returns>
+        public Task RunAsync() => this.BigMachine.CommandPost.SendAsync(this.Group, CommandPost<TIdentifier>.CommandType.Run, this.Identifier, 0);
 
         /// <summary>
         /// Serialize the machines to a byte array.
         /// </summary>
         /// <param name="options">Serializer options.</param>
         /// <returns>A byte array with the serialized value.</returns>
-        public byte[]? Serialize(TinyhandSerializerOptions? options = null)
-        {
-            if (!this.Group.TryGetMachine(this.Identifier, out var machine))
-            {
-                return null;
-            }
-
-            if (machine.IsSerializable && machine is ITinyhandSerialize serializer)
-            {
-                options ??= TinyhandSerializer.DefaultOptions;
-                var writer = default(Tinyhand.IO.TinyhandWriter);
-
-                lock (machine.SyncMachine)
-                {
-                    writer.WriteArrayHeader(2); // Header
-                    writer.Write(machine.TypeId); // Id
-                    serializer.Serialize(ref writer, options); // Data
-                }
-
-                return writer.FlushAndGetArray();
-            }
-
-            return null;
-        }
+        public Task<byte[]?> SerializeAsync(TinyhandSerializerOptions? options = null)
+            => this.BigMachine.CommandPost.BatchSingleAsync<byte[]>(CommandPost<TIdentifier>.BatchCommandType.Serialize, this.Group, this.Identifier, options);
     }
 
     /// <summary>
     /// Class for operating a machine.<br/>
-    /// To achieve lock-free operation, you need to use <see cref="ManMachineInterface{TIdentifier, TState}"/> instead of using machines directly.<br/>
-    /// <see cref="ManMachineInterface{TIdentifier, TState}"/> = <see cref="ManMachineInterface{TIdentifier}"/> + TState.
+    /// To achieve lock-free operation, you need to use <see cref="ManMachineInterface{TIdentifier, TState, TCommand}"/> instead of using machines directly.<br/>
+    /// <see cref="ManMachineInterface{TIdentifier, TState, TCommand}"/> = <see cref="ManMachineInterface{TIdentifier}"/> + TState.
     /// </summary>
     /// <typeparam name="TIdentifier">The type of an identifier.</typeparam>
     /// <typeparam name="TState">The type of machine state.</typeparam>
-    public abstract class ManMachineInterface<TIdentifier, TState> : ManMachineInterface<TIdentifier>
+    /// <typeparam name="TCommand">The type of machine command.</typeparam>
+    public abstract class ManMachineInterface<TIdentifier, TState, TCommand> : ManMachineInterface<TIdentifier>
         where TIdentifier : notnull
         where TState : struct
+        where TCommand : struct
     {
         /// <summary>
-        /// Initializes a new instance of the <see cref="ManMachineInterface{TIdentifier, TState}"/> class.
+        /// Initializes a new instance of the <see cref="ManMachineInterface{TIdentifier, TState, TCommand}"/> class.
         /// </summary>
         /// <param name="group">The group to which the machine belongs.</param>
         /// <param name="identifier">The identifier.</param>
@@ -176,34 +132,57 @@ namespace BigMachines
         /// <summary>
         /// Gets the current state of the machine.
         /// </summary>
-        /// <returns>The state of the machine..<br/>
-        /// <see langword="null"/>: Machine is not available.</returns>
-        public TState? GetCurrentState()
+        /// <param name="state">The state of the machine.</param>
+        /// <returns>
+        /// <see langword="true"/>: the state is successfully retrieved; otherwise <see langword="false"/>.</returns>
+        public bool TryGetState(out TState state)
         {
             if (this.Group.TryGetMachine(this.Identifier, out var machine))
             {
                 if (machine is Machine<TIdentifier> m && m.Status != MachineStatus.Terminated)
                 {
-                    return System.Runtime.CompilerServices.Unsafe.As<int, TState>(ref m.CurrentState);
+                    state = Unsafe.As<int, TState>(ref m.CurrentState);
+                    return true;
                 }
             }
 
-            return null;
+            state = default;
+            return false;
         }
 
         /// <summary>
         /// Changes the state of the machine.
         /// </summary>
         /// <param name="state">The next machine state.</param>
-        public void ChangeState(TState state) => this.BigMachine.CommandPost.Send(CommandPost<TIdentifier>.CommandType.State, this.Group, this.Identifier, Unsafe.As<TState, int>(ref state));
+        /// <returns><see langword="true"/> if the state is successfully changed.</returns>
+        public Task<bool> ChangeStateAsync(TState state)
+        {
+            var i = Unsafe.As<TState, int>(ref state);
+            return this.BigMachine.CommandPost.SendAndReceiveAsync<bool>(this.Group, CommandPost<TIdentifier>.CommandType.ChangeState, this.Identifier, i);
+        }
 
-        /// <summary>
-        /// Changes the state of the machine and receives the result.
-        /// </summary>
-        /// <param name="state">The next machine state.</param>
-        /// <param name="millisecondTimeout">Timeout in milliseconds.</param>
-        /// <returns><see langword="true"/>: The state is successfully changed.<br/>
-        /// <see langword="false"/>: Not changed (change denied or the machine is not available.)</returns>
-        public bool ChangeStateTwoWay(TState state, int millisecondTimeout = 100) => this.BigMachine.CommandPost.SendTwoWay<int, bool>(CommandPost<TIdentifier>.CommandType.StateTwoWay, this.Group, this.Identifier, Unsafe.As<TState, int>(ref state), millisecondTimeout);
+        public Task CommandAsync<TMessage>(TCommand command, TMessage message)
+        {
+            var data = Unsafe.As<TCommand, int>(ref command);
+            return this.BigMachine.CommandPost.SendAsync<TMessage>(this.Group, CommandPost<TIdentifier>.CommandType.Command, this.Identifier, data, message);
+        }
+
+        public Task<TResponse?> CommandAndReceiveAsync<TMessage, TResponse>(TCommand command, TMessage message)
+        {
+            var data = Unsafe.As<TCommand, int>(ref command);
+            return this.BigMachine.CommandPost.SendAndReceiveAsync<TMessage, TResponse>(this.Group, CommandPost<TIdentifier>.CommandType.Command, this.Identifier, data, message);
+        }
+
+        /*public Task CommandGroupAsync<TMessage>(TCommand command, TMessage message)
+        {
+            var data = Unsafe.As<TCommand, int>(ref command);
+            return this.BigMachine.CommandPost.SendGroupAsync<TMessage>(this.Group, CommandPost<TIdentifier>.CommandType.Command, this.Group.GetIdentifiers(), data, message);
+        }
+
+        public Task<KeyValuePair<TIdentifier, TResponse?>[]> CommandAndReceiveGroupAsync<TMessage, TResponse>(TCommand command, TMessage message)
+        {
+            var data = Unsafe.As<TCommand, int>(ref command);
+            return this.BigMachine.CommandPost.SendAndReceiveGroupAsync<TMessage, TResponse>(this.Group, CommandPost<TIdentifier>.CommandType.Command, this.Group.GetIdentifiers(), data, message);
+        }*/
     }
 }

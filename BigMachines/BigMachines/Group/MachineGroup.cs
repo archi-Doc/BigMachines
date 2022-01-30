@@ -5,6 +5,7 @@ using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
 using System.Linq;
+using System.Runtime.CompilerServices;
 using System.Text;
 using System.Threading.Tasks;
 
@@ -30,9 +31,17 @@ namespace BigMachines
             return null;
         }
 
-        public void CommandGroup<TMessage>(TMessage message) => this.BigMachine.CommandPost.SendGroup(CommandPost<TIdentifier>.CommandType.Command, this, this.IdentificationToMachine.Keys, message);
+        public Task CommandAsync<TCommand, TMessage>(TCommand command, TMessage message)
+            where TCommand : struct
+        {
+            return this.BigMachine.CommandPost.SendGroupAsync(this, CommandPost<TIdentifier>.CommandType.Command, this.IdentificationToMachine.Keys, Unsafe.As<TCommand, int>(ref command), message);
+        }
 
-        public KeyValuePair<TIdentifier, TResponse?>[] CommandGroupTwoWay<TMessage, TResponse>(TMessage message, int millisecondTimeout = 100) => this.BigMachine.CommandPost.SendGroupTwoWay<TMessage, TResponse>(CommandPost<TIdentifier>.CommandType.CommandTwoWay, this, this.IdentificationToMachine.Keys, message);
+        public Task<KeyValuePair<TIdentifier, TResponse?>[]> CommandAndReceiveAsync<TCommand, TMessage, TResponse>(TCommand command, TMessage message)
+            where TCommand : struct
+        {
+            return this.BigMachine.CommandPost.SendAndReceiveGroupAsync<TMessage, TResponse>(this, CommandPost<TIdentifier>.CommandType.Command, this.IdentificationToMachine.Keys, Unsafe.As<TCommand, int>(ref command), message);
+        }
 
         public BigMachine<TIdentifier> BigMachine { get; }
 
@@ -60,24 +69,16 @@ namespace BigMachines
 
             if (machineToRemove != null)
             {
-                lock (machineToRemove.SyncMachine)
-                {
-                    machineToRemove.TerminateInternal();
-                }
+                machineToRemove.TaskRunAndTerminate();
             }
         }
 
         bool IMachineGroup<TIdentifier>.TryGetMachine(TIdentifier identifier, [MaybeNullWhen(false)] out Machine<TIdentifier> machine) => this.IdentificationToMachine.TryGetValue(identifier, out machine);
 
-        bool IMachineGroup<TIdentifier>.TryRemoveMachine(TIdentifier identifier)
+        bool IMachineGroup<TIdentifier>.RemoveFromGroup(TIdentifier identifier)
         {
             if (this.IdentificationToMachine.TryRemove(identifier, out var machine))
             {
-                lock (machine.SyncMachine)
-                {
-                    machine.TerminateInternal();
-                }
-
                 return true;
             }
             else

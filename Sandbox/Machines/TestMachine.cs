@@ -42,16 +42,6 @@ namespace Sandbox
             return StateResult.Continue;
         }
 
-        protected override void ProcessCommand(CommandPost<int>.Command command)
-        {
-            if (command.Message is double)
-            {
-                var count = (double)Volatile.Read(ref this.count);
-                var total = (double)Volatile.Read(ref this.total);
-                command.Response = count / total;
-            }
-        }
-
         [Key(11)]
         private long total;
 
@@ -83,7 +73,7 @@ namespace Sandbox
                 Console.WriteLine($"ContinuousMachine: {d * 100:F2}%");
             }*/
 
-            var results = this.BigMachine.Continuous.CommandTwoWay<double, double>(true, 0);
+            var results = this.BigMachine.Continuous.CommandAndReceiveAsync<int, int, double>(true, 0, 0).Result;
             if (results.Length == 0)
             {
                 Console.WriteLine("ContinuousMachine: none");
@@ -144,6 +134,15 @@ namespace Sandbox
         {
             Console.WriteLine("Generic");
             return StateResult.Continue;
+        }
+
+        [CommandMethod(3)]
+        protected void GetInfo(CommandPost<TIdentifier>.Command command)
+        {// void, Task
+            if (command.Message is int n)
+            {
+                command.Response = 4;
+            }
         }
     }
 
@@ -236,14 +235,14 @@ namespace Sandbox
         }
     }
 
-    public partial class ParentClassT2<T, TIdentifier>
-        where TIdentifier : notnull
+    public partial class ParentClassT2<T, TIdentifier2>
+        where TIdentifier2 : notnull
     {
         [TinyhandObject(UseServiceProvider = true)]
         [MachineObject(123)]
-        public partial class NestedMachineT2 : Machine<TIdentifier>
+        public partial class NestedMachineT2 : Machine<TIdentifier2>
         {
-            public NestedMachineT2(BigMachine<TIdentifier> bigMachine)
+            public NestedMachineT2(BigMachine<TIdentifier2> bigMachine)
             : base(bigMachine)
             {
                 this.Param = default!;
@@ -258,6 +257,11 @@ namespace Sandbox
             {
                 Console.WriteLine("T2" + this.Param?.ToString());
                 return StateResult.Continue;
+            }
+
+            [CommandMethod(0)]
+            protected async Task TestCommand(CommandPost<TIdentifier2>.Command command)
+            {
             }
         }
     }
@@ -359,9 +363,17 @@ namespace Sandbox
         private bool InitialCanExit() => true;
 
         [StateMethod(1)]
-        protected StateResult First(StateParameter parameter)
+        protected async Task<StateResult> First(StateParameter parameter)
         {
             Console.WriteLine($"TestMachine(First) : {this.Dummy++}");
+
+            /*var task = System.Threading.Tasks.Task.Delay(1000);
+            task.ContinueWith(x => { this.ChangeState(State.Two); }); // 1
+            this.ReleaseAndInvoke(Task.Delay(1000)); // 2*/
+
+            Console.WriteLine("Delay start");
+            await Task.Delay(1000).WithoutLock(this);
+            Console.WriteLine("Delay end");
 
             // this.SetTimeout(44.5);
             // this.ChangeStateInternal(State.First);
@@ -370,12 +382,21 @@ namespace Sandbox
 
         protected bool FirstCanEnter() => true;
 
-        protected override void ProcessCommand(CommandPost<int>.Command command)
-        {// Custom
-            if (command.Message is int x)
+        [CommandMethod(33, WithoutLock = false)]
+        protected void GetInfo(CommandPost<int>.Command command)
+        {// void, Task
+            if (command.Message is int n)
             {
-                Console.WriteLine($"command: {x}");
-                command.Response = x + 1;
+                command.Response = 4;
+            }
+        }
+
+        [CommandMethod(3, WithoutLock = true)]
+        protected async Task GetInfo2(CommandPost<int>.Command command)
+        {// void, Task
+            if (command.Message is int n)
+            {
+                command.Response = 4;
             }
         }
 

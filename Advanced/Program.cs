@@ -48,7 +48,6 @@ public class Program
         container.Register<ServiceProviderMachine>(Reuse.Transient); // Register machine.
         // container.Register<TestMachine>(Reuse.Transient); BigMachine will use default constructor if not registered.
         var bigMachine = container.Resolve<BigMachine<int>>(); // Create BigMachine.
-        // var bigMachine = new BigMachine<int>(ThreadCore.Root);
 
         // Load
         try
@@ -66,29 +65,31 @@ public class Program
 
         bigMachine.Start(); // Start BigMachine.
 
-        TerminatorMachine<int>.Test(bigMachine, 0);
+        TerminatorMachine<int>.Start(bigMachine, 0); // This machine will stop the app thread if there is no working machine.
 
         // TestMachine.Test(bigMachine);
-        // PassiveMachine.Test(bigMachine);
+        // await PassiveMachine.Test(bigMachine);
         // IntermittentMachine.Test(bigMachine);
-        ContinuousMachine.Test(bigMachine);
+        // ContinuousMachine.Test(bigMachine);
 
         // Other test code.
-        DerivedMachine.Test2(bigMachine);
-        DerivedMachine2.Test(bigMachine);
+        // DerivedMachine.Test2(bigMachine);
+        // DerivedMachine2.Test(bigMachine);
         // GenericMachine<int>.Test(bigMachine);
         // LoopMachine.Test(bigMachine);
-        // LoopMachine2.Test(bigMachine);
         // SingleMachine.Test(bigMachine);
         // ServiceProviderMachine.Test(bigMachine);
 
         await ThreadCore.Root.WaitForTerminationAsync(-1); // Wait for the termination infinitely.
 
         // Save
-        var data = bigMachine.Serialize();
-        using (var fs = new FileStream("app.data", FileMode.Create))
+        var data = await bigMachine.SerializeAsync();
+        if (data != null)
         {
-            fs.Write(data);
+            using (var fs = new FileStream("app.data", FileMode.Create))
+            {
+                fs.Write(data);
+            }
         }
     }
 
@@ -97,9 +98,9 @@ public class Program
         var bigMachine = new BigMachine<IdentifierClass>();
         bigMachine.Start();
 
-        bigMachine.TryCreate<IdentifierMachine.Interface>(new(1, "A"));
+        bigMachine.CreateOrGet<IdentifierMachine.Interface>(new(1, "A"));
         // bigMachine.TryCreate<GenericMachine<IdentifierClass>.Interface>(new(2, "B"));
-        TerminatorMachine<IdentifierClass>.Test(bigMachine, IdentifierClass.Default);
+        TerminatorMachine<IdentifierClass>.Start(bigMachine, IdentifierClass.Default);
 
         // var bigMachine = new BigMachine<IdentifierClass2>(ThreadCore.Root);
         // bigMachine.TryCreate<IdentifierMachine2.Interface>(new(1, "A"));

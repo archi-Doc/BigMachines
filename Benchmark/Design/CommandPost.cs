@@ -110,7 +110,7 @@ namespace BigMachines.Obsolete
             this.mainFlag = true;
         }
 
-        public async Task<TResult> SendTwoWay<TMessage, TResult>(int id, TMessage message, int millisecondTimeout, CancellationToken cancellationToken = default)
+        public async Task<TResponse> SendTwoWay<TMessage, TResponse>(int id, TMessage message, int millisecondTimeout, CancellationToken cancellationToken = default)
         {
             if (millisecondTimeout < 0 || millisecondTimeout > MaxMillisecondTimeout)
             {
@@ -135,7 +135,7 @@ namespace BigMachines.Obsolete
                 }
             }
 
-            return (TResult)m.Response!;
+            return (TResponse)m.Response!;
         }
 
         public int MillisecondInterval { get; }

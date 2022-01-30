@@ -2,7 +2,7 @@
   "profiles": {
     "BigMachinesGenerator": {
       "commandName": "DebugRoslynComponent",
-      "targetProject": "..\\Advanced\\Advanced.csproj"
+      "targetProject": "..\\Sandbox\\Sandbox.csproj"
     }
   }
 }

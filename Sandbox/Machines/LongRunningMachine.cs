@@ -15,7 +15,7 @@ namespace Sandbox
     {
         public static void Test(BigMachine<int> bigMachine)
         {
-            var loopMachine = bigMachine.TryCreate<LongRunningMachine.Interface>(0);
+            var loopMachine = bigMachine.CreateOrGet<LongRunningMachine.Interface>(0);
         }
 
         public LongRunningMachine(BigMachine<int> bigMachine)

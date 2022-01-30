@@ -35,9 +35,9 @@ namespace Benchmark
             await Benchmark.Design.CommandDesign7.Test();
             await Benchmark.Design.CommandDesign8.Test();*/
 
-            /*var bm = new BigMachine<int>(ThreadCore.Root);
+            var bm = new BigMachine<int>();
             bm.EnableLoopChecker = true;
-            await Benchmark.Design.SimpleBench.Test(bm);*/
+            await Benchmark.Design.SimpleBench.Test(bm); // 470/670
 
             DebugRun<Test.LoopCheckerBenchmark2>();
 

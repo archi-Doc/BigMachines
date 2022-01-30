@@ -18,7 +18,8 @@ namespace Benchmark.Design
         {
         }
 
-        protected override void ProcessCommand(CommandPost<int>.Command command)
+        [CommandMethod(0)]
+        public void Test(CommandPost<int>.Command command)
         {
             var message = command.Message;
         }
@@ -26,13 +27,13 @@ namespace Benchmark.Design
 
     internal class SimpleBench
     {
-        internal const int N = 1000_000;
+        internal const int N = 1_000_000;
 
         private static SimpleBenchMachine.Interface machine = default!;
 
         internal static async Task Test(BigMachine<int> bigMachine)
         {
-            machine = bigMachine.Create<SimpleBenchMachine.Interface>(0);
+            machine = bigMachine.CreateNew<SimpleBenchMachine.Interface>(0);
             var sw = new Stopwatch();
 
             Start("Command");
@@ -66,17 +67,17 @@ namespace Benchmark.Design
 
         internal static async Task TestCommand()
         {
-            for (var i = 0; i < 1000_000; i++)
+            for (var i = 0; i < N; i++)
             {
-                machine.Command(0);
+                _ = machine.CommandAsync(SimpleBenchMachine.Command.Test, 0);
             }
         }
 
         internal static async Task TestCommandTwoWay()
         {
-            for (var i = 0; i < 1000_000; i++)
+            for (var i = 0; i < N; i++)
             {
-                machine.CommandTwoWay<int, int>(0);
+                _ = machine.CommandAndReceiveAsync<int, int>(SimpleBenchMachine.Command.Test, 0);
             }
         }
     }

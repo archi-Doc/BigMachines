@@ -7,58 +7,45 @@ using System.Text;
 using System.Threading.Tasks;
 using BigMachines;
 
-namespace Advanced
+namespace Advanced;
+
+// Loop Machine
+[MachineObject(0xb7196ebc)]
+public partial class LoopMachine : Machine<int>
 {
-    // Loop Machine
-    [MachineObject(0xb7196ebc)]
-    public partial class LoopMachine : Machine<int>
+    public static void Test(BigMachine<int> bigMachine)
     {
-        public static void Test(BigMachine<int> bigMachine)
-        {
-            bigMachine.EnableLoopChecker = true;
-            var loopMachine = bigMachine.TryCreate<LoopMachine.Interface>(0);
-            loopMachine.Command<int>(1);
-        }
+        bigMachine.EnableLoopChecker = true;
+        var loopMachine = bigMachine.CreateOrGet<LoopMachine.Interface>(0);
 
-        public LoopMachine(BigMachine<int> bigMachine)
-            : base(bigMachine)
-        {
-        }
+        // Case 1: LoopMachine -> LoopMachine
+        loopMachine.CommandAsync(Command.RelayInt, 1);
 
-        protected override void ProcessCommand(CommandPost<int>.Command command)
-        {
-            if (command.Message is int n)
-            {// LoopMachine
-                this.BigMachine.TryGet<Interface>(this.Identifier)?.Command<int>(0);
-            }
-            else if (command.Message is string st)
-            {// LoopMachine -> TestMachine
-                this.BigMachine.TryGet<TestMachine.Interface>(3)?.Command(st);
-            }
+        // Case 2: LoopMachine -> TestMachine -> LoopMachine
+        /*bigMachine.CreateOrGet<TestMachine.Interface>(3);
+        loopMachine.CommandAsync(Command.RelayString, "loop");*/
+    }
+
+    public LoopMachine(BigMachine<int> bigMachine)
+        : base(bigMachine)
+    {
+    }
+
+    [CommandMethod(0)]
+    protected void RelayInt(CommandPost<int>.Command command)
+    {
+        if (command.Message is int n)
+        {// LoopMachine
+            this.BigMachine.TryGet<Interface>(this.Identifier)?.CommandAsync(Command.RelayInt, n);
         }
     }
 
-    // Loop Machine2 (Task.Run)
-    [MachineObject(0x2a27235e)]
-    public partial class LoopMachine2 : Machine<int>
+    [CommandMethod(1)]
+    protected void RelayString(CommandPost<int>.Command command)
     {
-        public static void Test(BigMachine<int> bigMachine)
-        {
-            var loopMachine = bigMachine.TryCreate<LoopMachine2.Interface>(0);
-            loopMachine.Command(1);
-        }
-
-        public LoopMachine2(BigMachine<int> bigMachine)
-            : base(bigMachine)
-        {
-        }
-
-        protected override void ProcessCommand(CommandPost<int>.Command command)
-        {
-            if (command.Message is int n)
-            {// LoopMachine
-                Task.Run(() => this.BigMachine.TryGet<Interface>(this.Identifier)?.Command(0));
-            }
+        if (command.Message is string st)
+        {// LoopMachine -> TestMachine
+            this.BigMachine.TryGet<TestMachine.Interface>(3)?.CommandAsync(TestMachine.Command.RelayString, st);
         }
     }
 }
