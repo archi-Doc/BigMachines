@@ -62,7 +62,7 @@ public partial class TestMachine : Machine<int> // Inherit Machine<TIdentifier> 
         : base(bigMachine)
     {
         this.DefaultTimeout = TimeSpan.FromSeconds(1); // Default time interval for machine execution.
-        this.SetLifespan(TimeSpan.FromSeconds(5)); // Time until the machine automatically terminates.
+        this.SetLifespan(TimeSpan.FromSeconds(5)); // The time until the machine automatically terminates.
     }
 
     public int Count { get; set; }
@@ -145,22 +145,22 @@ Passive machine can be run and the state can be changed by an external operation
 [MachineObject(0xffd829b4)]
 public partial class PassiveMachine : Machine<int>
 {
-    public static void Test(BigMachine<int> bigMachine)
+    public static async Task Test(BigMachine<int> bigMachine)
     {
-        var m = bigMachine.TryCreate<PassiveMachine.Interface>(0);
+        var m = bigMachine.CreateOrGet<PassiveMachine.Interface>(0);
 
-        m.Command("message 1"); // Send command.
+        await m.CommandAsync(Command.ReceiveString, "message 1"); // Send a command.
 
-        m.Run(); // Manually run machine.
+        await m.RunAsync(); // Manually run the machine.
 
-        m.ChangeState(State.First); // Change state from State.Initial to State.First
-        m.Run(); // Manually run machine.
+        await m.ChangeStateAsync(State.First); // Change the state from State.Initial to State.First
+        await m.RunAsync(); // Manually run the machine.
 
-        m.ChangeState(State.Second); // Change state from State.First to State.Second (denied)
-        m.Run(); // Manually run machine.
+        await m.ChangeStateAsync(State.Second); // Change the state from State.First to State.Second (denied)
+        await m.RunAsync(); // Manually run the machine.
 
-        m.ChangeState(State.Second); // Change state from State.First to State.Second (approved)
-        m.Run(); // Manually run machine.
+        await m.ChangeStateAsync(State.Second); // Change the state from State.First to State.Second (approved)
+        await m.RunAsync(); // Manually run the machine.
     }
 
     public PassiveMachine(BigMachine<int> bigMachine)
@@ -204,7 +204,8 @@ public partial class PassiveMachine : Machine<int>
         return result;
     }
 
-    protected override void ProcessCommand(CommandPost<int>.Command command)
+    [CommandMethod(0)]
+    protected void ReceiveString(CommandPost<int>.Command command)
     {
         if (command.Message is string message)
         {
@@ -226,7 +227,7 @@ public partial class IntermittentMachine : Machine<int>
 {
     public static void Test(BigMachine<int> bigMachine)
     {
-        var m = bigMachine.TryCreate<IntermittentMachine.Interface>(0);
+        var m = bigMachine.CreateOrGet<IntermittentMachine.Interface>(0);
 
         // The machine will run at regular intervals (1 second).
     }
@@ -235,7 +236,7 @@ public partial class IntermittentMachine : Machine<int>
         : base(bigMachine)
     {
         this.DefaultTimeout = TimeSpan.FromSeconds(1); // Default time interval for machine execution.
-        this.SetLifespan(TimeSpan.FromSeconds(5)); // Time until the machine automatically terminates.
+        this.SetLifespan(TimeSpan.FromSeconds(5)); // The time until the machine automatically terminates.
     }
 
     public int Count { get; set; }
@@ -273,13 +274,13 @@ It's designed for heavy and time-consuming tasks.
 Once a continuous machine is created, `BigMachine` will assign one thread for the machine and run the machine repeatedly until the machine returns `StateResult.Terminate`.
 
 ```csharp
-[MachineObject(0xb579a7d8, Continuous = true)] // Set Continuous property to true.
+[MachineObject(0xb579a7d8, Continuous = true)] // Set the Continuous property to true.
 public partial class ContinuousMachine : Machine<int>
 {
     public static void Test(BigMachine<int> bigMachine)
     {
         bigMachine.Continuous.SetMaxThreads(2); // Set the maximum number of threads used for continuous machines.
-        var m = bigMachine.TryCreate<ContinuousMachine.Interface>(0);
+        var m = bigMachine.CreateOrGet<ContinuousMachine.Interface>(0);
 
         // The machine will run until the task is complete.
     }
@@ -292,7 +293,7 @@ public partial class ContinuousMachine : Machine<int>
     public int Count { get; set; }
 
     [StateMethod(0)]
-    protected StateResult Initial(StateParameter parameter)
+    protected async Task<StateResult> Initial(StateParameter parameter)
     {
         Console.WriteLine($"ContinuousMachine: Initial - {this.Count++}");
         if (this.Count > 10)
@@ -301,7 +302,8 @@ public partial class ContinuousMachine : Machine<int>
             return StateResult.Terminate;
         }
 
-        Thread.Sleep(100); // Some heavy task
+        await Task.Delay(100); // Some heavy task
+        // await Task.Delay(100).WithoutLock(this); // You can also release the lock temporarily to improve the response (the machine state may change in the meantime).
 
         return StateResult.Continue;
     }
@@ -382,11 +384,13 @@ These keywords in `Machine` class are reserved for source generator.
 
 - `Interface`: Nested class for operating a machine.
 - `State`: enum type which represents the state of a machine.
+- `Command`: enum type which represents the command of a machine.
 - `CreateInterface()`: Creates an instance of machine interface.
 - `ChangeState()`: Changes the state of a machine.
 - `GetState()`: Gets the current state of a machine.
 - `InternalChangeState()`: Internally used to change the state.
 - `InternalRun()`:  Internally used to run machine and process each state.
+- `InternalCommand()`:  Internally used to process commands.
 - `RegisterBM()`: Registers the machine to `BigMachine`.
 
 `Internal` methods are used within the library and should not be used by the user.
@@ -409,11 +413,6 @@ container.Register<ServiceProviderMachine>(Reuse.Transient); // Register machine
 ```
 
 ```csharp
-using System;
-using BigMachines;
-
-namespace Advanced;
-
 public class SomeService
 {
     public void Print(string? text) => Console.WriteLine($"Some service : {text}");
@@ -425,7 +424,7 @@ public partial class ServiceProviderMachine : Machine<int>
 {
     public static void Test(BigMachine<int> bigMachine)
     {
-        bigMachine.TryCreate<ServiceProviderMachine.Interface>(0, "A"); // Create a machine and set a parameter.
+        bigMachine.CreateOrGet<ServiceProviderMachine.Interface>(0, "A"); // Create a machine and set a parameter.
     }
 
     public ServiceProviderMachine(BigMachine<int> bigMachine, SomeService service)
@@ -465,12 +464,13 @@ Normally, the type of the identifier is fixed.
 However you can create generic-identifier machine and machines can be used with multiple types of `BigMachine`.
 
 ```csharp
+[MachineObject(0x928b319e)]
 public partial class GenericMachine<TIdentifier> : Machine<TIdentifier>
-    where TIdentifier : notnull
+where TIdentifier : notnull
 {
     public static void Test(BigMachine<TIdentifier> bigMachine)
     {
-        bigMachine.TryCreate<GenericMachine<TIdentifier>.Interface>(default!);
+        bigMachine.CreateOrGet<GenericMachine<TIdentifier>.Interface>(default!);
     }
 
     public GenericMachine(BigMachine<TIdentifier> bigMachine)
@@ -503,8 +503,15 @@ public partial class LoopMachine : Machine<int>
 {
     public static void Test(BigMachine<int> bigMachine)
     {
-        var loopMachine = bigMachine.TryCreate<LoopMachine.Interface>(0);
-        loopMachine.Command(1);
+        bigMachine.EnableLoopChecker = true;
+        var loopMachine = bigMachine.CreateOrGet<LoopMachine.Interface>(0);
+
+        // Case 1: LoopMachine -> LoopMachine
+        loopMachine.CommandAsync(Command.RelayInt, 1);
+
+        // Case 2: LoopMachine -> TestMachine -> LoopMachine
+        /*bigMachine.CreateOrGet<TestMachine.Interface>(3);
+        loopMachine.CommandAsync(Command.RelayString, "loop");*/
     }
 
     public LoopMachine(BigMachine<int> bigMachine)
@@ -512,11 +519,21 @@ public partial class LoopMachine : Machine<int>
     {
     }
 
-    protected override void ProcessCommand(CommandPost<int>.Command command)
+    [CommandMethod(0)]
+    protected void RelayInt(CommandPost<int>.Command command)
     {
         if (command.Message is int n)
         {// LoopMachine
-            this.BigMachine.TryGet<Interface>(this.Identifier)?.Command(0);
+            this.BigMachine.TryGet<Interface>(this.Identifier)?.CommandAsync(Command.RelayInt, n);
+        }
+    }
+
+    [CommandMethod(1)]
+    protected void RelayString(CommandPost<int>.Command command)
+    {
+        if (command.Message is string st)
+        {// LoopMachine -> TestMachine
+            this.BigMachine.TryGet<TestMachine.Interface>(3)?.CommandAsync(TestMachine.Command.RelayString, st);
         }
     }
 }

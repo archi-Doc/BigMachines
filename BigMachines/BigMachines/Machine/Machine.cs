@@ -277,6 +277,10 @@ public abstract class Machine<TIdentifier>
     /// </summary>
     internal object SyncObjectOrSemaphore = default!;
 
+    /// <summary>
+    /// Lock the machine.<br/>
+    /// To prevent dead-lock, call this method FIRST in the locking order.
+    /// </summary>
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     protected internal void LockMachine()
     {
@@ -290,6 +294,11 @@ public abstract class Machine<TIdentifier>
         }
     }
 
+    /// <summary>
+    /// Lock the machine.<br/>
+    /// To prevent dead-lock, call this method FIRST in the locking order.
+    /// </summary>
+    /// <returns>The task object representing the asynchronous operation.</returns>
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     protected internal async Task LockMachineAsync()
     {

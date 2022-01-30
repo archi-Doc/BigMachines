@@ -27,7 +27,7 @@ namespace Benchmark.Design
 
     internal class SimpleBench
     {
-        internal const int N = 1000_000;
+        internal const int N = 1_000_000;
 
         private static SimpleBenchMachine.Interface machine = default!;
 
@@ -67,7 +67,7 @@ namespace Benchmark.Design
 
         internal static async Task TestCommand()
         {
-            for (var i = 0; i < 1000_000; i++)
+            for (var i = 0; i < N; i++)
             {
                 _ = machine.CommandAsync(SimpleBenchMachine.Command.Test, 0);
             }
@@ -75,7 +75,7 @@ namespace Benchmark.Design
 
         internal static async Task TestCommandTwoWay()
         {
-            for (var i = 0; i < 1000_000; i++)
+            for (var i = 0; i < N; i++)
             {
                 _ = machine.CommandAndReceiveAsync<int, int>(SimpleBenchMachine.Command.Test, 0);
             }
