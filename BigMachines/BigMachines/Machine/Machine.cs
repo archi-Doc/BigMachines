@@ -187,14 +187,21 @@ public abstract class Machine<TIdentifier>
         }
         else if (command.Type == CommandPost<TIdentifier>.CommandType.ChangeState)
         {// ChangeState
-            try
-            {
-                await this.LockMachineAsync();
-                command.Response = this.InternalChangeState(command.Data);
+            if (this.Status == MachineStatus.Terminated)
+            {// Terminated
+                command.Response = false;
             }
-            finally
+            else
             {
-                this.UnlockMachine();
+                try
+                {
+                    await this.LockMachineAsync();
+                    command.Response = this.InternalChangeState(command.Data);
+                }
+                finally
+                {
+                    this.UnlockMachine();
+                }
             }
         }
         else
