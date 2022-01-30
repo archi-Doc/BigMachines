@@ -709,7 +709,7 @@ ModuleInitializerClass_Added:
                 {
                     if (x.ReturnTask)
                     {
-                        ssb.AppendLine($"State.{x.Name} => await this.{x.Name}(parameter),");
+                        ssb.AppendLine($"State.{x.Name} => await this.{x.Name}(parameter).ConfigureAwait(false),");
                     }
                     else
                     {
@@ -744,11 +744,17 @@ ModuleInitializerClass_Added:
                         if (!method.WithoutLock)
                         {
                             scopeTry = ssb.ScopeBrace("try");
-                            ssb.AppendLine("await this.LockMachineAsync();");
+                            ssb.AppendLine("await this.LockMachineAsync().ConfigureAwait(false);");
                         }
 
-                        var prefix2 = method.ReturnTask ? "await " : string.Empty;
-                        ssb.AppendLine($"{prefix2}this.{method.Name}(command);");
+                        if (method.ReturnTask == false)
+                        {
+                            ssb.AppendLine($"this.{method.Name}(command);");
+                        }
+                        else
+                        {
+                            ssb.AppendLine($"await this.{method.Name}(command).ConfigureAwait(false);");
+                        }
 
                         if (scopeTry != null)
                         {

@@ -19,7 +19,7 @@ public static class BigMachineTaskExtensions
             try
             {
                 semaphore.Release();
-                await task;
+                await task.ConfigureAwait(false);
             }
             finally
             {
@@ -28,7 +28,7 @@ public static class BigMachineTaskExtensions
         }
         else
         {// lock() is not supported.
-            await task;
+            await task.ConfigureAwait(false);
         }
     }
 }
