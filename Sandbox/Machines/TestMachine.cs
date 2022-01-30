@@ -42,16 +42,6 @@ namespace Sandbox
             return StateResult.Continue;
         }
 
-        protected override void ProcessCommand(CommandPost<int>.Command command)
-        {
-            if (command.Message is double)
-            {
-                var count = (double)Volatile.Read(ref this.count);
-                var total = (double)Volatile.Read(ref this.total);
-                command.Response = count / total;
-            }
-        }
-
         [Key(11)]
         private long total;
 
@@ -407,15 +397,6 @@ namespace Sandbox
             if (command.Message is int n)
             {
                 command.Response = 4;
-            }
-        }
-
-        protected override void ProcessCommand(CommandPost<int>.Command command)
-        {// Custom
-            if (command.Message is int x)
-            {
-                Console.WriteLine($"command: {x}");
-                command.Response = x + 1;
             }
         }
 

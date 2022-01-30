@@ -18,14 +18,10 @@ namespace Benchmark.Design
         {
         }
 
-        protected override void ProcessCommand(CommandPost<int>.Command command)
-        {
-            var message = command.Message;
-        }
-
         [CommandMethod(0)]
         public void Test(CommandPost<int>.Command command)
         {
+            var message = command.Message;
         }
     }
 

@@ -223,9 +223,6 @@ public abstract class Machine<TIdentifier>
                 this.BigMachine.ReportException(new(this, ex));
             }
 
-            // lock (this.SyncMachine) // Not inside lock statement.
-            this.ProcessCommand(command);
-
             if (this.Status == MachineStatus.Terminated)
             {
                 await this.TerminateAndRemoveFromGroup();
@@ -317,16 +314,6 @@ public abstract class Machine<TIdentifier>
         {
             Monitor.Exit(this.SyncObjectOrSemaphore);
         }
-    }
-
-    /// <summary>
-    /// Expected to be implemented on the user side.<br/>
-    /// Receives commands and respond if necessary.<br/>
-    /// This code is NOT inside 'lock (this.Machine)' statement.
-    /// </summary>
-    /// <param name="command">The command.</param>
-    protected internal virtual void ProcessCommand(CommandPost<TIdentifier>.Command command)
-    {// Called: Machine.DistributeCommand()
     }
 
     /// <summary>

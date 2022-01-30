@@ -99,9 +99,12 @@ public partial class TestMachine : Machine<int> // Inherit Machine<TIdentifier> 
     }
 
     [CommandMethod(1)]
-    protected void CommandString(CommandPost<int>.Command command)
+    protected void RelayString(CommandPost<int>.Command command)
     {
-        // this.BigMachine.TryGet<LoopMachine.Interface>(0)?.Command(st);
+        if (command.Message is string st)
+        {// LoopMachine -> TestMachine -> LoopMachine
+            this.BigMachine.TryGet<LoopMachine.Interface>(0)?.CommandAsync(LoopMachine.Command.RelayString, st);
+        }
     }
 
     protected override void OnTerminated()
