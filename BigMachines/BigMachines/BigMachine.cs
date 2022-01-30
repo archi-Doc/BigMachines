@@ -367,7 +367,7 @@ public partial class BigMachine<TIdentifier>
                 {
                     try
                     {
-                        await machine.DistributeCommand(command);
+                        await machine.DistributeCommand(command).ConfigureAwait(false);
                     }
                     catch (Exception ex)
                     {
@@ -384,7 +384,7 @@ public partial class BigMachine<TIdentifier>
                     {
                         try
                         {
-                            await machine.DistributeCommand(x);
+                            await machine.DistributeCommand(x).ConfigureAwait(false);
                         }
                         catch (Exception ex)
                         {

@@ -205,7 +205,7 @@ public class CommandPost<TIdentifier>
     {
         var c = new Command(this.BigMachine, group, commandType, identifier, data, TinyhandSerializer.Clone(message));
 
-        await this.commandDelegate(c, null);
+        await this.commandDelegate(c, null).ConfigureAwait(false);
         if (c.Response is TResponse result)
         {// Valid result
             return result;
@@ -218,7 +218,7 @@ public class CommandPost<TIdentifier>
     {
         var c = new Command(this.BigMachine, group, commandType, identifier, data, null);
 
-        await this.commandDelegate(c, null);
+        await this.commandDelegate(c, null).ConfigureAwait(false);
         if (c.Response is TResponse result)
         {// Valid result
             return result;
@@ -241,7 +241,7 @@ public class CommandPost<TIdentifier>
             list.Add(c);
         }
 
-        await this.commandDelegate(null, list);
+        await this.commandDelegate(null, list).ConfigureAwait(false);
 
         var array = new KeyValuePair<TIdentifier, TResponse?>[list.Count];
         var n = 0;
@@ -265,7 +265,7 @@ public class CommandPost<TIdentifier>
     {
         var c = new BatchCommand(type, group, identifier, option);
 
-        await this.processBatchCommand(c);
+        await this.processBatchCommand(c).ConfigureAwait(false);
         if (c.Response is TResponse result)
         {// Valid result
             return result;
@@ -278,7 +278,7 @@ public class CommandPost<TIdentifier>
     {
         var c = new BatchCommand(type, group, default, option);
 
-        await this.processBatchCommand(c);
+        await this.processBatchCommand(c).ConfigureAwait(false);
         if (c.Response is TResponse result)
         {// Valid result
             return result;
@@ -291,7 +291,7 @@ public class CommandPost<TIdentifier>
     {
         var c = new BatchCommand(type, null, default, option);
 
-        await this.processBatchCommand(c);
+        await this.processBatchCommand(c).ConfigureAwait(false);
         if (c.Response is TResponse result)
         {// Valid result
             return result;

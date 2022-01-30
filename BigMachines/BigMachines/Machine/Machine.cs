@@ -169,8 +169,8 @@ public abstract class Machine<TIdentifier>
 
             try
             {
-                await this.LockMachineAsync();
-                if (await this.RunMachine(command, RunType.Manual, DateTime.UtcNow, this.BigMachine.Core.CancellationToken) == StateResult.Terminate)
+                await this.LockMachineAsync().ConfigureAwait(false);
+                if (await this.RunMachine(command, RunType.Manual, DateTime.UtcNow, this.BigMachine.Core.CancellationToken).ConfigureAwait(false) == StateResult.Terminate)
                 {
                     this.Status = MachineStatus.Terminated;
                     this.OnTerminated();
@@ -195,7 +195,7 @@ public abstract class Machine<TIdentifier>
             {
                 try
                 {
-                    await this.LockMachineAsync();
+                    await this.LockMachineAsync().ConfigureAwait(false);
                     command.Response = this.InternalChangeState(command.Data);
                 }
                 finally
@@ -223,7 +223,7 @@ public abstract class Machine<TIdentifier>
 
             try
             {
-                await this.InternalCommand(command);
+                await this.InternalCommand(command).ConfigureAwait(false);
             }
             catch (Exception ex)
             {
@@ -232,7 +232,7 @@ public abstract class Machine<TIdentifier>
 
             if (this.Status == MachineStatus.Terminated)
             {
-                await this.TerminateAndRemoveFromGroup();
+                await this.TerminateAndRemoveFromGroup().ConfigureAwait(false);
             }
         }
     }
@@ -246,7 +246,7 @@ public abstract class Machine<TIdentifier>
     {
         try
         {
-            await this.LockMachineAsync();
+            await this.LockMachineAsync().ConfigureAwait(false);
 
             this.Status = MachineStatus.Terminated;
             this.OnTerminated();
@@ -311,7 +311,7 @@ public abstract class Machine<TIdentifier>
     {
         if (this.SyncObjectOrSemaphore is SemaphoreSlim semaphore)
         {
-            await semaphore.WaitAsync();
+            await semaphore.WaitAsync().ConfigureAwait(false);
         }
         else
         {
@@ -409,7 +409,7 @@ RerunLoop:
 
         try
         {
-            result = await this.InternalRun(new(runType, cancellationToken));
+            result = await this.InternalRun(new(runType, cancellationToken)).ConfigureAwait(false);
         }
         catch (Exception ex)
         {
