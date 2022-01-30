@@ -34,7 +34,7 @@ public partial class TestMachine : Machine<int> // Inherit Machine<TIdentifier> 
     {
         this.IsSerializable = true; // Set true to serialize the machine
         this.DefaultTimeout = TimeSpan.FromSeconds(1); // Default time interval for machine processing.
-        this.SetLifespan(TimeSpan.FromSeconds(10)); // Time until the machine automatically terminates.
+        this.SetLifespan(TimeSpan.FromSeconds(10)); // The time until the machine automatically terminates.
     }
 
     [Key(11)]

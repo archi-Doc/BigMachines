@@ -8,55 +8,54 @@ using System.Threading.Tasks;
 using Arc.Threading;
 using BigMachines;
 
-namespace Advanced
+namespace Advanced;
+
+// Single Machine
+[MachineObject(0x48eb1f0f, Group = typeof(MachineSingle<>))] // Change groups from MachineGroup<> to MachineSingle<>.
+public partial class TerminatorMachine<TIdentifier> : Machine<TIdentifier>
+    where TIdentifier : notnull
 {
-    // Single Machine
-    [MachineObject(0x48eb1f0f, Group = typeof(MachineSingle<>))] // Change groups from MachineGroup<> to MachineSingle<>.
-    public partial class TerminatorMachine<TIdentifier> : Machine<TIdentifier>
-        where TIdentifier : notnull
+    public static void Start(BigMachine<TIdentifier> bigMachine, TIdentifier identifier)
     {
-        public static void Test(BigMachine<TIdentifier> bigMachine, TIdentifier identifier)
+        bigMachine.CreateOrGet<TerminatorMachine<TIdentifier>.Interface>(identifier);
+    }
+
+    public TerminatorMachine(BigMachine<TIdentifier> bigMachine)
+        : base(bigMachine)
+    {
+        this.DefaultTimeout = TimeSpan.FromSeconds(1);
+    }
+
+    [StateMethod(0)]
+    protected StateResult Initial(StateParameter parameter)
+    {
+        if (this.BigMachine.Continuous.GetInfo(true).Length > 0)
         {
-            bigMachine.CreateOrGet<TerminatorMachine<TIdentifier>.Interface>(identifier);
+            return StateResult.Continue;
         }
 
-        public TerminatorMachine(BigMachine<TIdentifier> bigMachine)
-            : base(bigMachine)
+        foreach (var x in this.BigMachine.GetGroups())
         {
-            this.DefaultTimeout = TimeSpan.FromSeconds(1);
-        }
-
-        [StateMethod(0)]
-        protected StateResult Initial(StateParameter parameter)
-        {
-            if (this.BigMachine.Continuous.GetInfo(true).Length > 0)
+            if (x.Info.MachineType != typeof(TerminatorMachine<TIdentifier>) &&
+                x.Count > 0)
             {
-                return StateResult.Continue;
-            }
-
-            foreach (var x in this.BigMachine.GetGroups())
-            {
-                if (x.Info.MachineType != typeof(TerminatorMachine<TIdentifier>) &&
-                    x.Count > 0)
+                foreach (var y in x.GetIdentifiers())
                 {
-                    foreach (var y in x.GetIdentifiers())
+                    if (x.TryGet<ManMachineInterface<TIdentifier>>(y)?.GetDefaultTimeout() is TimeSpan ts && ts > TimeSpan.Zero)
                     {
-                        if (x.TryGet<ManMachineInterface<TIdentifier>>(y)?.GetDefaultTimeout() is TimeSpan ts && ts > TimeSpan.Zero)
-                        {
-                            return StateResult.Continue;
-                        }
+                        return StateResult.Continue;
                     }
                 }
             }
-
-            if (this.BigMachine.GetExceptionCount() > 0)
-            {// Remaining exceptions.
-                return StateResult.Continue;
-            }
-
-            Console.WriteLine("Terminate (no machine)");
-            ThreadCore.Root.Terminate();
-            return StateResult.Terminate;
         }
+
+        if (this.BigMachine.GetExceptionCount() > 0)
+        {// Remaining exceptions.
+            return StateResult.Continue;
+        }
+
+        Console.WriteLine("Terminate (no machine)");
+        ThreadCore.Root.Terminate();
+        return StateResult.Terminate;
     }
 }

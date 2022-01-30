@@ -14,7 +14,7 @@ public partial class TestMachine : Machine<int> // Inherit Machine<TIdentifier> 
         : base(bigMachine)
     {
         this.DefaultTimeout = TimeSpan.FromSeconds(1); // Default time interval for machine execution.
-        this.SetLifespan(TimeSpan.FromSeconds(5)); // Time until the machine automatically terminates.
+        this.SetLifespan(TimeSpan.FromSeconds(5)); // The time until the machine automatically terminates.
     }
 
     public int Count { get; set; }
