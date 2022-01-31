@@ -99,9 +99,9 @@ public partial class BigMachine<TIdentifier>
     public static Dictionary<Type, MachineInfo<TIdentifier>> StaticInfo { get; } = new(); // typeof(Machine.Interface), MachineGroup
 
     /// <summary>
-    /// Gets or sets a value indicating whether to enable loop checker.
+    /// Gets or sets a value indicating the operation mode of the loop checker.
     /// </summary>
-    public bool EnableLoopChecker { get; set; } = true;
+    public LoopCheckerMode LoopCheckerMode { get; set; } = LoopCheckerMode.EnabledAndThrowException;
 
     /// <summary>
     /// Gets the status of <see cref="BigMachine{TIdentifier}"/>.

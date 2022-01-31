@@ -82,7 +82,7 @@ public class CommandPost<TIdentifier>
         public Command(BigMachine<TIdentifier> bigMachine, IMachineGroup<TIdentifier> group, CommandType type, TIdentifier identifier, int data, object? message)
         {
             LoopChecker? checker;
-            if (bigMachine.EnableLoopChecker)
+            if (bigMachine.LoopCheckerMode != LoopCheckerMode.Disabled)
             {// LoopChecker enabled.
                 checker = LoopChecker.AsyncLocalInstance.Value;
                 if (checker == null)

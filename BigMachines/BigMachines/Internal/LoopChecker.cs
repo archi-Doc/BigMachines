@@ -12,7 +12,25 @@ namespace BigMachines;
 
 #pragma warning disable SA1401 // Fields should be private
 
-public class LoopChecker
+public enum LoopCheckerMode
+{
+    /// <summary>
+    /// Loop checker is enabled and throws an exception when a recursive command is detected.
+    /// </summary>
+    EnabledAndThrowException,
+
+    /// <summary>
+    /// Loop checker is enabled but does not throw an exception when a recursive command is detected.
+    /// </summary>
+    EnabledWithoutException,
+
+    /// <summary>
+    /// Loop checker is disabled.
+    /// </summary>
+    Disabled,
+}
+
+internal class LoopChecker
 {
     public const int InitialArray = 4;
 
@@ -24,117 +42,72 @@ public class LoopChecker
 
     public LoopChecker(LoopChecker loopChecker)
     {
-        this.RunIdCount = loopChecker.RunIdCount;
-        if (loopChecker.RunId != null)
+        this.IdCount = loopChecker.IdCount;
+        if (loopChecker.IdArray != null)
         {
-            this.RunId = new uint[loopChecker.RunId.Length];
-            for (var n = 0; n < loopChecker.RunIdCount; n++)
+            this.IdArray = new ulong[loopChecker.IdArray.Length];
+            for (var n = 0; n < loopChecker.IdCount; n++)
             {
-                this.RunId[n] = loopChecker.RunId[n];
+                this.IdArray[n] = loopChecker.IdArray[n];
             }
         }
         else
         {
-            this.RunId0 = loopChecker.RunId0;
-            this.RunId1 = loopChecker.RunId1;
-        }
-
-        this.CommandIdCount = loopChecker.CommandIdCount;
-        if (loopChecker.CommandId != null)
-        {
-            this.CommandId = new uint[loopChecker.CommandId.Length];
-            for (var n = 0; n < loopChecker.CommandIdCount; n++)
-            {
-                this.CommandId[n] = loopChecker.CommandId[n];
-            }
-        }
-        else
-        {
-            this.CommandId0 = loopChecker.CommandId0;
-            this.CommandId1 = loopChecker.CommandId1;
+            this.Id0 = loopChecker.Id0;
+            this.Id1 = loopChecker.Id1;
         }
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public void AddRunId(uint id)
+    public void AddId(ulong id)
     {
-        if (this.RunIdCount == 0)
+        if (this.IdCount == 0)
         {
-            this.RunId0 = id;
-            this.RunIdCount = 1;
+            this.Id0 = id;
+            this.IdCount = 1;
         }
-        else if (this.RunIdCount == 1)
+        else if (this.IdCount == 1)
         {
-            this.RunId1 = id;
-            this.RunIdCount = 2;
+            this.Id1 = id;
+            this.IdCount = 2;
         }
         else
         {
-            if (this.RunId == null)
+            if (this.IdArray == null)
             {
-                this.RunId = new uint[InitialArray];
-                this.RunId[0] = this.RunId0;
-                this.RunId[1] = this.RunId1;
+                this.IdArray = new ulong[InitialArray];
+                this.IdArray[0] = this.Id0;
+                this.IdArray[1] = this.Id1;
             }
-            else if (this.RunIdCount >= this.RunId.Length)
+            else if (this.IdCount >= this.IdArray.Length)
             {
-                Array.Resize(ref this.RunId, this.RunId.Length + InitialArray);
+                Array.Resize(ref this.IdArray, this.IdArray.Length + InitialArray);
             }
 
-            this.RunId[this.RunIdCount++] = id;
+            this.IdArray[this.IdCount++] = id;
         }
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public void AddCommandId(uint id)
+    public bool FindId(ulong id)
     {
-        if (this.CommandIdCount == 0)
-        {
-            this.CommandId0 = id;
-            this.CommandIdCount = 1;
-        }
-        else if (this.CommandIdCount == 1)
-        {
-            this.CommandId1 = id;
-            this.CommandIdCount = 2;
-        }
-        else
-        {
-            if (this.CommandId == null)
-            {
-                this.CommandId = new uint[InitialArray];
-                this.CommandId[0] = this.CommandId0;
-                this.CommandId[1] = this.CommandId1;
-            }
-            else if (this.CommandIdCount >= this.CommandId.Length)
-            {
-                Array.Resize(ref this.CommandId, this.CommandId.Length + InitialArray);
-            }
-
-            this.CommandId[this.CommandIdCount++] = id;
-        }
-    }
-
-    [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public bool FindCommandId(uint id)
-    {
-        if (this.CommandIdCount == 0)
+        if (this.IdCount == 0)
         {
             return false;
         }
-        else if (this.CommandIdCount == 1)
+        else if (this.IdCount == 1)
         {
-            return this.CommandId0 == id;
+            return this.Id0 == id;
         }
-        else if (this.CommandIdCount == 2)
+        else if (this.IdCount == 2)
         {
-            return this.CommandId0 == id || this.CommandId1 == id;
+            return this.Id0 == id || this.Id1 == id;
         }
         else
         {
-            for (var n = 0; n < this.CommandIdCount; n++)
+            for (var n = 0; n < this.IdCount; n++)
             {
-                if (this.CommandId![n] == id)
+                if (this.IdArray![n] == id)
                 {
                     return true;
                 }
@@ -144,96 +117,38 @@ public class LoopChecker
         return false;
     }
 
-    [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public bool FindRunId(uint id)
+    public IEnumerable<ulong> EnumerateId()
     {
-        if (this.RunIdCount == 0)
-        {
-            return false;
-        }
-        else if (this.RunIdCount == 1)
-        {
-            return this.RunId0 == id;
-        }
-        else if (this.RunIdCount == 2)
-        {
-            return this.RunId0 == id || this.RunId1 == id;
-        }
-        else
-        {
-            for (var n = 0; n < this.RunIdCount; n++)
-            {
-                if (this.RunId![n] == id)
-                {
-                    return true;
-                }
-            }
-        }
-
-        return false;
-    }
-
-    public IEnumerable<uint> EnumerateCommandId()
-    {
-        if (this.CommandIdCount == 0)
+        if (this.IdCount == 0)
         {
             yield break;
         }
-        else if (this.CommandIdCount == 1)
+        else if (this.IdCount == 1)
         {
-            yield return this.CommandId0;
+            yield return this.Id0;
         }
-        else if (this.CommandIdCount == 2)
+        else if (this.IdCount == 2)
         {
-            yield return this.CommandId0;
-            yield return this.CommandId1;
+            yield return this.Id0;
+            yield return this.Id1;
         }
         else
         {
-            for (var n = 0; n < this.CommandIdCount; n++)
+            for (var n = 0; n < this.IdCount; n++)
             {
-                yield return this.CommandId![n];
+                yield return this.IdArray![n];
             }
         }
     }
 
-    public IEnumerable<uint> EnumerateRunId()
-    {
-        if (this.RunIdCount == 0)
-        {
-            yield break;
-        }
-        else if (this.RunIdCount == 1)
-        {
-            yield return this.RunId0;
-        }
-        else if (this.RunIdCount == 2)
-        {
-            yield return this.RunId0;
-            yield return this.RunId1;
-        }
-        else
-        {
-            for (var n = 0; n < this.RunIdCount; n++)
-            {
-                yield return this.RunId![n];
-            }
-        }
-    }
-
-    internal int RunIdCount;
-    internal uint RunId0;
-    internal uint RunId1;
-    internal uint[]? RunId;
-
-    internal int CommandIdCount;
-    internal uint CommandId0;
-    internal uint CommandId1;
-    internal uint[]? CommandId;
+    internal int IdCount;
+    internal ulong Id0;
+    internal ulong Id1;
+    internal ulong[]? IdArray;
 
     public LoopChecker Clone() => new(this);
 
-    public override string ToString() => $"Run {this.RunIdCount}, Command {this.CommandIdCount}";
+    public override string ToString() => $"Ids {this.IdCount}";
 }
 
 #pragma warning restore SA1401 // Fields should be private
