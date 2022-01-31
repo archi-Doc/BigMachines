@@ -619,8 +619,11 @@ public partial class BigMachine<TIdentifier>
 
                 foreach (var y in x.GetMachines())
                 {
-                    Interlocked.Add(ref y.Timeout, -elapsed.Ticks);
                     Interlocked.Add(ref y.Lifespan, -elapsed.Ticks);
+                    if (y.Status == MachineStatus.Running)
+                    {
+                        Interlocked.Add(ref y.Timeout, -elapsed.Ticks);
+                    }
 
                     if (y.Lifespan <= 0 || y.TerminationDate <= now)
                     {// Terminate
