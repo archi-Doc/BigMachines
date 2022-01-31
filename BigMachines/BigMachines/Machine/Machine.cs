@@ -39,6 +39,7 @@ public abstract class Machine<TIdentifier>
 
         this.Group = group;
         this.TypeId = group.Info.TypeId;
+        this.SerialNumber = Interlocked.Increment(ref serialNumber);
         if (group.Info.HasAsync)
         {
             this.SyncObjectOrSemaphore = new SemaphoreSlim(1, 1);
@@ -70,6 +71,11 @@ public abstract class Machine<TIdentifier>
     /// </summary>
     [Key(0)]
     public TIdentifier Identifier { get; protected set; } = default!;
+
+    /// <summary>
+    /// Gets or sets a running state of the machine.
+    /// </summary>
+    internal RunType RunType;
 
     /// <summary>
     /// Gets or sets the machine status (running, paused, terminated).
@@ -135,9 +141,9 @@ public abstract class Machine<TIdentifier>
     protected internal uint TypeId;
 
     /// <summary>
-    /// Gets or sets a running state of the machine.
+    /// Get the serial (unique) number of the machine.
     /// </summary>
-    internal RunType RunType { get; set; }
+    protected internal uint SerialNumber;
 
     /// <summary>
     /// Receivea a command and invoke an appropriate method.<br/>
@@ -152,19 +158,9 @@ public abstract class Machine<TIdentifier>
         }
         else if (command.Type == CommandPost<TIdentifier>.CommandType.Run)
         {// Run
-            if (command.LoopChecker is { } checker)
-            {
-                if (checker.FindRunId(this.TypeId))
-                {
-                    var s = string.Join('-', checker.EnumerateRunId().Take(checker.CommandIdCount).Select(x => this.BigMachine.GetMachineInfoFromTypeId(x)?.MachineType.Name));
-                    throw new BigMachine<TIdentifier>.CommandLoopException($"Run loop detected ({s})");
-                }
-
-                checker = checker.Clone();
-                checker.AddRunId(this.TypeId);
-                LoopChecker.AsyncLocalInstance.Value = checker;
-
-                // Console.WriteLine("run " + checker);
+            if (CheckRecursive(1))
+            {// Recursive command
+                return;
             }
 
             try
@@ -206,19 +202,9 @@ public abstract class Machine<TIdentifier>
         }
         else
         {// Command
-            if (command.LoopChecker is { } checker)
-            {
-                if (checker.FindCommandId(this.TypeId))
-                {
-                    var s = string.Join('-', checker.EnumerateCommandId().Take(checker.CommandIdCount).Select(x => this.BigMachine.GetMachineInfoFromTypeId(x)?.MachineType.Name));
-                    throw new BigMachine<TIdentifier>.CommandLoopException($"Command loop detected ({s})");
-                }
-
-                checker = checker.Clone();
-                checker.AddCommandId(this.TypeId);
-                LoopChecker.AsyncLocalInstance.Value = checker;
-
-                // Console.WriteLine("command " + checker);
+            if (CheckRecursive(0))
+            {// Recursive command
+                return;
             }
 
             try
@@ -234,6 +220,33 @@ public abstract class Machine<TIdentifier>
             {
                 await this.TerminateAndRemoveFromGroup().ConfigureAwait(false);
             }
+        }
+
+        bool CheckRecursive(ulong run)
+        {
+            if (command.LoopChecker is { } checker)
+            {
+                const uint SerialIdMask = ~(1u << 31);
+                var id = (run << 63) | (ulong)(this.SerialNumber & SerialIdMask) << 32 | this.TypeId; // Not a perfect solution, though it works in most cases.
+                if (checker.FindId(id))
+                {
+                    if (this.BigMachine.LoopCheckerMode != LoopCheckerMode.EnabledAndThrowException)
+                    {
+                        return true;
+                    }
+
+                    var s = string.Join('-', checker.EnumerateId().Select(x => this.BigMachine.GetMachineInfoFromTypeId((uint)x)?.MachineType.Name + "." + IdToString(x)));
+                    throw new BigMachine<TIdentifier>.CommandLoopException($"Loop detected ({s})");
+                }
+
+                checker = checker.Clone();
+                checker.AddId(id);
+                LoopChecker.AsyncLocalInstance.Value = checker;
+            }
+
+            return false;
+
+            static string IdToString(ulong id) => (id & (1ul << 63)) == 0 ? "Command" : "Run";
         }
     }
 
@@ -492,4 +505,6 @@ RerunLoop:
     /// <param name="seconds">The timeout in seconds.</param>
     /// <param name="absoluteDateTime">Set true to specify the next execution time by adding the current time and timeout.</param>
     protected void SetTimeout(double seconds, bool absoluteDateTime = false) => this.SetTimeout(TimeSpan.FromSeconds(seconds), absoluteDateTime);
+
+    private static uint serialNumber;
 }

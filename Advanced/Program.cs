@@ -76,7 +76,7 @@ public class Program
         // DerivedMachine.Test2(bigMachine);
         // DerivedMachine2.Test(bigMachine);
         // GenericMachine<int>.Test(bigMachine);
-        // LoopMachine.Test(bigMachine);
+        LoopMachine.Test(bigMachine);
         // SingleMachine.Test(bigMachine);
         // ServiceProviderMachine.Test(bigMachine);
 

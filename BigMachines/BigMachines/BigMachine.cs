@@ -99,9 +99,9 @@ public partial class BigMachine<TIdentifier>
     public static Dictionary<Type, MachineInfo<TIdentifier>> StaticInfo { get; } = new(); // typeof(Machine.Interface), MachineGroup
 
     /// <summary>
-    /// Gets or sets a value indicating whether to enable loop checker.
+    /// Gets or sets a value indicating the operation mode of the loop checker.
     /// </summary>
-    public bool EnableLoopChecker { get; set; } = true;
+    public LoopCheckerMode LoopCheckerMode { get; set; } = LoopCheckerMode.EnabledAndThrowException;
 
     /// <summary>
     /// Gets the status of <see cref="BigMachine{TIdentifier}"/>.
@@ -619,8 +619,11 @@ public partial class BigMachine<TIdentifier>
 
                 foreach (var y in x.GetMachines())
                 {
-                    Interlocked.Add(ref y.Timeout, -elapsed.Ticks);
                     Interlocked.Add(ref y.Lifespan, -elapsed.Ticks);
+                    if (y.Status == MachineStatus.Running)
+                    {
+                        Interlocked.Add(ref y.Timeout, -elapsed.Ticks);
+                    }
 
                     if (y.Lifespan <= 0 || y.TerminationDate <= now)
                     {// Terminate

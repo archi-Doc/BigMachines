@@ -24,9 +24,12 @@ public partial class TestMachine : Machine<int> // Inherit Machine<TIdentifier> 
         var testGroup = bigMachine.GetGroup<TestMachine.Interface>(); // Group is a collection of machines.
         testMachine = testGroup.TryGet<TestMachine.Interface>(3); // Get machine from the group.
 
-        // Loop test
-        // bigMachine.TryCreate<LoopMachine.Interface>(0);
-        // testMachine?.Command("loop test");
+        var testMachine2 = bigMachine.CreateOrGet<TestMachine.Interface>(10);
+        testMachine2.SetMachineStatus(MachineStatus.Paused);
+
+        testGroup.CommandAsync(TestMachine.Command.PrintText, "group message").Wait();
+        // testMachine?.Group.CommandAsync(TestMachine.Command.PrintText, "group message").Wait();
+        Console.WriteLine();
     }
 
     public TestMachine(BigMachine<int> bigMachine)
@@ -104,6 +107,15 @@ public partial class TestMachine : Machine<int> // Inherit Machine<TIdentifier> 
         if (command.Message is string st)
         {// LoopMachine -> TestMachine -> LoopMachine
             this.BigMachine.TryGet<LoopMachine.Interface>(0)?.CommandAsync(LoopMachine.Command.RelayString, st);
+        }
+    }
+
+    [CommandMethod(2)]
+    protected void PrintText(CommandPost<int>.Command command)
+    {
+        if (command.Message is string text)
+        {
+            Console.WriteLine($"TestMachine {this.Identifier} PrintText : {text}");
         }
     }
 
