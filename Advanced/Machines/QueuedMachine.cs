@@ -16,9 +16,9 @@ namespace Advanced
         public static void Test(BigMachine<int> bigMachine)
         {
             var queuedMachine = bigMachine.CreateOrGet<QueuedMachine.Interface>(0);
-            bigMachine.CreateOrGet<QueuedMachine.Interface>(2);
-            bigMachine.CreateOrGet<QueuedMachine.Interface>(1);
-            bigMachine.CreateNew<QueuedMachine.Interface>(0);
+            queuedMachine.RunAsync();
+            bigMachine.CreateOrGet<QueuedMachine.Interface>(2).RunAsync();
+            bigMachine.CreateOrGet<QueuedMachine.Interface>(1).RunAsync();
 
             var group = queuedMachine.Group;
             Console.WriteLine(string.Join(",", group.GetIdentifiers().Select(a => a.ToString())));
@@ -35,14 +35,10 @@ namespace Advanced
         [StateMethod(0)]
         protected async Task<StateResult> Initial(StateParameter parameter)
         {
-            Console.WriteLine($"Queued machine: ({this.Identifier.ToString()}) - {this.Count++}");
-            if (this.Count == 3)
-            {
-                return StateResult.Terminate;
-            }
-
-            await Task.Delay(1000);
-            return StateResult.Continue;
+            Console.WriteLine($"Queued machine: ({this.Identifier.ToString()}) Start");
+            await Task.Delay(1500);
+            Console.WriteLine($"Queued machine: ({this.Identifier.ToString()}) End");
+            return StateResult.Terminate;
         }
     }
 }
