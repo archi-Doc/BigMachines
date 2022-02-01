@@ -16,9 +16,9 @@ namespace Advanced
         public static void Test(BigMachine<int> bigMachine)
         {
             var queuedMachine = bigMachine.CreateOrGet<QueuedMachine.Interface>(0);
-            queuedMachine.RunAsync();
-            bigMachine.CreateOrGet<QueuedMachine.Interface>(2).RunAsync();
-            bigMachine.CreateOrGet<QueuedMachine.Interface>(1).RunAsync();
+            queuedMachine.SetTimeout(TimeSpan.Zero);
+            bigMachine.CreateOrGet<QueuedMachine.Interface>(2).SetTimeout(TimeSpan.Zero);
+            bigMachine.CreateOrGet<QueuedMachine.Interface>(1).SetTimeout(TimeSpan.Zero);
 
             var group = queuedMachine.Group;
             Console.WriteLine(string.Join(",", group.GetIdentifiers().Select(a => a.ToString())));

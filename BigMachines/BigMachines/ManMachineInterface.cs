@@ -3,6 +3,7 @@
 using System;
 using System.Collections.Generic;
 using System.Runtime.CompilerServices;
+using System.Threading;
 using System.Threading.Tasks;
 using Tinyhand;
 
@@ -88,6 +89,17 @@ public abstract class ManMachineInterface<TIdentifier>
         }
 
         return null;
+    }
+
+    public bool SetTimeout(TimeSpan timeSpan)
+    {
+        if (this.Group.TryGetMachine(this.Identifier, out var machine))
+        {
+            Volatile.Write(ref machine.Timeout, timeSpan.Ticks);
+            return true;
+        }
+
+        return false;
     }
 
     /// <summary>
