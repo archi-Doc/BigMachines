@@ -10,13 +10,13 @@ using BigMachines;
 namespace Advanced
 {
     // Single Machine
-    [MachineObject(0xe5cff489, Group = typeof(MachineSingle<>))] // Change groups from MachineGroup<> to MachineSingle<>.
+    [MachineObject(0x2862ff37, Group = typeof(SingleGroup<>))] // Change groups from MachineGroup<> to SingleGroup<>.
     public partial class SingleMachine : Machine<int>
     {
         public static void Test(BigMachine<int> bigMachine)
         {
             bigMachine.CreateOrGet<SingleMachine.Interface>(0);
-            bigMachine.CreateOrGet<SingleMachine.Interface>(1); // Only one machine is created since SingleMachine belongs to MachineSingle<> group.
+            bigMachine.CreateOrGet<SingleMachine.Interface>(1); // Only one machine is created since SingleMachine belongs to SingleGroup<> group.
         }
 
         public SingleMachine(BigMachine<int> bigMachine)

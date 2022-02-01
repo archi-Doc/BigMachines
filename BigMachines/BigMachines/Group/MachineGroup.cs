@@ -11,6 +11,10 @@ using System.Threading.Tasks;
 
 namespace BigMachines
 {
+    /// <summary>
+    /// <see cref="MachineGroup{TIdentifier}"/> is a standard machine group that uses <see cref="ConcurrentDictionary{TKey, TValue}"/>.
+    /// </summary>
+    /// <typeparam name="TIdentifier">he type of an identifier.</typeparam>
     public class MachineGroup<TIdentifier> : IMachineGroup<TIdentifier>
         where TIdentifier : notnull
     {
@@ -75,9 +79,9 @@ namespace BigMachines
 
         bool IMachineGroup<TIdentifier>.TryGetMachine(TIdentifier identifier, [MaybeNullWhen(false)] out Machine<TIdentifier> machine) => this.IdentificationToMachine.TryGetValue(identifier, out machine);
 
-        bool IMachineGroup<TIdentifier>.RemoveFromGroup(TIdentifier identifier)
+        bool IMachineGroup<TIdentifier>.RemoveFromGroup(Machine<TIdentifier> machine)
         {
-            if (this.IdentificationToMachine.TryRemove(identifier, out var machine))
+            if (this.IdentificationToMachine.TryRemove(new(machine.Identifier, machine)))
             {
                 return true;
             }

@@ -11,7 +11,7 @@ using BigMachines;
 namespace Sandbox;
 
 // Single Machine
-[MachineObject(0x48eb1f0f, Group = typeof(MachineSingle<>))] // Change groups from MachineGroup<> to MachineSingle<>.
+[MachineObject(0x48eb1f0f, Group = typeof(SingleGroup<>))] // Change groups from MachineGroup<> to MachineSingle<>.
 public partial class TerminatorMachine : Machine<int>
 {
     public TerminatorMachine(BigMachine<int> bigMachine)
@@ -34,7 +34,7 @@ public partial class TerminatorMachine : Machine<int>
             {
                 foreach (var y in x.GetIdentifiers())
                 {
-                    if (x.TryGet<ManMachineInterface<int>>(y)?.GetDefaultTimeout() is TimeSpan ts && ts > TimeSpan.Zero)
+                    if (x.TryGet<ManMachineInterface<int>>(y)?.IsActive() == true)
                     {
                         return StateResult.Continue;
                     }

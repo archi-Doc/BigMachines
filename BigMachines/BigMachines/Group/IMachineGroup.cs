@@ -89,7 +89,7 @@ public interface IMachineGroup<TIdentifier>
 
     internal void AddMachine(TIdentifier identifier, Machine<TIdentifier> machine);
 
-    internal bool RemoveFromGroup(TIdentifier identifier);
+    internal bool RemoveFromGroup(Machine<TIdentifier> machine);
 }
 
 public interface IMachineGroup<TIdentifier, TState, TCommand> : IMachineGroup<TIdentifier>
