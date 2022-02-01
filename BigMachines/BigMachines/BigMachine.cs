@@ -618,7 +618,7 @@ public partial class BigMachine<TIdentifier>
                 {// Omit continuous machines
                     continue;
                 }
-                else if (x.Info.GroupType == typeof(MachineQueued<>))
+                else if (x.Info.GroupType == typeof(QueueGroup<>))
                 {
                     canRun = x.GetMachines().All(a => a.RunType == RunType.NotRunning);
                 }
@@ -637,7 +637,7 @@ public partial class BigMachine<TIdentifier>
                     }
                     else if (canRun && (y.Timeout <= 0 || y.NextRun >= now) && y.RunType == RunType.NotRunning)
                     {// Screening
-                        if (x.Info.GroupType == typeof(MachineQueued<>))
+                        if (x.Info.GroupType == typeof(QueueGroup<>))
                         {
                             canRun = false;
                         }

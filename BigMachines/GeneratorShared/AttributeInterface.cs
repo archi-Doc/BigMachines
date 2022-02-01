@@ -30,7 +30,7 @@ namespace BigMachines
         public uint MachineTypeId { get; }
 
         /// <summary>
-        /// Gets or sets a machine group of the machine (e.g. <see cref="MachineGroup{TIdentifier}"/>(default), <see cref="MachineSingle{TIdentifier}"/>).
+        /// Gets or sets a machine group of the machine (e.g. <see cref="MachineGroup{TIdentifier}"/>(default), <see cref="SingleGroup{TIdentifier}"/>).
         /// </summary>
         public Type? Group { get; set; }
 

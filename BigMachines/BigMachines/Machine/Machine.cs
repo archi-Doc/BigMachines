@@ -451,12 +451,12 @@ RerunLoop:
     /// Set the timeout of the machine.<br/>
     /// The time decreases while the program is running, and the machine will run when it reaches zero.
     /// </summary>
-    /// <param name="timeSpan">The timeout.</param>
-    /// <param name="absoluteDateTime">Set true to specify the next execution time by adding the current time and timeout.</param>
-    protected void SetTimeout(TimeSpan timeSpan, bool absoluteDateTime = false)
+    /// <param name="timeout">The timeout.</param>
+    /// <param name="absoluteDateTime">Set <see langword="true"></see> to specify the next execution time by adding the current time and timeout.</param>
+    protected internal void SetTimeout(TimeSpan timeout, bool absoluteDateTime = false)
     {
         this.RequestRerun = false;
-        if (timeSpan.Ticks < 0)
+        if (timeout.Ticks < 0)
         {
             Volatile.Write(ref this.Timeout, long.MaxValue);
             this.NextRun = default;
@@ -465,11 +465,11 @@ RerunLoop:
 
         if (absoluteDateTime)
         {
-            this.NextRun = DateTime.UtcNow + timeSpan;
+            this.NextRun = DateTime.UtcNow + timeout;
         }
         else
         {
-            Volatile.Write(ref this.Timeout, timeSpan.Ticks);
+            Volatile.Write(ref this.Timeout, timeout.Ticks);
         }
     }
 
@@ -479,7 +479,7 @@ RerunLoop:
     /// </summary>
     /// <param name="timeSpan">The lifespan.</param>
     /// <param name="absoluteDateTime">Set true to specify the terminate time by adding the current time and lifespan.</param>
-    protected void SetLifespan(TimeSpan timeSpan, bool absoluteDateTime = false)
+    protected internal void SetLifespan(TimeSpan timeSpan, bool absoluteDateTime = false)
     {
         if (timeSpan.Ticks < 0)
         {
@@ -497,14 +497,6 @@ RerunLoop:
             Volatile.Write(ref this.Lifespan, timeSpan.Ticks);
         }
     }
-
-    /// <summary>
-    /// Set the timeout of the machine.<br/>
-    /// The time decreases while the program is running, and the machine will run when it reaches zero.
-    /// </summary>
-    /// <param name="seconds">The timeout in seconds.</param>
-    /// <param name="absoluteDateTime">Set true to specify the next execution time by adding the current time and timeout.</param>
-    protected void SetTimeout(double seconds, bool absoluteDateTime = false) => this.SetTimeout(TimeSpan.FromSeconds(seconds), absoluteDateTime);
 
     private static uint serialNumber;
 }

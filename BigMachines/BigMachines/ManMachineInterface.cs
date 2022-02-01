@@ -77,6 +77,35 @@ public abstract class ManMachineInterface<TIdentifier>
     }
 
     /// <summary>
+    /// Indicates whether the machine is running (in a Run method).
+    /// </summary>
+    /// <returns><see langword="true"/>: The machine is running (in a Run method).</returns>
+    public bool IsRunning()
+    {
+        if (this.Group.TryGetMachine(this.Identifier, out var machine))
+        {
+            return machine.RunType != RunType.NotRunning;
+        }
+
+        return false;
+    }
+
+    /// <summary>
+    /// Indicates whether the machine is active (in a Run method or waiting to execute).
+    /// </summary>
+    /// <returns><see langword="true"/>: The machine is active (in a Run method or waiting to execute).</returns>
+    public bool IsActive()
+    {
+        if (this.Group.TryGetMachine(this.Identifier, out var machine))
+        {
+            return machine.RunType != RunType.NotRunning ||
+                (machine.DefaultTimeout is TimeSpan ts && ts > TimeSpan.Zero);
+        }
+
+        return false;
+    }
+
+    /// <summary>
     /// Gets the default timeout of the machine.
     /// </summary>
     /// <returns>The default timeout of the machine.<br/>
@@ -89,6 +118,24 @@ public abstract class ManMachineInterface<TIdentifier>
         }
 
         return null;
+    }
+
+    /// <summary>
+    /// Set the timeout of the machine.<br/>
+    /// The time decreases while the program is running, and the machine will run when it reaches zero.
+    /// </summary>
+    /// <param name="timeout">The timeout.</param>
+    /// <param name="absoluteDateTime">Set <see langword="true"></see> to specify the next execution time by adding the current time and timeout.</param>
+    /// <returns><see langword="true"/>:  the timeout is successfully set.</returns>
+    public bool SetTimeout(TimeSpan timeout, bool absoluteDateTime = false)
+    {
+        if (this.Group.TryGetMachine(this.Identifier, out var machine))
+        {
+            machine.SetTimeout(timeout, absoluteDateTime);
+            return true;
+        }
+
+        return false;
     }
 
     public bool SetTimeout(TimeSpan timeSpan)

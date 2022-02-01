@@ -303,7 +303,7 @@ namespace Sandbox
     }
 
     [TinyhandObject(UseServiceProvider = true)]
-    [MachineObject(0x35, Group = typeof(MachineSingle<>))]
+    [MachineObject(0x35, Group = typeof(SingleGroup<>))]
     public partial class TestMachine : Machine<int>
     {
         /*public enum State

@@ -11,6 +11,10 @@ using System.Threading.Tasks;
 
 namespace BigMachines
 {
+    /// <summary>
+    /// <see cref="MachineGroup{TIdentifier}"/> is a standard machine group that uses <see cref="ConcurrentDictionary{TKey, TValue}"/>.
+    /// </summary>
+    /// <typeparam name="TIdentifier">he type of an identifier.</typeparam>
     public class MachineGroup<TIdentifier> : IMachineGroup<TIdentifier>
         where TIdentifier : notnull
     {

@@ -16,10 +16,10 @@ using System.Threading.Tasks;
 
 namespace BigMachines
 {
-    public class MachineSingle<TIdentifier> : IMachineGroup<TIdentifier>
+    public class SingleGroup<TIdentifier> : IMachineGroup<TIdentifier>
         where TIdentifier : notnull
     {
-        internal protected MachineSingle(BigMachine<TIdentifier> bigMachine)
+        internal protected SingleGroup(BigMachine<TIdentifier> bigMachine)
         {
             this.BigMachine = bigMachine;
             this.Info = default!; // Must call Assign()
@@ -27,7 +27,7 @@ namespace BigMachines
 
         public struct Enumerator2 : IEnumerable<TIdentifier>
         {
-            internal Enumerator2(MachineSingle<TIdentifier> group)
+            internal Enumerator2(SingleGroup<TIdentifier> group)
             {
                 this.group = group;
             }
@@ -43,14 +43,14 @@ namespace BigMachines
 
             IEnumerator IEnumerable.GetEnumerator() => this.GetEnumerator();
 
-            private MachineSingle<TIdentifier> group;
+            private SingleGroup<TIdentifier> group;
         }
 
         public IEnumerable<TIdentifier> GetIdentifiers() => new Enumerator2(this);
 
         public struct Enumerator : IEnumerable<Machine<TIdentifier>>
         {
-            internal Enumerator(MachineSingle<TIdentifier> group)
+            internal Enumerator(SingleGroup<TIdentifier> group)
             {
                 this.group = group;
             }
@@ -66,7 +66,7 @@ namespace BigMachines
 
             IEnumerator IEnumerable.GetEnumerator() => this.GetEnumerator();
 
-            private MachineSingle<TIdentifier> group;
+            private SingleGroup<TIdentifier> group;
         }
 
         IEnumerable<Machine<TIdentifier>> IMachineGroup<TIdentifier>.GetMachines() => new Enumerator(this);

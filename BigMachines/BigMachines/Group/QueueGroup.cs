@@ -14,7 +14,7 @@ using Arc.Collections;
 
 namespace BigMachines;
 
-public class MachineQueued<TIdentifier> : IMachineGroup<TIdentifier>
+public class QueueGroup<TIdentifier> : IMachineGroup<TIdentifier>
     where TIdentifier : notnull
 {
     private class Item
@@ -34,7 +34,7 @@ public class MachineQueued<TIdentifier> : IMachineGroup<TIdentifier>
         internal LinkedListNode<Item> Node = default!;
     }
 
-    internal protected MachineQueued(BigMachine<TIdentifier> bigMachine)
+    internal protected QueueGroup(BigMachine<TIdentifier> bigMachine)
     {
         this.BigMachine = bigMachine;
         this.Info = default!; // Must call Assign()
