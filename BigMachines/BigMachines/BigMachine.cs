@@ -237,7 +237,7 @@ public partial class BigMachine<TIdentifier>
         this.GetMachineGroup(typeof(TMachineInterface), out var group);
         if (group.TryGetMachine(identifier, out var machine))
         {// Found
-            group.RemoveFromGroup(identifier);
+            group.RemoveFromGroup(machine);
             machine.TaskRunAndTerminate();
             return true;
         }

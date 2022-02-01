@@ -144,11 +144,11 @@ public class MachineQueued<TIdentifier> : IMachineGroup<TIdentifier>
         return false;
     }
 
-    bool IMachineGroup<TIdentifier>.RemoveFromGroup(TIdentifier identifier)
+    bool IMachineGroup<TIdentifier>.RemoveFromGroup(Machine<TIdentifier> machine)
     {
         lock (this.identifierToItem)
         {
-            if (this.identifierToItem.Remove(identifier, out var item))
+            if (this.identifierToItem.TryGetValue(machine.Identifier, out var item) && item.Machine == machine)
             {// Remove
                 this.list.Remove(item.Node);
                 item.Clear();
@@ -171,7 +171,7 @@ public class MachineQueued<TIdentifier> : IMachineGroup<TIdentifier>
     {
         lock (this.identifierToItem)
         {
-            return this.identifierToItem.Keys.ToArray();
+            return this.list.Select(a => a.Machine.Identifier).ToArray();
         }
     }
 

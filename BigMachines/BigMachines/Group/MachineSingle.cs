@@ -172,10 +172,10 @@ namespace BigMachines
             }
         }
 
-        bool IMachineGroup<TIdentifier>.RemoveFromGroup(TIdentifier identifier)
+        bool IMachineGroup<TIdentifier>.RemoveFromGroup(Machine<TIdentifier> machine)
         {
             var m = Volatile.Read(ref this.machine1);
-            if (m != null && EqualityComparer<TIdentifier>.Default.Equals(m.Identifier, identifier))
+            if (m == machine)
             {
                 Volatile.Write(ref this.machine1, null);
                 return true;

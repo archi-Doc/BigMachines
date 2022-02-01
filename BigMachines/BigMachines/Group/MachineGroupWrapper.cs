@@ -52,7 +52,7 @@ public class MachineGroupWrapper<TIdentifier, TState, TCommand> : IMachineGroup<
 
     Machine<TIdentifier> IMachineGroup<TIdentifier>.GetOrAddMachine(TIdentifier identifier, Machine<TIdentifier> machine) => this.Group.GetOrAddMachine(identifier, machine);
 
-    bool IMachineGroup<TIdentifier>.RemoveFromGroup(TIdentifier identifier) => this.Group.RemoveFromGroup(identifier);
+    bool IMachineGroup<TIdentifier>.RemoveFromGroup(Machine<TIdentifier> machine) => this.Group.RemoveFromGroup(machine);
 
     bool IMachineGroup<TIdentifier>.TryGetMachine(TIdentifier identifier, [MaybeNullWhen(false)] out Machine<TIdentifier> machine) => this.Group.TryGetMachine(identifier, out machine);
 }

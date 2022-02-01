@@ -274,7 +274,7 @@ public abstract class Machine<TIdentifier>
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     internal void RemoveFromGroup()
     {
-        this.Group.RemoveFromGroup(this.Identifier);
+        this.Group.RemoveFromGroup(this);
         if (this.Info.Continuous)
         {
             this.BigMachine.Continuous.RemoveMachine(this);

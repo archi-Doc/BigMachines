@@ -10,7 +10,7 @@ using BigMachines;
 namespace Advanced
 {
     // Single Machine
-    [MachineObject(0xe5cff489, Group = typeof(MachineSingle<>))] // Change groups from MachineGroup<> to MachineSingle<>.
+    [MachineObject(0x2862ff37, Group = typeof(MachineSingle<>))] // Change groups from MachineGroup<> to MachineSingle<>.
     public partial class SingleMachine : Machine<int>
     {
         public static void Test(BigMachine<int> bigMachine)
