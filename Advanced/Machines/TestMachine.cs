@@ -19,6 +19,7 @@ public partial class TestMachine : Machine<int> // Inherit Machine<TIdentifier> 
     public static void Test(BigMachine<int> bigMachine)
     {
         bigMachine.CreateOrGet<TestMachine.Interface>(3);
+        bigMachine.CreateOrGet<TestMachine.Interface>(3);
         var testMachine = bigMachine.TryGet<TestMachine.Interface>(3); // Get the created machine.
 
         var testGroup = bigMachine.GetGroup<TestMachine.Interface>(); // Group is a collection of machines.
