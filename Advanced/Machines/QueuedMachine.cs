@@ -28,15 +28,20 @@ namespace Advanced
             : base(bigMachine)
         {
             this.DefaultTimeout = TimeSpan.FromSeconds(1);
-            this.SetLifespan(TimeSpan.FromSeconds(3));
         }
 
         public int Count { get; set; }
 
         [StateMethod(0)]
-        protected StateResult Initial(StateParameter parameter)
+        protected async Task<StateResult> Initial(StateParameter parameter)
         {
             Console.WriteLine($"Queued machine: ({this.Identifier.ToString()}) - {this.Count++}");
+            if (this.Count == 3)
+            {
+                return StateResult.Terminate;
+            }
+
+            await Task.Delay(1000);
             return StateResult.Continue;
         }
     }

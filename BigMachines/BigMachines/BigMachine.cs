@@ -610,11 +610,17 @@ public partial class BigMachine<TIdentifier>
                 elapsed = default;
             }
 
+            bool canRun;
             foreach (var x in this.groupArray)
             {
+                canRun = true;
                 if (x.Info.Continuous)
                 {// Omit continuous machines
                     continue;
+                }
+                else if (x.Info.GroupType == typeof(MachineQueued<>))
+                {
+                    canRun = x.GetMachines().All(a => a.RunType == RunType.NotRunning);
                 }
 
                 foreach (var y in x.GetMachines())
@@ -629,8 +635,13 @@ public partial class BigMachine<TIdentifier>
                     {// Terminate
                         y.TerminateAndRemoveFromGroup().Wait();
                     }
-                    else if ((y.Timeout <= 0 || y.NextRun >= now) && y.RunType == RunType.NotRunning)
+                    else if (canRun && (y.Timeout <= 0 || y.NextRun >= now) && y.RunType == RunType.NotRunning)
                     {// Screening
+                        if (x.Info.GroupType == typeof(MachineQueued<>))
+                        {
+                            canRun = false;
+                        }
+
                         Task.Run(() => // taskrun
                         {
                             try
