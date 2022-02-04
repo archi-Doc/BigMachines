@@ -711,7 +711,31 @@ public abstract class VisceralObjectBase<T> : IComparable<T>
         });
     }
 
-    public (string name, int count) GetClosedGenericName(string? argumentName)
+    public string[] GetSafeGenericNameList()
+    {
+        var list = new string[this.Generics_Arguments.Length];
+        for (var i = 0; i < this.Generics_Arguments.Length; i++)
+        {
+            list[i] = GetSafeGenericName(this.Generics_Arguments[i]);
+        }
+
+        return list;
+
+        static string GetSafeGenericName(T typeArgument)
+        {
+            if (typeArgument.symbol is ITypeParameterSymbol tps)
+            {
+                if (tps.HasValueTypeConstraint)
+                {
+                    return "int";
+                }
+            }
+
+            return "object";
+        }
+    }
+
+    public (string name, int count) GetClosedGenericName(string[]? argumentName)
     {// Namespace.Class<T, U>.Nested<X> -> Namespace.Class<argumentName, argumentName>.Nested<argumentName>
      // Count
         var n = 0;
@@ -737,7 +761,7 @@ public abstract class VisceralObjectBase<T> : IComparable<T>
         {
             sb.Append(".");
             sb.Append(array[i].SimpleName);
-            if (array[i].Generics_IsGeneric)
+            if (array[i].Generics_Arguments.Length > 0)
             {
                 var length = array[i].Generics_Arguments.Length;
                 sb.Append("<");
@@ -750,7 +774,7 @@ public abstract class VisceralObjectBase<T> : IComparable<T>
                             sb.Append(", ");
                         }
 
-                        sb.Append(argumentName);
+                        sb.Append(argumentName[n]);
                     }
                 }
                 else
