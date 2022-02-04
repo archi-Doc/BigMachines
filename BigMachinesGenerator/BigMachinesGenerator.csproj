@@ -5,6 +5,7 @@
     <GenerateDocumentationFile>true</GenerateDocumentationFile>
     <IncludeSymbols>false</IncludeSymbols>
     <IsRoslynComponent>true</IsRoslynComponent>
+    <DevelopmentDependency>true</DevelopmentDependency>
   </PropertyGroup>
 
   <PropertyGroup>
@@ -35,8 +36,14 @@
     </ItemGroup>
   </Target>
 
+  <Target Name="PackBuildOutputs" DependsOnTargets="SatelliteDllsProjectOutputGroup;DebugSymbolsProjectOutputGroup">
+    <ItemGroup>
+      <TfmSpecificPackageFile Include="$(PKGArc_Visceral)\lib\netstandard2.0\Arc.Visceral.dll" PackagePath="analyzers\dotnet\cs" />
+    </ItemGroup>
+  </Target>
+
   <ItemGroup>
-    <PackageReference Include="Arc.Visceral" Version="0.1.0" GeneratePathProperty="true" PrivateAssets="all" />
+    <PackageReference Include="Arc.Visceral" Version="0.1.0" GeneratePathProperty="true" />
     <PackageReference Include="Microsoft.CodeAnalysis.CSharp" Version="4.0.1" PrivateAssets="all" />
     <PackageReference Include="Microsoft.CodeAnalysis.Analyzers" Version="3.3.3" PrivateAssets="all" />
     <PackageReference Include="StyleCop.Analyzers" Version="1.1.118">
