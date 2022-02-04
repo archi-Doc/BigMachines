@@ -18,10 +18,6 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <None Remove="bin\Release\netstandard2.0\\BigMachinesGenerator.dll" />
-  </ItemGroup>
-
-  <ItemGroup>
     <None Include="$(OutputPath)\$(AssemblyName).dll" Pack="true" PackagePath="analyzers/dotnet/cs" Visible="false" />
   </ItemGroup>
 
@@ -29,7 +25,18 @@
     <AdditionalFiles Include="..\stylecop.json" Link="stylecop.json" />
   </ItemGroup>
 
+  <PropertyGroup>
+    <GetTargetPathDependsOn>$(GetTargetPathDependsOn);GetDependencyTargetPaths</GetTargetPathDependsOn>
+  </PropertyGroup>
+
+  <Target Name="GetDependencyTargetPaths">
+    <ItemGroup>
+      <TargetPathWithTargetPlatformMoniker Include="$(PKGArc_Visceral)\lib\netstandard2.0\Arc.Visceral.dll" IncludeRuntimeDependency="false" />
+    </ItemGroup>
+  </Target>
+
   <ItemGroup>
+    <PackageReference Include="Arc.Visceral" Version="0.1.0" GeneratePathProperty="true" PrivateAssets="all" />
     <PackageReference Include="Microsoft.CodeAnalysis.CSharp" Version="4.0.1" PrivateAssets="all" />
     <PackageReference Include="Microsoft.CodeAnalysis.Analyzers" Version="3.3.3" PrivateAssets="all" />
     <PackageReference Include="StyleCop.Analyzers" Version="1.1.118">
