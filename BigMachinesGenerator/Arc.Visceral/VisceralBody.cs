@@ -107,10 +107,14 @@ public class VisceralBody<T>
             return result;
         }
 
+        var addFullName = symbol is not ITypeParameterSymbol;
         var fullName = this.SymbolToFullName(symbol);
-        if (this.TryGet(fullName, out var result2))
-        {// Search full name.
-            return result2;
+        if (addFullName)
+        {
+            if (this.TryGet(fullName, out var result2))
+            {// Search full name.
+                return result2;
+            }
         }
 
         var t = new T();
@@ -122,7 +126,10 @@ public class VisceralBody<T>
         if (t.Kind.IsType())
         {
             this.SymbolToObject.Add(symbol, t);
-            this.FullNameToObject.Add(fullName, t);
+            if (addFullName)
+            {
+                this.FullNameToObject.Add(fullName, t);
+            }
         }
 
         return t;
