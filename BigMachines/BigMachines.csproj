@@ -25,8 +25,8 @@
 
   <ItemGroup>
     <PackageReference Include="Arc.Collections" Version="1.0.2" />
-    <PackageReference Include="Arc.Threading" Version="0.10.0" />
-    <PackageReference Include="Tinyhand" Version="0.26.0" />
+    <PackageReference Include="Arc.Threading" Version="0.11.1" />
+    <PackageReference Include="Tinyhand" Version="0.26.3" />
     <PackageReference Include="StyleCop.Analyzers" Version="1.1.118">
       <PrivateAssets>all</PrivateAssets>
       <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
