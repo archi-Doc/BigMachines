@@ -16,6 +16,38 @@ namespace Arc.Visceral;
 
 public static class VisceralHelper
 {
+    public static IEnumerable<TSource> MinBy<TSource, TValue>(this IEnumerable<TSource> source, Func<TSource, TValue> selector)
+    {
+        return SelectBy(source, selector, (a, b) => Comparer<TValue>.Default.Compare(a, b) < 0);
+    }
+
+    public static IEnumerable<TSource> MaxBy<TSource, TValue>(this IEnumerable<TSource> source, Func<TSource, TValue> selector)
+    {
+        return SelectBy(source, selector, (a, b) => Comparer<TValue>.Default.Compare(a, b) > 0);
+    }
+
+    private static IEnumerable<TSource> SelectBy<TSource, TValue>(IEnumerable<TSource> source, Func<TSource, TValue> selector, Func<TValue, TValue, bool> comparer)
+    {
+        var list = new LinkedList<TSource>();
+        TValue prevKey = default!;
+        foreach (var item in source)
+        {
+            var key = selector(item);
+            if (list.Count == 0 || comparer(key, prevKey))
+            {
+                list.Clear();
+                list.AddLast(item);
+                prevKey = key;
+            }
+            else if (Comparer<TValue>.Default.Compare(key, prevKey) == 0)
+            {
+                list.AddLast(item);
+            }
+        }
+
+        return list;
+    }
+
     public static bool IsValidIdentifier(string identifier)
     {
         var span = identifier.AsSpan();
