@@ -14,7 +14,7 @@ namespace BigMachines;
 /// To achieve lock-free operation, you need to use <see cref="ManMachineInterface{TIdentifier, TState, TCommand}"/> instead of using machines directly.
 /// </summary>
 /// <typeparam name="TIdentifier">The type of an identifier.</typeparam>
-public abstract class ManMachineInterface<TIdentifier>
+public abstract class ManMachineInterface<TIdentifier> // MANMACHINE INTERFACE by Shirow.
     where TIdentifier : notnull
 {
     /// <summary>
