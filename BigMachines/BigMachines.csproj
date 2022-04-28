@@ -25,9 +25,9 @@
 
   <ItemGroup>
     <PackageReference Include="Arc.Visceral" Version="0.1.0" GeneratePathProperty="true" PrivateAssets="all" />
-    <PackageReference Include="Arc.Collections" Version="1.0.2" />
-    <PackageReference Include="Arc.Threading" Version="0.11.1" />
-    <PackageReference Include="Tinyhand" Version="0.27.1" />
+    <PackageReference Include="Arc.Collections" Version="1.0.3" />
+    <PackageReference Include="Arc.Threading" Version="0.12.3" />
+    <PackageReference Include="Tinyhand" Version="0.28.4" />
     <PackageReference Include="StyleCop.Analyzers" Version="1.1.118">
       <PrivateAssets>all</PrivateAssets>
       <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
