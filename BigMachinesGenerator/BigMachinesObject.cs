@@ -741,7 +741,7 @@ ModuleInitializerClass_Added:
                     using (var scopeIf = ssb.ScopeBrace($"{prefix} (command.Data == {method.Id})"))
                     {
                         ScopingStringBuilder.IScope? scopeTry = null;
-                        if (!method.WithoutLock)
+                        if (method.WithLock)
                         {
                             scopeTry = ssb.ScopeBrace("try");
                             ssb.AppendLine("await this.LockMachineAsync().ConfigureAwait(false);");

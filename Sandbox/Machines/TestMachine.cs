@@ -382,7 +382,7 @@ namespace Sandbox
 
         protected bool FirstCanEnter() => true;
 
-        [CommandMethod(33, WithoutLock = false)]
+        [CommandMethod(33, WithLock = true)]
         protected void GetInfo(CommandPost<int>.Command command)
         {// void, Task
             if (command.Message is int n)
@@ -391,7 +391,7 @@ namespace Sandbox
             }
         }
 
-        [CommandMethod(3, WithoutLock = true)]
+        [CommandMethod(3, WithLock = false)]
         protected async Task GetInfo2(CommandPost<int>.Command command)
         {// void, Task
             if (command.Message is int n)

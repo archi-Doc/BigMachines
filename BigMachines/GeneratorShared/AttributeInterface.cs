@@ -43,9 +43,11 @@ namespace BigMachines
 #pragma warning disable SA1629
     /// <summary>
     /// Adds the target method to the state machine.<br/>
-    /// The format of a method must be: <br/>
-    /// <see langword="protected"/> <see cref="StateResult"/> SampleState(<see cref="StateParameter"/> parameter)<br/>
-    /// { <see langword="return"/> <see cref="StateResult.Continue"/>; }
+    /// The format of the method is as follows: <br/><br/>
+    /// <see langword="protected"/> <see cref="StateResult"/> ExampleState(<see cref="StateParameter"/> parameter)<br/>
+    ///  or<br/>
+    ///  <see langword="protected"/> <see langword="async"/> Task&lt;<see cref="StateResult"/>&gt; ExampleState(<see cref="StateParameter"/> parameter)<br/>
+    ///  => <see cref="StateResult.Continue"/>;
     /// </summary>
 #pragma warning restore SA1629
     [AttributeUsage(AttributeTargets.Method, AllowMultiple = false, Inherited = true)]
@@ -73,9 +75,11 @@ namespace BigMachines
 #pragma warning disable SA1629
     /// <summary>
     /// Adds a command method to the machine.<br/>
-    /// The format of a method must be: <br/>
-    /// <see langword="protected"/> <see cref="StateResult"/> SampleCommand(<see cref="StateParameter"/> parameter)<br/>
-    /// { <see langword="return"/> <see cref="StateResult.Continue"/>; }
+    /// The format of the method is as follows: <br/><br/>
+    /// <see langword="protected"/> <see langword="void"/> ExampleCommand(<see cref="CommandPost{TIdentifier}"/>.Command command)<br/>
+    /// or<br/>
+    /// <see langword="protected"/> <see langword="async"/> Task ExampleCommand(<see cref="CommandPost{TIdentifier}"/>.Command command)<br/>
+    /// => <see cref="StateResult.Continue"/>;
     /// </summary>
 #pragma warning restore SA1629
     [AttributeUsage(AttributeTargets.Method, AllowMultiple = false, Inherited = true)]
@@ -98,9 +102,9 @@ namespace BigMachines
         public uint Id { get; }
 
         /// <summary>
-        /// Gets or sets a value indicating whether the command method executes without locking the machine [the default is false].
+        /// Gets or sets a value indicating whether the command method executes with locking the machine [the default is <see langword="true"/>].
         /// </summary>
-        public bool WithoutLock { get; set; } = false;
+        public bool WithLock { get; set; } = true;
     }
 
     /// <summary>
