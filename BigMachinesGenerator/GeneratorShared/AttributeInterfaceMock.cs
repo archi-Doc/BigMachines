@@ -119,7 +119,7 @@ namespace BigMachines.Generator
 
         public uint Id { get; set; }
 
-        public bool WithoutLock { get; set; }
+        public bool WithLock { get; set; } = true;
 
         public static CommandMethodAttributeMock FromArray(object?[] constructorArguments, KeyValuePair<string, object?>[] namedArguments)
         {
@@ -132,10 +132,10 @@ namespace BigMachines.Generator
                 attribute.Id = (uint)val;
             }
 
-            val = AttributeHelper.GetValue(-1, nameof(WithoutLock), constructorArguments, namedArguments);
+            val = AttributeHelper.GetValue(-1, nameof(WithLock), constructorArguments, namedArguments);
             if (val != null)
             {
-                attribute.WithoutLock = (bool)val;
+                attribute.WithLock = (bool)val;
             }
 
             return attribute;

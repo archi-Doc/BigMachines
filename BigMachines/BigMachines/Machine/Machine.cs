@@ -226,8 +226,8 @@ public abstract class Machine<TIdentifier>
         {
             if (command.LoopChecker is { } checker)
             {
-                const uint SerialIdMask = ~(1u << 31);
-                var id = (run << 63) | (ulong)(this.SerialNumber & SerialIdMask) << 32 | this.TypeId; // Not a perfect solution, though it works in most cases.
+                const uint SerialNumberMask = ~(1u << 31);
+                var id = (run << 63) | (ulong)(this.SerialNumber & SerialNumberMask) << 32 | this.TypeId; // Not a perfect solution, though it works in most cases.
                 if (checker.FindId(id))
                 {
                     if (this.BigMachine.LoopCheckerMode != LoopCheckerMode.EnabledAndThrowException)

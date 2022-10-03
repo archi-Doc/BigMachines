@@ -69,7 +69,7 @@ namespace BigMachines.Generator
             commandMethod.Name = method.SimpleName;
             commandMethod.Id = methodAttribute.Id;
             commandMethod.ReturnTask = returnTask;
-            commandMethod.WithoutLock = methodAttribute.WithoutLock;
+            commandMethod.WithLock = methodAttribute.WithLock;
 
             return commandMethod;
         }
@@ -84,6 +84,6 @@ namespace BigMachines.Generator
 
         public bool ReturnTask { get; internal set; }
 
-        public bool WithoutLock { get; internal set; }
+        public bool WithLock { get; internal set; }
     }
 }
