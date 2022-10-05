@@ -20,13 +20,16 @@ public partial class PassiveMachine : Machine<int>
 
         await m.RunAsync(); // Manually run the machine.
 
-        await m.ChangeStateAsync(State.First); // Change the state from State.Initial to State.First
+        var result = await m.ChangeStateAsync(State.First); // Change the state from State.Initial to State.First
+        Console.WriteLine(result.ToString());
         await m.RunAsync(); // Manually run the machine.
 
-        await m.ChangeStateAsync(State.Second); // Change the state from State.First to State.Second (denied)
+        result = await m.ChangeStateAsync(State.Second); // Change the state from State.First to State.Second (denied)
+        Console.WriteLine(result.ToString());
         await m.RunAsync(); // Manually run the machine.
 
-        await m.ChangeStateAsync(State.Second); // Change the state from State.First to State.Second (approved)
+        result = await m.ChangeStateAsync(State.Second); // Change the state from State.First to State.Second (approved)
+        Console.WriteLine(result.ToString());
         await m.RunAsync(); // Manually run the machine.
     }
 

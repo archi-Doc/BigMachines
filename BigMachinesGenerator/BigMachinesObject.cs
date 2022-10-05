@@ -778,11 +778,11 @@ ModuleInitializerClass_Added:
                 return;
             }
 
-            using (var scope = ssb.ScopeBrace($"protected override bool {BigMachinesBody.InternalChangeState}(int state)"))
+            using (var scope = ssb.ScopeBrace($"protected override ChangeStateResult {BigMachinesBody.InternalChangeState}(int state)"))
             {
                 using (var scopeElse = ssb.ScopeBrace("if (this.CurrentState == state)"))
                 {
-                    ssb.AppendLine("return true;");
+                    ssb.AppendLine("return ChangeStateResult.Success;");
                 }
 
                 ssb.AppendLine();
@@ -824,20 +824,25 @@ ModuleInitializerClass_Added:
                 ssb.AppendLine("};");
                 ssb.AppendLine();
 
-                using (var scope2 = ssb.ScopeBrace("if (canExit && canEnter)"))
+                using (var scope2 = ssb.ScopeBrace("if (!canExit)"))
                 {
-                    ssb.AppendLine($"this.CurrentState = state;");
-                    ssb.AppendLine("return true;");
+                    ssb.AppendLine("return ChangeStateResult.UnableToExit;");
+                }
+
+                using (var scope2 = ssb.ScopeBrace("else if (!canEnter)"))
+                {
+                    ssb.AppendLine("return ChangeStateResult.UnableToEnter;");
                 }
 
                 using (var scope2 = ssb.ScopeBrace("else"))
                 {
-                    ssb.AppendLine("return false;");
+                    ssb.AppendLine($"this.CurrentState = state;");
+                    ssb.AppendLine("return ChangeStateResult.Success;");
                 }
             }
 
             ssb.AppendLine();
-            ssb.AppendLine($"protected bool ChangeState({this.StateName} state, bool rerun = true) => this.{BigMachinesBody.InternalChangeState}(Unsafe.As<{this.StateName}, int>(ref state));");
+            ssb.AppendLine($"protected ChangeStateResult ChangeState({this.StateName} state, bool rerun = true) => this.{BigMachinesBody.InternalChangeState}(Unsafe.As<{this.StateName}, int>(ref state));");
             ssb.AppendLine();
             ssb.AppendLine($"protected {this.NewIfDerived}{this.StateName} GetCurrentState() => Unsafe.As<int, {this.StateName}>(ref this.CurrentState);");
             ssb.AppendLine();

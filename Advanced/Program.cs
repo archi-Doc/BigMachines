@@ -67,8 +67,8 @@ public class Program
 
         TerminatorMachine<int>.Start(bigMachine, 0); // This machine will stop the app thread if there is no working machine.
 
-        TestMachine.Test(bigMachine);
-        // await PassiveMachine.Test(bigMachine);
+        // TestMachine.Test(bigMachine);
+        await PassiveMachine.Test(bigMachine);
         // IntermittentMachine.Test(bigMachine);
         // ContinuousMachine.Test(bigMachine);
 

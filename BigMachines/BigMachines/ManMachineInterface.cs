@@ -214,10 +214,10 @@ public abstract class ManMachineInterface<TIdentifier, TState, TCommand> : ManMa
     /// </summary>
     /// <param name="state">The next machine state.</param>
     /// <returns><see langword="true"/> if the state is successfully changed.</returns>
-    public Task<bool> ChangeStateAsync(TState state)
+    public Task<ChangeStateResult> ChangeStateAsync(TState state)
     {
         var i = Unsafe.As<TState, int>(ref state);
-        return this.BigMachine.CommandPost.SendAndReceiveAsync<bool>(this.Group, CommandPost<TIdentifier>.CommandType.ChangeState, this.Identifier, i);
+        return this.BigMachine.CommandPost.SendAndReceiveAsync<ChangeStateResult>(this.Group, CommandPost<TIdentifier>.CommandType.ChangeState, this.Identifier, i);
     }
 
     public Task CommandAsync<TMessage>(TCommand command, TMessage message)
