@@ -185,7 +185,7 @@ public abstract class Machine<TIdentifier>
         {// ChangeState
             if (this.Status == MachineStatus.Terminated)
             {// Terminated
-                command.Response = false;
+                command.Response = ChangeStateResult.Terminated;
             }
             else
             {
@@ -379,7 +379,7 @@ public abstract class Machine<TIdentifier>
     /// </summary>
     /// <param name="state">The next state.</param>
     /// <returns><see langword="true"/>: State changed. <see langword="false"/>: Not changed (same state or denied). </returns>
-    protected internal virtual bool InternalChangeState(int state) => false;
+    protected internal virtual ChangeStateResult InternalChangeState(int state) => ChangeStateResult.Terminated;
 
     /// <summary>
     /// Generated method which is called when processing a command.
