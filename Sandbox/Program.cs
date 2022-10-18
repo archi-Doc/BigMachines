@@ -1,11 +1,11 @@
 ﻿using System;
 using System.IO;
 using System.Linq;
-using System.Threading;
 using System.Threading.Tasks;
 using Arc.Threading;
+using Arc.Unit;
 using BigMachines;
-using DryIoc;
+using Microsoft.Extensions.DependencyInjection;
 using Tinyhand;
 
 namespace Sandbox
@@ -45,12 +45,17 @@ namespace Sandbox
             // GenericMachine<int>.RegisterBM(102);
             // MachineLoader.Add(typeof(TestMachineLoader<>));
 
-            var container = new Container();
-            container.RegisterDelegate<BigMachine<int>>(x => new BigMachine<int>(container), Reuse.Singleton);
-            container.Register<TestMachine>(Reuse.Singleton);
-            // container.Register<Sandbox.ParentClassT<>.NestedMachineT>(Reuse.Singleton);
-            container.Register(typeof(Sandbox.ParentClassT<>.NestedMachineT));
-            var bigMachine = container.Resolve<BigMachine<int>>();
+            var builder = new UnitBuilder()
+                .Configure(context =>
+                {
+                    BigMachine<int>.Configure(context);
+
+                    context.AddTransient<TestMachine>();
+                    context.AddTransient(typeof(Sandbox.ParentClassT<>.NestedMachineT));
+                });
+
+            var unit = builder.Build();
+            var bigMachine = unit.Context.ServiceProvider.GetRequiredService<BigMachine<int>>();
 
             Console.WriteLine("BigMachines Sandbox");
             // var bigMachine = new BigMachine<int>(ThreadCore.Root);
