@@ -106,6 +106,20 @@ public abstract class ManMachineInterface<TIdentifier> // MANMACHINE INTERFACE b
     }
 
     /// <summary>
+    /// Indicates whether the machine is terminated.
+    /// </summary>
+    /// <returns><see langword="true"/>: The machine is terminated.</returns>
+    public bool IsTerminated()
+    {
+        if (this.Group.TryGetMachine(this.Identifier, out var machine))
+        {
+            return machine.Status == MachineStatus.Terminated;
+        }
+
+        return true;
+    }
+
+    /// <summary>
     /// Gets the default timeout of the machine.
     /// </summary>
     /// <returns>The default timeout of the machine.<br/>
