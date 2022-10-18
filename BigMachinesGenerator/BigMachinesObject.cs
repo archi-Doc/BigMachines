@@ -778,7 +778,7 @@ ModuleInitializerClass_Added:
                 return;
             }
 
-            using (var scope = ssb.ScopeBrace($"protected override ChangeStateResult {BigMachinesBody.InternalChangeState}(int state)"))
+            using (var scope = ssb.ScopeBrace($"protected override ChangeStateResult {BigMachinesBody.InternalChangeState}(int state, bool rerun)"))
             {
                 using (var scopeElse = ssb.ScopeBrace("if (this.CurrentState == state)"))
                 {
@@ -837,12 +837,18 @@ ModuleInitializerClass_Added:
                 using (var scope2 = ssb.ScopeBrace("else"))
                 {
                     ssb.AppendLine($"this.CurrentState = state;");
+                    using (var scope3 = ssb.ScopeBrace("if (rerun)"))
+                    {
+                        ssb.AppendLine($"this.RequestRerun = true;");
+                    }
+
+                    ssb.AppendLine();
                     ssb.AppendLine("return ChangeStateResult.Success;");
                 }
             }
 
             ssb.AppendLine();
-            ssb.AppendLine($"protected ChangeStateResult ChangeState({this.StateName} state, bool rerun = true) => this.{BigMachinesBody.InternalChangeState}(Unsafe.As<{this.StateName}, int>(ref state));");
+            ssb.AppendLine($"protected ChangeStateResult ChangeState({this.StateName} state, bool rerun = false) => this.{BigMachinesBody.InternalChangeState}(Unsafe.As<{this.StateName}, int>(ref state), rerun);");
             ssb.AppendLine();
             ssb.AppendLine($"protected {this.NewIfDerived}{this.StateName} GetCurrentState() => Unsafe.As<int, {this.StateName}>(ref this.CurrentState);");
             ssb.AppendLine();
