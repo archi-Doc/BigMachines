@@ -192,7 +192,7 @@ public abstract class Machine<TIdentifier>
                 try
                 {
                     await this.LockMachineAsync().ConfigureAwait(false);
-                    command.Response = this.InternalChangeState(command.Data);
+                    command.Response = this.InternalChangeState(command.Data, false);
                 }
                 finally
                 {
@@ -378,8 +378,9 @@ public abstract class Machine<TIdentifier>
     /// Generated method which is called when the state changes.
     /// </summary>
     /// <param name="state">The next state.</param>
+    /// <param name="rerun">If <see langword="true"/>, the machine wll rerun if the Machine state is changed.</param>
     /// <returns><see langword="true"/>: State changed. <see langword="false"/>: Not changed (same state or denied). </returns>
-    protected internal virtual ChangeStateResult InternalChangeState(int state) => ChangeStateResult.Terminated;
+    protected internal virtual ChangeStateResult InternalChangeState(int state, bool rerun) => ChangeStateResult.Terminated;
 
     /// <summary>
     /// Generated method which is called when processing a command.
