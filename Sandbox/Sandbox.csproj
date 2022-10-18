@@ -7,10 +7,6 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <PackageReference Include="DryIoc.dll" Version="5.0.1" />
-  </ItemGroup>
-
-  <ItemGroup>
     <ProjectReference Include="..\BigMachinesGenerator\BigMachinesGenerator.csproj" ReferenceOutputAssembly="false" OutputItemType="Analyzer" />
     <ProjectReference Include="..\BigMachines\BigMachines.csproj" />
   </ItemGroup>

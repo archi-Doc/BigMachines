@@ -10,6 +10,7 @@ using System.Runtime.CompilerServices;
 using System.Threading;
 using System.Threading.Tasks;
 using Arc.Threading;
+using Arc.Unit;
 using BigMachines.Internal;
 using Tinyhand;
 
@@ -54,6 +55,11 @@ public partial class BigMachine<TIdentifier>
         }
     }
 
+    public static void Configure(IUnitConfigurationContext context)
+    {
+        context.TryAddSingleton<BigMachine<TIdentifier>>();
+    }
+
     /// <summary>
     /// Initializes a new instance of the <see cref="BigMachine{TIdentifier}"/> class.
     /// </summary>
@@ -91,6 +97,40 @@ public partial class BigMachine<TIdentifier>
                 throw new InvalidOperationException($"Machine: {x.Info.MachineType} is already registered.");
             }
         }
+    }
+
+    /// <summary>
+    /// Determines whether there is a working machine.
+    /// </summary>
+    /// <returns><see langword="true"/>: Working machines exist.<br/>
+    /// <see langword="false"/>: No working machine.</returns>
+    public bool IsActive()
+    {
+        foreach (var x in this.GetGroups())
+        {
+            if (x.Count > 0)
+            {
+                foreach (var y in x.GetIdentifiers())
+                {
+                    if (x.TryGet<ManMachineInterface<TIdentifier>>(y)?.IsActive() == true)
+                    {
+                        return true;
+                    }
+                }
+            }
+        }
+
+        if (this.Continuous.GetInfo(true).Length > 0)
+        {// Continuous machines.
+            return true;
+        }
+
+        if (this.GetExceptionCount() > 0)
+        {// Remaining exceptions.
+            return true;
+        }
+
+        return false;
     }
 
     /// <summary>
