@@ -36,41 +36,32 @@ public partial class LoopMachine : Machine<int>
     }
 
     [CommandMethod(0)]
-    protected void RelayInt(CommandPost<int>.Command command)
-    {
-        if (command.Message is int n)
-        {// LoopMachine
-            Console.WriteLine($"RelayInt: {n}");
-            this.BigMachine.TryGet<Interface>(this.Identifier)?.CommandAsync(Command.RelayInt, n);
-        }
+    protected void RelayInt(int n)
+    {// LoopMachine
+        Console.WriteLine($"RelayInt: {n}");
+        this.BigMachine.TryGet<Interface>(this.Identifier)?.CommandAsync(Command.RelayInt, n);
     }
 
     [CommandMethod(1)]
-    protected void RelayString(CommandPost<int>.Command command)
-    {
-        if (command.Message is string st)
-        {// LoopMachine -> TestMachine
-            Console.WriteLine($"RelayString: {st}");
-            this.BigMachine.TryGet<TestMachine.Interface>(3)?.CommandAsync(TestMachine.Command.RelayString, st);
-        }
+    protected void RelayString(string st)
+    {// LoopMachine -> TestMachine
+        Console.WriteLine($"RelayString: {st}");
+        this.BigMachine.TryGet<TestMachine.Interface>(3)?.CommandAsync(TestMachine.Command.RelayString, st);
     }
 
     [CommandMethod(2)]
-    protected void RelayInt2(CommandPost<int>.Command command)
-    {
-        if (command.Message is int n)
-        {// LoopMachine -> LoopMachine n
-            if (this.Identifier == 0)
-            {
-                Console.WriteLine($"RelayInt2: {n}");
-                this.BigMachine.TryGet<Interface>(n)?.CommandAsync(Command.RelayInt2, n);
-            }
-            else
-            {
-                n = 0;
-                Console.WriteLine($"RelayInt2: {n}");
-                this.BigMachine.TryGet<Interface>(n)?.CommandAsync(Command.RelayInt2, n);
-            }
+    protected void RelayInt2(int n)
+    {// LoopMachine -> LoopMachine n
+        if (this.Identifier == 0)
+        {
+            Console.WriteLine($"RelayInt2: {n}");
+            this.BigMachine.TryGet<Interface>(n)?.CommandAsync(Command.RelayInt2, n);
+        }
+        else
+        {
+            n = 0;
+            Console.WriteLine($"RelayInt2: {n}");
+            this.BigMachine.TryGet<Interface>(n)?.CommandAsync(Command.RelayInt2, n);
         }
     }
 }

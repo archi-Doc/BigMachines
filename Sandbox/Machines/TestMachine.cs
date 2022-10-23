@@ -137,12 +137,9 @@ namespace Sandbox
         }
 
         [CommandMethod(3)]
-        protected void GetInfo(CommandPost<TIdentifier>.Command command)
+        protected int GetInfo(int n)
         {// void, Task
-            if (command.Message is int n)
-            {
-                command.Response = 4;
-            }
+            return 4;
         }
     }
 
@@ -260,7 +257,7 @@ namespace Sandbox
             }
 
             [CommandMethod(0)]
-            protected async Task TestCommand(CommandPost<TIdentifier2>.Command command)
+            protected async Task TestCommand()
             {
             }
         }
@@ -383,21 +380,21 @@ namespace Sandbox
         protected bool FirstCanEnter() => true;
 
         [CommandMethod(33, WithLock = true)]
-        protected void GetInfo(CommandPost<int>.Command command)
+        protected int GetInfo(int n)
         {// void, Task
-            if (command.Message is int n)
-            {
-                command.Response = 4;
-            }
+            return 4;
         }
 
         [CommandMethod(3, WithLock = false)]
-        protected async Task GetInfo2(CommandPost<int>.Command command)
+        protected async Task<int> GetInfo2(int n)
         {// void, Task
-            if (command.Message is int n)
-            {
-                command.Response = 4;
-            }
+            return 4;
+        }
+
+        [CommandMethod(4)]
+        protected async Task<int> GetInfo4(int message)
+        {// void, Task
+            return message + 1;
         }
 
         /*protected override StateResult InternalRun(StateParameter parameter)

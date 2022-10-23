@@ -38,7 +38,7 @@ namespace Advanced
                 var machine = testGroup.TryGet<TestMachine.Interface>(x);
                 if (machine != null)
                 {
-                    var result = machine.CommandAndReceiveAsync<int, int>(TestMachine.Command.GetCount, 0).Result;
+                    var result = machine.CommandAndReceiveAsync<int>(TestMachine.Command.GetCount).Result;
                     Console.WriteLine($"Single: TestMachine found {x} - {result}");
                 }
             }

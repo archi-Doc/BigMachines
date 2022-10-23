@@ -93,31 +93,45 @@ public partial class TestMachine : Machine<int> // Inherit Machine<TIdentifier> 
     }
 
     [CommandMethod(0)]
-    protected void GetCount(CommandPost<int>.Command command)
+    protected int GetCount(int n)
     {
-        if (command.Message is int n && n == 0)
+        if (n == 0)
         {
             // this.BigMachine.TryGet<TerminatorMachine<int>.Interface>(0)?.CommandAndReceiveAsync(TerminatorMachine<int>.Command)<int, int>(0);
-            command.Response = this.Count;
+            return this.Count;
         }
+
+        return 0;
     }
 
     [CommandMethod(1)]
-    protected void RelayString(CommandPost<int>.Command command)
-    {
-        if (command.Message is string st)
-        {// LoopMachine -> TestMachine -> LoopMachine
-            this.BigMachine.TryGet<LoopMachine.Interface>(0)?.CommandAsync(LoopMachine.Command.RelayString, st);
-        }
+    protected void RelayString(string st)
+    {// LoopMachine -> TestMachine -> LoopMachine
+        this.BigMachine.TryGet<LoopMachine.Interface>(0)?.CommandAsync(LoopMachine.Command.RelayString, st);
     }
 
     [CommandMethod(2)]
-    protected void PrintText(CommandPost<int>.Command command)
+    protected void PrintText(string text)
     {
-        if (command.Message is string text)
-        {
-            Console.WriteLine($"TestMachine {this.Identifier} PrintText : {text}");
-        }
+        Console.WriteLine($"TestMachine {this.Identifier} PrintText : {text}");
+    }
+
+    [CommandMethod(3)]
+    protected string TestCommand3(string text)
+    {
+        return text;
+    }
+
+    [CommandMethod(4)]
+    protected async Task<string> TestCommand4(string text)
+    {
+        return text;
+    }
+
+    [CommandMethod(5)]
+    protected async Task<string> TestCommand5()
+    {
+        return "text";
     }
 
     protected override void OnTerminated()

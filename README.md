@@ -83,12 +83,9 @@ public partial class TestMachine : Machine<int> // Inherit Machine<TIdentifier> 
     }
 
     [CommandMethod(1)] // Annotate CommandMethod attribute to a method which receives and processes commands.
-    protected void TestCommand(CommandPost<int>.Command command)
-    {// Command method is of the form 'void TestCommand(CommandPost<TIdentifier>.Command command)' or 'Task TestCommand(CommandPost<TIdentifier>.Command command)'.
-        if (command.Message is string message)
-        {
-            Console.WriteLine($"Command received: {message}");
-        }
+    protected void TestCommand(string message)
+    {
+        Console.WriteLine($"Command received: {message}");
     }
 
     protected override void OnTerminated()

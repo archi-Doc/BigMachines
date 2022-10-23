@@ -93,7 +93,7 @@ namespace BigMachines.Generator
             category: "BigMachinesGenerator", DiagnosticSeverity.Error, isEnabledByDefault: true);
 
         public static readonly DiagnosticDescriptor Error_MethodFormat2 = new DiagnosticDescriptor(
-            id: "BMG014", title: "Invalid method", messageFormat: "Command method must be in the format of `void {0}(CommandPost<{1}>.Command command)' or `Task {0}(CommandPost<{1}>.Command command)'",
+            id: "BMG014", title: "Invalid method", messageFormat: "Command method must be in the format of 'void Method()', 'Task Method()', 'TResponse Method()', 'Task<TResponse> Method()', 'void Method(TMessage)', 'Task Method(TMessage)', 'TResponse Method(TMessage)', 'Task<TResponse> Method(TMessage)'",
             category: "BigMachinesGenerator", DiagnosticSeverity.Error, isEnabledByDefault: true);
 
         public BigMachinesBody(GeneratorExecutionContext context)
