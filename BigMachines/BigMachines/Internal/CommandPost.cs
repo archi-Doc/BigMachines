@@ -184,7 +184,25 @@ public class CommandPost<TIdentifier>
         return this.commandDelegate(c, null);
     }
 
-    public Task SendGroupAsync<TMessage>(IMachineGroup<TIdentifier> group, CommandType commandType, IEnumerable<TIdentifier> identifiers, int data, TMessage message) => this.SendGroupsAsync(Enumerable.Repeat(group, identifiers.Count()), commandType, identifiers, data, message);
+    public Task SendGroupAsync(IMachineGroup<TIdentifier> group, CommandType commandType, IEnumerable<TIdentifier> identifiers, int data)
+        => this.SendGroupsAsync(Enumerable.Repeat(group, identifiers.Count()), commandType, identifiers, data);
+
+    public Task SendGroupsAsync(IEnumerable<IMachineGroup<TIdentifier>> groups, CommandType commandType, IEnumerable<TIdentifier> identifiers, int data)
+    {
+        var list = new List<Command>();
+        var g = groups.GetEnumerator();
+        var i = identifiers.GetEnumerator();
+        while (g.MoveNext() && i.MoveNext())
+        {
+            var c = new Command(this.BigMachine, g.Current, commandType, i.Current, data, null);
+            list.Add(c);
+        }
+
+        return this.commandDelegate(null, list);
+    }
+
+    public Task SendGroupAsync<TMessage>(IMachineGroup<TIdentifier> group, CommandType commandType, IEnumerable<TIdentifier> identifiers, int data, TMessage message)
+        => this.SendGroupsAsync(Enumerable.Repeat(group, identifiers.Count()), commandType, identifiers, data, message);
 
     public Task SendGroupsAsync<TMessage>(IEnumerable<IMachineGroup<TIdentifier>> groups, CommandType commandType, IEnumerable<TIdentifier> identifiers, int data, TMessage message)
     {
@@ -227,7 +245,42 @@ public class CommandPost<TIdentifier>
         return default;
     }
 
-    public Task<KeyValuePair<TIdentifier, TResponse?>[]> SendAndReceiveGroupAsync<TMessage, TResponse>(IMachineGroup<TIdentifier> group, CommandType commandType, IEnumerable<TIdentifier> identifiers, int data, TMessage message) => this.SendAndReceiveGroupsAsync<TMessage, TResponse>(Enumerable.Repeat(group, identifiers.Count()), commandType, identifiers, data, message);
+    public Task<KeyValuePair<TIdentifier, TResponse?>[]> SendAndReceiveGroupAsync<TResponse>(IMachineGroup<TIdentifier> group, CommandType commandType, IEnumerable<TIdentifier> identifiers, int data)
+        => this.SendAndReceiveGroupsAsync<TResponse>(Enumerable.Repeat(group, identifiers.Count()), commandType, identifiers, data);
+
+    public async Task<KeyValuePair<TIdentifier, TResponse?>[]> SendAndReceiveGroupsAsync<TResponse>(IEnumerable<IMachineGroup<TIdentifier>> groups, CommandType commandType, IEnumerable<TIdentifier> identifiers, int data)
+    {
+        var list = new List<Command>();
+        var g = groups.GetEnumerator();
+        var i = identifiers.GetEnumerator();
+        while (g.MoveNext() && i.MoveNext())
+        {
+            var c = new Command(this.BigMachine, g.Current, commandType, i.Current, data, null);
+            list.Add(c);
+        }
+
+        await this.commandDelegate(null, list).ConfigureAwait(false);
+
+        var array = new KeyValuePair<TIdentifier, TResponse?>[list.Count];
+        var n = 0;
+        foreach (var x in list)
+        {
+            if (x.Response is TResponse result)
+            {// Valid result
+                array[n++] = new(x.Identifier, result);
+            }
+        }
+
+        if (array.Length != n)
+        {
+            Array.Resize(ref array, n);
+        }
+
+        return array;
+    }
+
+    public Task<KeyValuePair<TIdentifier, TResponse?>[]> SendAndReceiveGroupAsync<TMessage, TResponse>(IMachineGroup<TIdentifier> group, CommandType commandType, IEnumerable<TIdentifier> identifiers, int data, TMessage message)
+        => this.SendAndReceiveGroupsAsync<TMessage, TResponse>(Enumerable.Repeat(group, identifiers.Count()), commandType, identifiers, data, message);
 
     public async Task<KeyValuePair<TIdentifier, TResponse?>[]> SendAndReceiveGroupsAsync<TMessage, TResponse>(IEnumerable<IMachineGroup<TIdentifier>> groups, CommandType commandType, IEnumerable<TIdentifier> identifiers, int data, TMessage message)
     {

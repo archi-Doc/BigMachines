@@ -234,10 +234,22 @@ public abstract class ManMachineInterface<TIdentifier, TState, TCommand> : ManMa
         return this.BigMachine.CommandPost.SendAndReceiveAsync<ChangeStateResult>(this.Group, CommandPost<TIdentifier>.CommandType.ChangeState, this.Identifier, i);
     }
 
+    public Task CommandAsync(TCommand command)
+    {
+        var data = Unsafe.As<TCommand, int>(ref command);
+        return this.BigMachine.CommandPost.SendAsync(this.Group, CommandPost<TIdentifier>.CommandType.Command, this.Identifier, data);
+    }
+
     public Task CommandAsync<TMessage>(TCommand command, TMessage message)
     {
         var data = Unsafe.As<TCommand, int>(ref command);
         return this.BigMachine.CommandPost.SendAsync<TMessage>(this.Group, CommandPost<TIdentifier>.CommandType.Command, this.Identifier, data, message);
+    }
+
+    public Task<TResponse?> CommandAndReceiveAsync<TResponse>(TCommand command)
+    {
+        var data = Unsafe.As<TCommand, int>(ref command);
+        return this.BigMachine.CommandPost.SendAndReceiveAsync<TResponse>(this.Group, CommandPost<TIdentifier>.CommandType.Command, this.Identifier, data);
     }
 
     public Task<TResponse?> CommandAndReceiveAsync<TMessage, TResponse>(TCommand command, TMessage message)
@@ -245,18 +257,4 @@ public abstract class ManMachineInterface<TIdentifier, TState, TCommand> : ManMa
         var data = Unsafe.As<TCommand, int>(ref command);
         return this.BigMachine.CommandPost.SendAndReceiveAsync<TMessage, TResponse>(this.Group, CommandPost<TIdentifier>.CommandType.Command, this.Identifier, data, message);
     }
-
-    // public new IMachineGroup<TIdentifier, TState, TCommand> Group { get; }
-
-    /*public Task CommandGroupAsync<TMessage>(TCommand command, TMessage message)
-    {
-        var data = Unsafe.As<TCommand, int>(ref command);
-        return this.BigMachine.CommandPost.SendGroupAsync<TMessage>(this.Group, CommandPost<TIdentifier>.CommandType.Command, this.Group.GetIdentifiers(), data, message);
-    }
-
-    public Task<KeyValuePair<TIdentifier, TResponse?>[]> CommandAndReceiveGroupAsync<TMessage, TResponse>(TCommand command, TMessage message)
-    {
-        var data = Unsafe.As<TCommand, int>(ref command);
-        return this.BigMachine.CommandPost.SendAndReceiveGroupAsync<TMessage, TResponse>(this.Group, CommandPost<TIdentifier>.CommandType.Command, this.Group.GetIdentifiers(), data, message);
-    }*/
 }

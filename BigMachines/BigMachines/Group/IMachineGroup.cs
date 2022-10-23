@@ -42,11 +42,11 @@ public interface IMachineGroup<TIdentifier>
     public Task<byte[]?> SerializeAsync(TinyhandSerializerOptions? options = null)
         => this.BigMachine.CommandPost.BatchGroupAsync<byte[]>(CommandPost<TIdentifier>.BatchCommandType.Serialize, this, options);
 
-    public Task<KeyValuePair<TIdentifier, TResponse?>[]> CommandAndReceiveAsync<TCommand, TMessage, TResponse>(TCommand command, TMessage message)
+    public Task CommandAsync<TCommand>(TCommand command)
         where TCommand : struct
     {
         var data = Unsafe.As<TCommand, int>(ref command);
-        return this.BigMachine.CommandPost.SendAndReceiveGroupAsync<TMessage, TResponse>(this, CommandPost<TIdentifier>.CommandType.Command, this.GetIdentifiers(), data, message);
+        return this.BigMachine.CommandPost.SendGroupAsync(this, CommandPost<TIdentifier>.CommandType.Command, this.GetIdentifiers(), data);
     }
 
     public Task CommandAsync<TCommand, TMessage>(TCommand command, TMessage message)
@@ -54,6 +54,20 @@ public interface IMachineGroup<TIdentifier>
     {
         var data = Unsafe.As<TCommand, int>(ref command);
         return this.BigMachine.CommandPost.SendGroupAsync<TMessage>(this, CommandPost<TIdentifier>.CommandType.Command, this.GetIdentifiers(), data, message);
+    }
+
+    public Task<KeyValuePair<TIdentifier, TResponse?>[]> CommandAndReceiveAsync<TCommand, TResponse>(TCommand command)
+        where TCommand : struct
+    {
+        var data = Unsafe.As<TCommand, int>(ref command);
+        return this.BigMachine.CommandPost.SendAndReceiveGroupAsync<TResponse>(this, CommandPost<TIdentifier>.CommandType.Command, this.GetIdentifiers(), data);
+    }
+
+    public Task<KeyValuePair<TIdentifier, TResponse?>[]> CommandAndReceiveAsync<TCommand, TMessage, TResponse>(TCommand command, TMessage message)
+        where TCommand : struct
+    {
+        var data = Unsafe.As<TCommand, int>(ref command);
+        return this.BigMachine.CommandPost.SendAndReceiveGroupAsync<TMessage, TResponse>(this, CommandPost<TIdentifier>.CommandType.Command, this.GetIdentifiers(), data, message);
     }
 
     /// <summary>
