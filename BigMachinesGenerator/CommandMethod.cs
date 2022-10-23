@@ -23,29 +23,44 @@ namespace BigMachines.Generator
                 return null;
             }
 
+            BigMachinesObject? responseObject = null;
+            string? messageFullName = null;
+
             var flag = false;
-            if (machine.IdentifierObject != null &&
-                method.Method_Parameters.Length == 1 &&
-                method.Method_Parameters[0] == string.Format(BigMachinesBody.CommandParameterFullName, machine.IdentifierObject.FullName))
-            {
+            if (method.Method_Parameters.Length == 0)
+            {// No message
+            }
+            else if (method.Method_Parameters.Length == 1)
+            {// TMessage
+                messageFullName = method.Method_Parameters[0];
             }
             else
             {// Invalid parameter
                 flag = true;
             }
 
-            var returnTypeName = method.Method_ReturnObject?.FullName;
+            var returnObject = method.Method_ReturnObject;
+            var returnTypeName = returnObject?.FullName;
             var returnTask = false;
             if (returnTypeName == "void")
-            {// void
+            {// void (Sync + no responce)
             }
             else if (returnTypeName == BigMachinesBody.TaskFullName)
-            {// Task
+            {// Task (Async + no responce)
                 returnTask = true;
             }
+            else if (returnObject?.Generics_Kind == VisceralGenericsKind.ClosedGeneric &&
+                returnObject.OriginalDefinition?.FullName == BigMachinesBody.TaskFullName2 &&
+                returnObject?.Generics_Arguments is { } args &&
+                args.Length == 1)
+            {// Task<TResponse> (Async + Response)
+                returnTask = true;
+                responseObject = args[0];
+            }
             else
-            {// Invalid return type
-                flag = true;
+            {// Other (Sync + Response)
+                returnTask = false;
+                responseObject = returnObject;
             }
 
             if (flag)
@@ -70,6 +85,8 @@ namespace BigMachines.Generator
             commandMethod.Id = methodAttribute.Id;
             commandMethod.ReturnTask = returnTask;
             commandMethod.WithLock = methodAttribute.WithLock;
+            commandMethod.ResponseObject = responseObject;
+            commandMethod.MessageFullName = messageFullName;
 
             return commandMethod;
         }
@@ -85,5 +102,9 @@ namespace BigMachines.Generator
         public bool ReturnTask { get; internal set; }
 
         public bool WithLock { get; internal set; }
+
+        public BigMachinesObject? ResponseObject { get; private set; }
+
+        public string? MessageFullName { get; private set; }
     }
 }

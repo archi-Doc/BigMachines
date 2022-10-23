@@ -737,8 +737,12 @@ ModuleInitializerClass_Added:
                 for (var i = 0; i < this.CommandMethodList.Count; i++)
                 {
                     var method = this.CommandMethodList[i];
+
+                    var messageVariable = method.MessageFullName == null ? string.Empty : $"message{i}";
+                    var messageCondition = method.MessageFullName == null ? string.Empty : $" && command.Message is {method.MessageFullName} {messageVariable}";
+
                     var prefix = i == 0 ? "if" : "else if";
-                    using (var scopeIf = ssb.ScopeBrace($"{prefix} (command.Data == {method.Id})"))
+                    using (var scopeIf = ssb.ScopeBrace($"{prefix} (command.Data == {method.Id}{messageCondition})"))
                     {
                         ScopingStringBuilder.IScope? scopeTry = null;
                         if (method.WithLock)
@@ -747,13 +751,14 @@ ModuleInitializerClass_Added:
                             ssb.AppendLine("await this.LockMachineAsync().ConfigureAwait(false);");
                         }
 
+                        var responseCode = method.ResponseObject == null ? string.Empty : $"command.Response = ";
                         if (method.ReturnTask == false)
                         {
-                            ssb.AppendLine($"this.{method.Name}(command);");
+                            ssb.AppendLine($"{responseCode}this.{method.Name}({messageVariable});");
                         }
                         else
                         {
-                            ssb.AppendLine($"await this.{method.Name}(command).ConfigureAwait(false);");
+                            ssb.AppendLine($"{responseCode}await this.{method.Name}({messageVariable}).ConfigureAwait(false);");
                         }
 
                         if (scopeTry != null)

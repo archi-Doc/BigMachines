@@ -75,11 +75,8 @@ public partial class PassiveMachine : Machine<int>
     }
 
     [CommandMethod(0)]
-    protected void ReceiveString(CommandPost<int>.Command command)
+    protected void ReceiveString(string message)
     {
-        if (command.Message is string message)
-        {
-            Console.WriteLine($"PassiveMachine command: {message}");
-        }
+        Console.WriteLine($"PassiveMachine command: {message}");
     }
 }
