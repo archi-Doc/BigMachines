@@ -1,7 +1,7 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
-    <TargetFramework>net6.0</TargetFramework>
+    <TargetFramework>net7.0</TargetFramework>
     <GenerateDocumentationFile>true</GenerateDocumentationFile>
   </PropertyGroup>
 
@@ -24,11 +24,11 @@
   </ItemGroup>
 
   <ItemGroup>
-    <PackageReference Include="Arc.Unit" Version="0.1.2" />
+    <PackageReference Include="Arc.Unit" Version="0.4.0" />
     <PackageReference Include="Arc.Visceral" Version="0.1.0" GeneratePathProperty="true" PrivateAssets="all" />
-    <PackageReference Include="Arc.Collections" Version="1.3.0" />
-    <PackageReference Include="Arc.Threading" Version="0.15.2" />
-    <PackageReference Include="Tinyhand" Version="0.38.0" />
+    <PackageReference Include="Arc.Collections" Version="1.4.0" />
+    <PackageReference Include="Arc.Threading" Version="0.16.0" />
+    <PackageReference Include="Tinyhand" Version="0.41.1" />
     <PackageReference Include="StyleCop.Analyzers" Version="1.1.118">
       <PrivateAssets>all</PrivateAssets>
       <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
