@@ -731,7 +731,7 @@ public partial class BigMachine<TIdentifier>
                     return;
                 }
 
-                if (machine.RunMachine(null, RunType.Timer, now, core.CancellationToken).Result == StateResult.Terminate)
+                if (machine.RunMachine(null, RunType.Timer, now).Result == StateResult.Terminate)
                 {
                     machine.Status = MachineStatus.Terminated;
                     machine.OnTerminated();
