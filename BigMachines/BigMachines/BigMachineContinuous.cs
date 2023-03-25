@@ -223,7 +223,7 @@ namespace BigMachines
         private List<Core> cores = new();
         private LinkedList<Item> items = new();
 
-        private (IMachineGroup<TIdentifier>[], TIdentifier[]) GetGroupsAndIdentifiers(bool running)
+        private (IMachineGroup<TIdentifier>[] Groups, TIdentifier[] Identifiers) GetGroupsAndIdentifiers(bool running)
         {
             lock (this.syncContinuous)
             {

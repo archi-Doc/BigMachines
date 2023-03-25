@@ -59,6 +59,12 @@ public class ScopingStringBuilder
         this.header.Add(header);
     }
 
+    public void AppendNamespace(string @namespace)
+    {
+        this.AppendLine($"namespace {@namespace};");
+        this.AppendLine();
+    }
+
     public IScope ScopeNamespace(string @namespace) => this.ScopeBrace($"namespace {@namespace}");
 
     public IScope ScopeBrace(string preface)

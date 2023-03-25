@@ -11,7 +11,6 @@ using System.Threading;
 using System.Threading.Tasks;
 using Arc.Threading;
 using Arc.Unit;
-using BigMachines.Internal;
 using Tinyhand;
 
 #pragma warning disable SA1009 // Closing parenthesis should be spaced correctly

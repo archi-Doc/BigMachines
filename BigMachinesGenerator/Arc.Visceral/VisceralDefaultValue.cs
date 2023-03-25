@@ -262,10 +262,36 @@ public static class VisceralDefaultValue
         }
         else if (obj is float f)
         {
+            if (float.IsNaN(f))
+            {
+                return "float.NaN";
+            }
+            else if (float.IsNaN(f))
+            {
+                return "float.PositiveInfinity";
+            }
+            else if (float.IsNaN(f))
+            {
+                return "float.NegativeInfinity";
+            }
+
             return f.ToString(CultureInfo.InvariantCulture) + "f";
         }
         else if (obj is double d)
         {
+            if (double.IsNaN(d))
+            {
+                return "double.NaN";
+            }
+            else if (double.IsPositiveInfinity(d))
+            {
+                return "double.PositiveInfinity";
+            }
+            else if (double.IsNegativeInfinity(d))
+            {
+                return "double.NegativeInfinity";
+            }
+
             return d.ToString(CultureInfo.InvariantCulture) + "d";
         }
         else if (obj is decimal d2)
