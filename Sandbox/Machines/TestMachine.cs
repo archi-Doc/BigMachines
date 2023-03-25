@@ -246,7 +246,7 @@ namespace Sandbox
                 this.DefaultTimeout = TimeSpan.FromSeconds(1);
             }
 
-            [Key(10)]
+            [Key(11)]
             public T Param { get; set; }
 
             [StateMethod(0)]

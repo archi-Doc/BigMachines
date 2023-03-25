@@ -169,7 +169,7 @@ public static class VisceralHelper
         _ => string.Empty,
     };
 
-    public static (string property, string getter, string setter) GetterSetterAccessibilityToPropertyString(Accessibility getter, Accessibility setter)
+    public static (string Property, string Getter, string Setter) GetterSetterAccessibilityToPropertyString(Accessibility getter, Accessibility setter)
     {
         var max = getter;
         max = max > setter ? max : setter;

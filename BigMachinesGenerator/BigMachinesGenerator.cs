@@ -67,9 +67,9 @@ namespace BigMachines.Generator
             return null;
         }
 
-        private void Emit(SourceProductionContext context, (Compilation compilation, ImmutableArray<TypeDeclarationSyntax?> types) source)
+        private void Emit(SourceProductionContext context, (Compilation Compilation, ImmutableArray<TypeDeclarationSyntax?> Types) source)
         {
-            var compilation = source.compilation;
+            var compilation = source.Compilation;
             var machineObjectAttributeSymbol = compilation.GetTypeByMetadataName(MachineObjectAttributeMock.FullName);
             if (machineObjectAttributeSymbol == null)
             {
@@ -92,7 +92,7 @@ namespace BigMachines.Generator
 #pragma warning restore RS1024 // Symbols should be compared for equality
 
             var generatorOptionSet = false;
-            foreach (var x in source.types)
+            foreach (var x in source.Types)
             {
                 if (x == null)
                 {

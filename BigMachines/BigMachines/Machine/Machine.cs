@@ -10,10 +10,7 @@ using System.Threading;
 using System.Threading.Tasks;
 using Tinyhand;
 
-#pragma warning disable SA1009 // Closing parenthesis should be spaced correctly
-#pragma warning disable SA1124 // Do not use regions
 #pragma warning disable SA1401
-#pragma warning disable SA1602 // Enumeration items should be documented
 
 namespace BigMachines;
 
@@ -64,6 +61,11 @@ public abstract class Machine<TIdentifier>
     /// Gets <see cref="MachineInfo{TIdentifier}"/>.
     /// </summary>
     public MachineInfo<TIdentifier> Info => this.Group.Info;
+
+    /// <summary>
+    /// Gets <see cref="System.Threading.CancellationToken"/> of the <see cref="BigMachine{TIdentifier}"/>.
+    /// </summary>
+    public CancellationToken CancellationToken => this.BigMachine.Core.CancellationToken;
 
     /// <summary>
     /// Gets or sets the identifier of this machine.<br/>
@@ -166,7 +168,7 @@ public abstract class Machine<TIdentifier>
             try
             {
                 await this.LockMachineAsync().ConfigureAwait(false);
-                if (await this.RunMachine(command, RunType.Manual, DateTime.UtcNow, this.BigMachine.Core.CancellationToken).ConfigureAwait(false) == StateResult.Terminate)
+                if (await this.RunMachine(command, RunType.Manual, DateTime.UtcNow).ConfigureAwait(false) == StateResult.Terminate)
                 {
                     this.Status = MachineStatus.Terminated;
                     this.OnTerminated();
@@ -407,9 +409,8 @@ public abstract class Machine<TIdentifier>
     /// <param name="command">Command.</param>
     /// <param name="runType">A trigger of the machine running.</param>
     /// <param name="now">Current time.</param>
-    /// <param name="cancellationToken">CancellationToken.</param>
     /// <returns>true: The machine is terminated.</returns>
-    protected internal async Task<StateResult> RunMachine(CommandPost<TIdentifier>.Command? command, RunType runType, DateTime now, CancellationToken cancellationToken)
+    protected internal async Task<StateResult> RunMachine(CommandPost<TIdentifier>.Command? command, RunType runType, DateTime now)
     {// Called: Machine.DistributeCommand(), BigMachine.MainLoop()
         if (this.RunType != RunType.NotRunning)
         {// Machine is running
@@ -423,7 +424,7 @@ RerunLoop:
 
         try
         {
-            result = await this.InternalRun(new(runType, cancellationToken)).ConfigureAwait(false);
+            result = await this.InternalRun(new(runType)).ConfigureAwait(false);
         }
         catch (Exception ex)
         {

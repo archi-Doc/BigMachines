@@ -194,11 +194,10 @@ public struct StateParameter
     /// Initializes a new instance of the <see cref="StateParameter"/> struct.
     /// </summary>
     /// <param name="type">RunType.</param>
-    /// <param name="calcellationToken">CancellationToken.</param>
-    public StateParameter(RunType type, CancellationToken calcellationToken)
+    public StateParameter(RunType type)
     {
         this.RunType = type;
-        this.CancellationToken = calcellationToken;
+        // this.CancellationToken = calcellationToken;
         // this.Message = null;
     }
 
@@ -207,10 +206,10 @@ public struct StateParameter
     /// </summary>
     public RunType RunType { get; }
 
-    /// <summary>
+    /*/// <summary>
     /// Gets a CancellationToken.
     /// </summary>
-    public CancellationToken CancellationToken { get; }
+    public CancellationToken CancellationToken { get; }*/
 
     /*/// <summary>
     /// Gets a message.

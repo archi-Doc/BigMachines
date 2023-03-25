@@ -45,7 +45,7 @@ namespace BigMachines
                     try
                     {
                         machine.LockMachine();
-                        if (machine.RunMachine(null, RunType.Continuous, DateTime.UtcNow, core.CancellationToken).Result == StateResult.Terminate)
+                        if (machine.RunMachine(null, RunType.Continuous, DateTime.UtcNow).Result == StateResult.Terminate)
                         {// Terminated
                             machine.Status = MachineStatus.Terminated;
                             machine.OnTerminated();
@@ -223,7 +223,7 @@ namespace BigMachines
         private List<Core> cores = new();
         private LinkedList<Item> items = new();
 
-        private (IMachineGroup<TIdentifier>[], TIdentifier[]) GetGroupsAndIdentifiers(bool running)
+        private (IMachineGroup<TIdentifier>[] Groups, TIdentifier[] Identifiers) GetGroupsAndIdentifiers(bool running)
         {
             lock (this.syncContinuous)
             {

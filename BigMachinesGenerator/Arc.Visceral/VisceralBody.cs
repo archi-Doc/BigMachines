@@ -376,10 +376,13 @@ public class VisceralBody<T>
 
         if (nameFormat == NameFormat.AddNamespaceAndClass)
         {// Add Namespace
-            var ns = symbol.ContainingNamespace?.ToDisplayString();
-            if (ns != null && ns.Length > 0)
+            if (symbol.ContainingNamespace?.IsGlobalNamespace == false)
             {
-                result = ns + "." + result;
+                var ns = symbol.ContainingNamespace.ToDisplayString();
+                if (ns.Length > 0)
+                {
+                    result = ns + "." + result;
+                }
             }
         }
 
