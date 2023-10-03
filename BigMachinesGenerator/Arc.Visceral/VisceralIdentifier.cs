@@ -1,13 +1,8 @@
 ﻿// Copyright (c) All contributors. All rights reserved. Licensed under the MIT license.
 
 using System.Collections.Generic;
-using System.Text;
-using Microsoft.CodeAnalysis;
-using Microsoft.CodeAnalysis.CSharp.Syntax;
 
-#pragma warning disable SA1306 // Field names should begin with lower-case letter
 #pragma warning disable SA1401 // Fields should be private
-#pragma warning disable SA1602 // Enumeration items should be documented
 
 namespace Arc.Visceral;
 
