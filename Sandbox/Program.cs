@@ -82,6 +82,11 @@ namespace Sandbox
             // Test2(bigMachine);
             Test3(bigMachine);
 
+            // tempcode
+            var bigMachineA = new BigMachineA();
+            await bigMachineA.Machine1.RunAsync();
+            var a = bigMachineA.Machines.TryGet(0);
+
             await ThreadCore.Root.WaitForTerminationAsync(-1); // Wait for the termination infinitely.
 
             // Save
