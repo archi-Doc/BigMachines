@@ -1,18 +1,13 @@
 ﻿// Copyright (c) All contributors. All rights reserved. Licensed under the MIT license.
 
-using System.Collections.Concurrent;
-using System.Data;
-using System.Diagnostics.CodeAnalysis;
-using System.Runtime.CompilerServices;
 using Sandbox;
 using Tinyhand;
-using Tinyhand.IO;
-using static SimpleCommandLine.SimpleParser;
 
 namespace BigMachines;
 
+/*
 [TinyhandObject(Tree = true, ExplicitKeyOnly = true)]
-public partial class BigMachineA
+public partial class BigMachineA : BigMachineBase
 {
     public BigMachineA()
     {
@@ -24,5 +19,6 @@ public partial class BigMachineA
 
     [KeyAsName]
     private MachineDictionary<int, Sandbox.TestMachine> machines = default!;
-    public MachineGroupInterface<int, Sandbox.TestMachine.Interface, Sandbox.TestMachine.State, Sandbox.TestMachine.Command> Machines => default!;
-}
+
+    public UnorderedMachineControl<int, Sandbox.TestMachine, Sandbox.TestMachine.Interface, Sandbox.TestMachine.State, Sandbox.TestMachine.Command> Machines => default!;
+}*/
