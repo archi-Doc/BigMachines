@@ -7,17 +7,24 @@ using System.Diagnostics.CodeAnalysis;
 using System.Runtime.CompilerServices;
 using System.Threading.Tasks;
 using Tinyhand;
+using Tinyhand.IO;
 using ValueLink;
 
 namespace BigMachines;
 
-public sealed class UnorderedMachineControl<TIdentifier, TMachine, TInterface, TState, TCommand>
+[TinyhandObject(Tree = true)]
+public sealed partial class UnorderedMachineControl<TIdentifier, TMachine, TInterface, TState, TCommand>
+    : ITinyhandSerialize<UnorderedMachineControl<TIdentifier, TMachine, TInterface, TState, TCommand>>, ITinyhandCustomJournal
     where TIdentifier : notnull
-    where TMachine : ITinyhandSerialize<TMachine>
+    where TMachine : ITinyhandSerialize<TMachine>, IMachine
     where TInterface : ManMachineInterface<TIdentifier, TState, TCommand>
     where TState : struct
     where TCommand : struct
 {
+    public UnorderedMachineControl()
+    {
+    }
+
     public UnorderedMachineControl(BigMachineBase bigMachine)
     {
         this.bigMachine = bigMachine;
@@ -28,7 +35,7 @@ public sealed class UnorderedMachineControl<TIdentifier, TMachine, TInterface, T
 
     [TinyhandObject(Tree = true)]
     [ValueLinkObject(Isolation = IsolationLevel.Serializable)]
-    private partial record Item
+    private partial class Item
     {
         public Item()
         {
@@ -56,15 +63,15 @@ public sealed class UnorderedMachineControl<TIdentifier, TMachine, TInterface, T
 
     #endregion
 
-    #region Interface
+    #region Unique
 
     public TInterface? TryGet(TIdentifier identifier)
     {
         lock (this.items.SyncObject)
         {
-            if (this.items.IdentifierChain.FindFirst(identifier) is { } machine)
+            if (this.items.IdentifierChain.FindFirst(identifier) is { } item)
             {
-                return machine.InterfaceInstance as TInterface;
+                return item.Machine.InterfaceInstance as TInterface;
             }
         }
 
@@ -82,11 +89,33 @@ public sealed class UnorderedMachineControl<TIdentifier, TMachine, TInterface, T
         return this.bigMachine.CommandPost.SendAndReceiveGroupAsync<TMessage, TResponse>(this, CommandPost<TIdentifier>.CommandType.Command, this.IdentificationToMachine.Keys, Unsafe.As<TCommand, int>(ref command), message);
     }
 
+    static void ITinyhandSerialize<UnorderedMachineControl<TIdentifier, TMachine, TInterface, TState, TCommand>>.Serialize(ref TinyhandWriter writer, scoped ref UnorderedMachineControl<TIdentifier, TMachine, TInterface, TState, TCommand>? value, TinyhandSerializerOptions options)
+    {
+        if (value is null)
+        {
+            writer.WriteNil();
+            return;
+        }
+
+        TinyhandSerializer.SerializeObject(ref writer, value.items, options);
+    }
+
+    static void ITinyhandSerialize<UnorderedMachineControl<TIdentifier, TMachine, TInterface, TState, TCommand>>.Deserialize(ref TinyhandReader reader, scoped ref UnorderedMachineControl<TIdentifier, TMachine, TInterface, TState, TCommand>? value, TinyhandSerializerOptions options)
+    {
+        throw new NotImplementedException();
+    }
+
+    bool ITinyhandCustomJournal.ReadCustomRecord(ref TinyhandReader reader)
+        => ((ITreeObject)this.items).ReadRecord(ref reader);
+
+    ITreeObject
+
     #endregion
 
     #region FieldAndProperty
 
     private readonly BigMachineBase bigMachine;
+    private readonly CommandPost<TIdentifier> commandPost = new();
     private Item.GoshujinClass items = new();
 
     public MachineInfo<TIdentifier> Info { get; private set; }
@@ -94,45 +123,5 @@ public sealed class UnorderedMachineControl<TIdentifier, TMachine, TInterface, T
     public int Count => this.IdentificationToMachine.Count;
 
     #endregion
-
-    public IEnumerable<TIdentifier> GetIdentifiers() => this.IdentificationToMachine.Keys;
-
-    void IMachineGroup<TIdentifier>.Assign(MachineInfo<TIdentifier> info)
-    {
-        this.Info = info;
-    }
-
-    Machine<TIdentifier> IMachineGroup<TIdentifier>.GetOrAddMachine(TIdentifier identifier, Machine<TIdentifier> machine) => this.IdentificationToMachine.GetOrAdd(identifier, machine);
-
-    void IMachineGroup<TIdentifier>.AddMachine(TIdentifier identifier, Machine<TIdentifier> machine)
-    {
-        Machine<TIdentifier>? machineToRemove = null;
-        this.IdentificationToMachine.AddOrUpdate(identifier, x => machine, (i, m) =>
-        {
-            machineToRemove = m;
-            return machine;
-        });
-
-        if (machineToRemove != null)
-        {
-            machineToRemove.TaskRunAndTerminate();
-        }
-    }
-
-    bool IMachineGroup<TIdentifier>.TryGetMachine(TIdentifier identifier, [MaybeNullWhen(false)] out Machine<TIdentifier> machine) => this.IdentificationToMachine.TryGetValue(identifier, out machine);
-
-    bool IMachineGroup<TIdentifier>.RemoveFromGroup(Machine<TIdentifier> machine)
-    {
-        if (this.IdentificationToMachine.TryRemove(new(machine.Identifier, machine)))
-        {
-            return true;
-        }
-        else
-        {
-            return false;
-        }
-    }
-
-    IEnumerable<Machine<TIdentifier>> IMachineGroup<TIdentifier>.GetMachines() => this.IdentificationToMachine.Values;
 
 }
