@@ -1,5 +1,6 @@
 ﻿// Copyright (c) All contributors. All rights reserved. Licensed under the MIT license.
 
+using System;
 using System.Threading.Tasks;
 using Tinyhand;
 using Tinyhand.IO;
@@ -14,7 +15,7 @@ public partial class TestBigMachine : ITinyhandSerialize<TestBigMachine>
     {
     }
 
-    public UnorderedMachineControl<int, TestMachine.Interface> TestMachine { get; private set; } = new(x => new TestMachine());
+    public UnorderedMachineControl<int, TestMachine.Interface> TestMachine { get; private set; } = new((x, y) => new TestMachine(x, y).InterfaceInstance);
 
     static void ITinyhandSerialize<TestBigMachine>.Serialize(ref TinyhandWriter writer, scoped ref TestBigMachine? value, TinyhandSerializerOptions options)
     {
@@ -30,6 +31,13 @@ public partial class TestBigMachine : ITinyhandSerialize<TestBigMachine>
 [TinyhandObject]
 public partial class UnorderedMachineControl<TIdentifier, TInterface> : MachineControl<TIdentifier>
 {
+    public UnorderedMachineControl(Func<UnorderedMachineControl<TIdentifier, TInterface>, TIdentifier, TInterface> createDelegate)
+    {
+        this.createDelegate = createDelegate;
+    }
+
+    private Func<UnorderedMachineControl<TIdentifier, TInterface>, TIdentifier, TInterface> createDelegate; // MachineControl + Identifier -> Machine.Interface
+
     [TinyhandObject(Tree = true)]
     [ValueLinkObject(Isolation = IsolationLevel.Serializable)]
     private partial class Item
@@ -81,7 +89,7 @@ public partial class UnorderedMachineControl<TIdentifier, TInterface> : MachineC
         {
             if (!this.items.IdentifierChain.TryGetValue(identifier, out var item))
             {
-                item = new(identifier, default!);
+                item = new(identifier, this.createDelegate(this, identifier));
             }
 
             return item.Interface;
@@ -97,7 +105,7 @@ public partial class MachineControl
 {
 }
 
-public abstract class ManMachineInterface
+public abstract class ManMachineInterface // MANMACHINE INTERFACE by Shirow.
 {
     public ManMachineInterface()
     {
@@ -111,7 +119,11 @@ public class Machine
         this.Control = control;
     }
 
-    public MachineControl Control { get; private set; }
+    public MachineControl Control { get; }
+
+#pragma warning disable SA1401
+    protected object? interfaceInstance;
+#pragma warning restore SA1401
 }
 
 public class Machine<TIdentifier> : Machine
@@ -123,13 +135,13 @@ public class Machine<TIdentifier> : Machine
         this.Identifier = identifier;
     }
 
-    public new MachineControl<TIdentifier> Control { get; private set; }
+    public new MachineControl<TIdentifier> Control { get; }
 
-    public TIdentifier Identifier { get; private set; }
+    public TIdentifier Identifier { get; }
 }
 
 // [MachineObject] // ulong id = FarmHash.Hash64(Type.FullName)
-internal partial class TestMachine : Machine<int>
+public partial class TestMachine : Machine<int>
 {
     public TestMachine(MachineControl<int> control, int identifier)
         : base(control, identifier)
@@ -142,29 +154,65 @@ internal partial class TestMachine : Machine<int>
         var machine = bigMachine.TestMachine.TryGet(0);
         if (machine is not null)
         {
+            machine.Command.Command1();
         }
     }
 
-    private Interface @interface;
+    public Interface InterfaceInstance
+    {
+        get
+        {
+            if (this.interfaceInstance is not Interface @interface)
+            {
+                @interface = new(this);
+                this.interfaceInstance = @interface;
+            }
+
+            return @interface;
+        }
+    }
 
     public class Interface
     {
-        public Interface(MachineControl control, int identifier)
+        public Interface(TestMachine machine)
         {
-            this.control = control;
-            this.identifier = identifier;
+            this.machine = machine;
         }
 
-        private readonly MachineControl control;
-        private readonly int identifier;
+        public CommandList Command => new(this.machine);
 
-        public static class Command
+        private readonly TestMachine machine;
+
+        public readonly struct CommandList
         {
-            public static void Command1()
+            public CommandList(TestMachine machine)
             {
-                var m = new TestMachine();
-                m.Command1();
+                this.machine = machine;
             }
+
+            public void Command1()
+            {
+                // var m = new TestMachine();
+                // m.Command1();
+            }
+
+            public Task<bool> Command2(string name)
+            {
+                byte[] packet;
+                using (var writer = default(TinyhandWriter))
+                {
+                    writer.Write(this.machine.Identifier);
+                    writer.Write(name);
+                    packet = writer.FlushAndGetArray();
+                }
+
+                this.machine.Control.Send(packet);
+
+                // var m = new TestMachine();
+                // m.Command1();
+            }
+
+            private readonly TestMachine machine;
         }
     }
 

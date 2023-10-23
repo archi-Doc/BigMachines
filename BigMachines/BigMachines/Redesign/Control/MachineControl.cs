@@ -5,7 +5,7 @@ using System.Diagnostics.CodeAnalysis;
 
 namespace BigMachines;
 
-public abstract class MachineControl
+/*public abstract class MachineControl<TIdentifier>
 {
     public MachineControl(BigMachineBase bigMachine, MachineInfo<TIdentifier> info)
     {
@@ -37,7 +37,6 @@ public abstract class MachineControl
 
     #endregion
 }
-
 
 public abstract class MachineControl<TIdentifier>
     where TIdentifier : notnull
@@ -72,3 +71,4 @@ public abstract class MachineControl<TIdentifier>
 
     #endregion
 }
+*/

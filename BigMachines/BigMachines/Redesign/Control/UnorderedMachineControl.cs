@@ -12,7 +12,7 @@ using ValueLink;
 
 namespace BigMachines;
 
-[TinyhandObject(Tree = true)]
+/*[TinyhandObject(Tree = true)]
 public sealed partial class UnorderedMachineControl<TIdentifier, TMachine, TInterface, TState, TCommand>
     : ITinyhandSerialize<UnorderedMachineControl<TIdentifier, TMachine, TInterface, TState, TCommand>>, ITinyhandCustomJournal
     where TIdentifier : notnull
@@ -125,3 +125,4 @@ public sealed partial class UnorderedMachineControl<TIdentifier, TMachine, TInte
     #endregion
 
 }
+*/
