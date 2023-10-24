@@ -22,7 +22,8 @@ public partial class TestMachine : Machine<int>
         var machine = bigMachine.TestMachine.TryGet(0);
         if (machine is not null)
         {
-            machine.Command.Command1();
+            _ = machine.Command.Command1();
+            _ = machine.RunAsync();
         }
     }
 
@@ -40,9 +41,10 @@ public partial class TestMachine : Machine<int>
         }
     }
 
-    public class Interface
+    public class Interface : ManMachineInterface
     {
         public Interface(TestMachine machine)
+            : base(machine)
         {
             this.machine = machine;
         }
@@ -58,10 +60,22 @@ public partial class TestMachine : Machine<int>
                 this.machine = machine;
             }
 
-            public void Command1()
+            public async Task<CommandResult> Command1()
             {
-                // var m = new TestMachine();
-                // m.Command1();
+                await this.machine.Semaphore.EnterAsync().ConfigureAwait(false);
+                try
+                {
+                    if (this.machine.Status == MachineStatus.Terminated)
+                    {
+                        return CommandResult.Terminated;
+                    }
+
+                    return this.machine.Command1();
+                }
+                finally
+                {
+                    this.machine.Semaphore.Exit();
+                }
             }
 
             public Task<bool> Command2(string name)
@@ -86,8 +100,9 @@ public partial class TestMachine : Machine<int>
         }
     }
 
-    protected void Initial()
+    protected StateResult Initial()
     {
+        return StateResult.Continue;
         // this.SetState(State.Second);
     }
 
@@ -96,7 +111,8 @@ public partial class TestMachine : Machine<int>
         // this.SetState(State.Second);
     }
 
-    protected void Command1()
+    public CommandResult Command1()
     {
+        return CommandResult.Success;
     }
 }

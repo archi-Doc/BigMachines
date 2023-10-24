@@ -128,6 +128,28 @@ public enum StateResult
 }
 
 /// <summary>
+/// Represents the result of a command method.
+/// </summary>
+public enum CommandResult
+{
+    Success,
+    Failure,
+    Terminated,
+}
+
+public readonly struct CommandResult<TResponse>
+{
+    public CommandResult(CommandResult result, TResponse response)
+    {
+        this.Result = result;
+        this.Resnpose = response;
+    }
+
+    public readonly CommandResult Result;
+    public readonly TResponse Resnpose;
+}
+
+/// <summary>
 /// Represents the state of the machine.
 /// </summary>
 public enum MachineStatus
