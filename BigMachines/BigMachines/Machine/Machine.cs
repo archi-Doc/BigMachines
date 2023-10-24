@@ -83,7 +83,7 @@ public abstract class Machine<TIdentifier>
     /// Gets or sets the machine status (running, paused, terminated).
     /// </summary>
     [Key(1)]
-    protected internal volatile MachineStatus Status = MachineStatus.Running;
+    protected internal volatile OperationalState Status = OperationalState.Running;
 
     /// <summary>
     /// Gets or sets the current state of this machine.
@@ -154,7 +154,7 @@ public abstract class Machine<TIdentifier>
     /// <returns><see langword="true"/>: Terminated, <see langword="false"/>: Continue.</returns>
     internal async Task DistributeCommand(CommandPost<TIdentifier>.Command command)
     {
-        if (this.Status == MachineStatus.Terminated)
+        if (this.Status == OperationalState.Terminated)
         {// Terminated
             return;
         }
@@ -170,14 +170,14 @@ public abstract class Machine<TIdentifier>
                 await this.LockMachineAsync().ConfigureAwait(false);
                 if (await this.RunMachine(command, RunType.Manual, DateTime.UtcNow).ConfigureAwait(false) == StateResult.Terminate)
                 {
-                    this.Status = MachineStatus.Terminated;
+                    this.Status = OperationalState.Terminated;
                     this.OnTerminated();
                 }
             }
             finally
             {
                 this.UnlockMachine();
-                if (this.Status == MachineStatus.Terminated)
+                if (this.Status == OperationalState.Terminated)
                 {
                     this.RemoveFromGroup();
                 }
@@ -185,7 +185,7 @@ public abstract class Machine<TIdentifier>
         }
         else if (command.Type == CommandPost<TIdentifier>.CommandType.ChangeState)
         {// ChangeState
-            if (this.Status == MachineStatus.Terminated)
+            if (this.Status == OperationalState.Terminated)
             {// Terminated
                 command.Response = ChangeStateResult.Terminated;
             }
@@ -218,7 +218,7 @@ public abstract class Machine<TIdentifier>
                 this.BigMachine.ReportException(new(this, ex));
             }
 
-            if (this.Status == MachineStatus.Terminated)
+            if (this.Status == OperationalState.Terminated)
             {
                 await this.TerminateAndRemoveFromGroup().ConfigureAwait(false);
             }
@@ -263,7 +263,7 @@ public abstract class Machine<TIdentifier>
         {
             await this.LockMachineAsync().ConfigureAwait(false);
 
-            this.Status = MachineStatus.Terminated;
+            this.Status = OperationalState.Terminated;
             this.OnTerminated();
         }
         finally

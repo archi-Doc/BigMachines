@@ -3,8 +3,8 @@
 using System;
 using System.Threading.Tasks;
 using Tinyhand;
-using Tinyhand.IO;
-using ValueLink;
+
+#pragma warning disable SA1602
 
 namespace BigMachines.Redesign;
 
@@ -25,11 +25,25 @@ public partial class TestMachine : Machine<int>
         {
             await machine.Command.Command1();
             await machine.RunAsync();
+            await machine.ChangeStateAsync(State.Initial);
         }
 
         var testMachines = bigMachine.TestMachines;
         var results = await testMachines.CommandAll.Command1();
         await testMachines.RunAllAsync();
+    }
+
+    public enum State
+    {
+        Initial = 0,
+        First = 1,
+    }
+
+    public enum Command
+    {
+        GetInfo = 33,
+        GetInfo2 = 3,
+        GetInfo4 = 4,
     }
 
     public Interface InterfaceInstance
@@ -46,7 +60,7 @@ public partial class TestMachine : Machine<int>
         }
     }
 
-    public class Interface : ManMachineInterface
+    public class Interface : ManMachineInterface<State>
     {
         public Interface(TestMachine machine)
             : base(machine)
@@ -56,7 +70,7 @@ public partial class TestMachine : Machine<int>
 
         public CommandList Command => new(this.machine);
 
-        private readonly TestMachine machine;
+        private new readonly TestMachine machine;
 
         public readonly struct CommandList
         {
@@ -70,7 +84,7 @@ public partial class TestMachine : Machine<int>
                 await this.machine.Semaphore.EnterAsync().ConfigureAwait(false);
                 try
                 {
-                    if (this.machine.Status == MachineStatus.Terminated)
+                    if (this.machine.OperationalState == OperationalState.Terminated)
                     {
                         return CommandResult.Terminated;
                     }

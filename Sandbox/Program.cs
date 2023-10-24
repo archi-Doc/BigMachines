@@ -109,6 +109,7 @@ namespace Sandbox
 
             m.RunAsync();
             m.RunAsync();
+            m.ChangeStateAsync(TestMachine.State.First);
 
             var gorup = m.Group;
 

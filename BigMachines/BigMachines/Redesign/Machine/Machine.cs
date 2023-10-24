@@ -72,18 +72,18 @@ public abstract partial class Machine
     #region Keys
 
     /// <summary>
-    /// Gets or sets the machine status (running, paused, terminated).
+    /// Gets or sets the operational state of the machine (running, paused, terminated).
     /// </summary>
     [Key(1)]
-    protected MachineStatus status = MachineStatus.Running;
+    protected OperationalState operationalState = OperationalState.Running;
 
     [IgnoreMember]
-    protected MachineStatus Status
+    protected OperationalState OperationalState
     {
-        get => this.status;
+        get => this.operationalState;
         set
         {
-            if (this.status == value)
+            if (this.operationalState == value)
             {
                 return;
             }
@@ -95,11 +95,11 @@ public abstract partial class Machine
                 writer.Write(1);
                 writer.Write_Value();
                 var ev = value;
-                writer.Write(Unsafe.As<MachineStatus, int>(ref ev));
+                writer.Write(Unsafe.As<OperationalState, int>(ref ev));
                 root.AddJournal(writer);
             }
 
-            this.status = value;
+            this.operationalState = value;
         }
     }
 
@@ -297,8 +297,9 @@ public abstract partial class Machine
     /// Gets an instance of <see cref="MachineControl"/>.
     /// </summary>
     public readonly MachineControl Control;
-
     protected readonly SemaphoreLock Semaphore = new();
+
+    [IgnoreMember]
     protected object? interfaceInstance;
 
     /// <summary>
@@ -321,14 +322,16 @@ public abstract partial class Machine
     protected internal uint TypeId;
 
     /// <summary>
-    /// Get the serial (unique) number of this machine.
-    /// </summary>
-    private uint machineNumber;
-
-    /// <summary>
     /// Gets or sets a value indicating whether the machine is going to re-run.
     /// </summary>
-    protected internal bool RequestRerun { get; set; }
+    [IgnoreMember]
+    protected bool requestRerun;
+
+    /// <summary>
+    /// Get the serial (unique) number of this machine.
+    /// </summary>
+    [IgnoreMember]
+    private uint machineNumber;
 
     #endregion
 
@@ -349,7 +352,7 @@ public abstract partial class Machine
         this.RunType = runType;
 RerunLoop:
         StateResult result;
-        this.RequestRerun = false;
+        this.requestRerun = false;
 
         try
         {
@@ -367,7 +370,7 @@ RerunLoop:
             this.RunType = RunType.NotRunning;
             return result;
         }
-        else if (this.RequestRerun)
+        else if (this.requestRerun)
         {
             goto RerunLoop;
         }
@@ -397,7 +400,7 @@ RerunLoop:
         await this.Semaphore.EnterAsync().ConfigureAwait(false);
         try
         {
-            this.Status = MachineStatus.Terminated;
+            this.OperationalState = OperationalState.Terminated;
             this.OnTerminated();
         }
         finally
@@ -421,7 +424,7 @@ RerunLoop:
     /// Generated method which is called when the state changes.
     /// </summary>
     /// <param name="state">The next state.</param>
-    /// <param name="rerun">If <see langword="true"/>, the machine wll rerun if the Machine state is changed.</param>
+    /// <param name="rerun">The machine wll re-run if <paramref name="rerun"/> is <see langword="true"/>, and the machine state is changed.</param>
     /// <returns><see langword="true"/>: State changed. <see langword="false"/>: Not changed (same state or denied). </returns>
     protected virtual ChangeStateResult InternalChangeState(int state, bool rerun) => ChangeStateResult.Terminated;
 
@@ -431,5 +434,56 @@ RerunLoop:
     /// </summary>
     protected virtual void OnTerminated()
     {
+    }
+
+    /// <summary>
+    /// Set the start time of the machine.<br/>
+    /// The time decreases while the program is running, and the machine will run when it reaches zero.
+    /// </summary>
+    /// <param name="timeout">The timeout.</param>
+    /// <param name="absoluteDateTime">Set <see langword="true"></see> to specify the next execution time by adding the current time and timeout.</param>
+    protected internal void SetTimeout(TimeSpan timeout, bool absoluteDateTime = false)
+    {
+        this.requestRerun = false;
+        if (timeout.Ticks < 0)
+        {
+            Volatile.Write(ref this.startTime, long.MaxValue);
+            this.NextRun = default;
+            return;
+        }
+
+        if (absoluteDateTime)
+        {
+            this.NextRun = DateTime.UtcNow + timeout;
+        }
+        else
+        {
+            Volatile.Write(ref this.startTime, timeout.Ticks);
+        }
+    }
+
+    /// <summary>
+    /// Set the lifespen of the machine.<br/>
+    /// The lifespan decreases while the program is running, and the machine will terminate when it reaches zero.
+    /// </summary>
+    /// <param name="timeSpan">The lifespan.</param>
+    /// <param name="absoluteDateTime">Set true to specify the terminate time by adding the current time and lifespan.</param>
+    protected internal void SetLifespan(TimeSpan timeSpan, bool absoluteDateTime = false)
+    {
+        if (timeSpan.Ticks < 0)
+        {
+            Volatile.Write(ref this.lifespan, long.MaxValue);
+            this.TerminationDate = DateTime.MaxValue;
+            return;
+        }
+
+        if (absoluteDateTime)
+        {
+            this.TerminationDate = DateTime.UtcNow + timeSpan;
+        }
+        else
+        {
+            Volatile.Write(ref this.lifespan, timeSpan.Ticks);
+        }
     }
 }

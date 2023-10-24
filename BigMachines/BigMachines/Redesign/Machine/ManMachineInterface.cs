@@ -1,7 +1,10 @@
 ﻿// Copyright (c) All contributors. All rights reserved. Licensed under the MIT license.
 
 using System;
+using System.Threading;
 using System.Threading.Tasks;
+
+#pragma warning disable SA1401
 
 namespace BigMachines.Redesign;
 
@@ -17,7 +20,80 @@ public partial class Machine
             this.machine = machine;
         }
 
-        private readonly Machine machine;
+        protected readonly Machine machine;
+
+        /// <summary>
+        /// Gets the operational state of the machine.
+        /// </summary>
+        /// <returns>The operational state of the machine.<br/>
+        /// <see langword="null"/>: Machine is not available.</returns>
+        public OperationalState GetOperationalState()
+            => this.machine.OperationalState;
+
+        /// <summary>
+        /// Changes the operational state of the machine.
+        /// </summary>
+        /// <param name="state">The operational state.</param>
+        /// <returns><see langword="true"/>: The status is successfully changed.<br/>
+        /// <see langword="false"/>: Machine is not available.</returns>
+        public bool SetOperationalState(OperationalState state)
+        {
+            using (this.machine.Semaphore.Lock())
+            {
+                if (this.machine.OperationalState == OperationalState.Terminated)
+                {
+                    return false;
+                }
+
+                this.machine.OperationalState = state;
+            }
+
+            return true;
+        }
+
+        /// <summary>
+        /// Indicates whether the machine is running (in a Run method).
+        /// </summary>
+        /// <returns><see langword="true"/>: The machine is running (in a Run method).</returns>
+        public bool IsRunning()
+            => this.machine.RunType != RunType.NotRunning;
+
+        /// <summary>
+        /// Indicates whether the machine is active (in a Run method or waiting to execute).
+        /// </summary>
+        /// <returns><see langword="true"/>: The machine is active (in a Run method or waiting to execute).</returns>
+        public bool IsActive()
+            => this.machine.RunType != RunType.NotRunning ||
+                    (this.machine.DefaultTimeout is TimeSpan ts && ts > TimeSpan.Zero);
+
+        /// <summary>
+        /// Indicates whether the machine is terminated.
+        /// </summary>
+        /// <returns><see langword="true"/>: The machine is terminated.</returns>
+        public bool IsTerminated()
+            => this.machine.OperationalState == OperationalState.Terminated;
+
+        /// <summary>
+        /// Gets the default timeout of the machine.
+        /// </summary>
+        /// <returns>The default timeout of the machine.<br/>
+        /// <see langword="null"/>: Machine is not available.</returns>
+        public TimeSpan GetDefaultTimeout()
+            => this.machine.DefaultTimeout;
+
+        /// <summary>
+        /// Set the timeout of the machine.<br/>
+        /// The time decreases while the program is running, and the machine will run when it reaches zero.
+        /// </summary>
+        /// <param name="timeout">The timeout.</param>
+        /// <param name="absoluteDateTime">Set <see langword="true"></see> to specify the next execution time by adding the current time and timeout.</param>
+        public void SetTimeout(TimeSpan timeout, bool absoluteDateTime = false)
+            => this.machine.SetTimeout(timeout, absoluteDateTime);
+
+        public void SetTimeout(TimeSpan timeSpan)
+        {
+            Volatile.Write(ref this.machine.Timeout, timeSpan.Ticks);
+        }
 
         public async Task RunAsync()
         {
@@ -31,7 +107,7 @@ public partial class Machine
             {
                 if (await this.machine.RunMachine(RunType.Manual, DateTime.UtcNow).ConfigureAwait(false) == StateResult.Terminate)
                 {
-                    this.machine.Status = MachineStatus.Terminated;
+                    this.machine.OperationalState = OperationalState.Terminated;
                     this.machine.OnTerminated();
                 }
             }
@@ -39,7 +115,7 @@ public partial class Machine
             {
                 this.machine.Semaphore.Exit();
 
-                if (this.machine.Status == MachineStatus.Terminated)
+                if (this.machine.OperationalState == OperationalState.Terminated)
                 {
                     this.machine.RemoveFromControl();
                 }

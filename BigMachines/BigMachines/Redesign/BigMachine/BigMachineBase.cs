@@ -2,9 +2,13 @@
 
 using System;
 using System.Collections.Concurrent;
+using System.Threading;
 
 namespace BigMachines.Redesign;
 
+/// <summary>
+///  The top-level abstract class for managing groups of machines.
+/// </summary>
 public abstract class BigMachineBase
 {
     /// <summary>
@@ -17,6 +21,7 @@ public abstract class BigMachineBase
     /// </summary>
     public IServiceProvider? ServiceProvider { get; }
 
+    private ExceptionHandlerDelegate exceptionHandler = DefaultExceptionHandler;
     private ConcurrentQueue<BigMachineException> exceptionQueue = new();
 
     /// <summary>
@@ -32,4 +37,25 @@ public abstract class BigMachineBase
     /// <param name="exception">The exception to be queued.</param>
     public void ReportException(BigMachineException exception)
         => this.exceptionQueue.Enqueue(exception);
+
+    /// <summary>
+    /// Sets an exception handler.
+    /// </summary>
+    /// <param name="handler">The exception handler.</param>
+    public void SetExceptionHandler(ExceptionHandlerDelegate handler)
+        => Volatile.Write(ref this.exceptionHandler, handler);
+
+    /// <summary>
+    /// Process queued exceptions using the exception handler.
+    /// </summary>
+    public void ProcessException()
+    {
+        while (this.exceptionQueue.TryDequeue(out var exception))
+        {
+            this.exceptionHandler(exception);
+        }
+    }
+
+    private static void DefaultExceptionHandler(BigMachineException exception)
+        => throw exception.Exception;
 }

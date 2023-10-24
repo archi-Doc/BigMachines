@@ -1,7 +1,6 @@
 ﻿// Copyright (c) All contributors. All rights reserved. Licensed under the MIT license.
 
 using System;
-using System.Collections;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Linq;
@@ -12,10 +11,6 @@ using System.Threading.Tasks;
 using Arc.Threading;
 using Arc.Unit;
 using Tinyhand;
-
-#pragma warning disable SA1009 // Closing parenthesis should be spaced correctly
-#pragma warning disable SA1124 // Do not use regions
-#pragma warning disable SA1602 // Enumeration items should be documented
 
 namespace BigMachines;
 
@@ -665,7 +660,7 @@ public partial class BigMachine<TIdentifier>
                 foreach (var y in x.GetMachines())
                 {
                     Interlocked.Add(ref y.Lifespan, -elapsed.Ticks);
-                    if (y.Status == MachineStatus.Running)
+                    if (y.Status == OperationalState.Running)
                     {
                         Interlocked.Add(ref y.Timeout, -elapsed.Ticks);
                     }
@@ -691,7 +686,7 @@ public partial class BigMachine<TIdentifier>
                             finally
                             {
                                 y.UnlockMachine();
-                                if (y.Status == MachineStatus.Terminated)
+                                if (y.Status == OperationalState.Terminated)
                                 {
                                     y.RemoveFromGroup();
                                 }
@@ -733,7 +728,7 @@ public partial class BigMachine<TIdentifier>
 
                 if (machine.RunMachine(null, RunType.Timer, now).Result == StateResult.Terminate)
                 {
-                    machine.Status = MachineStatus.Terminated;
+                    machine.Status = OperationalState.Terminated;
                     machine.OnTerminated();
                 }
             }

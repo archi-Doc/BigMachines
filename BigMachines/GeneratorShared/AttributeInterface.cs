@@ -163,9 +163,9 @@ public readonly struct CommandResult<TResponse>
 }
 
 /// <summary>
-/// Represents the state of the machine.
+/// Represents the operational state of the machine.
 /// </summary>
-public enum MachineStatus
+public enum OperationalState
 {
     /// <summary>
     /// Machine is running.

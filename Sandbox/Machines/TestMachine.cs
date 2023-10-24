@@ -410,7 +410,7 @@ public partial class TestMachine : Machine<int>
 
     /*protected override bool ChangeStateInternal(State state)
     {// Generated
-        if (this.Status == MachineStatus.Terminated)
+        if (this.Status == OperationalState.Terminated)
         {
             return false;
         }
