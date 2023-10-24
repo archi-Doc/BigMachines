@@ -46,6 +46,10 @@ public partial class Machine
                 }
 
                 this.machine.OperationalState = state;
+                if (this.machine.OperationalState == OperationalState.Terminated)
+                {
+                    this.machine.RemoveFromControl();
+                }
             }
 
             return true;
@@ -73,6 +77,19 @@ public partial class Machine
         public bool IsTerminated()
             => this.machine.OperationalState == OperationalState.Terminated;
 
+        public TimeSpan GetRemainingToRun()
+            => new(this.machine.remainingToRun);
+
+        public void SetRemainingToRun(TimeSpan remainingToRun)
+            => this.machine.RemainingToRun = remainingToRun.Ticks;
+
+        /// <summary>
+        /// Gets the last run time of the machine.
+        /// </summary>
+        /// <returns>The last run time of the machine.
+        public DateTime GetLastRunTime()
+            => this.machine.LastRunTime;
+
         /// <summary>
         /// Gets the default timeout of the machine.
         /// </summary>
@@ -82,18 +99,11 @@ public partial class Machine
             => this.machine.DefaultTimeout;
 
         /// <summary>
-        /// Set the timeout of the machine.<br/>
-        /// The time decreases while the program is running, and the machine will run when it reaches zero.
+        /// Set the next scheduled execution time.<br/>
         /// </summary>
-        /// <param name="timeout">The timeout.</param>
-        /// <param name="absoluteDateTime">Set <see langword="true"></see> to specify the next execution time by adding the current time and timeout.</param>
-        public void SetTimeout(TimeSpan timeout, bool absoluteDateTime = false)
-            => this.machine.SetTimeout(timeout, absoluteDateTime);
-
-        public void SetTimeout(TimeSpan timeSpan)
-        {
-            Volatile.Write(ref this.machine.Timeout, timeSpan.Ticks);
-        }
+        /// <param name="nextRunTime">The next scheduled execution time</param>
+        public void SetNextRunTime(DateTime nextRunTime)
+            => this.machine.NextRunTime = nextRunTime;
 
         public async Task RunAsync()
         {

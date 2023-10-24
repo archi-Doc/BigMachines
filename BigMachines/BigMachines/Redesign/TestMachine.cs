@@ -25,7 +25,8 @@ public partial class TestMachine : Machine<int>
         {
             await machine.Command.Command1();
             await machine.RunAsync();
-            await machine.ChangeStateAsync(State.Initial);
+            machine.ChangeState(State.Initial);
+            var id = machine.Identifier;
         }
 
         var testMachines = bigMachine.TestMachines;
@@ -60,7 +61,7 @@ public partial class TestMachine : Machine<int>
         }
     }
 
-    public class Interface : ManMachineInterface<State>
+    public class Interface : ManMachineInterface<int, State>
     {
         public Interface(TestMachine machine)
             : base(machine)

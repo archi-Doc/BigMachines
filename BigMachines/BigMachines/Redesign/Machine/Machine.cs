@@ -107,15 +107,15 @@ public abstract partial class Machine
     /// Gets or sets the current state of this machine.
     /// </summary>
     [Key(2)]
-    protected int currentState;
+    protected int machineState;
 
     [IgnoreMember]
-    protected int CurrentState
+    protected int MachineState
     {
-        get => this.currentState;
+        get => this.machineState;
         set
         {
-            if (this.currentState == value)
+            if (this.machineState == value)
             {
                 return;
             }
@@ -130,7 +130,7 @@ public abstract partial class Machine
                 root.AddJournal(writer);
             }
 
-            this.currentState = value;
+            this.machineState = value;
         }
     }
 
@@ -138,15 +138,15 @@ public abstract partial class Machine
     /// The time until this machine starts.
     /// </summary>
     [Key(3)]
-    protected long startTime = long.MaxValue; // TimeSpan.Ticks (for interlocked)
+    protected long remainingToRun = long.MaxValue; // TimeSpan.Ticks (for interlocked)
 
     [IgnoreMember]
-    protected long StartTime
+    protected long RemainingToRun
     {
-        get => this.currentState;
+        get => this.machineState;
         set
         {
-            if (this.startTime == value)
+            if (this.remainingToRun == value)
             {
                 return;
             }
@@ -161,7 +161,7 @@ public abstract partial class Machine
                 root.AddJournal(writer);
             }
 
-            this.startTime = value;
+            this.remainingToRun = value;
         }
     }
 
@@ -169,15 +169,15 @@ public abstract partial class Machine
     /// The last <see cref="DateTime"/> when this machine ran.
     /// </summary>
     [Key(4)]
-    protected DateTime lastRun;
+    protected DateTime lastRunTime;
 
     [IgnoreMember]
-    protected DateTime LastRun
+    protected DateTime LastRunTime
     {
-        get => this.lastRun;
+        get => this.lastRunTime;
         set
         {
-            if (this.lastRun == value)
+            if (this.lastRunTime == value)
             {
                 return;
             }
@@ -192,7 +192,7 @@ public abstract partial class Machine
                 root.AddJournal(writer);
             }
 
-            this.lastRun = value;
+            this.lastRunTime = value;
         }
     }
 
@@ -200,15 +200,15 @@ public abstract partial class Machine
     /// The next scheduled <see cref="DateTime"/> for this machine to run.
     /// </summary>
     [Key(5)]
-    protected DateTime nextRun;
+    protected DateTime nextRunTime;
 
     [IgnoreMember]
-    protected DateTime NextRun
+    protected DateTime NextRunTime
     {
-        get => this.nextRun;
+        get => this.nextRunTime;
         set
         {
-            if (this.nextRun == value)
+            if (this.nextRunTime == value)
             {
                 return;
             }
@@ -223,7 +223,7 @@ public abstract partial class Machine
                 root.AddJournal(writer);
             }
 
-            this.nextRun = value;
+            this.nextRunTime = value;
         }
     }
 
@@ -262,15 +262,15 @@ public abstract partial class Machine
     /// Gets or sets <see cref="DateTime"/> when the machine will be automatically terminated.
     /// </summary>
     [Key(7)]
-    protected DateTime terminationDate = DateTime.MaxValue;
+    protected DateTime terminationTime = DateTime.MaxValue;
 
     [IgnoreMember]
-    protected DateTime TerminationDate
+    protected DateTime TerminationTime
     {
-        get => this.terminationDate;
+        get => this.terminationTime;
         set
         {
-            if (this.terminationDate == value)
+            if (this.terminationTime == value)
             {
                 return;
             }
@@ -285,7 +285,7 @@ public abstract partial class Machine
                 root.AddJournal(writer);
             }
 
-            this.terminationDate = value;
+            this.terminationTime = value;
         }
     }
 
@@ -375,7 +375,7 @@ RerunLoop:
             goto RerunLoop;
         }
 
-        this.LastRun = now;
+        this.LastRunTime = now;
         this.RunType = RunType.NotRunning;
         return result;
     }
@@ -440,25 +440,25 @@ RerunLoop:
     /// Set the start time of the machine.<br/>
     /// The time decreases while the program is running, and the machine will run when it reaches zero.
     /// </summary>
-    /// <param name="timeout">The timeout.</param>
+    /// <param name="time">The timeout.</param>
     /// <param name="absoluteDateTime">Set <see langword="true"></see> to specify the next execution time by adding the current time and timeout.</param>
-    protected internal void SetTimeout(TimeSpan timeout, bool absoluteDateTime = false)
+    protected internal void SetNextRunTime(TimeSpan time, bool absoluteDateTime = false)
     {
         this.requestRerun = false;
-        if (timeout.Ticks < 0)
+        if (time.Ticks < 0)
         {
-            Volatile.Write(ref this.startTime, long.MaxValue);
-            this.NextRun = default;
+            Volatile.Write(ref this.remainingToRun, long.MaxValue);
+            this.NextRunTime = default;
             return;
         }
 
         if (absoluteDateTime)
         {
-            this.NextRun = DateTime.UtcNow + timeout;
+            this.NextRunTime = DateTime.UtcNow + time;
         }
         else
         {
-            Volatile.Write(ref this.startTime, timeout.Ticks);
+            Volatile.Write(ref this.remainingToRun, time.Ticks);
         }
     }
 
@@ -473,13 +473,13 @@ RerunLoop:
         if (timeSpan.Ticks < 0)
         {
             Volatile.Write(ref this.lifespan, long.MaxValue);
-            this.TerminationDate = DateTime.MaxValue;
+            this.TerminationTime = DateTime.MaxValue;
             return;
         }
 
         if (absoluteDateTime)
         {
-            this.TerminationDate = DateTime.UtcNow + timeSpan;
+            this.TerminationTime = DateTime.UtcNow + timeSpan;
         }
         else
         {

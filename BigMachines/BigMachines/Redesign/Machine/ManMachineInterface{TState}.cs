@@ -1,8 +1,6 @@
 ﻿// Copyright (c) All contributors. All rights reserved. Licensed under the MIT license.
 
-using System;
 using System.Runtime.CompilerServices;
-using System.Threading.Tasks;
 
 namespace BigMachines.Redesign;
 
@@ -30,7 +28,7 @@ public partial class Machine
         {
             if (this.machine.OperationalState != OperationalState.Terminated)
             {
-                state = Unsafe.As<int, TState>(ref this.machine.currentState);
+                state = Unsafe.As<int, TState>(ref this.machine.machineState);
                 return true;
             }
 
