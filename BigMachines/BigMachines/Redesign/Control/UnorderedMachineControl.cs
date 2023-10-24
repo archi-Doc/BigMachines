@@ -18,7 +18,7 @@ public sealed partial class UnorderedMachineControl<TIdentifier, TInterface, TCo
 {
     internal UnorderedMachineControl()
         : base(default!)
-    {
+    {// This code has some issues, but since it's never called directly, it's probably fine.
         this.createInterface = default!;
         this.createCommandAll = default!;
         this.CommandAll = default!;
