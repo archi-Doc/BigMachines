@@ -137,6 +137,19 @@ public enum CommandResult
     Terminated,
 }
 
+public readonly struct IdentifierAndCommandResult<TIdentifier>
+    where TIdentifier : notnull
+{
+    public IdentifierAndCommandResult(TIdentifier identifier, CommandResult result)
+    {
+        this.Identifier = identifier;
+        this.Result = result;
+    }
+
+    public readonly TIdentifier Identifier;
+    public readonly CommandResult Result;
+}
+
 public readonly struct CommandResult<TResponse>
 {
     public CommandResult(CommandResult result, TResponse response)

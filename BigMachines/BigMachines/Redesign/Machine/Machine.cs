@@ -6,6 +6,7 @@ using System.Threading.Tasks;
 using Arc.Threading;
 using Tinyhand;
 
+#pragma warning disable SA1202
 #pragma warning disable SA1401 // Fields should be private
 
 namespace BigMachines.Redesign;
@@ -22,8 +23,6 @@ public abstract partial class Machine
 
     public MachineControl Control { get; }
 
-    
-
     /// <summary>
     /// Gets the machine status (running, paused, terminated).
     /// </summary>
@@ -36,6 +35,68 @@ public abstract partial class Machine
     /// Gets or sets a running state of the machine.
     /// </summary>
     internal RunType RunType;
+
+    /// <summary>
+    /// Gets or sets the current state of this machine.
+    /// </summary>
+    [Key(2)]
+    protected internal int CurrentState;
+
+    /// <summary>
+    /// The time until the machine is executed.
+    /// </summary>
+    [Key(3)]
+    protected internal long Timeout = long.MaxValue; // TimeSpan.Ticks (for interlocked)
+
+    /// <summary>
+    /// Gets or sets <see cref="DateTime"/> when the machine is executed last time.
+    /// </summary>
+    [Key(4)]
+    protected internal DateTime LastRun;
+
+    /// <summary>
+    /// Gets or sets <see cref="DateTime"/> when the machine is will be executed.
+    /// </summary>
+    [Key(5)]
+    protected internal DateTime NextRun;
+
+    /// <summary>
+    /// The lifespan of this machine. When this value reaches 0, the machine is terminated.
+    /// </summary>
+    [Key(6)]
+    protected internal long Lifespan = long.MaxValue; // TimeSpan.Ticks (for interlocked)
+
+    /// <summary>
+    /// Gets or sets <see cref="DateTime"/> when the machine will be automatically terminated.
+    /// </summary>
+    [Key(7)]
+    protected internal DateTime TerminationDate = DateTime.MaxValue;
+
+    /// <summary>
+    /// Gets or sets the default time interval at which the machine will run.<br/>
+    /// <see cref="TimeSpan.Zero"/>: No interval execution.<br/>
+    /// This property is NOT serialization target.
+    /// </summary>
+    [IgnoreMember]
+    protected internal TimeSpan DefaultTimeout;
+
+    /// <summary>
+    /// Gets or sets a value indicating whether this machine is to be serialized.<br/>
+    /// This property is NOT serialization target.
+    /// </summary>
+    [IgnoreMember]
+    protected internal bool IsSerializable = false;
+
+    /// <summary>
+    /// Gets a TypeId of the machine.
+    /// </summary>
+    [IgnoreMember]
+    protected internal uint TypeId;
+
+    /// <summary>
+    /// Get the serial (unique) number of the machine.
+    /// </summary>
+    protected internal uint SerialNumber;
 
     /// <summary>
     /// Gets or sets a value indicating whether the machine is going to re-run.
@@ -72,7 +133,7 @@ RerunLoop:
         catch (Exception ex)
         {
             result = StateResult.Terminate;
-            // this.BigMachine.ReportException(new(this, ex));
+            this.Control.BigMachine.ReportException(new(this, ex));
         }
 
         if (result == StateResult.Terminate)
@@ -124,11 +185,11 @@ RerunLoop:
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     internal void RemoveFromControl()
     {
-        this.Control.RemoveFromGroup(this);
-        if (this.Info.Continuous)
+        this.Control.RemoveMachine(this);
+        /*if (this.Info.Continuous)
         {
             this.BigMachine.Continuous.RemoveMachine(this);
-        }
+        }*/
     }
 
     /// <summary>
@@ -150,6 +211,7 @@ RerunLoop:
 
 [TinyhandObject(ReservedKeys = 10)]
 public abstract partial class Machine<TIdentifier> : Machine
+    where TIdentifier : notnull
 {
     public Machine(MachineControl<TIdentifier> control, TIdentifier identifier)
         : base(control)

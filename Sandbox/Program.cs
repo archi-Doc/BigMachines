@@ -36,6 +36,10 @@ namespace Sandbox
                 ThreadCore.Root.Terminate(); // Send a termination signal to the root.
             };
 
+            var testBigMachine = new TestBigMachine();
+            var bin = TinyhandSerializer.Serialize(testBigMachine);
+            var testBigMachine2 = TinyhandSerializer.Deserialize<TestBigMachine>(bin);
+
             // typeof(TestMachine.Interface) => GroupInfo ( Constructor, TypeId, typeof(TestMachine) )
             // BigMachine<int>.StaticInfo[typeof(TestMachine.Interface)] = new(typeof(TestMachine), 0, x => new TestMachine(x), typeof(MachineSingle<>));
 

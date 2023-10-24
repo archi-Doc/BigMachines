@@ -1,29 +1,22 @@
 ﻿// Copyright (c) All contributors. All rights reserved. Licensed under the MIT license.
 
 using System;
+using System.Collections.Concurrent;
 using BigMachines.Redesign;
 using Tinyhand;
 using Tinyhand.IO;
 
 namespace BigMachines;
 
-public abstract class BigMachineBase
-{
-    /// <summary>
-    /// Gets <see cref="IServiceProvider"/> used to create instances of <see cref="Machine{TIdentifier}"/>.
-    /// </summary>
-    public IServiceProvider? ServiceProvider { get; }
-}
-
 [TinyhandObject]
-public partial class TestBigMachine : ITinyhandSerialize<TestBigMachine>
+public partial class TestBigMachine : BigMachineBase, ITinyhandSerialize<TestBigMachine>
 {
     public TestBigMachine()
     {
+        this.TestMachines = new(this, (x, y) => new TestMachine(x, y).InterfaceInstance, x => new TestMachine.Interface.CommandAll(x));
     }
 
-    [IgnoreMember]
-    public UnorderedMachineControl<int, TestMachine.Interface> TestMachine { get; private set; } = new((x, y) => new TestMachine(x, y).InterfaceInstance);
+    public UnorderedMachineControl<int, TestMachine.Interface, TestMachine.Interface.CommandAll> TestMachines { get; private set; }
 
     static void ITinyhandSerialize<TestBigMachine>.Serialize(ref TinyhandWriter writer, scoped ref TestBigMachine? value, TinyhandSerializerOptions options)
     {

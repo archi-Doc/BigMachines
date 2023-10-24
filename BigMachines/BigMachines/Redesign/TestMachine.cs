@@ -16,15 +16,19 @@ public partial class TestMachine : Machine<int>
     {
     }
 
-    public static void Test1()
+    public static async Task Test1()
     {
         var bigMachine = new TestBigMachine();
-        var machine = bigMachine.TestMachine.TryGet(0);
+        var machine = bigMachine.TestMachines.TryGet(0);
         if (machine is not null)
         {
-            _ = machine.Command.Command1();
-            _ = machine.RunAsync();
+            await machine.Command.Command1();
+            await machine.RunAsync();
         }
+
+        var testMachines = bigMachine.TestMachines;
+        var results = await testMachines.CommandAll.Command1();
+        await testMachines.RunAllAsync();
     }
 
     public Interface InterfaceInstance
@@ -78,25 +82,29 @@ public partial class TestMachine : Machine<int>
                 }
             }
 
-            public Task<bool> Command2(string name)
+            private readonly TestMachine machine;
+        }
+
+        public readonly struct CommandAll
+        {
+            public CommandAll(MachineControl<int, Interface> control)
             {
-                byte[] packet;
-                using (var writer = default(TinyhandWriter))
-                {
-                    writer.Write(this.machine.Identifier);
-                    writer.Write(name);
-                    packet = writer.FlushAndGetArray();
-                }
-
-                return Task.FromResult(true);
-
-                // this.machine.Control.Send(packet);
-
-                // var m = new TestMachine();
-                // m.Command1();
+                this.control = control;
             }
 
-            private readonly TestMachine machine;
+            private readonly MachineControl<int, Interface> control;
+
+            public async Task<IdentifierAndCommandResult<int>[]> Command1()
+            {
+                var machines = this.control.GetMachines();
+                var results = new IdentifierAndCommandResult<int>[machines.Length];
+                for (var i = 0; i < machines.Length; i++)
+                {
+                    results[i] = new(machines[i].machine.Identifier, await machines[i].Command.Command1().ConfigureAwait(false));
+                }
+
+                return results;
+            }
         }
     }
 
@@ -111,7 +119,7 @@ public partial class TestMachine : Machine<int>
         // this.SetState(State.Second);
     }
 
-    public CommandResult Command1()
+    protected CommandResult Command1()
     {
         return CommandResult.Success;
     }
