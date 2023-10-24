@@ -2,75 +2,309 @@
 
 using System;
 using System.Runtime.CompilerServices;
+using System.Threading;
 using System.Threading.Tasks;
+using System.Xml.Linq;
 using Arc.Threading;
 using Tinyhand;
+using Tinyhand.IO;
 
 #pragma warning disable SA1202
 #pragma warning disable SA1401 // Fields should be private
 
 namespace BigMachines.Redesign;
 
-[TinyhandObject(ReservedKeys = 10)]
+/// <summary>
+/// Represents an abstract class that serves as the base for the actual machine class.<br/>
+/// <see cref="Machine{TIdentifier}"/> = <see cref="Machine"/>+<typeparamref name="TIdentifier"/>.
+/// </summary>
+/// <typeparam name="TIdentifier">The type of an identifier.</typeparam>
+[TinyhandObject(ReservedKeys = Machine.ReservedKeyNumber)]
+public abstract partial class Machine<TIdentifier> : Machine
+    where TIdentifier : notnull
+{
+    internal Machine()
+        : base(default!)
+    {
+        this.Control = default!;
+        this.Identifier = default!;
+    }
+
+    public Machine(MachineControl<TIdentifier> control, TIdentifier identifier)
+        : base(control)
+    {
+        this.Control = control;
+        this.Identifier = identifier;
+    }
+
+    /// <summary>
+    /// Gets an instance of <see cref="MachineControl{TIdentifier}"/>.
+    /// </summary>
+    public new MachineControl<TIdentifier> Control { get; }
+
+    /// <summary>
+    /// Gets or sets the identifier.
+    /// </summary>
+    [Key(0, IgnoreKeyReservation = true)]
+    public TIdentifier Identifier { get; protected set; }
+}
+
+/// <summary>
+/// Represents an abstract class that serves as the base for the actual machine class.
+/// </summary>
+[TinyhandObject(ReservedKeys = ReservedKeyNumber)]
 public abstract partial class Machine
 {
+    internal const int ReservedKeyNumber = 10;
+    private static uint serialNumber;
+
+    public Machine()
+    {
+        this.Control = default!;
+    }
+
     public Machine(MachineControl control)
     {
         this.Control = control;
+        this.machineNumber = Interlocked.Increment(ref serialNumber);
     }
 
-    #region FieldAndProperty
-
-    public MachineControl Control { get; }
+    #region Keys
 
     /// <summary>
-    /// Gets the machine status (running, paused, terminated).
+    /// Gets or sets the machine status (running, paused, terminated).
     /// </summary>
-    [Key(0)]
-    public MachineStatus Status { get; private set; } = MachineStatus.Running;
+    [Key(1)]
+    protected MachineStatus status = MachineStatus.Running;
 
-    protected SemaphoreLock Semaphore { get; } = new();
+    [IgnoreMember]
+    protected MachineStatus Status
+    {
+        get => this.status;
+        set
+        {
+            if (this.status == value)
+            {
+                return;
+            }
 
-    /// <summary>
-    /// Gets or sets a running state of the machine.
-    /// </summary>
-    internal RunType RunType;
+            if (this is ITreeObject treeObject &&
+                treeObject.TryGetJournalWriter(out var root, out var writer, true))
+            {
+                writer.Write_Key();
+                writer.Write(1);
+                writer.Write_Value();
+                var ev = value;
+                writer.Write(Unsafe.As<MachineStatus, int>(ref ev));
+                root.AddJournal(writer);
+            }
+
+            this.status = value;
+        }
+    }
 
     /// <summary>
     /// Gets or sets the current state of this machine.
     /// </summary>
     [Key(2)]
-    protected internal int CurrentState;
+    protected int currentState;
+
+    [IgnoreMember]
+    protected int CurrentState
+    {
+        get => this.currentState;
+        set
+        {
+            if (this.currentState == value)
+            {
+                return;
+            }
+
+            if (this is ITreeObject treeObject &&
+                treeObject.TryGetJournalWriter(out var root, out var writer, true))
+            {
+                writer.Write_Key();
+                writer.Write(2);
+                writer.Write_Value();
+                writer.Write(value);
+                root.AddJournal(writer);
+            }
+
+            this.currentState = value;
+        }
+    }
 
     /// <summary>
-    /// The time until the machine is executed.
+    /// The time until this machine starts.
     /// </summary>
     [Key(3)]
-    protected internal long Timeout = long.MaxValue; // TimeSpan.Ticks (for interlocked)
+    protected long startTime = long.MaxValue; // TimeSpan.Ticks (for interlocked)
+
+    [IgnoreMember]
+    protected long StartTime
+    {
+        get => this.currentState;
+        set
+        {
+            if (this.startTime == value)
+            {
+                return;
+            }
+
+            if (this is ITreeObject treeObject &&
+                treeObject.TryGetJournalWriter(out var root, out var writer, true))
+            {
+                writer.Write_Key();
+                writer.Write(3);
+                writer.Write_Value();
+                writer.Write(value);
+                root.AddJournal(writer);
+            }
+
+            this.startTime = value;
+        }
+    }
 
     /// <summary>
-    /// Gets or sets <see cref="DateTime"/> when the machine is executed last time.
+    /// The last <see cref="DateTime"/> when this machine ran.
     /// </summary>
     [Key(4)]
-    protected internal DateTime LastRun;
+    protected DateTime lastRun;
+
+    [IgnoreMember]
+    protected DateTime LastRun
+    {
+        get => this.lastRun;
+        set
+        {
+            if (this.lastRun == value)
+            {
+                return;
+            }
+
+            if (this is ITreeObject treeObject &&
+                treeObject.TryGetJournalWriter(out var root, out var writer, true))
+            {
+                writer.Write_Key();
+                writer.Write(4);
+                writer.Write_Value();
+                writer.Write(value);
+                root.AddJournal(writer);
+            }
+
+            this.lastRun = value;
+        }
+    }
 
     /// <summary>
-    /// Gets or sets <see cref="DateTime"/> when the machine is will be executed.
+    /// The next scheduled <see cref="DateTime"/> for this machine to run.
     /// </summary>
     [Key(5)]
-    protected internal DateTime NextRun;
+    protected DateTime nextRun;
+
+    [IgnoreMember]
+    protected DateTime NextRun
+    {
+        get => this.nextRun;
+        set
+        {
+            if (this.nextRun == value)
+            {
+                return;
+            }
+
+            if (this is ITreeObject treeObject &&
+                treeObject.TryGetJournalWriter(out var root, out var writer, true))
+            {
+                writer.Write_Key();
+                writer.Write(5);
+                writer.Write_Value();
+                writer.Write(value);
+                root.AddJournal(writer);
+            }
+
+            this.nextRun = value;
+        }
+    }
 
     /// <summary>
-    /// The lifespan of this machine. When this value reaches 0, the machine is terminated.
+    /// The remaining lifespan of this machine. When it reaches 0, the machine will terminate.
     /// </summary>
     [Key(6)]
-    protected internal long Lifespan = long.MaxValue; // TimeSpan.Ticks (for interlocked)
+    protected long lifespan = long.MaxValue; // TimeSpan.Ticks (for interlocked)
+
+    [IgnoreMember]
+    protected long Lifespan
+    {
+        get => this.lifespan;
+        set
+        {
+            if (this.lifespan == value)
+            {
+                return;
+            }
+
+            if (this is ITreeObject treeObject &&
+                treeObject.TryGetJournalWriter(out var root, out var writer, true))
+            {
+                writer.Write_Key();
+                writer.Write(6);
+                writer.Write_Value();
+                writer.Write(value);
+                root.AddJournal(writer);
+            }
+
+            this.lifespan = value;
+        }
+    }
 
     /// <summary>
     /// Gets or sets <see cref="DateTime"/> when the machine will be automatically terminated.
     /// </summary>
     [Key(7)]
-    protected internal DateTime TerminationDate = DateTime.MaxValue;
+    protected DateTime terminationDate = DateTime.MaxValue;
+
+    [IgnoreMember]
+    protected DateTime TerminationDate
+    {
+        get => this.terminationDate;
+        set
+        {
+            if (this.terminationDate == value)
+            {
+                return;
+            }
+
+            if (this is ITreeObject treeObject &&
+                treeObject.TryGetJournalWriter(out var root, out var writer, true))
+            {
+                writer.Write_Key();
+                writer.Write(7);
+                writer.Write_Value();
+                writer.Write(value);
+                root.AddJournal(writer);
+            }
+
+            this.terminationDate = value;
+        }
+    }
+
+    #endregion
+
+    #region FieldAndProperty
+
+    /// <summary>
+    /// Gets an instance of <see cref="MachineControl"/>.
+    /// </summary>
+    public readonly MachineControl Control;
+
+    protected readonly SemaphoreLock Semaphore = new();
+    protected object? interfaceInstance;
+
+    /// <summary>
+    /// Gets or sets a running state of the machine.
+    /// </summary>
+    internal RunType RunType;
 
     /// <summary>
     /// Gets or sets the default time interval at which the machine will run.<br/>
@@ -81,29 +315,20 @@ public abstract partial class Machine
     protected internal TimeSpan DefaultTimeout;
 
     /// <summary>
-    /// Gets or sets a value indicating whether this machine is to be serialized.<br/>
-    /// This property is NOT serialization target.
-    /// </summary>
-    [IgnoreMember]
-    protected internal bool IsSerializable = false;
-
-    /// <summary>
     /// Gets a TypeId of the machine.
     /// </summary>
     [IgnoreMember]
     protected internal uint TypeId;
 
     /// <summary>
-    /// Get the serial (unique) number of the machine.
+    /// Get the serial (unique) number of this machine.
     /// </summary>
-    protected internal uint SerialNumber;
+    private uint machineNumber;
 
     /// <summary>
     /// Gets or sets a value indicating whether the machine is going to re-run.
     /// </summary>
     protected internal bool RequestRerun { get; set; }
-
-    protected object? interfaceInstance;
 
     #endregion
 
@@ -207,20 +432,4 @@ RerunLoop:
     protected virtual void OnTerminated()
     {
     }
-}
-
-[TinyhandObject(ReservedKeys = 10)]
-public abstract partial class Machine<TIdentifier> : Machine
-    where TIdentifier : notnull
-{
-    public Machine(MachineControl<TIdentifier> control, TIdentifier identifier)
-        : base(control)
-    {
-        this.Control = control;
-        this.Identifier = identifier;
-    }
-
-    public new MachineControl<TIdentifier> Control { get; }
-
-    public TIdentifier Identifier { get; }
 }

@@ -5,11 +5,14 @@ using System;
 namespace BigMachines.Redesign;
 
 /// <summary>
-/// Defines the type of delegate used to handle exceptions.
+/// Defines the type of delegate for handling BigMachine exceptions.
 /// </summary>
 /// <param name="exception">Exception.</param>
 public delegate void ExceptionHandlerDelegate(BigMachineException exception);
 
+/// <summary>
+/// A class for handling exceptions that occur during BigMachine processing.
+/// </summary>
 public class BigMachineException
 {
     public BigMachineException(Machine machine, Exception exception)
@@ -22,4 +25,15 @@ public class BigMachineException
     public Machine Machine { get; }
 
     public Exception Exception { get; }
+}
+
+/// <summary>
+/// An exception caused by a circular invocation of commands.
+/// </summary>
+public class CircularCommandException : Exception
+{
+    public CircularCommandException(string message)
+        : base(message)
+    {
+    }
 }

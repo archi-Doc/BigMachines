@@ -5,8 +5,11 @@ using System.Threading.Tasks;
 
 namespace BigMachines.Redesign;
 
-public abstract partial class Machine
+public partial class Machine
 {
+    /// <summary>
+    /// An interface class for users to interact with machines.
+    /// </summary>
     public abstract class ManMachineInterface
     {// MANMACHINE INTERFACE by Shirow.
         public ManMachineInterface(Machine machine)
@@ -46,17 +49,17 @@ public abstract partial class Machine
             {
                 /*if (command.LoopChecker is { } checker)
                 {
-                    const uint SerialNumberMask = ~(1u << 31);
-                    var id = (run << 63) | (ulong)(this.SerialNumber & SerialNumberMask) << 32 | this.TypeId; // Not a perfect solution, though it works in most cases.
+                    const uint MachineNumberMask = ~(1u << 31);
+                    var id = (run << 63) | (ulong)(this.machine.machineNumber & MachineNumberMask) << 32 | this.TypeId; // Not a perfect solution, though it works in most cases.
                     if (checker.FindId(id))
                     {
-                        if (this.BigMachine.LoopCheckerMode != LoopCheckerMode.EnabledAndThrowException)
+                        if (this.machine.Control.BigMachine.LoopCheckerMode != LoopCheckerMode.EnabledAndThrowException)
                         {
                             return true;
                         }
 
                         var s = string.Join('-', checker.EnumerateId().Select(x => this.BigMachine.GetMachineInfoFromTypeId((uint)x)?.MachineType.Name + "." + IdToString(x)));
-                        throw new BigMachine<TIdentifier>.CommandLoopException($"Loop detected ({s})");
+                        throw new CircularCommandException($"Circular commands detected ({s})");
                     }
 
                     checker = checker.Clone();

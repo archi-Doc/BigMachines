@@ -2,11 +2,8 @@
 
 using System;
 using System.Collections.Generic;
-using System.Linq;
 using System.Runtime.CompilerServices;
-using System.Text;
 using System.Threading;
-using System.Threading.Tasks;
 
 namespace BigMachines;
 
@@ -15,17 +12,12 @@ namespace BigMachines;
 public enum LoopCheckerMode
 {
     /// <summary>
-    /// Loop checker is enabled and throws an exception when a recursive command is detected.
+    /// The loop checker is enabled and will throw an exception when it detects a recursive command.
     /// </summary>
     EnabledAndThrowException,
 
     /// <summary>
-    /// Loop checker is enabled but does not throw an exception when a recursive command is detected.
-    /// </summary>
-    EnabledWithoutException,
-
-    /// <summary>
-    /// Loop checker is disabled.
+    /// The loop checker is disabled.
     /// </summary>
     Disabled,
 }
@@ -150,5 +142,3 @@ internal class LoopChecker
 
     public override string ToString() => $"Ids {this.IdCount}";
 }
-
-#pragma warning restore SA1401 // Fields should be private

@@ -2,12 +2,16 @@
 
 using System;
 using System.Collections.Concurrent;
-using BigMachines.Redesign;
 
-namespace BigMachines;
+namespace BigMachines.Redesign;
 
 public abstract class BigMachineBase
 {
+    /// <summary>
+    /// Gets or sets a value to specify the operation mode of the loop checker.
+    /// </summary>
+    public LoopCheckerMode LoopCheckerMode { get; set; } = LoopCheckerMode.EnabledAndThrowException;
+
     /// <summary>
     /// Gets <see cref="IServiceProvider"/> used to create instances of <see cref="Machine{TIdentifier}"/>.
     /// </summary>
