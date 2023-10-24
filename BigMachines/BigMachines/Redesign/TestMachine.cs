@@ -8,138 +8,6 @@ using ValueLink;
 
 namespace BigMachines.Redesign;
 
-[TinyhandObject]
-public partial class TestBigMachine : ITinyhandSerialize<TestBigMachine>
-{
-    public TestBigMachine()
-    {
-    }
-
-    public UnorderedMachineControl<int, TestMachine.Interface> TestMachine { get; private set; } = new((x, y) => new TestMachine(x, y).InterfaceInstance);
-
-    static void ITinyhandSerialize<TestBigMachine>.Serialize(ref TinyhandWriter writer, scoped ref TestBigMachine? value, TinyhandSerializerOptions options)
-    {
-        throw new System.NotImplementedException();
-    }
-
-    static void ITinyhandSerialize<TestBigMachine>.Deserialize(ref TinyhandReader reader, scoped ref TestBigMachine? value, TinyhandSerializerOptions options)
-    {
-        throw new System.NotImplementedException();
-    }
-}
-
-[TinyhandObject]
-public partial class UnorderedMachineControl<TIdentifier, TInterface> : MachineControl<TIdentifier>
-{
-    public UnorderedMachineControl(Func<UnorderedMachineControl<TIdentifier, TInterface>, TIdentifier, TInterface> createDelegate)
-    {
-        this.createDelegate = createDelegate;
-    }
-
-    private Func<UnorderedMachineControl<TIdentifier, TInterface>, TIdentifier, TInterface> createDelegate; // MachineControl + Identifier -> Machine.Interface
-
-    [TinyhandObject(Tree = true)]
-    [ValueLinkObject(Isolation = IsolationLevel.Serializable)]
-    private partial class Item
-    {
-        public Item()
-        {
-            this.Identifier = default!;
-            this.Interface = default!;
-        }
-
-        public Item(TIdentifier identifier, TInterface @interface)
-        {
-            this.Identifier = identifier;
-            this.Interface = @interface;
-        }
-
-#pragma warning disable SA1401 // Fields should be private
-
-        [Key(0)]
-        [Link(Primary = true, Unique = true, Type = ChainType.Unordered)]
-        public TIdentifier Identifier;
-
-        [Key(1)]
-        public TInterface Interface;
-
-#pragma warning restore SA1401 // Fields should be private
-    }
-
-    private readonly Item.GoshujinClass items = new();
-
-    public TInterface? TryGet(TIdentifier identifier)
-    {
-        lock (this.items.SyncObject)
-        {
-            if (this.items.IdentifierChain.TryGetValue(identifier, out var item))
-            {
-                return item.Interface;
-            }
-            else
-            {
-                return default;
-            }
-        }
-    }
-
-    public TInterface GetOrCreate(TIdentifier identifier)
-    {
-        lock (this.items.SyncObject)
-        {
-            if (!this.items.IdentifierChain.TryGetValue(identifier, out var item))
-            {
-                item = new(identifier, this.createDelegate(this, identifier));
-            }
-
-            return item.Interface;
-        }
-    }
-}
-
-public partial class MachineControl<TIdentifier> : MachineControl
-{
-}
-
-public partial class MachineControl
-{
-}
-
-public abstract class ManMachineInterface // MANMACHINE INTERFACE by Shirow.
-{
-    public ManMachineInterface()
-    {
-    }
-}
-
-public class Machine
-{
-    public Machine(MachineControl control)
-    {
-        this.Control = control;
-    }
-
-    public MachineControl Control { get; }
-
-#pragma warning disable SA1401
-    protected object? interfaceInstance;
-#pragma warning restore SA1401
-}
-
-public class Machine<TIdentifier> : Machine
-{
-    public Machine(MachineControl<TIdentifier> control, TIdentifier identifier)
-        : base(control)
-    {
-        this.Control = control;
-        this.Identifier = identifier;
-    }
-
-    public new MachineControl<TIdentifier> Control { get; }
-
-    public TIdentifier Identifier { get; }
-}
-
 // [MachineObject] // ulong id = FarmHash.Hash64(Type.FullName)
 public partial class TestMachine : Machine<int>
 {
@@ -206,7 +74,9 @@ public partial class TestMachine : Machine<int>
                     packet = writer.FlushAndGetArray();
                 }
 
-                this.machine.Control.Send(packet);
+                return Task.FromResult(true);
+
+                // this.machine.Control.Send(packet);
 
                 // var m = new TestMachine();
                 // m.Command1();

@@ -12,6 +12,79 @@ using ValueLink;
 
 namespace BigMachines;
 
+[TinyhandObject]
+public partial class UnorderedMachineControl<TIdentifier, TInterface> : MachineControl<TIdentifier>
+{
+    public UnorderedMachineControl()
+    {
+    }
+
+    public UnorderedMachineControl(Func<UnorderedMachineControl<TIdentifier, TInterface>, TIdentifier, TInterface> createDelegate)
+    {
+        this.createDelegate = createDelegate;
+    }
+
+    private Func<UnorderedMachineControl<TIdentifier, TInterface>, TIdentifier, TInterface> createDelegate; // MachineControl + Identifier -> Machine.Interface
+
+    [TinyhandObject(Tree = true)]
+    [ValueLinkObject(Isolation = IsolationLevel.Serializable)]
+    private partial class Item
+    {
+        public Item()
+        {
+            this.Identifier = default!;
+            this.Interface = default!;
+        }
+
+        public Item(TIdentifier identifier, TInterface @interface)
+        {
+            this.Identifier = identifier;
+            this.Interface = @interface;
+        }
+
+#pragma warning disable SA1401 // Fields should be private
+
+        [Key(0)]
+        [Link(Primary = true, Unique = true, Type = ChainType.Unordered)]
+        public TIdentifier Identifier;
+
+        [Key(1)]
+        public TInterface Interface;
+
+#pragma warning restore SA1401 // Fields should be private
+    }
+
+    private readonly Item.GoshujinClass items = new();
+
+    public TInterface? TryGet(TIdentifier identifier)
+    {
+        lock (this.items.SyncObject)
+        {
+            if (this.items.IdentifierChain.TryGetValue(identifier, out var item))
+            {
+                return item.Interface;
+            }
+            else
+            {
+                return default;
+            }
+        }
+    }
+
+    public TInterface GetOrCreate(TIdentifier identifier)
+    {
+        lock (this.items.SyncObject)
+        {
+            if (!this.items.IdentifierChain.TryGetValue(identifier, out var item))
+            {
+                item = new(identifier, this.createDelegate(this, identifier));
+            }
+
+            return item.Interface;
+        }
+    }
+}
+
 /*[TinyhandObject(Tree = true)]
 public sealed partial class UnorderedMachineControl<TIdentifier, TMachine, TInterface, TState, TCommand>
     : ITinyhandSerialize<UnorderedMachineControl<TIdentifier, TMachine, TInterface, TState, TCommand>>, ITinyhandCustomJournal
