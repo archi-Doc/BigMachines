@@ -13,7 +13,7 @@ namespace BigMachines.Redesign;
 [TinyhandObject(UseServiceProvider = true, Structual = true)]
 public partial class SingleMachine : Machine
 {
-    public SingleMachine(SingleMachineControl<SingleMachine, Interface> control)
+    public SingleMachine(SingleMachineControl<Interface> control)
         : base(control)
     {
     }
