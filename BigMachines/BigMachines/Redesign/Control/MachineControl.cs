@@ -61,7 +61,7 @@ public abstract class MachineControl<TIdentifier, TInterface> : MachineControl<T
     /// Gets an array of machine interfaces.
     /// </summary>
     /// <returns>An array of machine interfaces.</returns>
-    public abstract TInterface[] GetMachines();
+    public abstract TInterface[] GetArray();
 
     /// <summary>
     /// Runs all the machines managed by the control class.
@@ -69,7 +69,7 @@ public abstract class MachineControl<TIdentifier, TInterface> : MachineControl<T
     /// <returns>A <see cref="Task"/> representing the asynchronous operation.</returns>
     public async Task RunAllAsync()
     {
-        var machines = this.GetMachines();
+        var machines = this.GetArray();
         foreach (var x in machines)
         {
             await x.RunAsync().ConfigureAwait(false);

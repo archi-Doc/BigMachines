@@ -112,7 +112,7 @@ public partial class TestMachine : Machine<int>
 
             public async Task<IdentifierAndCommandResult<int>[]> Command1()
             {
-                var machines = this.control.GetMachines();
+                var machines = this.control.GetArray();
                 var results = new IdentifierAndCommandResult<int>[machines.Length];
                 for (var i = 0; i < machines.Length; i++)
                 {

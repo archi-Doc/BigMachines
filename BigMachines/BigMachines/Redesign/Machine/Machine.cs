@@ -19,7 +19,7 @@ namespace BigMachines.Redesign;
 [TinyhandObject(ReservedKeys = ReservedKeyNumber)]
 public abstract partial class Machine
 {
-    internal const int ReservedKeyNumber = 10;
+    internal const int ReservedKeyNumber = 8;
     private static uint serialNumber;
 
     public Machine()
@@ -244,15 +244,10 @@ public abstract partial class Machine
     protected readonly TimeSpan DefaultTimeout;
 
     [IgnoreMember]
-    protected OperationalFlag operationalState = OperationalFlag.Standby;
+    protected OperationalFlag operationalState;
 
     [IgnoreMember]
     protected object? interfaceInstance;
-
-    /// <summary>
-    /// Gets or sets a running state of the machine.
-    /// </summary>
-    internal RunType RunType;
 
     /// <summary>
     /// Gets or sets a value indicating whether the machine is going to re-run.
@@ -277,12 +272,12 @@ public abstract partial class Machine
     /// <returns>true: The machine is terminated.</returns>
     private async Task<StateResult> RunMachine(RunType runType, DateTime now)
     {// Called: Machine.DistributeCommand(), BigMachine.MainLoop()
-        if (this.RunType != RunType.NotRunning)
+        if (this.operationalState.HasFlag(OperationalFlag.Running))
         {// Machine is running
             return StateResult.Continue;
         }
 
-        this.RunType = runType;
+        this.operationalState |= OperationalFlag.Running;
 RerunLoop:
         StateResult result;
         this.requestRerun = false;
@@ -300,7 +295,7 @@ RerunLoop:
         if (result == StateResult.Terminate)
         {
             // this.LastRun = now;
-            this.RunType = RunType.NotRunning;
+            this.operationalState &= ~OperationalFlag.Running;
             return result;
         }
         else if (this.requestRerun)
@@ -309,7 +304,7 @@ RerunLoop:
         }
 
         this.LastRunTime = now;
-        this.RunType = RunType.NotRunning;
+        this.operationalState &= OperationalFlag.Running;
         return result;
     }
 
@@ -318,15 +313,23 @@ RerunLoop:
 
     private async Task TerminateAndRemoveFromControl()
     {
+        var terminated = false;
         await this.Semaphore.EnterAsync().ConfigureAwait(false);
         try
         {
-            this.operationalState = OperationalFlag.Terminated;
-            this.OnTerminated();
+            if (this.operationalState.HasFlag(OperationalFlag.Terminated))
+            {
+                terminated = true;
+                this.OnTerminated();
+            }
         }
         finally
         {
             this.Semaphore.Exit();
+        }
+
+        if (terminated)
+        {
             this.RemoveFromControl();
         }
     }

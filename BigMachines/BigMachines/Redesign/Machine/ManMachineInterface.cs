@@ -29,13 +29,23 @@ public partial class Machine
         public OperationalFlag GetOperationalState()
             => this.machine.operationalState;
 
-        /// <summary>
-        /// Changes the operational state of the machine.
-        /// </summary>
-        /// <param name="state">The operational state.</param>
-        /// <returns><see langword="true"/>: The status is successfully changed.<br/>
-        /// <see langword="false"/>: Machine is not available.</returns>
-        public bool SetOperationalState(OperationalFlag state)
+        public bool TerminateMachine()
+        {
+            using (this.machine.Semaphore.Lock())
+            {
+                if (this.machine.operationalState.HasFlag(OperationalFlag.Terminated))
+                {
+                    return false;
+                }
+
+                this.machine.operationalState |= OperationalFlag.Terminated;
+            }
+
+            this.machine.RemoveFromControl();
+            return true;
+        }
+
+        public bool PauseMachine()
         {
             using (this.machine.Semaphore.Lock())
             {
@@ -44,11 +54,22 @@ public partial class Machine
                     return false;
                 }
 
-                this.machine.operationalState = state;
+                this.machine.operationalState |= OperationalFlag.Paused;
+            }
+
+            return true;
+        }
+
+        public bool UnpauseMachine()
+        {
+            using (this.machine.Semaphore.Lock())
+            {
                 if (this.machine.operationalState == OperationalFlag.Terminated)
                 {
-                    this.machine.RemoveFromControl();
+                    return false;
                 }
+
+                this.machine.operationalState &= ~OperationalFlag.Paused;
             }
 
             return true;
@@ -59,22 +80,24 @@ public partial class Machine
         /// </summary>
         /// <returns><see langword="true"/>: The machine is running (in state methods).</returns>
         public bool IsRunning()
-            => this.machine.RunType != RunType.NotRunning;
+            => this.machine.operationalState.HasFlag(OperationalFlag.Running) &&
+            !this.machine.operationalState.HasFlag(OperationalFlag.Terminated);
 
         /// <summary>
         /// Indicates whether the machine is active (in state methods or waiting to execute).
         /// </summary>
         /// <returns><see langword="true"/>: The machine is active (in state methods or waiting to execute).</returns>
         public bool IsActive()
-            => this.machine.RunType != RunType.NotRunning ||
-                    (this.machine.DefaultTimeout is TimeSpan ts && ts > TimeSpan.Zero);
+            => !this.machine.operationalState.HasFlag(OperationalFlag.Terminated) &&
+            (this.machine.operationalState.HasFlag(OperationalFlag.Running) ||
+            (this.machine.DefaultTimeout is TimeSpan ts && ts > TimeSpan.Zero));
 
         /// <summary>
         /// Indicates whether the machine is terminated.
         /// </summary>
         /// <returns><see langword="true"/>: The machine is terminated.</returns>
         public bool IsTerminated()
-            => this.machine.operationalState == OperationalFlag.Terminated;
+            => this.machine.operationalState.HasFlag(OperationalFlag.Terminated);
 
         public TimeSpan GetTimeToStart()
             => new(this.machine.TimeToStart);
@@ -166,7 +189,7 @@ public partial class Machine
             {
                 if (await this.machine.RunMachine(RunType.Manual, DateTime.UtcNow).ConfigureAwait(false) == StateResult.Terminate)
                 {
-                    this.machine.operationalState = OperationalFlag.Terminated;
+                    this.machine.operationalState |= OperationalFlag.Terminated;
                     this.machine.OnTerminated();
                 }
             }
@@ -174,7 +197,7 @@ public partial class Machine
             {
                 this.machine.Semaphore.Exit();
 
-                if (this.machine.operationalState == OperationalFlag.Terminated)
+                if (this.machine.operationalState.HasFlag(OperationalFlag.Terminated))
                 {
                     this.machine.RemoveFromControl();
                 }

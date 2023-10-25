@@ -37,6 +37,9 @@ namespace Sandbox
             };
 
             var testBigMachine = new TestBigMachine();
+            var m = testBigMachine.TestMachines.GetOrCreate(1);
+            m.PauseMachine();
+            m.UnpauseMachine();
             var bin = TinyhandSerializer.Serialize(testBigMachine);
             var testBigMachine2 = TinyhandSerializer.Deserialize<TestBigMachine>(bin);
 

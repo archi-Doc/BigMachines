@@ -169,11 +169,6 @@ public readonly struct CommandResult<TResponse>
 public enum OperationalFlag
 {
     /// <summary>
-    /// Machine is in standby.
-    /// </summary>
-    Standby = 0,
-
-    /// <summary>
     /// Machine is running (in state methods).
     /// </summary>
     Running = 1,

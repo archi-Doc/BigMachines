@@ -77,7 +77,7 @@ public sealed partial class UnorderedMachineControl<TIdentifier, TInterface, TCo
         }
     }
 
-    public override TInterface[] GetMachines()
+    public override TInterface[] GetArray()
     {
         lock (this.items.SyncObject)
         {
