@@ -1,6 +1,7 @@
 ﻿// Copyright (c) All contributors. All rights reserved. Licensed under the MIT license.
 
 using System;
+using System.Runtime.CompilerServices;
 using Tinyhand;
 using Tinyhand.IO;
 
@@ -16,6 +17,7 @@ namespace BigMachines.Redesign;
 /// <typeparam name="TInterface">The type of an interface.</typeparam>
 [TinyhandObject(Structual = true)]
 public partial class SingleMachineControl<TMachine, TInterface> : MachineControl, ITinyhandSerialize<SingleMachineControl<TMachine, TInterface>>, ITinyhandCustomJournal
+    where TMachine : Machine
     where TInterface : Machine.ManMachineInterface
 {
     internal SingleMachineControl()
@@ -51,9 +53,18 @@ public partial class SingleMachineControl<TMachine, TInterface> : MachineControl
 
     static void ITinyhandSerialize<SingleMachineControl<TMachine, TInterface>>.Serialize(ref TinyhandWriter writer, scoped ref SingleMachineControl<TMachine, TInterface>? value, TinyhandSerializerOptions options)
     {
-        if (value?.@interface?.Machine is TMachine machine)
+        /*if (value?.@interface?.Machine is TMachine machine)
         {
             options.Resolver.GetFormatter<TMachine>().Serialize(ref writer, machine, options);
+        }
+        else
+        {
+            writer.WriteNil();
+        }*/
+
+        if (value?.@interface?.Machine is ITinyhandSerialize serialize)
+        {
+            serialize.Serialize(ref writer, options);
         }
         else
         {
@@ -63,7 +74,16 @@ public partial class SingleMachineControl<TMachine, TInterface> : MachineControl
 
     static void ITinyhandSerialize<SingleMachineControl<TMachine, TInterface>>.Deserialize(ref TinyhandReader reader, scoped ref SingleMachineControl<TMachine, TInterface>? value, TinyhandSerializerOptions options)
     {
-        throw new NotImplementedException();
+        if (value is null)
+        {
+            throw new TinyhandException("Control instance is not ready.");
+        }
+
+        var machine = options.Resolver.GetFormatter<TMachine>().Deserialize(ref reader, options);
+        if (machine is not null)
+        {
+            value.@interface = machine.interfaceInstance as TInterface;
+        }
     }
 
     bool ITinyhandCustomJournal.ReadCustomRecord(ref TinyhandReader reader)

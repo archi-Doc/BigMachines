@@ -247,7 +247,7 @@ public abstract partial class Machine
     protected OperationalFlag operationalState;
 
     [IgnoreMember]
-    protected object? interfaceInstance;
+    protected internal object? interfaceInstance;
 
     /// <summary>
     /// Gets or sets a value indicating whether the machine is going to re-run.
