@@ -12,7 +12,7 @@ using ValueLink;
 namespace BigMachines.Redesign;
 
 [TinyhandObject(Structual = true)]
-public sealed partial class UnorderedMachineControl<TIdentifier, TInterface, TCommandAll> : MachineControl<TIdentifier, TInterface>, ITinyhandSerialize<UnorderedMachineControl<TIdentifier, TInterface, TCommandAll>>, ITinyhandCustomJournal
+public sealed partial class UnorderedMachineControl<TIdentifier, TInterface, TCommandAll> : MultiMachineControl<TIdentifier, TInterface>, ITinyhandSerialize<UnorderedMachineControl<TIdentifier, TInterface, TCommandAll>>, ITinyhandCustomJournal
     where TIdentifier : notnull
     where TInterface : Machine.ManMachineInterface
 {

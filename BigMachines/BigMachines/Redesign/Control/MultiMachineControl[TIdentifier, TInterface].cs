@@ -6,15 +6,15 @@ namespace BigMachines.Redesign;
 
 /// <summary>
 /// Represents the abstract class for managing machines.<br/>
-/// <see cref="MachineControl{TIdentifier, TInterface}"/> = <see cref="MachineControl{TIdentifier}"/>+<typeparamref name="TInterface"/>.
+/// <see cref="MultiMachineControl{TIdentifier, TInterface}"/> = <see cref="MultiMachineControl{TIdentifier}"/>+<typeparamref name="TInterface"/>.
 /// </summary>
 /// <typeparam name="TIdentifier">The type of an identifier.</typeparam>
 /// <typeparam name="TInterface">The type of a machine interface.</typeparam>
-public abstract class MachineControl<TIdentifier, TInterface> : MachineControl<TIdentifier>
+public abstract class MultiMachineControl<TIdentifier, TInterface> : MultiMachineControl<TIdentifier>
     where TIdentifier : notnull
     where TInterface : Machine.ManMachineInterface
 {
-    public MachineControl(BigMachineBase bigMachine)
+    public MultiMachineControl(BigMachineBase bigMachine)
         : base(bigMachine)
     {
     }

@@ -26,13 +26,13 @@ public partial class Machine
         /// <see langword="true"/>: the state is successfully retrieved; otherwise <see langword="false"/> (the machine is terminated).</returns>
         public bool TryGetState(out TState state)
         {
-            if (this.machine.operationalState == OperationalFlag.Terminated)
+            if (this.Machine.operationalState == OperationalFlag.Terminated)
             {
                 state = default;
                 return false;
             }
 
-            state = Unsafe.As<int, TState>(ref this.machine.machineState);
+            state = Unsafe.As<int, TState>(ref this.Machine.machineState);
             return true;
         }
 
@@ -46,15 +46,15 @@ public partial class Machine
             var result = ChangeStateResult.Terminated;
             var i = Unsafe.As<TState, int>(ref state);
 
-            using (this.machine.Semaphore.Lock())
+            using (this.Machine.Semaphore.Lock())
             {
-                if (this.machine.operationalState == OperationalFlag.Terminated)
+                if (this.Machine.operationalState == OperationalFlag.Terminated)
                 {// Terminated
                     result = ChangeStateResult.Terminated;
                 }
                 else
                 {
-                    result = this.machine.InternalChangeState(i, false);
+                    result = this.Machine.InternalChangeState(i, false);
                 }
             }
 

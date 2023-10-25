@@ -5,14 +5,14 @@ using System.Threading.Tasks;
 namespace BigMachines.Redesign;
 
 /// <summary>
-/// Represents the abstract class for managing machines.<br/>
-/// <see cref="MachineControl{TIdentifier}"/> = <see cref="MachineControl"/>+<typeparamref name="TIdentifier"/>.
+/// Represents the abstract class for managing multiple machines.<br/>
+/// <see cref="MultiMachineControl{TIdentifier}"/> = <see cref="MachineControl"/>+<typeparamref name="TIdentifier"/>.
 /// </summary>
 /// <typeparam name="TIdentifier">The type of an identifier.</typeparam>
-public abstract class MachineControl<TIdentifier> : MachineControl
+public abstract class MultiMachineControl<TIdentifier> : MachineControl
     where TIdentifier : notnull
 {
-    public MachineControl(BigMachineBase bigMachine)
+    public MultiMachineControl(BigMachineBase bigMachine)
         : base(bigMachine)
     {
     }

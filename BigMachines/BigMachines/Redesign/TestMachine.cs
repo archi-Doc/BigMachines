@@ -4,6 +4,7 @@ using System;
 using System.Threading.Tasks;
 using Tinyhand;
 
+#pragma warning disable SA1401
 #pragma warning disable SA1602
 
 namespace BigMachines.Redesign;
@@ -12,7 +13,7 @@ namespace BigMachines.Redesign;
 [TinyhandObject(UseServiceProvider = true, Structual = true)]
 public partial class TestMachine : Machine<int>
 {
-    public TestMachine(MachineControl<int> control, int identifier)
+    public TestMachine(MultiMachineControl<int> control, int identifier)
         : base(control, identifier)
     {
     }
@@ -40,13 +41,6 @@ public partial class TestMachine : Machine<int>
         First = 1,
     }
 
-    public enum Command
-    {
-        GetInfo = 33,
-        GetInfo2 = 3,
-        GetInfo4 = 4,
-    }
-
     public Interface InterfaceInstance
     {
         get
@@ -66,12 +60,12 @@ public partial class TestMachine : Machine<int>
         public Interface(TestMachine machine)
             : base(machine)
         {
-            this.machine = machine;
+            this.Machine = machine;
         }
 
-        public CommandList Command => new(this.machine);
+        public CommandList Command => new(this.Machine);
 
-        private new readonly TestMachine machine;
+        protected internal new readonly TestMachine Machine;
 
         public readonly struct CommandList
         {
@@ -103,12 +97,12 @@ public partial class TestMachine : Machine<int>
 
         public readonly struct CommandAll
         {
-            public CommandAll(MachineControl<int, Interface> control)
+            public CommandAll(MultiMachineControl<int, Interface> control)
             {
                 this.control = control;
             }
 
-            private readonly MachineControl<int, Interface> control;
+            private readonly MultiMachineControl<int, Interface> control;
 
             public async Task<IdentifierAndCommandResult<int>[]> Command1()
             {
@@ -116,7 +110,7 @@ public partial class TestMachine : Machine<int>
                 var results = new IdentifierAndCommandResult<int>[machines.Length];
                 for (var i = 0; i < machines.Length; i++)
                 {
-                    results[i] = new(machines[i].machine.Identifier, await machines[i].Command.Command1().ConfigureAwait(false));
+                    results[i] = new(machines[i].Machine.Identifier, await machines[i].Command.Command1().ConfigureAwait(false));
                 }
 
                 return results;

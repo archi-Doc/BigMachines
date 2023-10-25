@@ -25,6 +25,6 @@ public partial class Machine
         /// <summary>
         /// Gets the identifier of the machine.
         /// </summary>
-        public TIdentifier Identifier => ((Machine<TIdentifier>)this.machine).Identifier;
+        public TIdentifier Identifier => ((Machine<TIdentifier>)this.Machine).Identifier;
     }
 }

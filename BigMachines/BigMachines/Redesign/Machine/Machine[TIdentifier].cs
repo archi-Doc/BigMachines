@@ -22,7 +22,7 @@ public abstract partial class Machine<TIdentifier> : Machine
         this.Identifier = default!;
     }
 
-    public Machine(MachineControl<TIdentifier> control, TIdentifier identifier)
+    public Machine(MultiMachineControl<TIdentifier> control, TIdentifier identifier)
         : base(control)
     {
         this.Control = control;
@@ -30,9 +30,9 @@ public abstract partial class Machine<TIdentifier> : Machine
     }
 
     /// <summary>
-    /// Gets an instance of <see cref="MachineControl{TIdentifier}"/>.
+    /// Gets an instance of <see cref="MultiMachineControl{TIdentifier}"/>.
     /// </summary>
-    public new MachineControl<TIdentifier> Control { get; }
+    public new MultiMachineControl<TIdentifier> Control { get; }
 
     /// <summary>
     /// Gets or sets the identifier.
