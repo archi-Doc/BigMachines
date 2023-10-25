@@ -23,24 +23,24 @@ public partial class Machine
         /// </summary>
         /// <param name="state">The state of the machine.</param>
         /// <returns>
-        /// <see langword="true"/>: the state is successfully retrieved; otherwise <see langword="false"/>.</returns>
+        /// <see langword="true"/>: the state is successfully retrieved; otherwise <see langword="false"/> (the machine is terminated).</returns>
         public bool TryGetState(out TState state)
         {
-            if (this.machine.OperationalState != OperationalState.Terminated)
+            if (this.machine.OperationalState == OperationalState.Terminated)
             {
-                state = Unsafe.As<int, TState>(ref this.machine.machineState);
-                return true;
+                state = default;
+                return false;
             }
 
-            state = default;
-            return false;
+            state = Unsafe.As<int, TState>(ref this.machine.machineState);
+            return true;
         }
 
         /// <summary>
         /// Changes the state of the machine.
         /// </summary>
         /// <param name="state">The next machine state.</param>
-        /// <returns><see langword="true"/> if the state is successfully changed.</returns>
+        /// <returns><see cref="ChangeStateResult"/>.</returns>
         public ChangeStateResult ChangeState(TState state)
         {
             var result = ChangeStateResult.Terminated;

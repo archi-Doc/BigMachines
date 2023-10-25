@@ -10,7 +10,7 @@ using Tinyhand.IO;
 namespace BigMachines;
 
 [TinyhandObject]
-public partial class MachineDictionary<TIdentifier, TMachine> : ITinyhandSerialize<MachineDictionary<TIdentifier, TMachine>>, ITinyhandReconstruct<MachineDictionary<TIdentifier, TMachine>>, ITreeObject
+public partial class MachineDictionary<TIdentifier, TMachine> : ITinyhandSerialize<MachineDictionary<TIdentifier, TMachine>>, ITinyhandReconstruct<MachineDictionary<TIdentifier, TMachine>>, IStructualObject
     where TIdentifier : notnull
     where TMachine : ITinyhandSerialize<TMachine>
 {
@@ -66,7 +66,7 @@ public partial class MachineDictionary<TIdentifier, TMachine> : ITinyhandSeriali
         value ??= new();
     }
 
-    bool ITreeObject.ReadRecord(ref TinyhandReader reader)
+    bool IStructualObject.ReadRecord(ref TinyhandReader reader)
     {
         if (!reader.TryRead(out JournalRecord record))
         {
@@ -96,9 +96,9 @@ public partial class MachineDictionary<TIdentifier, TMachine> : ITinyhandSeriali
         else if (record == JournalRecord.Locator)
         {// Locator, Key, (Data)
             this.Dictionary.TryGetValue(key, out var machine);
-            if (machine is ITreeObject treeObject)
+            if (machine is IStructualObject structualObject)
             {
-                treeObject.ReadRecord(ref reader);
+                structualObject.ReadRecord(ref reader);
             }
         }
 
@@ -107,9 +107,9 @@ public partial class MachineDictionary<TIdentifier, TMachine> : ITinyhandSeriali
 
     internal ConcurrentDictionary<TIdentifier, TMachine> Dictionary = new();
 
-    ITreeRoot? ITreeObject.TreeRoot { get; set; }
+    IStructualRoot? IStructualObject.StructualRoot { get; set; }
 
-    ITreeObject? ITreeObject.TreeParent { get; set; }
+    IStructualObject? IStructualObject.StructualParent { get; set; }
 
-    int ITreeObject.TreeKey { get; set; }
+    int IStructualObject.StructualKey { get; set; }
 }

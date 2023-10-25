@@ -9,7 +9,7 @@ using Tinyhand;
 namespace BigMachines.Redesign;
 
 // [MachineObject] // ulong id = FarmHash.Hash64(Type.FullName)
-[TinyhandObject(UseServiceProvider = true, Tree = true)]
+[TinyhandObject(UseServiceProvider = true, Structual = true)]
 public partial class TestMachine : Machine<int>
 {
     public TestMachine(MachineControl<int> control, int identifier)

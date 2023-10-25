@@ -4,7 +4,6 @@ using System;
 using System.Runtime.CompilerServices;
 using System.Threading;
 using System.Threading.Tasks;
-using System.Xml.Linq;
 using Arc.Threading;
 using Tinyhand;
 using Tinyhand.IO;
@@ -13,41 +12,6 @@ using Tinyhand.IO;
 #pragma warning disable SA1401 // Fields should be private
 
 namespace BigMachines.Redesign;
-
-/// <summary>
-/// Represents an abstract class that serves as the base for the actual machine class.<br/>
-/// <see cref="Machine{TIdentifier}"/> = <see cref="Machine"/>+<typeparamref name="TIdentifier"/>.
-/// </summary>
-/// <typeparam name="TIdentifier">The type of an identifier.</typeparam>
-[TinyhandObject(ReservedKeys = Machine.ReservedKeyNumber)]
-public abstract partial class Machine<TIdentifier> : Machine
-    where TIdentifier : notnull
-{
-    internal Machine()
-        : base(default!)
-    {
-        this.Control = default!;
-        this.Identifier = default!;
-    }
-
-    public Machine(MachineControl<TIdentifier> control, TIdentifier identifier)
-        : base(control)
-    {
-        this.Control = control;
-        this.Identifier = identifier;
-    }
-
-    /// <summary>
-    /// Gets an instance of <see cref="MachineControl{TIdentifier}"/>.
-    /// </summary>
-    public new MachineControl<TIdentifier> Control { get; }
-
-    /// <summary>
-    /// Gets or sets the identifier.
-    /// </summary>
-    [Key(0, IgnoreKeyReservation = true)]
-    public TIdentifier Identifier { get; protected set; }
-}
 
 /// <summary>
 /// Represents an abstract class that serves as the base for the actual machine class.
@@ -71,6 +35,10 @@ public abstract partial class Machine
 
     #region Keys
 
+    // Machine<TIdentifier>
+    // [Key(0)]
+    // public TIdentifier Identifier { get; protected set; }
+
     /// <summary>
     /// Gets or sets the operational state of the machine (running, paused, terminated).
     /// </summary>
@@ -88,8 +56,8 @@ public abstract partial class Machine
                 return;
             }
 
-            if (this is ITreeObject treeObject &&
-                treeObject.TryGetJournalWriter(out var root, out var writer, true))
+            if (this is IStructualObject structualObject &&
+                structualObject.TryGetJournalWriter(out var root, out var writer, true))
             {
                 writer.Write_Key();
                 writer.Write(1);
@@ -120,8 +88,8 @@ public abstract partial class Machine
                 return;
             }
 
-            if (this is ITreeObject treeObject &&
-                treeObject.TryGetJournalWriter(out var root, out var writer, true))
+            if (this is IStructualObject structualObject &&
+                structualObject.TryGetJournalWriter(out var root, out var writer, true))
             {
                 writer.Write_Key();
                 writer.Write(2);
@@ -151,8 +119,8 @@ public abstract partial class Machine
                 return;
             }
 
-            if (this is ITreeObject treeObject &&
-                treeObject.TryGetJournalWriter(out var root, out var writer, true))
+            if (this is IStructualObject structualObject &&
+                structualObject.TryGetJournalWriter(out var root, out var writer, true))
             {
                 writer.Write_Key();
                 writer.Write(3);
@@ -182,8 +150,8 @@ public abstract partial class Machine
                 return;
             }
 
-            if (this is ITreeObject treeObject &&
-                treeObject.TryGetJournalWriter(out var root, out var writer, true))
+            if (this is IStructualObject structualObject &&
+                structualObject.TryGetJournalWriter(out var root, out var writer, true))
             {
                 writer.Write_Key();
                 writer.Write(4);
@@ -213,8 +181,8 @@ public abstract partial class Machine
                 return;
             }
 
-            if (this is ITreeObject treeObject &&
-                treeObject.TryGetJournalWriter(out var root, out var writer, true))
+            if (this is IStructualObject structualObject &&
+                structualObject.TryGetJournalWriter(out var root, out var writer, true))
             {
                 writer.Write_Key();
                 writer.Write(5);
@@ -244,8 +212,8 @@ public abstract partial class Machine
                 return;
             }
 
-            if (this is ITreeObject treeObject &&
-                treeObject.TryGetJournalWriter(out var root, out var writer, true))
+            if (this is IStructualObject structualObject &&
+                structualObject.TryGetJournalWriter(out var root, out var writer, true))
             {
                 writer.Write_Key();
                 writer.Write(6);
@@ -275,8 +243,8 @@ public abstract partial class Machine
                 return;
             }
 
-            if (this is ITreeObject treeObject &&
-                treeObject.TryGetJournalWriter(out var root, out var writer, true))
+            if (this is IStructualObject structualObject &&
+                structualObject.TryGetJournalWriter(out var root, out var writer, true))
             {
                 writer.Write_Key();
                 writer.Write(7);

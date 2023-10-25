@@ -1,7 +1,6 @@
 ﻿// Copyright (c) All contributors. All rights reserved. Licensed under the MIT license.
 
 using System;
-using System.Threading;
 using System.Threading.Tasks;
 
 #pragma warning disable SA1401
@@ -56,9 +55,9 @@ public partial class Machine
         }
 
         /// <summary>
-        /// Indicates whether the machine is running (in a Run method).
+        /// Indicates whether the machine is running (in state methods).
         /// </summary>
-        /// <returns><see langword="true"/>: The machine is running (in a Run method).</returns>
+        /// <returns><see langword="true"/>: The machine is running (in state methods).</returns>
         public bool IsRunning()
             => this.machine.RunType != RunType.NotRunning;
 
@@ -86,7 +85,7 @@ public partial class Machine
         /// <summary>
         /// Gets the last run time of the machine.
         /// </summary>
-        /// <returns>The last run time of the machine.
+        /// <returns>The last run time of the machine.</returns>
         public DateTime GetLastRunTime()
             => this.machine.LastRunTime;
 
@@ -101,7 +100,7 @@ public partial class Machine
         /// <summary>
         /// Set the next scheduled execution time.<br/>
         /// </summary>
-        /// <param name="nextRunTime">The next scheduled execution time</param>
+        /// <param name="nextRunTime">The next scheduled execution time.</param>
         public void SetNextRunTime(DateTime nextRunTime)
             => this.machine.NextRunTime = nextRunTime;
 

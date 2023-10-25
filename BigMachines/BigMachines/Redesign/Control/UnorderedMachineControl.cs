@@ -35,7 +35,7 @@ public sealed partial class UnorderedMachineControl<TIdentifier, TInterface, TCo
     private Func<UnorderedMachineControl<TIdentifier, TInterface, TCommandAll>, TIdentifier, TInterface> createInterface; // MachineControl + Identifier -> Machine.Interface
     private Func<UnorderedMachineControl<TIdentifier, TInterface, TCommandAll>, TCommandAll> createCommandAll; // MachineControl -> Machine.Interface.CommandAll
 
-    [TinyhandObject(Tree = true)]
+    [TinyhandObject(Structual = true)]
     [ValueLinkObject(Isolation = IsolationLevel.Serializable)]
     private partial class Item
     {
