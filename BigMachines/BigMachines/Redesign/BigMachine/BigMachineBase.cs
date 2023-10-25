@@ -11,6 +11,8 @@ namespace BigMachines.Redesign;
 /// </summary>
 public abstract class BigMachineBase
 {
+    #region FieldAndProperty
+
     /// <summary>
     /// Gets or sets a value to specify the operation mode of the loop checker.
     /// </summary>
@@ -23,6 +25,10 @@ public abstract class BigMachineBase
 
     private ExceptionHandlerDelegate exceptionHandler = DefaultExceptionHandler;
     private ConcurrentQueue<BigMachineException> exceptionQueue = new();
+
+    #endregion
+
+    #region Exception
 
     /// <summary>
     /// Gets the number of exceptions queued.
@@ -58,4 +64,6 @@ public abstract class BigMachineBase
 
     private static void DefaultExceptionHandler(BigMachineException exception)
         => throw exception.Exception;
+
+    #endregion
 }

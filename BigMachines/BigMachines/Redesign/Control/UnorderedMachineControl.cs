@@ -11,8 +11,8 @@ using ValueLink;
 
 namespace BigMachines.Redesign;
 
-[TinyhandObject]
-public sealed partial class UnorderedMachineControl<TIdentifier, TInterface, TCommandAll> : MachineControl<TIdentifier, TInterface>, ITinyhandSerialize<UnorderedMachineControl<TIdentifier, TInterface, TCommandAll>>
+[TinyhandObject(Structual = true)]
+public sealed partial class UnorderedMachineControl<TIdentifier, TInterface, TCommandAll> : MachineControl<TIdentifier, TInterface>, ITinyhandSerialize<UnorderedMachineControl<TIdentifier, TInterface, TCommandAll>>, ITinyhandCustomJournal
     where TIdentifier : notnull
     where TInterface : Machine.ManMachineInterface
 {
@@ -162,6 +162,16 @@ public sealed partial class UnorderedMachineControl<TIdentifier, TInterface, TCo
 
         value ??= new();
         value.items = TinyhandSerializer.DeserializeObject<Item.GoshujinClass>(ref reader, options) ?? new();
+    }
+
+    bool ITinyhandCustomJournal.ReadCustomRecord(ref TinyhandReader reader)
+    {
+        if (this.items is IStructualObject obj)
+        {
+            return obj.ReadRecord(ref reader);
+        }
+
+        return false;
     }
 
     #endregion
