@@ -14,9 +14,12 @@ public partial class TestBigMachine : BigMachineBase, ITinyhandSerialize<TestBig
     public TestBigMachine()
     {
         this.TestMachines = new(this, (x, y) => new TestMachine(x, y).InterfaceInstance, x => new TestMachine.Interface.CommandAll(x));
+        this.SingleMachine = new(this, x => new SingleMachine(x).InterfaceInstance);
     }
 
     public UnorderedMachineControl<int, TestMachine.Interface, TestMachine.Interface.CommandAll> TestMachines { get; private set; }
+
+    public SingleMachineControl<SingleMachine, SingleMachine.Interface> SingleMachine { get; private set; }
 
     static void ITinyhandSerialize<TestBigMachine>.Serialize(ref TinyhandWriter writer, scoped ref TestBigMachine? value, TinyhandSerializerOptions options)
     {
