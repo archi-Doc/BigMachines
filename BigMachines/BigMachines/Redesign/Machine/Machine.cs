@@ -43,7 +43,7 @@ public abstract partial class Machine
     /// Gets or sets the operational state of the machine (running, paused, terminated).
     /// </summary>
     [Key(1)]
-    protected OperationalState operationalState = OperationalState.Running;
+    protected OperationalState operationalState = OperationalState.Standby;
 
     [IgnoreMember]
     protected OperationalState OperationalState
@@ -103,18 +103,18 @@ public abstract partial class Machine
     }
 
     /// <summary>
-    /// The time until this machine starts.
+    /// The time until the machine starts.
     /// </summary>
     [Key(3)]
-    protected long remainingToRun = long.MaxValue; // TimeSpan.Ticks (for interlocked)
+    protected long timeToStart = long.MaxValue; // TimeSpan.Ticks (for interlocked)
 
     [IgnoreMember]
-    protected long RemainingToRun
+    protected long TimeToStart
     {
-        get => this.machineState;
+        get => this.timeToStart;
         set
         {
-            if (this.remainingToRun == value)
+            if (this.timeToStart == value)
             {
                 return;
             }
@@ -129,7 +129,7 @@ public abstract partial class Machine
                 root.AddJournal(writer);
             }
 
-            this.remainingToRun = value;
+            this.timeToStart = value;
         }
     }
 
@@ -196,7 +196,8 @@ public abstract partial class Machine
     }
 
     /// <summary>
-    /// The remaining lifespan of this machine. When it reaches 0, the machine will terminate.
+    /// The remaining lifespan of the machine.<br/>
+    /// When it reaches 0, the machine will terminate.
     /// </summary>
     [Key(6)]
     protected long lifespan = long.MaxValue; // TimeSpan.Ticks (for interlocked)
@@ -227,7 +228,7 @@ public abstract partial class Machine
     }
 
     /// <summary>
-    /// Gets or sets <see cref="DateTime"/> when the machine will be automatically terminated.
+    /// Gets or sets the time for the machine to shut down automatically.
     /// </summary>
     [Key(7)]
     protected DateTime terminationTime = DateTime.MaxValue;
@@ -267,6 +268,13 @@ public abstract partial class Machine
     public readonly MachineControl Control;
     protected readonly SemaphoreLock Semaphore = new();
 
+    /// <summary>
+    /// Gets or sets the default time interval at which the machine will run.<br/>
+    /// <see cref="TimeSpan.Zero"/>: No interval execution.<br/>
+    /// This property is NOT serialization target.
+    /// </summary>
+    protected readonly TimeSpan DefaultTimeout;
+
     [IgnoreMember]
     protected object? interfaceInstance;
 
@@ -276,24 +284,10 @@ public abstract partial class Machine
     internal RunType RunType;
 
     /// <summary>
-    /// Gets or sets the default time interval at which the machine will run.<br/>
-    /// <see cref="TimeSpan.Zero"/>: No interval execution.<br/>
-    /// This property is NOT serialization target.
-    /// </summary>
-    [IgnoreMember]
-    protected internal TimeSpan DefaultTimeout;
-
-    /// <summary>
-    /// Gets a TypeId of the machine.
-    /// </summary>
-    [IgnoreMember]
-    protected internal uint TypeId;
-
-    /// <summary>
     /// Gets or sets a value indicating whether the machine is going to re-run.
     /// </summary>
     [IgnoreMember]
-    protected bool requestRerun;
+    private bool requestRerun;
 
     /// <summary>
     /// Get the serial (unique) number of this machine.
@@ -310,7 +304,7 @@ public abstract partial class Machine
     /// <param name="runType">A trigger of the machine running.</param>
     /// <param name="now">Current time.</param>
     /// <returns>true: The machine is terminated.</returns>
-    protected internal async Task<StateResult> RunMachine(RunType runType, DateTime now)
+    private async Task<StateResult> RunMachine(RunType runType, DateTime now)
     {// Called: Machine.DistributeCommand(), BigMachine.MainLoop()
         if (this.RunType != RunType.NotRunning)
         {// Machine is running
@@ -348,22 +342,10 @@ RerunLoop:
         return result;
     }
 
-    /// <summary>
-    /// Generated method which is called when the machine executes.
-    /// </summary>
-    /// <param name="parameter">StateParameter.</param>
-    /// <returns>StateResult.</returns>
-    protected internal virtual Task<StateResult> InternalRun(StateParameter parameter)
-    {// Called: Machine.RunMachine()
-        return Task.FromResult(StateResult.Terminate);
-    }
+    private Task TerminateAndRemoveFromControlAsync()
+        => Task.Run(() => this.TerminateAndRemoveFromControl());
 
-    internal Task TaskRunAndTerminate()
-    {
-        return Task.Run(() => this.TerminateAndRemoveFromGroup());
-    }
-
-    internal async Task TerminateAndRemoveFromGroup()
+    private async Task TerminateAndRemoveFromControl()
     {
         await this.Semaphore.EnterAsync().ConfigureAwait(false);
         try
@@ -379,7 +361,7 @@ RerunLoop:
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    internal void RemoveFromControl()
+    private void RemoveFromControl()
     {
         this.Control.RemoveMachine(this);
         /*if (this.Info.Continuous)
@@ -389,12 +371,23 @@ RerunLoop:
     }
 
     /// <summary>
+    /// Generated method which is called when the machine executes.
+    /// </summary>
+    /// <param name="parameter">StateParameter.</param>
+    /// <returns>StateResult.</returns>
+    protected virtual Task<StateResult> InternalRun(StateParameter parameter)
+    {// Called: Machine.RunMachine()
+        return Task.FromResult(StateResult.Terminate);
+    }
+
+    /// <summary>
     /// Generated method which is called when the state changes.
     /// </summary>
     /// <param name="state">The next state.</param>
     /// <param name="rerun">The machine wll re-run if <paramref name="rerun"/> is <see langword="true"/>, and the machine state is changed.</param>
     /// <returns><see langword="true"/>: State changed. <see langword="false"/>: Not changed (same state or denied). </returns>
-    protected virtual ChangeStateResult InternalChangeState(int state, bool rerun) => ChangeStateResult.Terminated;
+    protected virtual ChangeStateResult InternalChangeState(int state, bool rerun)
+        => ChangeStateResult.Terminated;
 
     /// <summary>
     /// Called when the machine is terminating.<br/>
@@ -402,56 +395,5 @@ RerunLoop:
     /// </summary>
     protected virtual void OnTerminated()
     {
-    }
-
-    /// <summary>
-    /// Set the start time of the machine.<br/>
-    /// The time decreases while the program is running, and the machine will run when it reaches zero.
-    /// </summary>
-    /// <param name="time">The timeout.</param>
-    /// <param name="absoluteDateTime">Set <see langword="true"></see> to specify the next execution time by adding the current time and timeout.</param>
-    protected internal void SetNextRunTime(TimeSpan time, bool absoluteDateTime = false)
-    {
-        this.requestRerun = false;
-        if (time.Ticks < 0)
-        {
-            Volatile.Write(ref this.remainingToRun, long.MaxValue);
-            this.NextRunTime = default;
-            return;
-        }
-
-        if (absoluteDateTime)
-        {
-            this.NextRunTime = DateTime.UtcNow + time;
-        }
-        else
-        {
-            Volatile.Write(ref this.remainingToRun, time.Ticks);
-        }
-    }
-
-    /// <summary>
-    /// Set the lifespen of the machine.<br/>
-    /// The lifespan decreases while the program is running, and the machine will terminate when it reaches zero.
-    /// </summary>
-    /// <param name="timeSpan">The lifespan.</param>
-    /// <param name="absoluteDateTime">Set true to specify the terminate time by adding the current time and lifespan.</param>
-    protected internal void SetLifespan(TimeSpan timeSpan, bool absoluteDateTime = false)
-    {
-        if (timeSpan.Ticks < 0)
-        {
-            Volatile.Write(ref this.lifespan, long.MaxValue);
-            this.TerminationTime = DateTime.MaxValue;
-            return;
-        }
-
-        if (absoluteDateTime)
-        {
-            this.TerminationTime = DateTime.UtcNow + timeSpan;
-        }
-        else
-        {
-            Volatile.Write(ref this.lifespan, timeSpan.Ticks);
-        }
     }
 }

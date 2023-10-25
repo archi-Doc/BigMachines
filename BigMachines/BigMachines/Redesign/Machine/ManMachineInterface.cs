@@ -62,9 +62,9 @@ public partial class Machine
             => this.machine.RunType != RunType.NotRunning;
 
         /// <summary>
-        /// Indicates whether the machine is active (in a Run method or waiting to execute).
+        /// Indicates whether the machine is active (in state methods or waiting to execute).
         /// </summary>
-        /// <returns><see langword="true"/>: The machine is active (in a Run method or waiting to execute).</returns>
+        /// <returns><see langword="true"/>: The machine is active (in state methods or waiting to execute).</returns>
         public bool IsActive()
             => this.machine.RunType != RunType.NotRunning ||
                     (this.machine.DefaultTimeout is TimeSpan ts && ts > TimeSpan.Zero);
@@ -76,11 +76,11 @@ public partial class Machine
         public bool IsTerminated()
             => this.machine.OperationalState == OperationalState.Terminated;
 
-        public TimeSpan GetRemainingToRun()
-            => new(this.machine.remainingToRun);
+        public TimeSpan GetTimeToStart()
+            => new(this.machine.TimeToStart);
 
-        public void SetRemainingToRun(TimeSpan remainingToRun)
-            => this.machine.RemainingToRun = remainingToRun.Ticks;
+        public void SetTimeToStart(TimeSpan timeToStart)
+            => this.machine.TimeToStart = timeToStart.Ticks;
 
         /// <summary>
         /// Gets the last run time of the machine.
@@ -90,19 +90,69 @@ public partial class Machine
             => this.machine.LastRunTime;
 
         /// <summary>
+        /// Gets the next scheduled execution time.
+        /// </summary>
+        /// <returns>The next scheduled execution time.</returns>
+        public DateTime GetNextRunTime()
+            => this.machine.NextRunTime;
+
+        /// <summary>
+        /// Set the next scheduled execution time.
+        /// </summary>
+        /// <param name="nextRunTime">The next scheduled execution time.</param>
+        public void SetNextRunTime(DateTime nextRunTime)
+            => this.machine.NextRunTime = nextRunTime;
+
+        /// <summary>
+        /// Set the time interval from now and schedule the next execution time.
+        /// </summary>
+        /// <param name="timeFromNow">The time interval from now (DateTime.UtcNow).</param>
+        public void SetNextRunTimeFromNow(TimeSpan timeFromNow)
+            => this.machine.NextRunTime = DateTime.UtcNow + timeFromNow;
+
+        /// <summary>
+        /// Gets the remaining lifespan of the machine.<br/>
+        /// When it reaches 0, the machine will terminate.
+        /// </summary>
+        /// <returns>The remaining lifespan of the machine.</returns>
+        public TimeSpan GetLifespan()
+            => new(this.machine.Lifespan);
+
+        /// <summary>
+        /// Set the remaining lifespan of the machine.
+        /// </summary>
+        /// <param name="lifespan">The remaining lifespan of the machine.</param>
+        public void SetLifespan(TimeSpan lifespan)
+            => this.machine.Lifespan = lifespan.Ticks;
+
+        /// <summary>
+        /// Gets the time for the machine to shut down automatically.
+        /// </summary>
+        /// <returns>The time for the machine to shut down automatically.</returns>
+        public DateTime GetTerminationTime()
+            => this.machine.TerminationTime;
+
+        /// <summary>
+        /// Set the time for the machine to shut down automatically.
+        /// </summary>
+        /// <param name="terminationTime">The time for the machine to shut down automatically.</param>
+        public void SetTerminationTime(DateTime terminationTime)
+            => this.machine.TerminationTime = terminationTime;
+
+        /// <summary>
+        /// Set the time for the machine to shut down automatically.
+        /// </summary>
+        /// <param name="timeFromNow">The time interval from now (DateTime.UtcNow).</param>
+        public void SetTerminationTimeFromNow(TimeSpan timeFromNow)
+            => this.machine.TerminationTime = DateTime.UtcNow + timeFromNow;
+
+        /// <summary>
         /// Gets the default timeout of the machine.
         /// </summary>
         /// <returns>The default timeout of the machine.<br/>
         /// <see langword="null"/>: Machine is not available.</returns>
         public TimeSpan GetDefaultTimeout()
             => this.machine.DefaultTimeout;
-
-        /// <summary>
-        /// Set the next scheduled execution time.<br/>
-        /// </summary>
-        /// <param name="nextRunTime">The next scheduled execution time.</param>
-        public void SetNextRunTime(DateTime nextRunTime)
-            => this.machine.NextRunTime = nextRunTime;
 
         public async Task RunAsync()
         {

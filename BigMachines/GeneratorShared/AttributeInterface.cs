@@ -168,7 +168,12 @@ public readonly struct CommandResult<TResponse>
 public enum OperationalState
 {
     /// <summary>
-    /// Machine is running.
+    /// Machine is in standby.
+    /// </summary>
+    Standby,
+
+    /// <summary>
+    /// Machine is running (in state methods).
     /// </summary>
     Running,
 
