@@ -26,8 +26,8 @@ public partial class Machine
         /// </summary>
         /// <returns>The operational state of the machine.<br/>
         /// <see langword="null"/>: Machine is not available.</returns>
-        public OperationalState GetOperationalState()
-            => this.machine.OperationalState;
+        public OperationalFlag GetOperationalState()
+            => this.machine.operationalState;
 
         /// <summary>
         /// Changes the operational state of the machine.
@@ -35,17 +35,17 @@ public partial class Machine
         /// <param name="state">The operational state.</param>
         /// <returns><see langword="true"/>: The status is successfully changed.<br/>
         /// <see langword="false"/>: Machine is not available.</returns>
-        public bool SetOperationalState(OperationalState state)
+        public bool SetOperationalState(OperationalFlag state)
         {
             using (this.machine.Semaphore.Lock())
             {
-                if (this.machine.OperationalState == OperationalState.Terminated)
+                if (this.machine.operationalState == OperationalFlag.Terminated)
                 {
                     return false;
                 }
 
-                this.machine.OperationalState = state;
-                if (this.machine.OperationalState == OperationalState.Terminated)
+                this.machine.operationalState = state;
+                if (this.machine.operationalState == OperationalFlag.Terminated)
                 {
                     this.machine.RemoveFromControl();
                 }
@@ -74,7 +74,7 @@ public partial class Machine
         /// </summary>
         /// <returns><see langword="true"/>: The machine is terminated.</returns>
         public bool IsTerminated()
-            => this.machine.OperationalState == OperationalState.Terminated;
+            => this.machine.operationalState == OperationalFlag.Terminated;
 
         public TimeSpan GetTimeToStart()
             => new(this.machine.TimeToStart);
@@ -166,7 +166,7 @@ public partial class Machine
             {
                 if (await this.machine.RunMachine(RunType.Manual, DateTime.UtcNow).ConfigureAwait(false) == StateResult.Terminate)
                 {
-                    this.machine.OperationalState = OperationalState.Terminated;
+                    this.machine.operationalState = OperationalFlag.Terminated;
                     this.machine.OnTerminated();
                 }
             }
@@ -174,7 +174,7 @@ public partial class Machine
             {
                 this.machine.Semaphore.Exit();
 
-                if (this.machine.OperationalState == OperationalState.Terminated)
+                if (this.machine.operationalState == OperationalFlag.Terminated)
                 {
                     this.machine.RemoveFromControl();
                 }

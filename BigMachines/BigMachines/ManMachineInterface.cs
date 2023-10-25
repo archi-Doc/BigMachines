@@ -49,7 +49,7 @@ public abstract class ManMachineInterface<TIdentifier> // MANMACHINE INTERFACE b
     /// </summary>
     /// <returns>The status of the machine.<br/>
     /// <see langword="null"/>: Machine is not available.</returns>
-    public OperationalState? GetOperationalState()
+    public OperationalFlag? GetOperationalState()
     {
         if (this.Group.TryGetMachine(this.Identifier, out var machine))
         {
@@ -65,7 +65,7 @@ public abstract class ManMachineInterface<TIdentifier> // MANMACHINE INTERFACE b
     /// <param name="status">The status.</param>
     /// <returns><see langword="true"/>: The status is successfully changed.<br/>
     /// <see langword="false"/>: Machine is not available.</returns>
-    public bool SetOperationalState(OperationalState status)
+    public bool SetOperationalState(OperationalFlag status)
     {
         if (this.Group.TryGetMachine(this.Identifier, out var machine))
         {
@@ -113,7 +113,7 @@ public abstract class ManMachineInterface<TIdentifier> // MANMACHINE INTERFACE b
     {
         if (this.Group.TryGetMachine(this.Identifier, out var machine))
         {
-            return machine.Status == OperationalState.Terminated;
+            return machine.Status == OperationalFlag.Terminated;
         }
 
         return true;
@@ -212,7 +212,7 @@ public abstract class ManMachineInterface<TIdentifier, TState, TCommand> : ManMa
     {
         if (this.Group.TryGetMachine(this.Identifier, out var machine))
         {
-            if (machine is Machine<TIdentifier> m && m.Status != OperationalState.Terminated)
+            if (machine is Machine<TIdentifier> m && m.Status != OperationalFlag.Terminated)
             {
                 state = Unsafe.As<int, TState>(ref m.CurrentState);
                 return true;

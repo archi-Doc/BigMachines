@@ -47,7 +47,7 @@ namespace BigMachines
                         machine.LockMachine();
                         if (machine.RunMachine(null, RunType.Continuous, DateTime.UtcNow).Result == StateResult.Terminate)
                         {// Terminated
-                            machine.Status = OperationalState.Terminated;
+                            machine.Status = OperationalFlag.Terminated;
                             machine.OnTerminated();
                             break;
                         }
@@ -58,7 +58,7 @@ namespace BigMachines
                     }
                 }
 
-                if (machine.Status == OperationalState.Terminated)
+                if (machine.Status == OperationalFlag.Terminated)
                 {
                     machine.RemoveFromGroup();
                 }

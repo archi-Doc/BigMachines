@@ -660,7 +660,7 @@ public partial class BigMachine<TIdentifier>
                 foreach (var y in x.GetMachines())
                 {
                     Interlocked.Add(ref y.Lifespan, -elapsed.Ticks);
-                    if (y.Status == OperationalState.Running)
+                    if (y.Status == OperationalFlag.Running)
                     {
                         Interlocked.Add(ref y.Timeout, -elapsed.Ticks);
                     }
@@ -686,7 +686,7 @@ public partial class BigMachine<TIdentifier>
                             finally
                             {
                                 y.UnlockMachine();
-                                if (y.Status == OperationalState.Terminated)
+                                if (y.Status == OperationalFlag.Terminated)
                                 {
                                     y.RemoveFromGroup();
                                 }
@@ -728,7 +728,7 @@ public partial class BigMachine<TIdentifier>
 
                 if (machine.RunMachine(null, RunType.Timer, now).Result == StateResult.Terminate)
                 {
-                    machine.Status = OperationalState.Terminated;
+                    machine.Status = OperationalFlag.Terminated;
                     machine.OnTerminated();
                 }
             }

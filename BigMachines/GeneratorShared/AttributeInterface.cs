@@ -165,27 +165,28 @@ public readonly struct CommandResult<TResponse>
 /// <summary>
 /// Represents the operational state of the machine.
 /// </summary>
-public enum OperationalState
+[Flags]
+public enum OperationalFlag
 {
     /// <summary>
     /// Machine is in standby.
     /// </summary>
-    Standby,
+    Standby = 0,
 
     /// <summary>
     /// Machine is running (in state methods).
     /// </summary>
-    Running,
+    Running = 1,
 
     /// <summary>
     /// Machine is paused.
     /// </summary>
-    Paused,
+    Paused = 2,
 
     /// <summary>
     /// Machine is terminated.
     /// </summary>
-    Terminated,
+    Terminated = 4,
 }
 
 /// <summary>

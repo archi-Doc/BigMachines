@@ -26,7 +26,7 @@ public partial class TestMachine : Machine<int> // Inherit Machine<TIdentifier> 
         testMachine = testGroup.TryGet<TestMachine.Interface>(3); // Get machine from the group.
 
         var testMachine2 = bigMachine.CreateOrGet<TestMachine.Interface>(10);
-        testMachine2.SetOperationalState(OperationalState.Paused);
+        testMachine2.SetOperationalState(OperationalFlag.Paused);
 
         testGroup.CommandAsync(TestMachine.Command.PrintText, "group message").Wait();
         // testMachine?.Group.CommandAsync(TestMachine.Command.PrintText, "group message").Wait();

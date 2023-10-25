@@ -40,41 +40,9 @@ public abstract partial class Machine
     // public TIdentifier Identifier { get; protected set; }
 
     /// <summary>
-    /// Gets or sets the operational state of the machine (running, paused, terminated).
-    /// </summary>
-    [Key(1)]
-    protected OperationalState operationalState = OperationalState.Standby;
-
-    [IgnoreMember]
-    protected OperationalState OperationalState
-    {
-        get => this.operationalState;
-        set
-        {
-            if (this.operationalState == value)
-            {
-                return;
-            }
-
-            if (this is IStructualObject structualObject &&
-                structualObject.TryGetJournalWriter(out var root, out var writer, true))
-            {
-                writer.Write_Key();
-                writer.Write(1);
-                writer.Write_Value();
-                var ev = value;
-                writer.Write(Unsafe.As<OperationalState, int>(ref ev));
-                root.AddJournal(writer);
-            }
-
-            this.operationalState = value;
-        }
-    }
-
-    /// <summary>
     /// Gets or sets the current state of this machine.
     /// </summary>
-    [Key(2)]
+    [Key(1)]
     protected int machineState;
 
     [IgnoreMember]
@@ -92,7 +60,7 @@ public abstract partial class Machine
                 structualObject.TryGetJournalWriter(out var root, out var writer, true))
             {
                 writer.Write_Key();
-                writer.Write(2);
+                writer.Write(1);
                 writer.Write_Value();
                 writer.Write(value);
                 root.AddJournal(writer);
@@ -105,7 +73,7 @@ public abstract partial class Machine
     /// <summary>
     /// The time until the machine starts.
     /// </summary>
-    [Key(3)]
+    [Key(2)]
     protected long timeToStart = long.MaxValue; // TimeSpan.Ticks (for interlocked)
 
     [IgnoreMember]
@@ -123,7 +91,7 @@ public abstract partial class Machine
                 structualObject.TryGetJournalWriter(out var root, out var writer, true))
             {
                 writer.Write_Key();
-                writer.Write(3);
+                writer.Write(2);
                 writer.Write_Value();
                 writer.Write(value);
                 root.AddJournal(writer);
@@ -136,7 +104,7 @@ public abstract partial class Machine
     /// <summary>
     /// The last <see cref="DateTime"/> when this machine ran.
     /// </summary>
-    [Key(4)]
+    [Key(3)]
     protected DateTime lastRunTime;
 
     [IgnoreMember]
@@ -154,7 +122,7 @@ public abstract partial class Machine
                 structualObject.TryGetJournalWriter(out var root, out var writer, true))
             {
                 writer.Write_Key();
-                writer.Write(4);
+                writer.Write(3);
                 writer.Write_Value();
                 writer.Write(value);
                 root.AddJournal(writer);
@@ -167,7 +135,7 @@ public abstract partial class Machine
     /// <summary>
     /// The next scheduled <see cref="DateTime"/> for this machine to run.
     /// </summary>
-    [Key(5)]
+    [Key(4)]
     protected DateTime nextRunTime;
 
     [IgnoreMember]
@@ -185,7 +153,7 @@ public abstract partial class Machine
                 structualObject.TryGetJournalWriter(out var root, out var writer, true))
             {
                 writer.Write_Key();
-                writer.Write(5);
+                writer.Write(4);
                 writer.Write_Value();
                 writer.Write(value);
                 root.AddJournal(writer);
@@ -199,7 +167,7 @@ public abstract partial class Machine
     /// The remaining lifespan of the machine.<br/>
     /// When it reaches 0, the machine will terminate.
     /// </summary>
-    [Key(6)]
+    [Key(5)]
     protected long lifespan = long.MaxValue; // TimeSpan.Ticks (for interlocked)
 
     [IgnoreMember]
@@ -217,7 +185,7 @@ public abstract partial class Machine
                 structualObject.TryGetJournalWriter(out var root, out var writer, true))
             {
                 writer.Write_Key();
-                writer.Write(6);
+                writer.Write(5);
                 writer.Write_Value();
                 writer.Write(value);
                 root.AddJournal(writer);
@@ -230,7 +198,7 @@ public abstract partial class Machine
     /// <summary>
     /// Gets or sets the time for the machine to shut down automatically.
     /// </summary>
-    [Key(7)]
+    [Key(6)]
     protected DateTime terminationTime = DateTime.MaxValue;
 
     [IgnoreMember]
@@ -248,7 +216,7 @@ public abstract partial class Machine
                 structualObject.TryGetJournalWriter(out var root, out var writer, true))
             {
                 writer.Write_Key();
-                writer.Write(7);
+                writer.Write(6);
                 writer.Write_Value();
                 writer.Write(value);
                 root.AddJournal(writer);
@@ -274,6 +242,9 @@ public abstract partial class Machine
     /// This property is NOT serialization target.
     /// </summary>
     protected readonly TimeSpan DefaultTimeout;
+
+    [IgnoreMember]
+    protected OperationalFlag operationalState = OperationalFlag.Standby;
 
     [IgnoreMember]
     protected object? interfaceInstance;
@@ -350,7 +321,7 @@ RerunLoop:
         await this.Semaphore.EnterAsync().ConfigureAwait(false);
         try
         {
-            this.OperationalState = OperationalState.Terminated;
+            this.operationalState = OperationalFlag.Terminated;
             this.OnTerminated();
         }
         finally

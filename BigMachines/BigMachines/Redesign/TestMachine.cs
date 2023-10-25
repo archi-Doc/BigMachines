@@ -85,7 +85,7 @@ public partial class TestMachine : Machine<int>
                 await this.machine.Semaphore.EnterAsync().ConfigureAwait(false);
                 try
                 {
-                    if (this.machine.OperationalState == OperationalState.Terminated)
+                    if (this.machine.operationalState == OperationalFlag.Terminated)
                     {
                         return CommandResult.Terminated;
                     }
