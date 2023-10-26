@@ -14,7 +14,6 @@ namespace BigMachines.Redesign;
 public partial class SingleMachine : Machine
 {
     public SingleMachine(SingleMachineControl<Interface> control)
-        : base(control)
     {
     }
 

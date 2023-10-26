@@ -80,10 +80,13 @@ public partial class SingleMachineControl<TInterface> : MachineControl, ITinyhan
             throw new TinyhandException("Control instance is not ready.");
         }
 
-        var machine = value.machineInformation.Constructor();
-        if (machine is ITinyhandSerialize obj)
+        if (value.machineInformation.Constructor is { } constructor)
         {
-            obj.Deserialize(ref reader, options);
+            var machine = constructor();
+            if (machine is ITinyhandSerialize obj)
+            {
+                obj.Deserialize(ref reader, options);
+            }
         }
     }
 

@@ -13,8 +13,7 @@ namespace BigMachines.Redesign;
 [TinyhandObject(UseServiceProvider = true, Structual = true)]
 public partial class TestMachine : Machine<int>
 {
-    public TestMachine(MultiMachineControl<int> control, int identifier)
-        : base(control, identifier)
+    public TestMachine()
     {
     }
 

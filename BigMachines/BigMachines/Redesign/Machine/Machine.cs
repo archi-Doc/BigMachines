@@ -22,14 +22,8 @@ public abstract partial class Machine
     internal const int ReservedKeyNumber = 8;
     private static uint serialNumber;
 
-    public Machine()
+    internal Machine()
     {
-        this.Control = default!;
-    }
-
-    public Machine(MachineControl control)
-    {
-        this.Control = control;
         this.machineNumber = Interlocked.Increment(ref serialNumber);
     }
 
@@ -233,7 +227,8 @@ public abstract partial class Machine
     /// <summary>
     /// Gets an instance of <see cref="MachineControl"/>.
     /// </summary>
-    public readonly MachineControl Control;
+    public MachineControl? Control { get; private set; }
+
     protected readonly SemaphoreLock Semaphore = new();
 
     /// <summary>
@@ -247,7 +242,7 @@ public abstract partial class Machine
     protected OperationalFlag operationalState;
 
     [IgnoreMember]
-    protected internal object? interfaceInstance;
+    protected object? interfaceInstance;
 
     /// <summary>
     /// Gets or sets a value indicating whether the machine is going to re-run.
@@ -289,7 +284,7 @@ RerunLoop:
         catch (Exception ex)
         {
             result = StateResult.Terminate;
-            this.Control.BigMachine.ReportException(new(this, ex));
+            this.Control?.BigMachine.ReportException(new(this, ex));
         }
 
         if (result == StateResult.Terminate)
@@ -337,7 +332,7 @@ RerunLoop:
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     private void RemoveFromControl()
     {
-        this.Control.RemoveMachine(this);
+        this.Control?.RemoveMachine(this);
         /*if (this.Info.Continuous)
         {
             this.BigMachine.Continuous.RemoveMachine(this);

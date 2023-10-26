@@ -16,23 +16,14 @@ public abstract partial class Machine<TIdentifier> : Machine
     where TIdentifier : notnull
 {
     internal Machine()
-        : base(default!)
     {
-        this.Control = default!;
         this.Identifier = default!;
-    }
-
-    public Machine(MultiMachineControl<TIdentifier> control, TIdentifier identifier)
-        : base(control)
-    {
-        this.Control = control;
-        this.Identifier = identifier;
     }
 
     /// <summary>
     /// Gets an instance of <see cref="MultiMachineControl{TIdentifier}"/>.
     /// </summary>
-    public new MultiMachineControl<TIdentifier> Control { get; }
+    public new MultiMachineControl<TIdentifier>? Control { get; private set; }
 
     /// <summary>
     /// Gets or sets the identifier.
