@@ -27,6 +27,11 @@ public abstract partial class Machine
         this.machineNumber = Interlocked.Increment(ref serialNumber);
     }
 
+    internal void Prepare(MachineControl control)
+    {
+        this.Control = control;
+    }
+
     #region Keys
 
     // Machine<TIdentifier>

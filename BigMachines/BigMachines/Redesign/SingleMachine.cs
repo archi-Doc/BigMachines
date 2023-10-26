@@ -13,7 +13,7 @@ namespace BigMachines.Redesign;
 [TinyhandObject(UseServiceProvider = true, Structual = true)]
 public partial class SingleMachine : Machine
 {
-    public SingleMachine(SingleMachineControl<Interface> control)
+    public SingleMachine()
     {
     }
 
@@ -31,13 +31,13 @@ public partial class SingleMachine : Machine
     {
         get
         {
-            if (this.interfaceInstance is not Interface @interface)
+            if (this.interfaceInstance is not Interface obj)
             {
-                @interface = new(this);
-                this.interfaceInstance = @interface;
+                obj = new(this);
+                this.interfaceInstance = obj;
             }
 
-            return @interface;
+            return obj;
         }
     }
 

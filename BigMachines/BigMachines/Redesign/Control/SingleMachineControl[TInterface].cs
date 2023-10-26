@@ -19,31 +19,37 @@ namespace BigMachines.Redesign;
 public partial class SingleMachineControl<TInterface> : MachineControl, ITinyhandSerialize<SingleMachineControl<TInterface>>, ITinyhandCustomJournal
     where TInterface : Machine.ManMachineInterface
 {
-    internal SingleMachineControl()
-         : base(default!)
-    {// This code has some issues, but since it's never called directly, it's probably fine.
-        this.createInterface = default!;
-    }
-
-    public SingleMachineControl(BigMachineBase bigMachine, Func<SingleMachineControl<TInterface>, TInterface> createInterface, MachineInformation machineInformation)
-    : base(bigMachine)
+    public SingleMachineControl()
     {
-        this.machineInformation = machineInformation;
-        this.createInterface = createInterface;
     }
 
-    private readonly MachineInformation machineInformation;
-    private Func<SingleMachineControl<TInterface>, TInterface> createInterface; // MachineControl -> Machine.Interface
-    private TInterface? @interface;
+    public void Prepare(BigMachineBase bigMachine, MachineInformation machineInformation)
+    {
+        this.BigMachine = bigMachine;
+        this.machineInformation = machineInformation;
+    }
+
+    private MachineInformation? machineInformation;
+    private TInterface? interfaceInstance;
 
     public TInterface Get()
-        => this.@interface ??= this.createInterface(this);
+    {
+        if (this.interfaceInstance is { } obj)
+        {
+            return obj;
+        }
+        else
+        {
+            this.interfaceInstance ??= this.BigMachine?.CreateMachine(this.machineInformation);
+            return this.interfaceInstance ??= machineInformation.Constructor().InterfaceInstance;
+        }
+    }
 
     internal override bool RemoveMachine(Machine machine)
     {
-        if (this.@interface?.Machine == machine)
+        if (this.interfaceInstance?.Machine == machine)
         {
-            this.@interface = null;
+            this.interfaceInstance = null;
             return true;
         }
         else
@@ -63,7 +69,7 @@ public partial class SingleMachineControl<TInterface> : MachineControl, ITinyhan
             writer.WriteNil();
         }*/
 
-        if (value?.@interface?.Machine is ITinyhandSerialize obj)
+        if (value?.interfaceInstance?.Machine is ITinyhandSerialize obj)
         {
             obj.Serialize(ref writer, options);
         }
@@ -75,12 +81,8 @@ public partial class SingleMachineControl<TInterface> : MachineControl, ITinyhan
 
     static void ITinyhandSerialize<SingleMachineControl<TInterface>>.Deserialize(ref TinyhandReader reader, scoped ref SingleMachineControl<TInterface>? value, TinyhandSerializerOptions options)
     {
-        if (value is null)
-        {
-            throw new TinyhandException("Control instance is not ready.");
-        }
-
-        if (value.machineInformation.Constructor is { } constructor)
+        value ??= new();
+        if (value.machineInformation?.Constructor is { } constructor)
         {
             var machine = constructor();
             if (machine is ITinyhandSerialize obj)

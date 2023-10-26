@@ -11,6 +11,57 @@ namespace BigMachines.Redesign;
 /// </summary>
 public abstract class BigMachineBase
 {
+    public BigMachineBase()
+    {
+    }
+
+    internal Machine? CreateMachine(MachineInformation? information)
+    {
+        Machine? machine = null;
+
+        if (information is null)
+        {
+            return default;
+        }
+
+        if (this.ServiceProvider != null)
+        {
+            machine = this.ServiceProvider.GetService(information.MachineType) as Machine;
+        }
+
+        if (machine == null)
+        {
+            if (information.Constructor != null)
+            {
+                machine = information.Constructor(this);
+            }
+            else
+            {
+                if (this.ServiceProvider == null)
+                {
+                    throw new InvalidOperationException("ServiceProvider is required to create an instance of machine which does not have default constructor.");
+                }
+                else
+                {
+                    throw new InvalidOperationException("ServiceProvider could not create an instance of machine (machine is not registered).");
+                }
+            }
+        }
+
+
+        if (machine.DefaultTimeout != TimeSpan.Zero && machine.TimeToStart == long.MaxValue)
+        {
+            Volatile.Write(ref machine.Timeout, 0);
+        }
+
+        if (group.Info.Continuous)
+        {
+            this.Continuous.AddMachine(machine);
+        }
+
+        return machine;
+    }
+
     #region FieldAndProperty
 
     /// <summary>

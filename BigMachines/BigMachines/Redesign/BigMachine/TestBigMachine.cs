@@ -14,7 +14,8 @@ public partial class TestBigMachine : BigMachineBase, ITinyhandSerialize<TestBig
     public TestBigMachine()
     {
         this.TestMachines = new(this, (x, y) => new TestMachine().InterfaceInstance, x => new TestMachine.Interface.CommandAll(x));
-        this.SingleMachine = new(this, x => new SingleMachine(x).InterfaceInstance, default);
+        this.SingleMachine = new();
+        this.SingleMachine.Prepare(this, default!);
     }
 
     public UnorderedMachineControl<int, TestMachine.Interface, TestMachine.Interface.CommandAll> TestMachines { get; private set; }

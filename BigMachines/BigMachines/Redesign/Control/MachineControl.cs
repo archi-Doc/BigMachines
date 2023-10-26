@@ -1,6 +1,6 @@
 ﻿// Copyright (c) All contributors. All rights reserved. Licensed under the MIT license.
 
-using System.Threading.Tasks;
+using Tinyhand;
 
 namespace BigMachines.Redesign;
 
@@ -9,15 +9,15 @@ namespace BigMachines.Redesign;
 /// </summary>
 public abstract class MachineControl
 {
-    public MachineControl(BigMachineBase bigMachine)
+    public MachineControl()
     {
-        this.BigMachine = bigMachine;
     }
 
     /// <summary>
-    /// Gets a BigMachine instance.
+    /// Gets or sets a BigMachine instance.
     /// </summary>
-    public BigMachineBase BigMachine { get; }
+    [IgnoreMember]
+    public BigMachineBase? BigMachine { get; protected set; }
 
     internal abstract bool RemoveMachine(Machine machine);
 }
