@@ -21,6 +21,7 @@ public partial class SingleMachineControl<TMachine, TInterface> : MachineControl
 {
     public SingleMachineControl()
     {
+        this.information = MachineRegistry.Get<TMachine>();
     }
 
     public void Prepare(BigMachineBase bigMachine)
@@ -28,6 +29,7 @@ public partial class SingleMachineControl<TMachine, TInterface> : MachineControl
         this.BigMachine = bigMachine;
     }
 
+    private MachineInformation information;
     private TMachine? machine;
 
     private TMachine Machine
@@ -51,7 +53,7 @@ public partial class SingleMachineControl<TMachine, TInterface> : MachineControl
                     throw new InvalidOperationException("Unable to create an instance of the machine.");
                 }*/
 
-                obj = MachineRegistry.CreateMachine<TMachine>();
+                obj = MachineRegistry.CreateMachine<TMachine>(this.information);
                 obj.Prepare(this);
                 this.machine = obj;
             }

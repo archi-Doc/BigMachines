@@ -1,6 +1,9 @@
 ﻿// Copyright (c) All contributors. All rights reserved. Licensed under the MIT license.
 
 using System;
+using System.Collections.Concurrent;
+using System.Collections.Generic;
+using System.Diagnostics.CodeAnalysis;
 using Tinyhand;
 
 namespace BigMachines.Redesign;
@@ -12,11 +15,34 @@ public static class MachineRegistry
     /// </summary>
     public static IServiceProvider? ServiceProvider { get; set; }*/
 
-    public static TMachine CreateMachine<TMachine>()
+    private static ConcurrentDictionary<Type, MachineInformation> typeToInformation = new();
+
+    public static void Register(MachineInformation information)
+    {
+        typeToInformation.TryAdd(information.MachineType, information);
+    }
+
+    public static MachineInformation Get<TMachine>()
+    {
+        if (typeToInformation.TryGetValue(typeof(TMachine), out var information))
+        {
+            return information;
+        }
+        else
+        {
+            throw new InvalidOperationException($"MachineInformation for type {typeof(TMachine).FullName} has not been registered.");
+        }
+    }
+
+    public static bool TryGet<TMachine>([MaybeNullWhen(false)] out MachineInformation information)
+    {
+        return typeToInformation.TryGetValue(typeof(TMachine), out information);
+    }
+
+    public static TMachine CreateMachine<TMachine>(MachineInformation information)
         where TMachine : Machine
     {
         var serviceProvider = TinyhandSerializer.ServiceProvider;
-        MachineInformation information = default!;
         TMachine? machine = default;
 
         if (serviceProvider is not null)
