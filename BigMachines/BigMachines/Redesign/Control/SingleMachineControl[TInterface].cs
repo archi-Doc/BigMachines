@@ -1,6 +1,7 @@
 ﻿// Copyright (c) All contributors. All rights reserved. Licensed under the MIT license.
 
 using System;
+using System.Runtime.CompilerServices;
 using Tinyhand;
 using Tinyhand.IO;
 
@@ -27,39 +28,44 @@ public partial class SingleMachineControl<TInterface> : MachineControl, ITinyhan
         this.machineInformation = machineInformation;
     }
 
-    private MachineInformation? machineInformation;
-    private TInterface? interfaceInstance;
+    private Machine? machine;
+
+    private Machine Machine
+    {
+        get
+        {
+            if (this.machine is not { } obj)
+            {
+                if (this.BigMachine is null)
+                {
+                    throw new InvalidOperationException("Call Prepare() function to specify a valid BigMachine object.");
+                }
+                else if (this.machineInformation is null)
+                {
+                    throw new InvalidOperationException("Call Prepare() function to specify a valid machine information.");
+                }
+
+                obj = this.BigMachine.CreateMachine(this.machineInformation);
+                if (obj is null)
+                {
+                    throw new InvalidOperationException("Unable to create an instance of the machine.");
+                }
+
+                this.machine = obj;
+            }
+
+            return obj;
+        }
+    }
 
     public TInterface Get()
-    {
-        if (this.interfaceInstance is not { } obj)
-        {
-            if (this.BigMachine is null)
-            {
-                throw new InvalidOperationException("Call Prepare() function to specify a valid BigMachine object.");
-            }
-            else if (this.machineInformation is null)
-            {
-                throw new InvalidOperationException("Call Prepare() function to specify a valid machine information.");
-            }
-
-            obj = this.BigMachine.CreateMachine(this.machineInformation).InterfaceInstance as TInterface;
-            if (obj is null)
-            {
-                throw new InvalidOperationException("Unable to create an instance of the machine.");
-            }
-
-            this.interfaceInstance = obj;
-        }
-
-        return obj;
-    }
+        => (TInterface)this.Machine.InterfaceInstance;
 
     internal override bool RemoveMachine(Machine machine)
     {
-        if (this.interfaceInstance?.Machine == machine)
+        if (this.machine == machine)
         {
-            this.interfaceInstance = null;
+            this.machine = null;
             return true;
         }
         else
@@ -70,7 +76,7 @@ public partial class SingleMachineControl<TInterface> : MachineControl, ITinyhan
 
     static void ITinyhandSerialize<SingleMachineControl<TInterface>>.Serialize(ref TinyhandWriter writer, scoped ref SingleMachineControl<TInterface>? value, TinyhandSerializerOptions options)
     {
-        if (value?.interfaceInstance?.Machine is ITinyhandSerialize obj)
+        if (value?.machine is ITinyhandSerialize obj)
         {
             obj.Serialize(ref writer, options);
         }
@@ -90,13 +96,14 @@ public partial class SingleMachineControl<TInterface> : MachineControl, ITinyhan
             if (machine is ITinyhandSerialize obj)
             {
                 obj.Deserialize(ref reader, options);
+                value.machine = machine;
             }
         }
     }
 
     bool ITinyhandCustomJournal.ReadCustomRecord(ref TinyhandReader reader)
     {
-        if (this.Get().Machine is IStructualObject obj)
+        if (this.Machine is IStructualObject obj)
         {
             return obj.ReadRecord(ref reader);
         }

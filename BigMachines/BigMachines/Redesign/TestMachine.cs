@@ -44,13 +44,13 @@ public partial class TestMachine : Machine<int>
     {
         get
         {
-            if (this.interfaceInstance is not Interface @interface)
+            if (this.interfaceInstance is not Interface obj)
             {
-                @interface = new(this);
-                this.interfaceInstance = @interface;
+                obj = new(this);
+                this.interfaceInstance = obj;
             }
 
-            return @interface;
+            return obj;
         }
     }
 

@@ -13,7 +13,8 @@ public partial class TestBigMachine : BigMachineBase, ITinyhandSerialize<TestBig
 {
     public TestBigMachine()
     {
-        this.TestMachines = new(this, (x, y) => new TestMachine().InterfaceInstance, x => new TestMachine.Interface.CommandAll(x));
+        this.TestMachines = new();
+        this.TestMachines.Prepare(this, default!);
         this.SingleMachine = new();
         this.SingleMachine.Prepare(this, default!);
     }

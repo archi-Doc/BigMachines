@@ -29,5 +29,5 @@ public abstract partial class Machine<TIdentifier> : Machine
     /// Gets or sets the identifier.
     /// </summary>
     [Key(0, IgnoreKeyReservation = true)]
-    public TIdentifier Identifier { get; protected set; }
+    public TIdentifier Identifier { get; internal protected set; }
 }

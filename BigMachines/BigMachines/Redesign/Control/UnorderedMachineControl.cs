@@ -31,10 +31,6 @@ public sealed partial class UnorderedMachineControl<TIdentifier, TInterface, TCo
         }
     }
 
-    private MachineInformation? machineInformation;
-    private Func<UnorderedMachineControl<TIdentifier, TInterface, TCommandAll>, TIdentifier, TInterface>? createInterface; // MachineControl + Identifier -> Machine.Interface
-    private Func<UnorderedMachineControl<TIdentifier, TInterface, TCommandAll>, TCommandAll>? createCommandAll; // MachineControl -> Machine.Interface.CommandAll
-
     [TinyhandObject(Structual = true)]
     [ValueLinkObject(Isolation = IsolationLevel.Serializable)]
     private partial class Item
@@ -42,13 +38,13 @@ public sealed partial class UnorderedMachineControl<TIdentifier, TInterface, TCo
         public Item()
         {
             this.Identifier = default!;
-            this.Interface = default!;
+            this.Machine = default!;
         }
 
-        public Item(TIdentifier identifier, TInterface @interface)
+        public Item(TIdentifier identifier, Machine<TIdentifier> machine)
         {
             this.Identifier = identifier;
-            this.Interface = @interface;
+            this.Machine = machine;
         }
 
 #pragma warning disable SA1401 // Fields should be private
@@ -58,7 +54,7 @@ public sealed partial class UnorderedMachineControl<TIdentifier, TInterface, TCo
         public TIdentifier Identifier;
 
         [Key(1)]
-        public TInterface Interface;
+        public Machine<TIdentifier> Machine;
 
 #pragma warning restore SA1401 // Fields should be private
     }
@@ -81,7 +77,7 @@ public sealed partial class UnorderedMachineControl<TIdentifier, TInterface, TCo
     {
         lock (this.items.SyncObject)
         {
-            return this.items.Select(x => x.Interface).ToArray();
+            return this.items.Select(x => (TInterface)x.Machine.InterfaceInstance).ToArray();
         }
     }
 
@@ -116,7 +112,7 @@ public sealed partial class UnorderedMachineControl<TIdentifier, TInterface, TCo
         {
             if (this.items.IdentifierChain.TryGetValue(identifier, out var item))
             {
-                return item.Interface;
+                return (TInterface)item.Machine.InterfaceInstance;
             }
             else
             {
@@ -131,10 +127,12 @@ public sealed partial class UnorderedMachineControl<TIdentifier, TInterface, TCo
         {
             if (!this.items.IdentifierChain.TryGetValue(identifier, out var item))
             {
-                item = new(identifier, this.createInterface(this, identifier));
+                var machine = (Machine<TIdentifier>)this.CreateMachine();
+                machine.Identifier = identifier;
+                item = new(identifier, machine);
             }
 
-            return item.Interface;
+            return (TInterface)item.Machine.InterfaceInstance;
         }
     }
 
