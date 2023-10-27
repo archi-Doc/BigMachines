@@ -22,7 +22,7 @@ public partial class TestBigMachine : BigMachineBase, ITinyhandSerialize<TestBig
         controls = new MachineControl[] { this.TestMachines, this.SingleMachine, };
     }
 
-    public MachineControl[] GetArray()
+    public override MachineControl[] GetArray()
         => controls;
 
     public UnorderedMachineControl<int, TestMachine, TestMachine.Interface> TestMachines { get; private set; }

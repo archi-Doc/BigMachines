@@ -20,7 +20,7 @@ public sealed partial class UnorderedMachineControl<TIdentifier, TMachine, TInte
     internal UnorderedMachineControl()
         : base()
     {
-        this.information = MachineRegistry.Get<TMachine>();
+        this.MachineInformation = MachineRegistry.Get<TMachine>();
         this.items = new();
     }
 
@@ -61,7 +61,8 @@ public sealed partial class UnorderedMachineControl<TIdentifier, TMachine, TInte
 #pragma warning restore SA1401 // Fields should be private
     }
 
-    private MachineInformation information;
+    public override MachineInformation MachineInformation { get; }
+
     private Item.GoshujinClass items;
 
     // public TCommandAll CommandAll { get; private set; } = default!;
@@ -81,6 +82,14 @@ public sealed partial class UnorderedMachineControl<TIdentifier, TMachine, TInte
         lock (this.items.SyncObject)
         {
             return this.items.Select(x => (TInterface)x.Machine.InterfaceInstance).ToArray();
+        }
+    }
+
+    internal override TMachine[] GetMachines()
+    {
+        lock (this.items.SyncObject)
+        {
+            return this.items.Select(x => x.Machine).ToArray();
         }
     }
 
@@ -130,7 +139,7 @@ public sealed partial class UnorderedMachineControl<TIdentifier, TMachine, TInte
         {
             if (!this.items.IdentifierChain.TryGetValue(identifier, out var item))
             {
-                var machine = MachineRegistry.CreateMachine<TMachine>(this.information);
+                var machine = MachineRegistry.CreateMachine<TMachine>(this.MachineInformation);
                 machine.Prepare(this);
                 machine.Identifier = identifier;
                 item = new(identifier, machine);

@@ -38,11 +38,11 @@ public partial class Machine
                     return false;
                 }
 
+                this.Machine.OnTerminated();
                 this.Machine.operationalState |= OperationalFlag.Terminated;
             }
 
-            this.Machine.RemoveFromControl();
-            return true;
+            return this.Machine.RemoveFromControl();
         }
 
         public bool PauseMachine()

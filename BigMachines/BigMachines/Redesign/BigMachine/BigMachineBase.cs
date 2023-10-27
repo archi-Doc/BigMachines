@@ -9,48 +9,21 @@ namespace BigMachines.Redesign;
 /// <summary>
 ///  The top-level abstract class for managing groups of machines.
 /// </summary>
-public abstract class BigMachineBase
+public abstract partial class BigMachineBase
 {
     public BigMachineBase()
     {
+        this.core = new(this);
     }
 
-    /*internal Machine CreateMachine(MachineInformation information)
-    {
-        Machine? machine = null;
-        if (this.ServiceProvider != null)
-        {
-            machine = this.ServiceProvider.GetService(information.MachineType) as Machine;
-        }
+    public abstract MachineControl[] GetArray();
 
-        if (machine == null)
-        {
-            if (information.Constructor != null)
-            {
-                machine = information.Constructor();
-            }
-            else
-            {
-                if (this.ServiceProvider == null)
-                {
-                    throw new InvalidOperationException("Specify a service provider to create an instance of a machine that does not have a default constructor.");
-                }
-                else
-                {
-                    throw new InvalidOperationException("Service provider was unable to create an instance of the machine.");
-                }
-            }
-        }
+    #region Core
 
-        machine.StartIfDefaultTimeoutIsSet();
+    public void Start()
+        => this.core.Start();
 
-        if (information.Continuous)
-        {
-            // this.Continuous.AddMachine(machine);
-        }
-
-        return machine;
-    }*/
+    #endregion
 
     #region FieldAndProperty
 
@@ -59,6 +32,9 @@ public abstract class BigMachineBase
     /// </summary>
     public LoopCheckerMode LoopCheckerMode { get; set; } = LoopCheckerMode.EnabledAndThrowException;
 
+    public DateTime LastRun { get; private set; }
+
+    private BigMachineCore core;
     private ExceptionHandlerDelegate exceptionHandler = DefaultExceptionHandler;
     private ConcurrentQueue<BigMachineException> exceptionQueue = new();
 

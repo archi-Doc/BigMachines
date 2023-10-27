@@ -19,7 +19,7 @@ public partial class TestMachine : Machine<int>
 
     public static async Task Test1()
     {
-        MachineRegistry.Register(new(typeof(TestMachine), false, () => new TestMachine()));
+        MachineRegistry.Register(new(typeof(TestMachine), typeof(int), false, () => new TestMachine()));
 
         var bigMachine = new TestBigMachine();
         var machine = bigMachine.TestMachines.TryGet(0);

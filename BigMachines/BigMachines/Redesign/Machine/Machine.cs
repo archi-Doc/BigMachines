@@ -11,6 +11,7 @@ using Tinyhand;
 using Tinyhand.IO;
 
 #pragma warning disable SA1202
+#pragma warning disable SA1307 // Accessible fields should begin with upper-case letter
 #pragma warning disable SA1401 // Fields should be private
 
 namespace BigMachines.Redesign;
@@ -90,7 +91,7 @@ public abstract partial class Machine
     /// The time until the machine starts.
     /// </summary>
     [Key(2)]
-    protected long timeToStart = long.MaxValue; // TimeSpan.Ticks (for interlocked)
+    protected internal long timeToStart = long.MaxValue; // TimeSpan.Ticks (for interlocked)
 
     [IgnoreMember]
     protected long TimeToStart
@@ -152,7 +153,7 @@ public abstract partial class Machine
     /// The next scheduled <see cref="DateTime"/> for this machine to run.
     /// </summary>
     [Key(4)]
-    protected DateTime nextRunTime;
+    protected internal DateTime nextRunTime;
 
     [IgnoreMember]
     protected DateTime NextRunTime
@@ -184,7 +185,7 @@ public abstract partial class Machine
     /// When it reaches 0, the machine will terminate.
     /// </summary>
     [Key(5)]
-    protected long lifespan = long.MaxValue; // TimeSpan.Ticks (for interlocked)
+    protected internal long lifespan = long.MaxValue; // TimeSpan.Ticks (for interlocked)
 
     [IgnoreMember]
     protected long Lifespan
@@ -258,7 +259,7 @@ public abstract partial class Machine
     /// <see cref="TimeSpan.Zero"/>: No interval execution.<br/>
     /// This property is NOT serialization target.
     /// </summary>
-    protected readonly TimeSpan DefaultTimeout;
+    protected internal readonly TimeSpan DefaultTimeout;
 
     [IgnoreMember]
     protected OperationalFlag operationalState;
@@ -331,44 +332,20 @@ RerunLoop:
         }
 
         this.LastRunTime = now;
-        this.operationalState &= OperationalFlag.Running;
+        this.operationalState &= ~OperationalFlag.Running;
         return result;
     }
 
-    private Task TerminateAndRemoveFromControlAsync()
-        => Task.Run(() => this.TerminateAndRemoveFromControl());
-
-    private async Task TerminateAndRemoveFromControl()
-    {
-        var terminated = false;
-        await this.Semaphore.EnterAsync().ConfigureAwait(false);
-        try
-        {
-            if (this.operationalState.HasFlag(OperationalFlag.Terminated))
-            {
-                terminated = true;
-                this.OnTerminated();
-            }
-        }
-        finally
-        {
-            this.Semaphore.Exit();
-        }
-
-        if (terminated)
-        {
-            this.RemoveFromControl();
-        }
-    }
-
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    private void RemoveFromControl()
+    private bool RemoveFromControl()
     {
-        this.Control?.RemoveMachine(this);
+        var result = this.Control?.RemoveMachine(this) == true;
         /*if (this.Info.Continuous)
         {
             this.BigMachine.Continuous.RemoveMachine(this);
         }*/
+
+        return result;
     }
 
     /// <summary>

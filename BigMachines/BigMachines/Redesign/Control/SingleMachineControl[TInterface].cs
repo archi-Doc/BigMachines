@@ -21,7 +21,7 @@ public partial class SingleMachineControl<TMachine, TInterface> : MachineControl
 {
     public SingleMachineControl()
     {
-        this.information = MachineRegistry.Get<TMachine>();
+        this.MachineInformation = MachineRegistry.Get<TMachine>();
     }
 
     public void Prepare(BigMachineBase bigMachine)
@@ -29,7 +29,8 @@ public partial class SingleMachineControl<TMachine, TInterface> : MachineControl
         this.BigMachine = bigMachine;
     }
 
-    private MachineInformation information;
+    public override MachineInformation MachineInformation { get; }
+
     private TMachine? machine;
 
     private TMachine Machine
@@ -53,7 +54,7 @@ public partial class SingleMachineControl<TMachine, TInterface> : MachineControl
                     throw new InvalidOperationException("Unable to create an instance of the machine.");
                 }*/
 
-                obj = MachineRegistry.CreateMachine<TMachine>(this.information);
+                obj = MachineRegistry.CreateMachine<TMachine>(this.MachineInformation);
                 obj.Prepare(this);
                 this.machine = obj;
             }
@@ -74,6 +75,18 @@ public partial class SingleMachineControl<TMachine, TInterface> : MachineControl
         else
         {
             return Array.Empty<Machine.ManMachineInterface>();
+        }
+    }
+
+    internal override Machine[] GetMachines()
+    {
+        if (this.machine?.InterfaceInstance is { } obj)
+        {
+            return new Machine[] { (Machine)obj, };
+        }
+        else
+        {
+            return Array.Empty<Machine>();
         }
     }
 
