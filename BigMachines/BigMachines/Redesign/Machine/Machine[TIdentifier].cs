@@ -1,8 +1,7 @@
 ﻿// Copyright (c) All contributors. All rights reserved. Licensed under the MIT license.
 
 using Tinyhand;
-
-#pragma warning disable SA1202
+using Tinyhand.IO;
 
 namespace BigMachines.Redesign;
 
@@ -12,7 +11,7 @@ namespace BigMachines.Redesign;
 /// </summary>
 /// <typeparam name="TIdentifier">The type of an identifier.</typeparam>
 [TinyhandObject(ReservedKeys = Machine.ReservedKeyNumber)]
-public abstract partial class Machine<TIdentifier> : Machine
+public abstract partial class Machine<TIdentifier> : Machine // , ITinyhandSerialize<Machine<TIdentifier>>
     where TIdentifier : notnull
 {
     internal Machine()
@@ -30,4 +29,25 @@ public abstract partial class Machine<TIdentifier> : Machine
     /// </summary>
     [Key(0, IgnoreKeyReservation = true)]
     public TIdentifier Identifier { get; internal protected set; }
+
+    /*static void ITinyhandSerialize<Machine<TIdentifier>>.Deserialize(ref TinyhandReader reader, scoped ref Machine<TIdentifier>? value, TinyhandSerializerOptions options)
+    {
+        value ??= MachineRegistry.CreateMachine<Machine<TIdentifier>>();
+        if (value is ITinyhandSerialize obj)
+        {
+            obj.Deserialize(ref reader, options);
+        }
+    }
+
+    static void ITinyhandSerialize<Machine<TIdentifier>>.Serialize(ref TinyhandWriter writer, scoped ref Machine<TIdentifier>? value, TinyhandSerializerOptions options)
+    {
+        if (value is ITinyhandSerialize obj)
+        {
+            obj.Serialize(ref writer, options);
+        }
+        else
+        {
+            writer.WriteNil();
+        }
+    }*/
 }

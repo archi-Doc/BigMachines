@@ -43,13 +43,6 @@ public static class MachineRegistry
             }
         }
 
-        machine.StartIfDefaultTimeoutIsSet();
-
-        if (information.Continuous)
-        {
-            // this.Continuous.AddMachine(machine);
-        }
-
         return machine;
     }
 }

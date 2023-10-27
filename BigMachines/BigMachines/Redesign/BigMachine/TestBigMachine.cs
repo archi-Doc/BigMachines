@@ -16,12 +16,12 @@ public partial class TestBigMachine : BigMachineBase, ITinyhandSerialize<TestBig
         this.TestMachines = new();
         this.TestMachines.Prepare(this, default!);
         this.SingleMachine = new();
-        this.SingleMachine.Prepare(this, default!);
+        this.SingleMachine.Prepare(this);
     }
 
     public UnorderedMachineControl<int, TestMachine, TestMachine.Interface, TestMachine.Interface.CommandAll> TestMachines { get; private set; }
 
-    public SingleMachineControl<SingleMachine.Interface> SingleMachine { get; private set; }
+    public SingleMachineControl<SingleMachine, SingleMachine.Interface> SingleMachine { get; private set; }
 
     static void ITinyhandSerialize<TestBigMachine>.Serialize(ref TinyhandWriter writer, scoped ref TestBigMachine? value, TinyhandSerializerOptions options)
     {

@@ -1,10 +1,12 @@
 ﻿// Copyright (c) All contributors. All rights reserved. Licensed under the MIT license.
 
 using System;
+using System.Reflection.PortableExecutable;
 using System.Runtime.CompilerServices;
 using System.Threading;
 using System.Threading.Tasks;
 using Arc.Threading;
+using Microsoft.VisualBasic;
 using Tinyhand;
 using Tinyhand.IO;
 
@@ -30,6 +32,16 @@ public abstract partial class Machine
     internal void Prepare(MachineControl control)
     {
         this.Control = control;
+
+        if (this.DefaultTimeout != TimeSpan.Zero && this.timeToStart == long.MaxValue)
+        {
+            this.timeToStart = 0;
+        }
+
+        /*if (information.Continuous)
+        {// tempcode
+            // this.Continuous.AddMachine(machine);
+        }*/
     }
 
     #region Keys
