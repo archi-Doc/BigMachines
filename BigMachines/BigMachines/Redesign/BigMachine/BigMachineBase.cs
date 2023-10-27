@@ -15,15 +15,9 @@ public abstract class BigMachineBase
     {
     }
 
-    internal Machine? CreateMachine(MachineInformation? information)
+    internal Machine CreateMachine(MachineInformation information)
     {
         Machine? machine = null;
-
-        if (information is null)
-        {
-            return default;
-        }
-
         if (this.ServiceProvider != null)
         {
             machine = this.ServiceProvider.GetService(information.MachineType) as Machine;

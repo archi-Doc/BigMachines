@@ -17,15 +17,7 @@ public sealed partial class UnorderedMachineControl<TIdentifier, TInterface, TCo
     where TInterface : Machine.ManMachineInterface
 {
     internal UnorderedMachineControl()
-        : base(default!)
-    {// This code has some issues, but since it's never called directly, it's probably fine.
-        this.createInterface = default!;
-        this.createCommandAll = default!;
-        this.CommandAll = default!;
-    }
-
-    public UnorderedMachineControl(BigMachineBase bigMachine, Func<UnorderedMachineControl<TIdentifier, TInterface, TCommandAll>, TIdentifier, TInterface> createInterface, Func<UnorderedMachineControl<TIdentifier, TInterface, TCommandAll>, TCommandAll> createCommandAll)
-        : base(bigMachine)
+        : base()
     {
         this.createInterface = createInterface;
         this.createCommandAll = createCommandAll;

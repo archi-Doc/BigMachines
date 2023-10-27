@@ -12,8 +12,8 @@ namespace BigMachines.Redesign;
 public abstract class MultiMachineControl<TIdentifier> : MachineControl
     where TIdentifier : notnull
 {
-    public MultiMachineControl(BigMachineBase bigMachine)
-        : base(bigMachine)
+    public MultiMachineControl()
+        : base()
     {
     }
 

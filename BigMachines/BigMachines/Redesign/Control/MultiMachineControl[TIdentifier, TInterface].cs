@@ -14,8 +14,8 @@ public abstract class MultiMachineControl<TIdentifier, TInterface> : MultiMachin
     where TIdentifier : notnull
     where TInterface : Machine.ManMachineInterface
 {
-    public MultiMachineControl(BigMachineBase bigMachine)
-        : base(bigMachine)
+    public MultiMachineControl()
+        : base()
     {
     }
 

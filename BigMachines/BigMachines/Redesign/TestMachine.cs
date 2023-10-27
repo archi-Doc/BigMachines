@@ -40,7 +40,7 @@ public partial class TestMachine : Machine<int>
         First = 1,
     }
 
-    public Interface InterfaceInstance
+    internal override object InterfaceInstance
     {
         get
         {

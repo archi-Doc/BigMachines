@@ -249,6 +249,8 @@ public abstract partial class Machine
     [IgnoreMember]
     protected object? interfaceInstance;
 
+    internal abstract object InterfaceInstance { get; }
+
     /// <summary>
     /// Gets or sets a value indicating whether the machine is going to re-run.
     /// </summary>

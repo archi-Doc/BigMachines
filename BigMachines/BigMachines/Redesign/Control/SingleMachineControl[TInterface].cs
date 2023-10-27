@@ -36,9 +36,14 @@ public partial class SingleMachineControl<TInterface> : MachineControl, ITinyhan
         {
             if (this.BigMachine is null)
             {
-                throw new InvalidOperationException("Unable to create an instance of the machine.");
+                throw new InvalidOperationException("Call Prepare() function to specify a valid BigMachine object.");
             }
-            obj = this.BigMachine?.CreateMachine(this.machineInformation) as TInterface;
+            else if (this.machineInformation is null)
+            {
+                throw new InvalidOperationException("Call Prepare() function to specify a valid machine information.");
+            }
+
+            obj = this.BigMachine.CreateMachine(this.machineInformation).InterfaceInstance as TInterface;
             if (obj is null)
             {
                 throw new InvalidOperationException("Unable to create an instance of the machine.");
