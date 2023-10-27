@@ -31,7 +31,7 @@ public abstract partial class Machine
     }
 
     internal void Prepare(MachineControl control)
-    {
+    {// Deserialize
         this.Control = control;
         if (this is IStructualObject obj &&
             this.Control is IStructualObject parent)
@@ -48,6 +48,12 @@ public abstract partial class Machine
         {// tempcode
             // this.Continuous.AddMachine(machine);
         }*/
+    }
+
+    internal void PrepareAndCreate(MachineControl control, object? createParam)
+    {// Create machine
+        this.Prepare(control);
+        this.OnCreation(createParam);
     }
 
     #region Keys
@@ -312,7 +318,7 @@ public abstract partial class Machine
                     if (this.TryRun(now) == StateResult.Terminate)
                     {
                         this.operationalState |= OperationalFlag.Terminated;
-                        this.OnTerminated();
+                        this.OnTermination();
                     }
                 }
                 finally
@@ -441,10 +447,19 @@ RerunLoop:
         => ChangeStateResult.Terminated;
 
     /// <summary>
-    /// Called when the machine is terminating.<br/>
-    /// This code is inside 'lock (this.Machine)' statement.
+    /// Called when the machine is created.<br/>
+    ///  This code is inside a semaphore lock.
     /// </summary>
-    protected virtual void OnTerminated()
+    /// <param name="createParam">The parameters used when creating a machine.</param>
+    protected virtual void OnCreation(object? createParam)
+    {
+    }
+
+    /// <summary>
+    /// Called when the machine is terminating.<br/>
+    ///  This code is inside a semaphore lock.
+    /// </summary>
+    protected virtual void OnTermination()
     {
     }
 }

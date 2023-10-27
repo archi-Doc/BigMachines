@@ -133,15 +133,36 @@ public sealed partial class UnorderedMachineControl<TIdentifier, TMachine, TInte
         }
     }
 
-    public TInterface GetOrCreate(TIdentifier identifier)
+    public TInterface? TryCreate(TIdentifier identifier, object? createParam = null)
+    {
+        lock (this.items.SyncObject)
+        {
+            if (this.items.IdentifierChain.TryGetValue(identifier, out var item))
+            {
+                return default;
+            }
+            else
+            {
+                var machine = MachineRegistry.CreateMachine<TMachine>(this.MachineInformation);
+                machine.Identifier = identifier;
+                machine.PrepareAndCreate(this, createParam);
+                item = new(identifier, machine);
+                item.Goshujin = this.items;
+            }
+
+            return (TInterface)item.Machine.InterfaceInstance;
+        }
+    }
+
+    public TInterface GetOrCreate(TIdentifier identifier, object? createParam = null)
     {
         lock (this.items.SyncObject)
         {
             if (!this.items.IdentifierChain.TryGetValue(identifier, out var item))
             {
                 var machine = MachineRegistry.CreateMachine<TMachine>(this.MachineInformation);
-                machine.Prepare(this);
                 machine.Identifier = identifier;
+                machine.PrepareAndCreate(this, createParam);
                 item = new(identifier, machine);
                 item.Goshujin = this.items;
             }

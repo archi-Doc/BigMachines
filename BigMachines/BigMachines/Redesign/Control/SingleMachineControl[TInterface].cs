@@ -39,21 +39,6 @@ public partial class SingleMachineControl<TMachine, TInterface> : MachineControl
         {
             if (this.machine is not { } obj)
             {
-                /*if (this.BigMachine is null)
-                {
-                    throw new InvalidOperationException("Call Prepare() function to specify a valid BigMachine object.");
-                }
-                else if (this.MachineInformation is null)
-                {
-                    throw new InvalidOperationException("Call Prepare() function to specify a valid machine information.");
-                }
-
-                obj = this.BigMachine.CreateMachine(this.MachineInformation);
-                if (obj is null)
-                {
-                    throw new InvalidOperationException("Unable to create an instance of the machine.");
-                }*/
-
                 obj = MachineRegistry.CreateMachine<TMachine>(this.MachineInformation);
                 obj.Prepare(this);
                 this.machine = obj;
