@@ -11,13 +11,18 @@ using ValueLink;
 
 namespace BigMachines.Redesign;
 
+public interface ISequentialMachineControl
+{
+    Machine.ManMachineInterface? GetFirst();
+}
+
 [TinyhandObject(Structual = true)]
-public sealed partial class UnorderedMachineControl<TIdentifier, TMachine, TInterface> : MultiMachineControl<TIdentifier, TInterface>, ITinyhandSerialize<UnorderedMachineControl<TIdentifier, TMachine, TInterface>>, ITinyhandCustomJournal
+public sealed partial class SequentialMachineControl<TIdentifier, TMachine, TInterface> : MultiMachineControl<TIdentifier, TInterface>, ISequentialMachineControl, ITinyhandSerialize<SequentialMachineControl<TIdentifier, TMachine, TInterface>>, ITinyhandCustomJournal
     where TIdentifier : notnull
     where TMachine : Machine<TIdentifier>
     where TInterface : Machine.ManMachineInterface
 {
-    internal UnorderedMachineControl()
+    internal SequentialMachineControl()
         : base()
     {
         this.MachineInformation = MachineRegistry.Get<TMachine>();
@@ -52,7 +57,8 @@ public sealed partial class UnorderedMachineControl<TIdentifier, TMachine, TInte
 #pragma warning disable SA1401 // Fields should be private
 
         [Key(0)]
-        [Link(Primary = true, Unique = true, Type = ChainType.Unordered)]
+        [Link(Primary = true, Name = "Sequential", Type = ChainType.QueueList)]
+        [Link(Unique = true, Type = ChainType.Unordered)]
         public TIdentifier Identifier;
 
         [Key(1)]
@@ -65,9 +71,20 @@ public sealed partial class UnorderedMachineControl<TIdentifier, TMachine, TInte
 
     private Item.GoshujinClass items;
 
-    // public TCommandAll CommandAll { get; private set; } = default!;
-
     #region Abstract
+
+    public Machine.ManMachineInterface? GetFirst()
+    {
+        lock (this.items.SyncObject)
+        {
+            if (this.items.SequentialChain.TryPeek(out var item))
+            {
+                return item.Machine.InterfaceInstance;
+            }
+
+            return default;
+        }
+    }
 
     public override TIdentifier[] GetIdentifiers()
     {
@@ -154,7 +171,7 @@ public sealed partial class UnorderedMachineControl<TIdentifier, TMachine, TInte
 
     #region Tinyhand
 
-    static void ITinyhandSerialize<UnorderedMachineControl<TIdentifier, TMachine, TInterface>>.Serialize(ref TinyhandWriter writer, scoped ref UnorderedMachineControl<TIdentifier, TMachine, TInterface>? value, TinyhandSerializerOptions options)
+    static void ITinyhandSerialize<SequentialMachineControl<TIdentifier, TMachine, TInterface>>.Serialize(ref TinyhandWriter writer, scoped ref SequentialMachineControl<TIdentifier, TMachine, TInterface>? value, TinyhandSerializerOptions options)
     {
         if (value is null)
         {
@@ -165,7 +182,7 @@ public sealed partial class UnorderedMachineControl<TIdentifier, TMachine, TInte
         TinyhandSerializer.SerializeObject(ref writer, value.items, options);
     }
 
-    static void ITinyhandSerialize<UnorderedMachineControl<TIdentifier, TMachine, TInterface>>.Deserialize(ref TinyhandReader reader, scoped ref UnorderedMachineControl<TIdentifier, TMachine, TInterface>? value, TinyhandSerializerOptions options)
+    static void ITinyhandSerialize<SequentialMachineControl<TIdentifier, TMachine, TInterface>>.Deserialize(ref TinyhandReader reader, scoped ref SequentialMachineControl<TIdentifier, TMachine, TInterface>? value, TinyhandSerializerOptions options)
     {
         if (reader.TryReadNil())
         {

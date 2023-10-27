@@ -1,7 +1,6 @@
 ﻿// Copyright (c) All contributors. All rights reserved. Licensed under the MIT license.
 
 using System;
-using System.Linq;
 using System.Threading.Tasks;
 using Arc.Threading;
 
@@ -52,22 +51,25 @@ public partial class BigMachineBase
                     elapsed = default;
                 }
 
-                bool canRun;
                 foreach (var x in controls)
                 {
-                    canRun = true;
                     if (x.MachineInformation.Continuous)
                     {// Omit continuous machines
                         continue;
                     }
-                    else if (x.MachineInformation.ControlType == typeof(QueueGroup<>))
+                    else if (x is ISequentialMachineControl sequential)
                     {
-                        canRun = x.GetMachines().All(a => !a.operationalState.HasFlag(OperationalFlag.Running));
+                        if (sequential.GetFirst() is { } obj)
+                        {
+                            obj.Machine.Process(now, elapsed);
+                        }
                     }
-
-                    foreach (var y in x.GetMachines())
+                    else
                     {
-                        await y.Process(now, elapsed);
+                        foreach (var y in x.GetMachines())
+                        {
+                            y.Process(now, elapsed);
+                        }
                     }
                 }
             }

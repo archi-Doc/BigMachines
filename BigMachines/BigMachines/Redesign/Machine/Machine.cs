@@ -283,7 +283,7 @@ public abstract partial class Machine
 
     #endregion
 
-    internal async Task Process(DateTime now, TimeSpan elapsed)
+    internal void Process(DateTime now, TimeSpan elapsed)
     {
         var canRun = true;
 
