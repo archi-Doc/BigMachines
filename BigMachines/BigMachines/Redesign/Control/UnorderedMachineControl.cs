@@ -19,13 +19,21 @@ public sealed partial class UnorderedMachineControl<TIdentifier, TInterface, TCo
     internal UnorderedMachineControl()
         : base()
     {
-        this.createInterface = createInterface;
-        this.createCommandAll = createCommandAll;
-        this.CommandAll = this.createCommandAll(this);
     }
 
-    private Func<UnorderedMachineControl<TIdentifier, TInterface, TCommandAll>, TIdentifier, TInterface> createInterface; // MachineControl + Identifier -> Machine.Interface
-    private Func<UnorderedMachineControl<TIdentifier, TInterface, TCommandAll>, TCommandAll> createCommandAll; // MachineControl -> Machine.Interface.CommandAll
+    public void Prepare(BigMachineBase bigMachine, MachineInformation machineInformation)
+    {
+        this.BigMachine = bigMachine;
+        this.machineInformation = machineInformation;
+        if (this.machineInformation.CommandAllConstructor is { })
+        {
+            this.CommandAll = (TCommandAll)this.machineInformation.CommandAllConstructor(this);
+        }
+    }
+
+    private MachineInformation? machineInformation;
+    private Func<UnorderedMachineControl<TIdentifier, TInterface, TCommandAll>, TIdentifier, TInterface>? createInterface; // MachineControl + Identifier -> Machine.Interface
+    private Func<UnorderedMachineControl<TIdentifier, TInterface, TCommandAll>, TCommandAll>? createCommandAll; // MachineControl -> Machine.Interface.CommandAll
 
     [TinyhandObject(Structual = true)]
     [ValueLinkObject(Isolation = IsolationLevel.Serializable)]
@@ -57,7 +65,7 @@ public sealed partial class UnorderedMachineControl<TIdentifier, TInterface, TCo
 
     private Item.GoshujinClass items = new();
 
-    public TCommandAll CommandAll { get; }
+    public TCommandAll CommandAll { get; private set; } = default!;
 
     #region Abstract
 

@@ -83,9 +83,10 @@ public partial class SingleMachineControl<TInterface> : MachineControl, ITinyhan
     static void ITinyhandSerialize<SingleMachineControl<TInterface>>.Deserialize(ref TinyhandReader reader, scoped ref SingleMachineControl<TInterface>? value, TinyhandSerializerOptions options)
     {
         value ??= new();
-        if (value.machineInformation?.Constructor is { } constructor)
+        if (value.BigMachine is not null &&
+            value.machineInformation is not null)
         {
-            var machine = constructor();
+            var machine = value.BigMachine.CreateMachine(value.machineInformation);
             if (machine is ITinyhandSerialize obj)
             {
                 obj.Deserialize(ref reader, options);

@@ -59,12 +59,11 @@ public partial class TestMachine : Machine<int>
         public Interface(TestMachine machine)
             : base(machine)
         {
-            this.Machine = machine;
         }
 
         public CommandList Command => new(this.Machine);
 
-        protected internal new readonly TestMachine Machine;
+        private new TestMachine Machine => (TestMachine)((ManMachineInterface)this).Machine;
 
         public readonly struct CommandList
         {
