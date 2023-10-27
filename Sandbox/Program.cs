@@ -37,8 +37,10 @@ namespace Sandbox
                 ThreadCore.Root.Terminate(); // Send a termination signal to the root.
             };
 
-            MachineRegistry.Register(new(typeof(BigMachines.Redesign.SingleMachine), typeof(SingleMachineControl<,>), null, false, () => new BigMachines.Redesign.SingleMachine()));
-            MachineRegistry.Register(new(typeof(BigMachines.Redesign.TestMachine), typeof(UnorderedMachineControl<,,>), typeof(int), false, () => new BigMachines.Redesign.TestMachine()));
+            MachineRegistry.Register(new(0, typeof(BigMachines.Redesign.SingleMachine), typeof(SingleMachineControl<,>)) { Constructor = () => new BigMachines.Redesign.SingleMachine(), Serializable = true, });
+
+            MachineRegistry.Register(new(1, typeof(BigMachines.Redesign.TestMachine), typeof(UnorderedMachineControl<,,>)) { Constructor = () => new BigMachines.Redesign.TestMachine(), IdentifierType = typeof(int), Serializable = true, });
+
             var testBigMachine = new TestBigMachine();
             var m = testBigMachine.TestMachines.GetOrCreate(1);
             m = testBigMachine.TestMachines.GetOrCreate(1);

@@ -1,6 +1,8 @@
 ﻿// Copyright (c) All contributors. All rights reserved. Licensed under the MIT license.
 
 using System;
+using System.Linq;
+using System.Runtime.CompilerServices;
 using BigMachines.Redesign;
 using Tinyhand;
 using Tinyhand.IO;
@@ -31,7 +33,27 @@ public partial class TestBigMachine : BigMachineBase, ITinyhandSerialize<TestBig
 
     static void ITinyhandSerialize<TestBigMachine>.Serialize(ref TinyhandWriter writer, scoped ref TestBigMachine? value, TinyhandSerializerOptions options)
     {
-        throw new System.NotImplementedException();
+        if (value == null)
+        {
+            writer.WriteNil();
+            return;
+        }
+
+        var count = controls.Count(x => x.MachineInformation.Serializable);
+
+        writer.WriteMapHeader(count);
+
+        if (value.TestMachines.MachineInformation.Serializable)
+        {
+            writer.Write(value.TestMachines.MachineInformation.Id);
+            TinyhandSerializer.SerializeObject(ref writer, value.TestMachines, options);
+        }
+
+        if (value.SingleMachine.MachineInformation.Serializable)
+        {
+            writer.Write(value.SingleMachine.MachineInformation.Id);
+            TinyhandSerializer.SerializeObject(ref writer, value.SingleMachine, options);
+        }
     }
 
     static void ITinyhandSerialize<TestBigMachine>.Deserialize(ref TinyhandReader reader, scoped ref TestBigMachine? value, TinyhandSerializerOptions options)
