@@ -91,7 +91,7 @@ public abstract partial class Machine
     /// The time until the machine starts.
     /// </summary>
     [Key(2)]
-    protected internal long timeToStart = long.MaxValue; // TimeSpan.Ticks (for interlocked)
+    protected long timeToStart = long.MaxValue; // TimeSpan.Ticks (for interlocked)
 
     [IgnoreMember]
     protected long TimeToStart
@@ -153,7 +153,7 @@ public abstract partial class Machine
     /// The next scheduled <see cref="DateTime"/> for this machine to run.
     /// </summary>
     [Key(4)]
-    protected internal DateTime nextRunTime;
+    protected DateTime nextRunTime;
 
     [IgnoreMember]
     protected DateTime NextRunTime
@@ -185,7 +185,7 @@ public abstract partial class Machine
     /// When it reaches 0, the machine will terminate.
     /// </summary>
     [Key(5)]
-    protected internal long lifespan = long.MaxValue; // TimeSpan.Ticks (for interlocked)
+    protected long lifespan = long.MaxValue; // TimeSpan.Ticks (for interlocked)
 
     [IgnoreMember]
     protected long Lifespan
@@ -262,12 +262,12 @@ public abstract partial class Machine
     protected internal readonly TimeSpan DefaultTimeout;
 
     [IgnoreMember]
-    protected OperationalFlag operationalState;
+    protected internal OperationalFlag operationalState;
 
     [IgnoreMember]
     protected object? interfaceInstance;
 
-    internal abstract object InterfaceInstance { get; }
+    internal abstract ManMachineInterface InterfaceInstance { get; }
 
     /// <summary>
     /// Gets or sets a value indicating whether the machine is going to re-run.
@@ -283,12 +283,80 @@ public abstract partial class Machine
 
     #endregion
 
-    internal void StartIfDefaultTimeoutIsSet()
+    internal async Task Process(DateTime now, TimeSpan elapsed)
     {
-        if (this.DefaultTimeout != TimeSpan.Zero && this.TimeToStart == long.MaxValue)
-        {
-            this.timeToStart = 0;
+        var canRun = true;
+
+        Interlocked.Add(ref this.lifespan, -elapsed.Ticks);
+        if (this.operationalState == 0)
+        {// Stand-by
+            Interlocked.Add(ref this.timeToStart, -elapsed.Ticks);
         }
+
+        if (this.lifespan <= 0 || this.terminationTime <= now)
+        {// Terminate
+            this.InterfaceInstance.TerminateMachine();
+        }
+        else if (canRun && (this.timeToStart <= 0 || this.nextRunTime >= now) && !this.operationalState.HasFlag(OperationalFlag.Running))
+        {// Screening
+            if (this.Control?.MachineInformation.ControlType == typeof(QueueGroup<>))
+            {// Sequential
+                canRun = false;
+            }
+
+            _ = Task.Run(() =>
+            {
+                this.Semaphore.Enter();
+                try
+                {
+                    if (this.TryRun(now) == StateResult.Terminate)
+                    {
+                        this.operationalState |= OperationalFlag.Terminated;
+                        this.OnTerminated();
+                    }
+                }
+                finally
+                {
+                    this.Semaphore.Exit();
+
+                    if (this.operationalState.HasFlag(OperationalFlag.Terminated))
+                    {
+                        this.RemoveFromControl();
+                    }
+                }
+            });
+        }
+    }
+
+    private StateResult TryRun(DateTime now)
+    {
+        var runFlag = false;
+        if (this.timeToStart <= 0)
+        {// Timeout
+            if (this.DefaultTimeout <= TimeSpan.Zero)
+            {
+                Volatile.Write(ref this.timeToStart, long.MinValue);
+            }
+            else
+            {
+                Volatile.Write(ref this.timeToStart, this.DefaultTimeout.Ticks);
+            }
+
+            runFlag = true;
+        }
+
+        if (this.nextRunTime >= now)
+        {
+            this.nextRunTime = default;
+            runFlag = true;
+        }
+
+        if (!runFlag)
+        {
+            return StateResult.Continue;
+        }
+
+        return this.RunMachine(RunType.Timer, now).Result;
     }
 
     /// <summary>
@@ -344,6 +412,11 @@ RerunLoop:
         {
             this.BigMachine.Continuous.RemoveMachine(this);
         }*/
+
+        if (this is IDisposable disposable)
+        {
+            disposable.Dispose();
+        }
 
         return result;
     }

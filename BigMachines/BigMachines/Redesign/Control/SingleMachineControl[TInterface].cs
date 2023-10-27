@@ -70,7 +70,7 @@ public partial class SingleMachineControl<TMachine, TInterface> : MachineControl
     {
         if (this.machine?.InterfaceInstance is { } obj)
         {
-            return new Machine.ManMachineInterface[] { (Machine.ManMachineInterface)obj, };
+            return new Machine.ManMachineInterface[] { obj, };
         }
         else
         {
@@ -80,9 +80,9 @@ public partial class SingleMachineControl<TMachine, TInterface> : MachineControl
 
     internal override Machine[] GetMachines()
     {
-        if (this.machine?.InterfaceInstance is { } obj)
+        if (this.machine is { } obj)
         {
-            return new Machine[] { (Machine)obj, };
+            return new Machine[] { obj, };
         }
         else
         {

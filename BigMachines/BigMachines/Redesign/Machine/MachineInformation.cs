@@ -13,12 +13,14 @@ public class MachineInformation
     /// Initializes a new instance of the <see cref="MachineInformation"/> class.
     /// </summary>
     /// <param name="machineType"><see cref="Type"/> of the machine.</param>
+    /// <param name="controlType"><see cref="Type"/> of the machine control.</param>
     /// <param name="identifierType"><see cref="Type"/> of the identifier.</param>
     /// <param name="continuous">True if the machine is continuous.</param>
     /// <param name="constructor">Constructor delegate of <see cref="Machine"/>.</param>
-    public MachineInformation(Type machineType, Type? identifierType, bool continuous, Func<Machine>? constructor)
+    public MachineInformation(Type machineType, Type controlType, Type? identifierType, bool continuous, Func<Machine>? constructor)
     {
         this.MachineType = machineType;
+        this.ControlType = controlType;
         this.IdentifierType = identifierType;
         this.Continuous = continuous;
         this.Constructor = constructor;
@@ -28,6 +30,11 @@ public class MachineInformation
     /// Gets <see cref="Type"/> of the machine.
     /// </summary>
     public Type MachineType { get; }
+
+    /// <summary>
+    /// Gets <see cref="Type"/> of the machine control.
+    /// </summary>
+    public Type ControlType { get; }
 
     /// <summary>
     /// Gets <see cref="Type"/> of the identifier.

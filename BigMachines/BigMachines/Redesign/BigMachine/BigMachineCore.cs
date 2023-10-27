@@ -1,7 +1,7 @@
 ﻿// Copyright (c) All contributors. All rights reserved. Licensed under the MIT license.
 
-using System.Threading;
 using System;
+using System.Linq;
 using System.Threading.Tasks;
 using Arc.Threading;
 
@@ -23,11 +23,11 @@ public partial class BigMachineBase
         {
             var core = (BigMachineCore)parameter!;
             var bigMachine = core.bigMachine;
-            var array = core.bigMachine.GetArray();
+            var controls = core.bigMachine.GetArray();
 
             while (!core.IsTerminated)
             {
-                if (!core.Sleep(bigMachine.timerInterval, TimeSpan.FromMilliseconds(10)))
+                if (await core.Delay(500) == false)
                 {// Terminated
                     break;
                 }
@@ -37,7 +37,8 @@ public partial class BigMachineBase
                     bigMachine.exceptionHandler(exception);
                 }
 
-                bigMachine.Continuous.Process();
+                // tempcode
+                // bigMachine.Continuous.Process();
 
                 var now = DateTime.UtcNow;
                 if (bigMachine.LastRun == default)
@@ -52,91 +53,21 @@ public partial class BigMachineBase
                 }
 
                 bool canRun;
-                foreach (var x in array)
+                foreach (var x in controls)
                 {
                     canRun = true;
                     if (x.MachineInformation.Continuous)
                     {// Omit continuous machines
                         continue;
                     }
-                    else if (x.MachineInformation.GroupType == typeof(QueueGroup<>))
+                    else if (x.MachineInformation.ControlType == typeof(QueueGroup<>))
                     {
-                        canRun = x.GetMachines().All(a => a.RunType == RunType.NotRunning);
+                        canRun = x.GetMachines().All(a => !a.operationalState.HasFlag(OperationalFlag.Running));
                     }
 
                     foreach (var y in x.GetMachines())
                     {
-                        Interlocked.Add(ref y.lifespan, -elapsed.Ticks);
-                        if (y.Status == OperationalFlag.Running)
-                        {
-                            Interlocked.Add(ref y.timeToStart, -elapsed.Ticks);
-                        }
-
-                        if (y.lifespan <= 0 || y.TerminationDate <= now)
-                        {// Terminate
-                            y.TerminateAndRemoveFromGroup().Wait();
-                        }
-                        else if (canRun && (y.timeToStart <= 0 || y.nextRunTime >= now) && y.RunType == RunType.NotRunning)
-                        {// Screening
-                            if (x.MachineInformation.GroupType == typeof(QueueGroup<>))
-                            {
-                                canRun = false;
-                            }
-
-                            Task.Run(() => // taskrun
-                            {
-                                try
-                                {
-                                    y.LockMachine();
-                                    TryRun(y);
-                                }
-                                finally
-                                {
-                                    y.UnlockMachine();
-                                    if (y.Status == OperationalFlag.Terminated)
-                                    {
-                                        y.RemoveFromGroup();
-                                    }
-                                }
-                            });
-                        }
-                    }
-                }
-
-                bigMachine.LastRun = now;
-
-                void TryRun(Machine machine)
-                {// locked
-                    var runFlag = false;
-                    if (machine.timeToStart <= 0)
-                    {// Timeout
-                        if (machine.DefaultTimeout <= TimeSpan.Zero)
-                        {
-                            Volatile.Write(ref machine.timeToStart, long.MinValue);
-                        }
-                        else
-                        {
-                            Volatile.Write(ref machine.timeToStart, machine.DefaultTimeout.Ticks);
-                        }
-
-                        runFlag = true;
-                    }
-
-                    if (machine.nextRunTime >= now)
-                    {
-                        machine.nextRunTime = default;
-                        runFlag = true;
-                    }
-
-                    if (!runFlag)
-                    {
-                        return;
-                    }
-
-                    if (machine.RunMachine(null, RunType.Timer, now).Result == StateResult.Terminate)
-                    {
-                        machine.operationalState |= OperationalFlag.Terminated;
-                        machine.OnTerminated();
+                        await y.Process(now, elapsed);
                     }
                 }
             }
