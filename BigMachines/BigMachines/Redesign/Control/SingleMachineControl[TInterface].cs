@@ -25,7 +25,7 @@ public partial class SingleMachineControl<TInterface> : MachineControl, ITinyhan
     public void Prepare(BigMachineBase bigMachine, MachineInformation machineInformation)
     {
         this.BigMachine = bigMachine;
-        this.machineInformation = machineInformation;
+        this.MachineInformation = machineInformation;
     }
 
     private Machine? machine;
@@ -40,12 +40,12 @@ public partial class SingleMachineControl<TInterface> : MachineControl, ITinyhan
                 {
                     throw new InvalidOperationException("Call Prepare() function to specify a valid BigMachine object.");
                 }
-                else if (this.machineInformation is null)
+                else if (this.MachineInformation is null)
                 {
                     throw new InvalidOperationException("Call Prepare() function to specify a valid machine information.");
                 }
 
-                obj = this.BigMachine.CreateMachine(this.machineInformation);
+                obj = this.BigMachine.CreateMachine(this.MachineInformation);
                 if (obj is null)
                 {
                     throw new InvalidOperationException("Unable to create an instance of the machine.");
@@ -90,9 +90,9 @@ public partial class SingleMachineControl<TInterface> : MachineControl, ITinyhan
     {
         value ??= new();
         if (value.BigMachine is not null &&
-            value.machineInformation is not null)
+            value.MachineInformation is not null)
         {
-            var machine = value.BigMachine.CreateMachine(value.machineInformation);
+            var machine = value.BigMachine.CreateMachine(value.MachineInformation);
             if (machine is ITinyhandSerialize obj)
             {
                 obj.Deserialize(ref reader, options);

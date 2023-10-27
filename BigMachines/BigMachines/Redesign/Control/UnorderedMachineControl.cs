@@ -12,8 +12,9 @@ using ValueLink;
 namespace BigMachines.Redesign;
 
 [TinyhandObject(Structual = true)]
-public sealed partial class UnorderedMachineControl<TIdentifier, TInterface, TCommandAll> : MultiMachineControl<TIdentifier, TInterface>, ITinyhandSerialize<UnorderedMachineControl<TIdentifier, TInterface, TCommandAll>>, ITinyhandCustomJournal
+public sealed partial class UnorderedMachineControl<TIdentifier, TMachine, TInterface, TCommandAll> : MultiMachineControl<TIdentifier, TInterface>, ITinyhandSerialize<UnorderedMachineControl<TIdentifier, TMachine, TInterface, TCommandAll>>, ITinyhandCustomJournal
     where TIdentifier : notnull
+    where TMachine : Machine<TIdentifier>
     where TInterface : Machine.ManMachineInterface
 {
     internal UnorderedMachineControl()
@@ -24,10 +25,10 @@ public sealed partial class UnorderedMachineControl<TIdentifier, TInterface, TCo
     public void Prepare(BigMachineBase bigMachine, MachineInformation machineInformation)
     {
         this.BigMachine = bigMachine;
-        this.machineInformation = machineInformation;
-        if (this.machineInformation.CommandAllConstructor is { })
+        this.MachineInformation = machineInformation;
+        if (this.MachineInformation.CommandAllConstructor is { })
         {
-            this.CommandAll = (TCommandAll)this.machineInformation.CommandAllConstructor(this);
+            this.CommandAll = (TCommandAll)this.MachineInformation.CommandAllConstructor(this);
         }
     }
 
@@ -41,7 +42,7 @@ public sealed partial class UnorderedMachineControl<TIdentifier, TInterface, TCo
             this.Machine = default!;
         }
 
-        public Item(TIdentifier identifier, Machine<TIdentifier> machine)
+        public Item(TIdentifier identifier, TMachine machine)
         {
             this.Identifier = identifier;
             this.Machine = machine;
@@ -54,7 +55,7 @@ public sealed partial class UnorderedMachineControl<TIdentifier, TInterface, TCo
         public TIdentifier Identifier;
 
         [Key(1)]
-        public Machine<TIdentifier> Machine;
+        public TMachine Machine;
 
 #pragma warning restore SA1401 // Fields should be private
     }
@@ -127,7 +128,7 @@ public sealed partial class UnorderedMachineControl<TIdentifier, TInterface, TCo
         {
             if (!this.items.IdentifierChain.TryGetValue(identifier, out var item))
             {
-                var machine = (Machine<TIdentifier>)this.CreateMachine();
+                var machine = (TMachine)this.CreateMachine();
                 machine.Identifier = identifier;
                 item = new(identifier, machine);
             }
@@ -140,7 +141,7 @@ public sealed partial class UnorderedMachineControl<TIdentifier, TInterface, TCo
 
     #region Tinyhand
 
-    static void ITinyhandSerialize<UnorderedMachineControl<TIdentifier, TInterface, TCommandAll>>.Serialize(ref TinyhandWriter writer, scoped ref UnorderedMachineControl<TIdentifier, TInterface, TCommandAll>? value, TinyhandSerializerOptions options)
+    static void ITinyhandSerialize<UnorderedMachineControl<TIdentifier, TMachine, TInterface, TCommandAll>>.Serialize(ref TinyhandWriter writer, scoped ref UnorderedMachineControl<TIdentifier, TMachine, TInterface, TCommandAll>? value, TinyhandSerializerOptions options)
     {
         if (value is null)
         {
@@ -151,7 +152,7 @@ public sealed partial class UnorderedMachineControl<TIdentifier, TInterface, TCo
         TinyhandSerializer.SerializeObject(ref writer, value.items, options);
     }
 
-    static void ITinyhandSerialize<UnorderedMachineControl<TIdentifier, TInterface, TCommandAll>>.Deserialize(ref TinyhandReader reader, scoped ref UnorderedMachineControl<TIdentifier, TInterface, TCommandAll>? value, TinyhandSerializerOptions options)
+    static void ITinyhandSerialize<UnorderedMachineControl<TIdentifier, TMachine, TInterface, TCommandAll>>.Deserialize(ref TinyhandReader reader, scoped ref UnorderedMachineControl<TIdentifier, TMachine, TInterface, TCommandAll>? value, TinyhandSerializerOptions options)
     {
         if (reader.TryReadNil())
         {

@@ -19,7 +19,7 @@ public partial class TestBigMachine : BigMachineBase, ITinyhandSerialize<TestBig
         this.SingleMachine.Prepare(this, default!);
     }
 
-    public UnorderedMachineControl<int, TestMachine.Interface, TestMachine.Interface.CommandAll> TestMachines { get; private set; }
+    public UnorderedMachineControl<int, TestMachine, TestMachine.Interface, TestMachine.Interface.CommandAll> TestMachines { get; private set; }
 
     public SingleMachineControl<SingleMachine.Interface> SingleMachine { get; private set; }
 

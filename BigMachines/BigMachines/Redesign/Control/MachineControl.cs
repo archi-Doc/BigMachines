@@ -15,12 +15,16 @@ public abstract class MachineControl
     }
 
     /// <summary>
-    /// Gets or sets a BigMachine instance.
+    /// Gets or sets a <see cref="BigMachineBase"/> instance.
     /// </summary>
     [IgnoreMember]
     public BigMachineBase? BigMachine { get; protected set; }
 
-    protected MachineInformation? machineInformation;
+    /// <summary>
+    /// Gets or sets a <see cref="MachineInformation"/> instance.
+    /// </summary>
+    [IgnoreMember]
+    public MachineInformation? MachineInformation { get; protected set; }
 
     internal abstract bool RemoveMachine(Machine machine);
 
@@ -30,12 +34,12 @@ public abstract class MachineControl
         {
             throw new InvalidOperationException("Call Prepare() function to specify a valid BigMachine object.");
         }
-        else if (this.machineInformation is null)
+        else if (this.MachineInformation is null)
         {
             throw new InvalidOperationException("Call Prepare() function to specify a valid machine information.");
         }
 
-        var machine = this.BigMachine.CreateMachine(this.machineInformation);
+        var machine = this.BigMachine.CreateMachine(this.MachineInformation);
         if (machine is null)
         {
             throw new InvalidOperationException("Unable to create an instance of the machine.");

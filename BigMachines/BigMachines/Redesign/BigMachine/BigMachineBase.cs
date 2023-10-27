@@ -6,6 +6,54 @@ using System.Threading;
 
 namespace BigMachines.Redesign;
 
+public static class MachineRegistry
+{
+    /// <summary>
+    /// Gets or sets <see cref="IServiceProvider"/> used to create an instances of <see cref="Machine"/>.
+    /// </summary>
+    public static IServiceProvider? ServiceProvider { get; set; }
+
+    public static TMachine CreateMachine<TMachine>()
+        where TMachine : Machine
+    {
+        MachineInformation information = default!;
+        TMachine? machine = default;
+
+        if (ServiceProvider != null)
+        {
+            machine = ServiceProvider.GetService(information.MachineType) as TMachine;
+        }
+
+        if (machine == null)
+        {
+            if (information.Constructor != null)
+            {
+                machine = (TMachine)information.Constructor();
+            }
+            else
+            {
+                if (ServiceProvider == null)
+                {
+                    throw new InvalidOperationException("Specify a service provider to create an instance of a machine that does not have a default constructor.");
+                }
+                else
+                {
+                    throw new InvalidOperationException("Service provider was unable to create an instance of the machine.");
+                }
+            }
+        }
+
+        machine.StartIfDefaultTimeoutIsSet();
+
+        if (information.Continuous)
+        {
+            // this.Continuous.AddMachine(machine);
+        }
+
+        return machine;
+    }
+}
+
 /// <summary>
 ///  The top-level abstract class for managing groups of machines.
 /// </summary>
@@ -60,7 +108,7 @@ public abstract class BigMachineBase
     public LoopCheckerMode LoopCheckerMode { get; set; } = LoopCheckerMode.EnabledAndThrowException;
 
     /// <summary>
-    /// Gets <see cref="IServiceProvider"/> used to create instances of <see cref="Machine{TIdentifier}"/>.
+    /// Gets <see cref="IServiceProvider"/> used to create an instances of <see cref="Machine"/>.
     /// </summary>
     public IServiceProvider? ServiceProvider { get; }
 
