@@ -12,7 +12,7 @@ using ValueLink;
 namespace BigMachines.Redesign;
 
 [TinyhandObject(Structual = true)]
-public sealed partial class UnorderedMachineControl<TIdentifier, TMachine, TInterface, TCommandAll> : MultiMachineControl<TIdentifier, TInterface>, ITinyhandSerialize<UnorderedMachineControl<TIdentifier, TMachine, TInterface, TCommandAll>>, ITinyhandCustomJournal
+public sealed partial class UnorderedMachineControl<TIdentifier, TMachine, TInterface> : MultiMachineControl<TIdentifier, TInterface>, ITinyhandSerialize<UnorderedMachineControl<TIdentifier, TMachine, TInterface>>, ITinyhandCustomJournal
     where TIdentifier : notnull
     where TMachine : Machine<TIdentifier>
     where TInterface : Machine.ManMachineInterface
@@ -20,15 +20,15 @@ public sealed partial class UnorderedMachineControl<TIdentifier, TMachine, TInte
     internal UnorderedMachineControl()
         : base()
     {
+        this.items = new();
     }
 
-    public void Prepare(BigMachineBase bigMachine, MachineInformation machineInformation)
+    public void Prepare(BigMachineBase bigMachine)
     {
         this.BigMachine = bigMachine;
-        this.MachineInformation = machineInformation;
-        if (this.MachineInformation.CommandAllConstructor is { })
+        if (this.BigMachine is IStructualObject obj)
         {
-            this.CommandAll = (TCommandAll)this.MachineInformation.CommandAllConstructor(this);
+            ((IStructualObject)this.items).SetParent(obj);
         }
     }
 
@@ -60,9 +60,9 @@ public sealed partial class UnorderedMachineControl<TIdentifier, TMachine, TInte
 #pragma warning restore SA1401 // Fields should be private
     }
 
-    private Item.GoshujinClass items = new();
+    private Item.GoshujinClass items;
 
-    public TCommandAll CommandAll { get; private set; } = default!;
+    // public TCommandAll CommandAll { get; private set; } = default!;
 
     #region Abstract
 
@@ -128,7 +128,8 @@ public sealed partial class UnorderedMachineControl<TIdentifier, TMachine, TInte
         {
             if (!this.items.IdentifierChain.TryGetValue(identifier, out var item))
             {
-                var machine = (TMachine)this.CreateMachine();
+                var machine = MachineRegistry.CreateMachine<TMachine>();
+                machine.Prepare(this);
                 machine.Identifier = identifier;
                 item = new(identifier, machine);
             }
@@ -141,7 +142,7 @@ public sealed partial class UnorderedMachineControl<TIdentifier, TMachine, TInte
 
     #region Tinyhand
 
-    static void ITinyhandSerialize<UnorderedMachineControl<TIdentifier, TMachine, TInterface, TCommandAll>>.Serialize(ref TinyhandWriter writer, scoped ref UnorderedMachineControl<TIdentifier, TMachine, TInterface, TCommandAll>? value, TinyhandSerializerOptions options)
+    static void ITinyhandSerialize<UnorderedMachineControl<TIdentifier, TMachine, TInterface>>.Serialize(ref TinyhandWriter writer, scoped ref UnorderedMachineControl<TIdentifier, TMachine, TInterface>? value, TinyhandSerializerOptions options)
     {
         if (value is null)
         {
@@ -152,7 +153,7 @@ public sealed partial class UnorderedMachineControl<TIdentifier, TMachine, TInte
         TinyhandSerializer.SerializeObject(ref writer, value.items, options);
     }
 
-    static void ITinyhandSerialize<UnorderedMachineControl<TIdentifier, TMachine, TInterface, TCommandAll>>.Deserialize(ref TinyhandReader reader, scoped ref UnorderedMachineControl<TIdentifier, TMachine, TInterface, TCommandAll>? value, TinyhandSerializerOptions options)
+    static void ITinyhandSerialize<UnorderedMachineControl<TIdentifier, TMachine, TInterface>>.Deserialize(ref TinyhandReader reader, scoped ref UnorderedMachineControl<TIdentifier, TMachine, TInterface>? value, TinyhandSerializerOptions options)
     {
         if (reader.TryReadNil())
         {
@@ -161,6 +162,10 @@ public sealed partial class UnorderedMachineControl<TIdentifier, TMachine, TInte
 
         value ??= new();
         value.items = TinyhandSerializer.DeserializeObject<Item.GoshujinClass>(ref reader, options) ?? new();
+        foreach (var x in value.items)
+        {
+            x.Machine.Prepare(value);
+        }
     }
 
     bool ITinyhandCustomJournal.ReadCustomRecord(ref TinyhandReader reader)

@@ -30,7 +30,6 @@ public partial class TestMachine : Machine<int>
         }
 
         var testMachines = bigMachine.TestMachines;
-        var results = await testMachines.CommandAll.Command1();
         await testMachines.RunAllAsync();
     }
 
@@ -93,7 +92,7 @@ public partial class TestMachine : Machine<int>
             private readonly TestMachine machine;
         }
 
-        public readonly struct CommandAll
+        /*public readonly struct CommandAll
         {
             public CommandAll(MultiMachineControl<int, Interface> control)
             {
@@ -113,7 +112,7 @@ public partial class TestMachine : Machine<int>
 
                 return results;
             }
-        }
+        }*/
     }
 
     protected StateResult Initial()

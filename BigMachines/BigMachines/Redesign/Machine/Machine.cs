@@ -32,6 +32,11 @@ public abstract partial class Machine
     internal void Prepare(MachineControl control)
     {
         this.Control = control;
+        if (this is IStructualObject obj &&
+            this.Control is IStructualObject parent)
+        {
+            obj.SetParent(parent);
+        }
 
         if (this.DefaultTimeout != TimeSpan.Zero && this.timeToStart == long.MaxValue)
         {

@@ -115,9 +115,7 @@ public partial class SingleMachineControl<TMachine, TInterface> : MachineControl
         {
             return obj.ReadRecord(ref reader);
         }
-        else
-        {
-            return false;
-        }
+
+        return false;
     }
 }
