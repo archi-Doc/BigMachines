@@ -31,6 +31,8 @@ public partial class TestMachine : Machine<int>
 
         var testMachines = bigMachine.TestMachines;
         await testMachines.RunAllAsync();
+
+        bigMachine.TestMachines.GetArray();
     }
 
     public enum State

@@ -63,6 +63,18 @@ public partial class SingleMachineControl<TMachine, TInterface> : MachineControl
     public TInterface Get()
         => (TInterface)this.Machine.InterfaceInstance;
 
+    public override Machine.ManMachineInterface[] GetArray()
+    {
+        if (this.machine?.InterfaceInstance is { } obj)
+        {
+            return new Machine.ManMachineInterface[] { (Machine.ManMachineInterface)obj, };
+        }
+        else
+        {
+            return Array.Empty<Machine.ManMachineInterface>();
+        }
+    }
+
     internal override bool RemoveMachine(Machine machine)
     {
         if (this.machine == machine)

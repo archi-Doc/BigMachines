@@ -1,7 +1,6 @@
 ﻿// Copyright (c) All contributors. All rights reserved. Licensed under the MIT license.
 
 using System;
-using System.Collections.Concurrent;
 using BigMachines.Redesign;
 using Tinyhand;
 using Tinyhand.IO;
@@ -11,13 +10,20 @@ namespace BigMachines;
 [TinyhandObject]
 public partial class TestBigMachine : BigMachineBase, ITinyhandSerialize<TestBigMachine>, IStructualObject
 {
+    private static MachineControl[] controls = Array.Empty<MachineControl>();
+
     public TestBigMachine()
     {
         this.TestMachines = new();
         this.TestMachines.Prepare(this);
         this.SingleMachine = new();
         this.SingleMachine.Prepare(this);
+
+        controls = new MachineControl[] { this.TestMachines, this.SingleMachine, };
     }
+
+    public MachineControl[] GetArray()
+        => controls;
 
     public UnorderedMachineControl<int, TestMachine, TestMachine.Interface> TestMachines { get; private set; }
 

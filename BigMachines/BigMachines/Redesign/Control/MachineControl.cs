@@ -20,5 +20,7 @@ public abstract class MachineControl
     [IgnoreMember]
     public BigMachineBase? BigMachine { get; protected set; }
 
+    public abstract Machine.ManMachineInterface[] GetArray();
+
     internal abstract bool RemoveMachine(Machine machine);
 }

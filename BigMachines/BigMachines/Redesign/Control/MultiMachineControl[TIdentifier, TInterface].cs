@@ -20,12 +20,6 @@ public abstract class MultiMachineControl<TIdentifier, TInterface> : MultiMachin
     }
 
     /// <summary>
-    /// Gets an array of machine interfaces.
-    /// </summary>
-    /// <returns>An array of machine interfaces.</returns>
-    public abstract TInterface[] GetArray();
-
-    /// <summary>
     /// Runs all the machines managed by the control class.
     /// </summary>
     /// <returns>A <see cref="Task"/> representing the asynchronous operation.</returns>
