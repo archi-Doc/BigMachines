@@ -1,12 +1,10 @@
 ﻿// Copyright (c) All contributors. All rights reserved. Licensed under the MIT license.
 
 using System;
-using System.Runtime.CompilerServices;
 using Tinyhand;
 using Tinyhand.IO;
 
 #pragma warning disable SA1202
-#pragma warning disable SA1204
 
 namespace BigMachines.Redesign;
 
@@ -34,15 +32,22 @@ public partial class SingleMachineControl<TInterface> : MachineControl, ITinyhan
 
     public TInterface Get()
     {
-        if (this.interfaceInstance is { } obj)
+        if (this.interfaceInstance is not { } obj)
         {
-            return obj;
+            if (this.BigMachine is null)
+            {
+                throw new InvalidOperationException("Unable to create an instance of the machine.");
+            }
+            obj = this.BigMachine?.CreateMachine(this.machineInformation) as TInterface;
+            if (obj is null)
+            {
+                throw new InvalidOperationException("Unable to create an instance of the machine.");
+            }
+
+            this.interfaceInstance = obj;
         }
-        else
-        {
-            this.interfaceInstance ??= this.BigMachine?.CreateMachine(this.machineInformation);
-            return this.interfaceInstance ??= machineInformation.Constructor().InterfaceInstance;
-        }
+
+        return obj;
     }
 
     internal override bool RemoveMachine(Machine machine)
@@ -60,15 +65,6 @@ public partial class SingleMachineControl<TInterface> : MachineControl, ITinyhan
 
     static void ITinyhandSerialize<SingleMachineControl<TInterface>>.Serialize(ref TinyhandWriter writer, scoped ref SingleMachineControl<TInterface>? value, TinyhandSerializerOptions options)
     {
-        /*if (value?.@interface?.Machine is TMachine machine)
-        {
-            options.Resolver.GetFormatter<TMachine>().Serialize(ref writer, machine, options);
-        }
-        else
-        {
-            writer.WriteNil();
-        }*/
-
         if (value?.interfaceInstance?.Machine is ITinyhandSerialize obj)
         {
             obj.Serialize(ref writer, options);

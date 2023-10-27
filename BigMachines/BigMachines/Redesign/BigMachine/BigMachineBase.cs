@@ -33,30 +33,26 @@ public abstract class BigMachineBase
         {
             if (information.Constructor != null)
             {
-                machine = information.Constructor(this);
+                machine = information.Constructor();
             }
             else
             {
                 if (this.ServiceProvider == null)
                 {
-                    throw new InvalidOperationException("ServiceProvider is required to create an instance of machine which does not have default constructor.");
+                    throw new InvalidOperationException("Specify a service provider to create an instance of a machine that does not have a default constructor.");
                 }
                 else
                 {
-                    throw new InvalidOperationException("ServiceProvider could not create an instance of machine (machine is not registered).");
+                    throw new InvalidOperationException("Service provider was unable to create an instance of the machine.");
                 }
             }
         }
 
+        machine.StartIfDefaultTimeoutIsSet();
 
-        if (machine.DefaultTimeout != TimeSpan.Zero && machine.TimeToStart == long.MaxValue)
+        if (information.Continuous)
         {
-            Volatile.Write(ref machine.Timeout, 0);
-        }
-
-        if (group.Info.Continuous)
-        {
-            this.Continuous.AddMachine(machine);
+            // this.Continuous.AddMachine(machine);
         }
 
         return machine;

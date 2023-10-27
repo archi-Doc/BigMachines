@@ -263,6 +263,14 @@ public abstract partial class Machine
 
     #endregion
 
+    internal void StartIfDefaultTimeoutIsSet()
+    {
+        if (this.DefaultTimeout != TimeSpan.Zero && this.TimeToStart == long.MaxValue)
+        {
+            this.timeToStart = 0;
+        }
+    }
+
     /// <summary>
     /// Run the machine.<br/>
     /// This code is inside 'lock (this.Machine)' statement.
@@ -289,7 +297,7 @@ RerunLoop:
         catch (Exception ex)
         {
             result = StateResult.Terminate;
-            this.Control?.BigMachine.ReportException(new(this, ex));
+            this.Control?.BigMachine?.ReportException(new(this, ex));
         }
 
         if (result == StateResult.Terminate)
