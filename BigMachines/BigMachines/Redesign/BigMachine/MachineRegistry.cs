@@ -4,6 +4,7 @@ using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
+using Microsoft.Extensions.DependencyInjection;
 using Tinyhand;
 
 namespace BigMachines.Redesign;
@@ -42,30 +43,17 @@ public static class MachineRegistry
     public static TMachine CreateMachine<TMachine>(MachineInformation information)
         where TMachine : Machine
     {
-        var serviceProvider = TinyhandSerializer.ServiceProvider;
         TMachine? machine = default;
-
-        if (serviceProvider is not null)
+        if (information.Constructor is not null)
         {
-            machine = serviceProvider.GetService(information.MachineType) as TMachine;
+            machine = (TMachine)information.Constructor();
         }
-
-        if (machine is null)
+        else
         {
-            if (information.Constructor is not null)
+            machine = TinyhandSerializer.ServiceProvider.GetService(information.MachineType) as TMachine;
+            if (machine is null)
             {
-                machine = (TMachine)information.Constructor();
-            }
-            else
-            {
-                if (serviceProvider is null)
-                {
-                    throw new InvalidOperationException("Specify a service provider to create an instance of a machine that does not have a default constructor.");
-                }
-                else
-                {
-                    throw new InvalidOperationException("Service provider was unable to create an instance of the machine.");
-                }
+                throw new InvalidOperationException("Service provider was unable to create an instance of the machine.");
             }
         }
 

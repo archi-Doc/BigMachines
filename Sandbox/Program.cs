@@ -5,6 +5,7 @@ using System.Threading.Tasks;
 using Arc.Threading;
 using Arc.Unit;
 using BigMachines;
+using BigMachines.Redesign;
 using Microsoft.Extensions.DependencyInjection;
 using Tinyhand;
 
@@ -36,8 +37,11 @@ namespace Sandbox
                 ThreadCore.Root.Terminate(); // Send a termination signal to the root.
             };
 
+            MachineRegistry.Register(new(typeof(BigMachines.Redesign.SingleMachine), typeof(SingleMachineControl<,>), null, false, () => new BigMachines.Redesign.SingleMachine()));
+            MachineRegistry.Register(new(typeof(BigMachines.Redesign.TestMachine), typeof(UnorderedMachineControl<,,>), typeof(int), false, () => new BigMachines.Redesign.TestMachine()));
             var testBigMachine = new TestBigMachine();
             var m = testBigMachine.TestMachines.GetOrCreate(1);
+            m = testBigMachine.TestMachines.GetOrCreate(1);
             m.PauseMachine();
             m.UnpauseMachine();
             var bin = TinyhandSerializer.Serialize(testBigMachine);
