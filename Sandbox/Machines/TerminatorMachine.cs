@@ -10,8 +10,7 @@ using BigMachines;
 
 namespace Sandbox;
 
-// Single Machine
-[MachineObject(0x48eb1f0f, Group = typeof(SingleGroup<>))] // Change groups from MachineGroup<> to MachineSingle<>.
+/*[MachineObject(0x48eb1f0f, Group = typeof(SingleGroup<>))] // Change groups from MachineGroup<> to MachineSingle<>.
 public partial class TerminatorMachine : Machine<int>
 {
     public TerminatorMachine(BigMachine<int> bigMachine)
@@ -51,4 +50,4 @@ public partial class TerminatorMachine : Machine<int>
         ThreadCore.Root.Terminate();
         return StateResult.Terminate;
     }
-}
+}*/

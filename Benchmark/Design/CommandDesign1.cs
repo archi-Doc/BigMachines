@@ -5,64 +5,52 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace Benchmark.Design
-{
-    internal class CommandDesign1
-    {// Task.Run
-        internal const int N = 1000_000;
+namespace Benchmark.Design;
 
-        private static object obj = new();
-        private static object obj2 = new();
-        private static int objCount = 0;
+internal class CommandDesign1
+{// Task.Run
+    internal const int N = 1000_000;
 
-        internal static async Task Test()
+    private static object obj = new();
+    private static object obj2 = new();
+    private static int objCount = 0;
+
+    internal static async Task Test()
+    {
+        var sw = new Stopwatch();
+
+        Start("Task.Run");
+        await TestCommand();
+        Stop();
+
+        Start("Parallel.For");
+        await TestCommandParallel();
+        Stop();
+
+        /*Start("Task.Run");
+        await TestCommandTwoWay();
+        Stop();*/
+
+        void Start(string name)
         {
-            var sw = new Stopwatch();
-
-            Start("Task.Run");
-            await TestCommand();
-            Stop();
-
-            Start("Parallel.For");
-            await TestCommandParallel();
-            Stop();
-
-            /*Start("Task.Run");
-            await TestCommandTwoWay();
-            Stop();*/
-
-            void Start(string name)
-            {
-                Console.WriteLine(name);
-                sw.Restart();
-            }
-
-            void Stop()
-            {
-                sw.Stop();
-                Console.WriteLine($"count: {objCount}");
-                Console.WriteLine($"time: {sw.ElapsedMilliseconds} ms");
-                Console.WriteLine();
-            }
+            Console.WriteLine(name);
+            sw.Restart();
         }
 
-        internal static async Task TestCommand()
+        void Stop()
         {
-            for (var i = 0; i < N; i++)
-            {
-                await Task.Run(() =>
-                {
-                    lock (obj)
-                    {
-                        Command(1);
-                    }
-                });
-            }
+            sw.Stop();
+            Console.WriteLine($"count: {objCount}");
+            Console.WriteLine($"time: {sw.ElapsedMilliseconds} ms");
+            Console.WriteLine();
         }
+    }
 
-        internal static async Task TestCommandParallel()
+    internal static async Task TestCommand()
+    {
+        for (var i = 0; i < N; i++)
         {
-            Parallel.For(0, N, x =>
+            await Task.Run(() =>
             {
                 lock (obj)
                 {
@@ -70,26 +58,37 @@ namespace Benchmark.Design
                 }
             });
         }
+    }
 
-        internal static async Task TestCommandTwoWay()
+    internal static async Task TestCommandParallel()
+    {
+        Parallel.For(0, N, x =>
         {
-            for (var i = 0; i < N; i++)
+            lock (obj)
             {
-                var result = await Task.Run(() =>
-                {
-                    lock (obj)
-                    {
-                        Command(1);
-                        return objCount;
-                    }
-                });
+                Command(1);
             }
-        }
+        });
+    }
 
-        internal static void Command(int n)
+    internal static async Task TestCommandTwoWay()
+    {
+        for (var i = 0; i < N; i++)
         {
-            objCount++;
-            return;
+            var result = await Task.Run(() =>
+            {
+                lock (obj)
+                {
+                    Command(1);
+                    return objCount;
+                }
+            });
         }
+    }
+
+    internal static void Command(int n)
+    {
+        objCount++;
+        return;
     }
 }

@@ -1,21 +1,13 @@
 ﻿// Copyright (c) All contributors. All rights reserved. Licensed under the MIT license.
 
 using System;
-using System.Collections.Concurrent;
-using System.Collections.Generic;
-using System.Threading;
 using System.Threading.Tasks;
-using Arc.Threading;
 using BigMachines;
 using Tinyhand;
 
-#pragma warning disable SA1009 // Closing parenthesis should be spaced correctly
-#pragma warning disable SA1124 // Do not use regions
-#pragma warning disable SA1602 // Enumeration items should be documented
-
 namespace Sandbox;
 
-[TinyhandObject(UseServiceProvider = true)]
+/*[TinyhandObject(UseServiceProvider = true)]
 [MachineObject(0x436a0f8f, Continuous = true)]
 public partial class ContinuousMachine : Machine<int>
 {
@@ -61,18 +53,6 @@ public partial class ContinuousWatcher : Machine<int>
     [StateMethod(0)]
     public StateResult Initial(StateParameter parameter)
     {
-        /*var i = this.BigMachine.Continuous.GetInfo(true);
-        if (i.Length == 0)
-        {
-            Console.WriteLine("ContinuousMachine: none");
-            return StateResult.Terminate;
-        }
-        else
-        {
-            var d = i[0].Interface.CommandTwoWay<double, double>(0);
-            Console.WriteLine($"ContinuousMachine: {d * 100:F2}%");
-        }*/
-
         var results = this.BigMachine.Continuous.CommandAndReceiveAsync<int, int, double>(true, 0, 0).Result;
         if (results.Length == 0)
         {
@@ -303,21 +283,6 @@ public partial class TestMachine2<TIdentifier> : Machine<TIdentifier>
 [MachineObject(0x35, Group = typeof(SingleGroup<>))]
 public partial class TestMachine : Machine<int>
 {
-    /*public enum State
-    {// Generated
-        Initial,
-        First,
-        Last,
-    }*/
-
-    /*public class Interface : ManMachineInterface<int, TestMachine.State>
-    {// Generated
-        public Interface(IMachineGroup<int> group, int identifier)
-            : base(group, identifier)
-        {
-        }
-    }*/
-
     public TestMachine(BigMachine<int> bigMachine)
         : base(bigMachine)
     {// Custom
@@ -325,15 +290,6 @@ public partial class TestMachine : Machine<int>
         this.DefaultTimeout = TimeSpan.FromSeconds(1);
         this.SetLifespan(TimeSpan.FromSeconds(55));
     }
-
-    /*protected override void CreateInterface(int identifier)
-    {// Generated
-        if (this.InterfaceInstance == null)
-        {
-            this.Identifier = identifier;
-            this.InterfaceInstance = new Interface(this.Group, identifier);
-        }
-    }*/
 
     [Key(11)]
     public int Dummy { get; set; }
@@ -364,10 +320,6 @@ public partial class TestMachine : Machine<int>
     {
         Console.WriteLine($"TestMachine(First) : {this.Dummy++}");
 
-        /*var task = System.Threading.Tasks.Task.Delay(1000);
-        task.ContinueWith(x => { this.ChangeState(State.Two); }); // 1
-        this.ReleaseAndInvoke(Task.Delay(1000)); // 2*/
-
         Console.WriteLine("Delay start");
         await Task.Delay(1000).WithoutLock(this);
         Console.WriteLine("Delay end");
@@ -396,50 +348,4 @@ public partial class TestMachine : Machine<int>
     {// void, Task
         return message + 1;
     }
-
-    /*protected override StateResult InternalRun(StateParameter parameter)
-    {// Generated
-        return this.CurrentState switch
-        {
-            State.Initial => this.Initial(parameter),
-            State.First => this.First(parameter),
-            // State.Last => this.Last(),
-            _ => StateResult.Terminate,
-        };
-    }*/
-
-    /*protected override bool ChangeStateInternal(State state)
-    {// Generated
-        if (this.Status == OperationalState.Terminated)
-        {
-            return false;
-        }
-        else if (this.CurrentState == state)
-        {
-            return true;
-        }
-
-        bool canExit = true;
-        if (this.CurrentState == State.First)
-        {
-            canExit = this.First(new StateParameter(RunType.CanExit)) != StateResult.Deny;
-        }
-
-        bool canEnter = state switch
-        {
-            State.First => this.First(new StateParameter(RunType.CanEnter)) != StateResult.Deny,
-            _ => true,
-        };
-
-        if (canExit && canEnter)
-        {
-            this.CurrentState = state;
-            this.RequrieRerun = true;
-            return true;
-        }
-        else
-        {
-            return false;
-        }
-    }*/
-}
+}*/

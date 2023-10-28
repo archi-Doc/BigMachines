@@ -9,7 +9,7 @@ using BigMachines;
 
 namespace Advanced;
 
-[MachineObject(0x1b431670)]
+/*[MachineObject(0x1b431670)]
 public partial class IntermittentMachine : Machine<int>
 {
     public static void Test(BigMachine<int> bigMachine)
@@ -47,4 +47,4 @@ public partial class IntermittentMachine : Machine<int>
         this.SetTimeout(TimeSpan.FromSeconds(0.5)); // Change the timeout of the machine.
         return StateResult.Continue;
     }
-}
+}*/

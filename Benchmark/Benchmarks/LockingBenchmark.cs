@@ -12,94 +12,93 @@ using System.Threading;
 using System.Threading.Tasks;
 using BenchmarkDotNet.Attributes;
 
-namespace Benchmark.Test
+namespace Benchmark.Test;
+
+public class LockClass
 {
-    public class LockClass
-    {
-        private object cs = new();
-        private int x;
+    private object cs = new();
+    private int x;
 
-        public void Test()
+    public void Test()
+    {
+        lock (cs)
         {
-            lock (cs)
+            unchecked
             {
-                unchecked
-                {
-                    this.x++;
-                }
+                this.x++;
             }
         }
     }
+}
 
-    public class SemaphoreSlimClass
+public class SemaphoreSlimClass
+{
+    private SemaphoreSlim semaphore = new(1, 1);
+    private int x;
+
+    public void Test()
     {
-        private SemaphoreSlim semaphore = new(1, 1);
-        private int x;
-
-        public void Test()
+        this.semaphore.Wait();
+        try
         {
-            this.semaphore.Wait();
-            try
+            unchecked
             {
-                unchecked
-                {
-                    this.x++;
-                }
+                this.x++;
             }
-            finally
-            {
-                this.semaphore.Release();
-            }
+        }
+        finally
+        {
+            this.semaphore.Release();
         }
     }
+}
 
-    public class AsyncSemaphoreSlimClass
+public class AsyncSemaphoreSlimClass
+{
+    private SemaphoreSlim semaphore = new(1, 1);
+    private int x;
+
+    public async Task Test()
     {
-        private SemaphoreSlim semaphore = new(1, 1);
-        private int x;
-
-        public async Task Test()
+        await this.semaphore.WaitAsync();
+        try
         {
-            await this.semaphore.WaitAsync();
-            try
+            unchecked
             {
-                unchecked
-                {
-                    this.x++;
-                }
-            }
-            finally
-            {
-                this.semaphore.Release();
+                this.x++;
             }
         }
+        finally
+        {
+            this.semaphore.Release();
+        }
     }
+}
 
-    [Config(typeof(BenchmarkConfig))]
-    public class LockingBenchmark
+[Config(typeof(BenchmarkConfig))]
+public class LockingBenchmark
+{
+    public LockClass LockClass { get; } = new();
+
+    public SemaphoreSlimClass SemaphoreSlimClass { get; } = new();
+
+    public AsyncSemaphoreSlimClass AsyncSemaphoreSlimClass { get; } = new();
+
+    public LockingBenchmark()
     {
-        public LockClass LockClass { get; } = new();
-
-        public SemaphoreSlimClass SemaphoreSlimClass { get; } = new();
-
-        public AsyncSemaphoreSlimClass AsyncSemaphoreSlimClass { get; } = new();
-
-        public LockingBenchmark()
-        {
-        }
-
-        [GlobalSetup]
-        public void Setup()
-        {
-        }
-
-        [Benchmark]
-        public void Lock() => this.LockClass.Test();
-
-        [Benchmark]
-        public void SemaphoreSlim() => this.SemaphoreSlimClass.Test();
-
-        [Benchmark]
-        public Task AsyncSemaphoreSlim() => this.AsyncSemaphoreSlimClass.Test();
     }
+
+    [GlobalSetup]
+    public void Setup()
+    {
+    }
+
+    [Benchmark]
+    public void Lock() => this.LockClass.Test();
+
+    [Benchmark]
+    public void SemaphoreSlim() => this.SemaphoreSlimClass.Test();
+
+    [Benchmark]
+    public Task AsyncSemaphoreSlim() => this.AsyncSemaphoreSlimClass.Test();
 }

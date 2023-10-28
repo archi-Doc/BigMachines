@@ -9,8 +9,7 @@ using BigMachines;
 
 namespace Advanced;
 
-// Loop Machine
-[MachineObject(0xb7196ebc)]
+/*[MachineObject(0xb7196ebc)]
 public partial class LoopMachine : Machine<int>
 {
     public static void Test(BigMachine<int> bigMachine)
@@ -64,4 +63,4 @@ public partial class LoopMachine : Machine<int>
             this.BigMachine.TryGet<Interface>(n)?.CommandAsync(Command.RelayInt2, n);
         }
     }
-}
+}*/

@@ -9,7 +9,7 @@ using BigMachines;
 
 namespace Advanced;
 
-[MachineObject(0xffd829b4)]
+/*[MachineObject(0xffd829b4)]
 public partial class PassiveMachine : Machine<int>
 {
     public static async Task Test(BigMachine<int> bigMachine)
@@ -79,4 +79,4 @@ public partial class PassiveMachine : Machine<int>
     {
         Console.WriteLine($"PassiveMachine command: {message}");
     }
-}
+}*/

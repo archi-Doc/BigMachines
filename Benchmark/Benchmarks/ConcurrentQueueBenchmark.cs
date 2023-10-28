@@ -11,99 +11,98 @@ using System.Reflection;
 using System.Collections.Concurrent;
 using BenchmarkDotNet.Attributes;
 
-namespace Benchmark.Design
+namespace Benchmark.Design;
+
+internal class BaseClass
 {
-    internal class BaseClass
+    internal string Name { get; } = "name";
+}
+
+internal class TestClass
+{
+    public TestClass()
     {
-        internal string Name { get; } = "name";
+        this.obj = new BaseClass();
     }
 
-    internal class TestClass
+    internal int id { get; set; }
+
+    internal object? obj { get; set; }
+}
+
+internal struct TestStruct
+{
+    internal int id { get; set; }
+
+    internal object? obj { get; set; }
+}
+
+public class TestInterface
+{
+    public TestInterface(object? obj, int identifier)
     {
-        public TestClass()
-        {
-            this.obj = new BaseClass();
-        }
-
-        internal int id { get; set; }
-
-        internal object? obj { get; set; }
+        this.obj = obj;
+        this.identifier = identifier;
     }
 
-    internal struct TestStruct
-    {
-        internal int id { get; set; }
+    internal object? obj { get; set; }
+    internal int identifier { get; set; }
+}
 
-        internal object? obj { get; set; }
+public struct TestInterface2
+{
+    public TestInterface2(object? obj, int identifier)
+    {
+        this.obj = obj;
+        this.identifier = identifier;
     }
 
-    public class TestInterface
-    {
-        public TestInterface(object? obj, int identifier)
-        {
-            this.obj = obj;
-            this.identifier = identifier;
-        }
+    internal object? obj { get; set; }
+    internal int identifier { get; set; }
+}
 
-        internal object? obj { get; set; }
-        internal int identifier { get; set; }
+[Config(typeof(BenchmarkConfig))]
+public class ConcurrentQueueBenchmark
+{
+    private ConcurrentQueue<TestClass> queue1 { get; } = new();
+
+    private ConcurrentQueue<TestStruct> queue2 { get; } = new();
+
+    public ConcurrentQueueBenchmark()
+    {
     }
 
-    public struct TestInterface2
+    [GlobalSetup]
+    public void Setup()
     {
-        public TestInterface2(object? obj, int identifier)
-        {
-            this.obj = obj;
-            this.identifier = identifier;
-        }
-
-        internal object? obj { get; set; }
-        internal int identifier { get; set; }
     }
 
-    [Config(typeof(BenchmarkConfig))]
-    public class ConcurrentQueueBenchmark
+    /*[Benchmark]
+    public bool TestClass()
     {
-        private ConcurrentQueue<TestClass> queue1 { get; } = new();
+        var t = new Design.TestClass();
+        this.queue1.Enqueue(t);
+        return this.queue1.TryDequeue(out _);
+    }
 
-        private ConcurrentQueue<TestStruct> queue2 { get; } = new();
+    [Benchmark]
+    public bool TestStruct()
+    {
+        Design.TestStruct t = default;
+        t.obj = new BaseClass();
+        this.queue2.Enqueue(t);
+        return this.queue2.TryDequeue(out _);
+    }*/
 
-        public ConcurrentQueueBenchmark()
-        {
-        }
+    [Benchmark]
+    public TestInterface Test()
+    {
+        return new TestInterface(this, 4);
+    }
 
-        [GlobalSetup]
-        public void Setup()
-        {
-        }
-
-        /*[Benchmark]
-        public bool TestClass()
-        {
-            var t = new Design.TestClass();
-            this.queue1.Enqueue(t);
-            return this.queue1.TryDequeue(out _);
-        }
-
-        [Benchmark]
-        public bool TestStruct()
-        {
-            Design.TestStruct t = default;
-            t.obj = new BaseClass();
-            this.queue2.Enqueue(t);
-            return this.queue2.TryDequeue(out _);
-        }*/
-
-        [Benchmark]
-        public TestInterface Test()
-        {
-            return new TestInterface(this, 4);
-        }
-
-        [Benchmark]
-        public TestInterface2 Test2()
-        {
-            return new TestInterface2(this, 4);
-        }
+    [Benchmark]
+    public TestInterface2 Test2()
+    {
+        return new TestInterface2(this, 4);
     }
 }

@@ -7,172 +7,171 @@ using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
 
-namespace Benchmark.Design
-{
-    internal class CommandDesign6
-    {// Thread + ManualResetEventSlim
-        internal class Command
-        {
-            public Command(bool flag)
-            {
-                this.Flag = flag;
-            }
+namespace Benchmark.Design;
 
-            public bool Flag { get; set; }
+internal class CommandDesign6
+{// Thread + ManualResetEventSlim
+    internal class Command
+    {
+        public Command(bool flag)
+        {
+            this.Flag = flag;
         }
 
-        internal const int N = 1000_000;
-        internal const int MillisecondInterval = 5;
+        public bool Flag { get; set; }
+    }
 
-        // private static object obj = new();
-        private static ConcurrentQueue<Command> concurrentQueue = new();
-        private static ManualResetEventSlim manualEvent = new(false); // Just slow
-        private static ManualResetEventSlim manualEvent2 = new(false); // Just slow
-        // private static bool EventFlag = false;
+    internal const int N = 1000_000;
+    internal const int MillisecondInterval = 5;
 
-        internal static async Task Test()
+    // private static object obj = new();
+    private static ConcurrentQueue<Command> concurrentQueue = new();
+    private static ManualResetEventSlim manualEvent = new(false); // Just slow
+    private static ManualResetEventSlim manualEvent2 = new(false); // Just slow
+    // private static bool EventFlag = false;
+
+    internal static async Task Test()
+    {
+        var sw = new Stopwatch();
+        var cts = new CancellationTokenSource();
+
+        var t = new Thread(ReceiveAction); // Task.Run(() => ReceiveAction(cts.Token));
+        t.Priority = ThreadPriority.AboveNormal;
+        t.Start(cts.Token);
+
+        Start("Event");
+        await TestCommand();
+        Stop();
+
+        Start("Event Parallel");
+        await TestCommandParallel();
+        Stop();
+
+        Start("Event TwoWay");
+        await TestCommandTwoWay();
+        Stop();
+
+        Start("Event TwoWay response");
+        await SendTwoWay();
+        Stop2();
+
+        Start("Event TwoWay response");
+        await SendTwoWay();
+        Stop2();
+
+        Start("Event TwoWay response");
+        await SendTwoWay();
+        Stop2();
+
+        cts.Cancel();
+        t.Join();
+
+        Console.WriteLine();
+
+        void Start(string name)
         {
-            var sw = new Stopwatch();
-            var cts = new CancellationTokenSource();
+            Console.Write($"{name,-25}: ");
+            sw.Restart();
+        }
 
-            var t = new Thread(ReceiveAction); // Task.Run(() => ReceiveAction(cts.Token));
-            t.Priority = ThreadPriority.AboveNormal;
-            t.Start(cts.Token);
+        void Stop()
+        {
+            sw.Stop();
+            Console.WriteLine($"{sw.ElapsedMilliseconds} ms");
+        }
 
-            Start("Event");
-            await TestCommand();
-            Stop();
+        void Stop2()
+        {
+            sw.Stop();
+            Console.WriteLine($"{sw.ElapsedTicks} ticks");
+        }
+    }
 
-            Start("Event Parallel");
-            await TestCommandParallel();
-            Stop();
+    internal static async Task TestCommand()
+    {
+        for (var i = 0; i < N; i++)
+        {
+            Send(1);
+        }
+    }
 
-            Start("Event TwoWay");
-            await TestCommandTwoWay();
-            Stop();
+    internal static async Task TestCommandParallel()
+    {
+        Parallel.For(0, N, x =>
+        {
+            Send(1);
+        });
+    }
 
-            Start("Event TwoWay response");
+    internal static async Task TestCommandTwoWay()
+    {
+        for (var i = 0; i < N; i++)
+        {
             await SendTwoWay();
-            Stop2();
+        }
+    }
 
-            Start("Event TwoWay response");
-            await SendTwoWay();
-            Stop2();
+    internal static void Send(int n)
+    {
+        concurrentQueue.Enqueue(new Command(false));
 
-            Start("Event TwoWay response");
-            await SendTwoWay();
-            Stop2();
+        // EventFlag = true;
+        manualEvent.Set();
 
-            cts.Cancel();
-            t.Join();
+        return;
+    }
 
-            Console.WriteLine();
+    internal static async Task SendTwoWay()
+    {
+        var c = new Command(false);
+        concurrentQueue.Enqueue(c);
 
-            void Start(string name)
+        // EventFlag = true;
+        manualEvent.Set();
+
+        while (true)
+        {
+            if (c.Flag)
             {
-                Console.Write($"{name,-25}: ");
-                sw.Restart();
+                return;
             }
 
-            void Stop()
+            if (manualEvent2.Wait(5))
             {
-                sw.Stop();
-                Console.WriteLine($"{sw.ElapsedMilliseconds} ms");
-            }
-
-            void Stop2()
-            {
-                sw.Stop();
-                Console.WriteLine($"{sw.ElapsedTicks} ticks");
+                manualEvent2.Reset();
             }
         }
+    }
 
-        internal static async Task TestCommand()
+    internal static void ReceiveAction(object? parameter)
+    {
+        var cancellationToken = (CancellationToken)parameter!;
+        while (true)
         {
-            for (var i = 0; i < N; i++)
+            if (cancellationToken.IsCancellationRequested)
             {
-                Send(1);
+                break;
             }
-        }
-
-        internal static async Task TestCommandParallel()
-        {
-            Parallel.For(0, N, x =>
+            else if (manualEvent.Wait(5))
             {
-                Send(1);
-            });
-        }
-
-        internal static async Task TestCommandTwoWay()
-        {
-            for (var i = 0; i < N; i++)
-            {
-                await SendTwoWay();
+                manualEvent.Reset();
             }
-        }
-
-        internal static void Send(int n)
-        {
-            concurrentQueue.Enqueue(new Command(false));
-
-            // EventFlag = true;
-            manualEvent.Set();
-
-            return;
-        }
-
-        internal static async Task SendTwoWay()
-        {
-            var c = new Command(false);
-            concurrentQueue.Enqueue(c);
-
-            // EventFlag = true;
-            manualEvent.Set();
-
-            while (true)
-            {
-                if (c.Flag)
-                {
-                    return;
-                }
-
-                if (manualEvent2.Wait(5))
-                {
-                    manualEvent2.Reset();
-                }
+            /*else if (!EventFlag)
+            {// manualEvent.WaitOne();
+                Thread.Sleep(1);
+                continue;
             }
-        }
-
-        internal static void ReceiveAction(object? parameter)
-        {
-            var cancellationToken = (CancellationToken)parameter!;
-            while (true)
+            else
             {
-                if (cancellationToken.IsCancellationRequested)
-                {
-                    break;
-                }
-                else if (manualEvent.Wait(5))
-                {
-                    manualEvent.Reset();
-                }
-                /*else if (!EventFlag)
-                {// manualEvent.WaitOne();
-                    Thread.Sleep(1);
-                    continue;
-                }
-                else
-                {
-                    EventFlag = false;
-                }*/
+                EventFlag = false;
+            }*/
 
-                while (concurrentQueue.TryDequeue(out var command))
-                {
-                    command.Flag = true;
-                }
-
-                manualEvent2.Set();
+            while (concurrentQueue.TryDequeue(out var command))
+            {
+                command.Flag = true;
             }
+
+            manualEvent2.Set();
         }
     }
 }

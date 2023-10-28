@@ -7,7 +7,7 @@ using BigMachines;
 
 namespace QuickStart;
 
-[MachineObject(0)] // Annotate MachineObject and set Machine type id (unique number).
+/*[MachineObject(0)] // Annotate MachineObject and set Machine type id (unique number).
 public partial class TestMachine : Machine<int> // Inherit Machine<TIdentifier> class. The type of the identifier is int.
 {
     public TestMachine(BigMachine<int> bigMachine)
@@ -45,13 +45,13 @@ public partial class TestMachine : Machine<int> // Inherit Machine<TIdentifier> 
         Console.WriteLine($"TestMachine {this.Identifier}: Terminated");
         ThreadCore.Root.Terminate(); // Send a termination signal to the root.
     }
-}
+}*/
 
 public class Program
 {
     public static async Task Main(string[] args)
     {
-        var bigMachine = new BigMachine<int>(); // Create a BigMachine instance.
+        /*var bigMachine = new BigMachine<int>(); // Create a BigMachine instance.
         bigMachine.Start(); // Start a thread to invoke a machine.
 
         var testMachine = bigMachine.CreateOrGet<TestMachine.Interface>(42); // Machine is created via an interface class and the identifier, not the machine class itself.
@@ -73,7 +73,7 @@ public class Program
         Console.WriteLine();
 
         testMachine?.CommandAsync(TestMachine.Command.TestCommand, "test message").Wait(); // Send a command to the machine.
-        Console.WriteLine();
+        Console.WriteLine();*/
 
         await ThreadCore.Root.WaitForTerminationAsync(-1); // Wait for the termination infinitely.
     }

@@ -3,10 +3,9 @@
 using System;
 using BigMachines;
 
-namespace Sandbox
+namespace Sandbox;
+
+[BigMachinesGeneratorOption(AttachDebugger = false, GenerateToFile = false)]
+internal class GeneratorOption
 {
-    [BigMachinesGeneratorOption(AttachDebugger = false, GenerateToFile = false)]
-    internal class GeneratorOption
-    {
-    }
 }

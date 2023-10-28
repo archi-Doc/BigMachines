@@ -11,36 +11,35 @@ using System.Reflection;
 using System.Threading;
 using BenchmarkDotNet.Attributes;
 
-namespace Benchmark.Test
+namespace Benchmark.Test;
+
+[Config(typeof(BenchmarkConfig))]
+public class AsyncLocalBenchmark
 {
-    [Config(typeof(BenchmarkConfig))]
-    public class AsyncLocalBenchmark
+    private const string Name = "bmLP";
+    static private AsyncLocal<string> asyncLocal = new();
+
+    public AsyncLocalBenchmark()
     {
-        private const string Name = "bmLP";
-        static private AsyncLocal<string> asyncLocal = new();
+        asyncLocal.Value = "test";
+    }
 
-        public AsyncLocalBenchmark()
-        {
-            asyncLocal.Value = "test";
-        }
+    [GlobalSetup]
+    public void Setup()
+    {
+    }
 
-        [GlobalSetup]
-        public void Setup()
-        {
-        }
+    [Benchmark]
+    public string? AsyncLocal_Get()
+    {
+        return asyncLocal.Value;
+    }
 
-        [Benchmark]
-        public string? AsyncLocal_Get()
-        {
-            return asyncLocal.Value;
-        }
-
-        [Benchmark]
-        public string? AsyncLocal_GetSet()
-        {
-            var st = asyncLocal.Value;
-            asyncLocal.Value = "1234";
-            return st;
-        }
+    [Benchmark]
+    public string? AsyncLocal_GetSet()
+    {
+        var st = asyncLocal.Value;
+        asyncLocal.Value = "1234";
+        return st;
     }
 }

@@ -6,12 +6,11 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace BigMachines
+namespace BigMachines;
+
+// [TinyhandObject]
+public partial class BigMachineStatus
 {
-    // [TinyhandObject]
-    public partial class BigMachineStatus
-    {
-        // [Key(0)]
-        public DateTime LastRun { get; internal protected set; }
-    }
+    // [Key(0)]
+    public DateTime LastRun { get; internal protected set; }
 }

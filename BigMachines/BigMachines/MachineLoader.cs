@@ -5,39 +5,38 @@ using System.Collections;
 using System.Collections.Concurrent;
 using System.Linq;
 
-namespace BigMachines
+namespace BigMachines;
+
+public static class MachineLoader
 {
-    public static class MachineLoader
+    public static void Add(Type loaderType)
     {
-        public static void Add(Type loaderType)
+        if (loaderType.IsGenericTypeDefinition &&
+            loaderType.GetInterfaces().Any(x => x.GetGenericTypeDefinition() == typeof(IMachineLoader<>)))
         {
-            if (loaderType.IsGenericTypeDefinition &&
-                loaderType.GetInterfaces().Any(x => x.GetGenericTypeDefinition() == typeof(IMachineLoader<>)))
-            {
-                loaderTypes.TryAdd(loaderType, 0);
-            }
+            loaderTypes.TryAdd(loaderType, 0);
         }
+    }
 
-        public static void Load<TIdentifier>()
-            where TIdentifier : notnull
+    public static void Load<TIdentifier>()
+        where TIdentifier : notnull
+    {
+        var type = typeof(TIdentifier);
+        if (!loadedTIdentifier.ContainsKey(type))
         {
-            var type = typeof(TIdentifier);
-            if (!loadedTIdentifier.ContainsKey(type))
-            {
-                loadedTIdentifier.TryAdd(type, 0);
+            loadedTIdentifier.TryAdd(type, 0);
 
-                foreach (var x in loaderTypes.Keys)
+            foreach (var x in loaderTypes.Keys)
+            {
+                var loader = (IMachineLoader<TIdentifier>?)Activator.CreateInstance(x.MakeGenericType(type));
+                if (loader != null)
                 {
-                    var loader = (IMachineLoader<TIdentifier>?)Activator.CreateInstance(x.MakeGenericType(type));
-                    if (loader != null)
-                    {
-                        loader.Load();
-                    }
+                    loader.Load();
                 }
             }
         }
-
-        private static ConcurrentDictionary<Type, int> loaderTypes = new();
-        private static ConcurrentDictionary<Type, int> loadedTIdentifier = new();
     }
+
+    private static ConcurrentDictionary<Type, int> loaderTypes = new();
+    private static ConcurrentDictionary<Type, int> loadedTIdentifier = new();
 }

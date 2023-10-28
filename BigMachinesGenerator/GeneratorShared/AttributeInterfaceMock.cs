@@ -7,190 +7,189 @@ using Microsoft.CodeAnalysis;
 
 #pragma warning disable SA1602 // Enumeration items should be documented
 
-namespace BigMachines.Generator
-{
-    public static class AttributeHelper
-    {
-        public static object? GetValue(int constructorIndex, string? name, object?[] constructorArguments, KeyValuePair<string, object?>[] namedArguments)
-        {
-            if (constructorIndex >= 0 && constructorIndex < constructorArguments.Length)
-            {// Constructor Argument.
-                return constructorArguments[constructorIndex];
-            }
-            else if (name != null)
-            {// Named Argument.
-                var pair = namedArguments.FirstOrDefault(x => x.Key == name);
-                if (pair.Equals(default(KeyValuePair<string, object?>)))
-                {
-                    return null;
-                }
+namespace BigMachines.Generator;
 
-                return pair.Value;
-            }
-            else
+public static class AttributeHelper
+{
+    public static object? GetValue(int constructorIndex, string? name, object?[] constructorArguments, KeyValuePair<string, object?>[] namedArguments)
+    {
+        if (constructorIndex >= 0 && constructorIndex < constructorArguments.Length)
+        {// Constructor Argument.
+            return constructorArguments[constructorIndex];
+        }
+        else if (name != null)
+        {// Named Argument.
+            var pair = namedArguments.FirstOrDefault(x => x.Key == name);
+            if (pair.Equals(default(KeyValuePair<string, object?>)))
             {
                 return null;
             }
+
+            return pair.Value;
+        }
+        else
+        {
+            return null;
         }
     }
+}
 
-    [AttributeUsage(AttributeTargets.Class, AllowMultiple = false, Inherited = true)]
-    public sealed class MachineObjectAttributeMock : Attribute
+[AttributeUsage(AttributeTargets.Class, AllowMultiple = false, Inherited = true)]
+public sealed class MachineObjectAttributeMock : Attribute
+{
+    public static readonly string SimpleName = "MachineObject";
+    public static readonly string StandardName = SimpleName + "Attribute";
+    public static readonly string FullName = "BigMachines." + StandardName;
+
+    public MachineObjectAttributeMock()
     {
-        public static readonly string SimpleName = "MachineObject";
-        public static readonly string StandardName = SimpleName + "Attribute";
-        public static readonly string FullName = "BigMachines." + StandardName;
-
-        public MachineObjectAttributeMock()
-        {
-        }
-
-        public uint MachineTypeId { get; set; }
-
-        public ISymbol? Group { get; set; }
-
-        public bool Continuous { get; set; }
-
-        public static MachineObjectAttributeMock FromArray(object?[] constructorArguments, KeyValuePair<string, object?>[] namedArguments)
-        {
-            var attribute = new MachineObjectAttributeMock();
-            object? val;
-
-            val = AttributeHelper.GetValue(0, nameof(MachineTypeId), constructorArguments, namedArguments);
-            if (val != null)
-            {
-                attribute.MachineTypeId = (uint)val;
-            }
-
-            val = AttributeHelper.GetValue(-1, nameof(Group), constructorArguments, namedArguments);
-            if (val != null)
-            {
-                attribute.Group = val as ISymbol;
-            }
-
-            val = AttributeHelper.GetValue(-1, nameof(Continuous), constructorArguments, namedArguments);
-            if (val != null)
-            {
-                attribute.Continuous = (bool)val;
-            }
-
-            return attribute;
-        }
     }
 
-    [AttributeUsage(AttributeTargets.Method, AllowMultiple = false, Inherited = true)]
-    public sealed class StateMethodAttributeMock : Attribute
+    public uint MachineTypeId { get; set; }
+
+    public ISymbol? Group { get; set; }
+
+    public bool Continuous { get; set; }
+
+    public static MachineObjectAttributeMock FromArray(object?[] constructorArguments, KeyValuePair<string, object?>[] namedArguments)
     {
-        public static readonly string SimpleName = "StateMethod";
-        public static readonly string StandardName = SimpleName + "Attribute";
-        public static readonly string FullName = "BigMachines." + StandardName;
+        var attribute = new MachineObjectAttributeMock();
+        object? val;
 
-        public StateMethodAttributeMock()
+        val = AttributeHelper.GetValue(0, nameof(MachineTypeId), constructorArguments, namedArguments);
+        if (val != null)
         {
+            attribute.MachineTypeId = (uint)val;
         }
 
-        public uint Id { get; set; }
-
-        public static StateMethodAttributeMock FromArray(object?[] constructorArguments, KeyValuePair<string, object?>[] namedArguments)
+        val = AttributeHelper.GetValue(-1, nameof(Group), constructorArguments, namedArguments);
+        if (val != null)
         {
-            var attribute = new StateMethodAttributeMock();
-            object? val;
-
-            val = AttributeHelper.GetValue(0, nameof(Id), constructorArguments, namedArguments);
-            if (val != null)
-            {
-                attribute.Id = (uint)val;
-            }
-
-            return attribute;
+            attribute.Group = val as ISymbol;
         }
+
+        val = AttributeHelper.GetValue(-1, nameof(Continuous), constructorArguments, namedArguments);
+        if (val != null)
+        {
+            attribute.Continuous = (bool)val;
+        }
+
+        return attribute;
+    }
+}
+
+[AttributeUsage(AttributeTargets.Method, AllowMultiple = false, Inherited = true)]
+public sealed class StateMethodAttributeMock : Attribute
+{
+    public static readonly string SimpleName = "StateMethod";
+    public static readonly string StandardName = SimpleName + "Attribute";
+    public static readonly string FullName = "BigMachines." + StandardName;
+
+    public StateMethodAttributeMock()
+    {
     }
 
-    [AttributeUsage(AttributeTargets.Method, AllowMultiple = false, Inherited = true)]
-    public sealed class CommandMethodAttributeMock : Attribute
+    public uint Id { get; set; }
+
+    public static StateMethodAttributeMock FromArray(object?[] constructorArguments, KeyValuePair<string, object?>[] namedArguments)
     {
-        public static readonly string SimpleName = "CommandMethod";
-        public static readonly string StandardName = SimpleName + "Attribute";
-        public static readonly string FullName = "BigMachines." + StandardName;
+        var attribute = new StateMethodAttributeMock();
+        object? val;
 
-        public CommandMethodAttributeMock()
+        val = AttributeHelper.GetValue(0, nameof(Id), constructorArguments, namedArguments);
+        if (val != null)
         {
+            attribute.Id = (uint)val;
         }
 
-        public uint Id { get; set; }
+        return attribute;
+    }
+}
 
-        public bool WithLock { get; set; } = true;
+[AttributeUsage(AttributeTargets.Method, AllowMultiple = false, Inherited = true)]
+public sealed class CommandMethodAttributeMock : Attribute
+{
+    public static readonly string SimpleName = "CommandMethod";
+    public static readonly string StandardName = SimpleName + "Attribute";
+    public static readonly string FullName = "BigMachines." + StandardName;
 
-        public static CommandMethodAttributeMock FromArray(object?[] constructorArguments, KeyValuePair<string, object?>[] namedArguments)
-        {
-            var attribute = new CommandMethodAttributeMock();
-            object? val;
-
-            val = AttributeHelper.GetValue(0, nameof(Id), constructorArguments, namedArguments);
-            if (val != null)
-            {
-                attribute.Id = (uint)val;
-            }
-
-            val = AttributeHelper.GetValue(-1, nameof(WithLock), constructorArguments, namedArguments);
-            if (val != null)
-            {
-                attribute.WithLock = (bool)val;
-            }
-
-            return attribute;
-        }
+    public CommandMethodAttributeMock()
+    {
     }
 
-    [AttributeUsage(AttributeTargets.Class | AttributeTargets.Struct, AllowMultiple = false, Inherited = true)]
-    public sealed class BigMachinesGeneratorOptionAttributeMock : Attribute
+    public uint Id { get; set; }
+
+    public bool WithLock { get; set; } = true;
+
+    public static CommandMethodAttributeMock FromArray(object?[] constructorArguments, KeyValuePair<string, object?>[] namedArguments)
     {
-        public static readonly string SimpleName = "BigMachinesGeneratorOption";
-        public static readonly string StandardName = SimpleName + "Attribute";
-        public static readonly string FullName = "BigMachines." + StandardName;
+        var attribute = new CommandMethodAttributeMock();
+        object? val;
 
-        public bool AttachDebugger { get; set; } = false;
-
-        public bool GenerateToFile { get; set; } = false;
-
-        public string? CustomNamespace { get; set; }
-
-        public bool UseModuleInitializer { get; set; } = true;
-
-        public BigMachinesGeneratorOptionAttributeMock()
+        val = AttributeHelper.GetValue(0, nameof(Id), constructorArguments, namedArguments);
+        if (val != null)
         {
+            attribute.Id = (uint)val;
         }
 
-        public static BigMachinesGeneratorOptionAttributeMock FromArray(object?[] constructorArguments, KeyValuePair<string, object?>[] namedArguments)
+        val = AttributeHelper.GetValue(-1, nameof(WithLock), constructorArguments, namedArguments);
+        if (val != null)
         {
-            var attribute = new BigMachinesGeneratorOptionAttributeMock();
-            object? val;
-
-            val = AttributeHelper.GetValue(-1, nameof(AttachDebugger), constructorArguments, namedArguments);
-            if (val != null)
-            {
-                attribute.AttachDebugger = (bool)val;
-            }
-
-            val = AttributeHelper.GetValue(-1, nameof(GenerateToFile), constructorArguments, namedArguments);
-            if (val != null)
-            {
-                attribute.GenerateToFile = (bool)val;
-            }
-
-            val = AttributeHelper.GetValue(-1, nameof(CustomNamespace), constructorArguments, namedArguments);
-            if (val != null)
-            {
-                attribute.CustomNamespace = (string)val;
-            }
-
-            val = AttributeHelper.GetValue(-1, nameof(UseModuleInitializer), constructorArguments, namedArguments);
-            if (val != null)
-            {
-                attribute.UseModuleInitializer = (bool)val;
-            }
-
-            return attribute;
+            attribute.WithLock = (bool)val;
         }
+
+        return attribute;
+    }
+}
+
+[AttributeUsage(AttributeTargets.Class | AttributeTargets.Struct, AllowMultiple = false, Inherited = true)]
+public sealed class BigMachinesGeneratorOptionAttributeMock : Attribute
+{
+    public static readonly string SimpleName = "BigMachinesGeneratorOption";
+    public static readonly string StandardName = SimpleName + "Attribute";
+    public static readonly string FullName = "BigMachines." + StandardName;
+
+    public bool AttachDebugger { get; set; } = false;
+
+    public bool GenerateToFile { get; set; } = false;
+
+    public string? CustomNamespace { get; set; }
+
+    public bool UseModuleInitializer { get; set; } = true;
+
+    public BigMachinesGeneratorOptionAttributeMock()
+    {
+    }
+
+    public static BigMachinesGeneratorOptionAttributeMock FromArray(object?[] constructorArguments, KeyValuePair<string, object?>[] namedArguments)
+    {
+        var attribute = new BigMachinesGeneratorOptionAttributeMock();
+        object? val;
+
+        val = AttributeHelper.GetValue(-1, nameof(AttachDebugger), constructorArguments, namedArguments);
+        if (val != null)
+        {
+            attribute.AttachDebugger = (bool)val;
+        }
+
+        val = AttributeHelper.GetValue(-1, nameof(GenerateToFile), constructorArguments, namedArguments);
+        if (val != null)
+        {
+            attribute.GenerateToFile = (bool)val;
+        }
+
+        val = AttributeHelper.GetValue(-1, nameof(CustomNamespace), constructorArguments, namedArguments);
+        if (val != null)
+        {
+            attribute.CustomNamespace = (string)val;
+        }
+
+        val = AttributeHelper.GetValue(-1, nameof(UseModuleInitializer), constructorArguments, namedArguments);
+        if (val != null)
+        {
+            attribute.UseModuleInitializer = (bool)val;
+        }
+
+        return attribute;
     }
 }

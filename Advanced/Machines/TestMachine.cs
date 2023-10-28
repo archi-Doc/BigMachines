@@ -1,18 +1,13 @@
 ﻿// Copyright (c) All contributors. All rights reserved. Licensed under the MIT license.
 
 using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading;
 using System.Threading.Tasks;
-using Arc.Threading;
 using BigMachines;
 using Tinyhand;
 
 namespace Advanced;
 
-[TinyhandObject(UseServiceProvider = true)] // Annotate TinyhandObject attribute to enable serialization (and set UseServiceProvider to true to skip default constructor check).
+/*[TinyhandObject(UseServiceProvider = true)] // Annotate TinyhandObject attribute to enable serialization (and set UseServiceProvider to true to skip default constructor check).
 [MachineObject(0x6169e4ee)] // Annotate MachineObject and set Machine type id (unique number).
 public partial class TestMachine : Machine<int> // Inherit Machine<TIdentifier> class.
 {
@@ -140,4 +135,4 @@ public partial class TestMachine : Machine<int> // Inherit Machine<TIdentifier> 
 
         // ThreadCore.Root.Terminate(); // Send a termination signal to the root.
     }
-}
+}*/

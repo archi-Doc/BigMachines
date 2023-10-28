@@ -5,7 +5,7 @@ using BigMachines;
 
 namespace Advanced;
 
-public class SomeService
+/*public class SomeService
 {
     public void Print(string? text) => Console.WriteLine($"Some service : {text}");
 }
@@ -42,4 +42,4 @@ public partial class ServiceProviderMachine : Machine<int>
         this.Service.Print(this.Text);
         return StateResult.Continue;
     }
-}
+}*/

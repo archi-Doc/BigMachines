@@ -7,37 +7,35 @@ using System.Text;
 using System.Threading.Tasks;
 using BigMachines;
 
-namespace Sandbox
+namespace Sandbox;
+
+/*[MachineObject(0xbadbe735)]
+public partial class LongRunningMachine : Machine<int>
 {
-    // Loop Machine
-    [MachineObject(0xbadbe735)]
-    public partial class LongRunningMachine : Machine<int>
+    public static void Test(BigMachine<int> bigMachine)
     {
-        public static void Test(BigMachine<int> bigMachine)
-        {
-            var loopMachine = bigMachine.CreateOrGet<LongRunningMachine.Interface>(0);
-        }
-
-        public LongRunningMachine(BigMachine<int> bigMachine)
-            : base(bigMachine)
-        {
-            // this.DefaultTimeout = TimeSpan.FromSeconds(1);
-            // this.SetLifespan(TimeSpan.FromSeconds(3));
-        }
-
-        [StateMethod(0)]
-        protected StateResult Initial(StateParameter parameter)
-        {
-            Console.WriteLine("Long running machine enter");
-
-            for (var n = 0; n < 30; n++)
-            {
-                this.BigMachine.Core.Sleep(100);
-            }
-
-            Console.WriteLine("Long running machine exit");
-
-            return StateResult.Continue;
-        }
+        var loopMachine = bigMachine.CreateOrGet<LongRunningMachine.Interface>(0);
     }
-}
+
+    public LongRunningMachine(BigMachine<int> bigMachine)
+        : base(bigMachine)
+    {
+        // this.DefaultTimeout = TimeSpan.FromSeconds(1);
+        // this.SetLifespan(TimeSpan.FromSeconds(3));
+    }
+
+    [StateMethod(0)]
+    protected StateResult Initial(StateParameter parameter)
+    {
+        Console.WriteLine("Long running machine enter");
+
+        for (var n = 0; n < 30; n++)
+        {
+            this.BigMachine.Core.Sleep(100);
+        }
+
+        Console.WriteLine("Long running machine exit");
+
+        return StateResult.Continue;
+    }
+}*/

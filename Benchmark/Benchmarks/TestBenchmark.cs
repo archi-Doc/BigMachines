@@ -10,23 +10,22 @@ using System.Linq.Expressions;
 using System.Reflection;
 using BenchmarkDotNet.Attributes;
 
-namespace Benchmark.Test
+namespace Benchmark.Test;
+
+[Config(typeof(BenchmarkConfig))]
+public class TestBenchmark
 {
-    [Config(typeof(BenchmarkConfig))]
-    public class TestBenchmark
+    public TestBenchmark()
     {
-        public TestBenchmark()
-        {
-        }
+    }
 
-        [GlobalSetup]
-        public void Setup()
-        {
-        }
+    [GlobalSetup]
+    public void Setup()
+    {
+    }
 
-        [Benchmark]
-        public void Clone_Raw()
-        {
-        }
+    [Benchmark]
+    public void Clone_Raw()
+    {
     }
 }

@@ -1,17 +1,12 @@
 ﻿// Copyright (c) All contributors. All rights reserved. Licensed under the MIT license.
 
 using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 using Arc.Threading;
 using BigMachines;
 
 namespace Advanced;
 
-// Single Machine
-[MachineObject(0x48eb1f0f, Group = typeof(SingleGroup<>))] // Change groups from MachineGroup<> to SingleGroup<>.
+/*[MachineObject(0x48eb1f0f, Group = typeof(SingleGroup<>))] // Change groups from MachineGroup<> to SingleGroup<>.
 public partial class TerminatorMachine<TIdentifier> : Machine<TIdentifier>
     where TIdentifier : notnull
 {
@@ -58,4 +53,4 @@ public partial class TerminatorMachine<TIdentifier> : Machine<TIdentifier>
         ThreadCore.Root.Terminate();
         return StateResult.Terminate;
     }
-}
+}*/
