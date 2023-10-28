@@ -7,6 +7,48 @@ using Tinyhand;
 
 namespace Sandbox;
 
+public class TestC
+{
+}
+
+[BigMachineObject]
+public partial class TestBigMachine
+{
+    [AddMachine<TinyMachine>(Volatile = true)]
+    public TestBigMachine()
+    {
+    }
+}
+
+[BigMachineObject(Default = true)]
+public partial class TestBigMachine2
+{
+    public TestBigMachine2()
+    {
+    }
+}
+
+
+[MachineObject(333)]
+public partial class TinyMachine : Machine<int>
+{
+    public TinyMachine()
+        : base()
+    {
+    }
+}
+
+[TinyhandObject]
+[MachineObject(22)]
+public partial class TinyMachine2 : Machine<int>
+{
+    public TinyMachine2()
+        : base()
+    {
+    }
+}
+
+
 /*[TinyhandObject(UseServiceProvider = true)]
 [MachineObject(0x436a0f8f, Continuous = true)]
 public partial class ContinuousMachine : Machine<int>

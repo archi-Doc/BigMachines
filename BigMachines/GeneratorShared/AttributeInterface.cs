@@ -1,11 +1,29 @@
 ﻿// Copyright (c) All contributors. All rights reserved. Licensed under the MIT license.
 
 using System;
-using System.Threading;
-
-#pragma warning disable SA1602 // Enumeration items should be documented
 
 namespace BigMachines;
+
+[AttributeUsage(AttributeTargets.Class, AllowMultiple = false, Inherited = true)]
+public sealed class BigMachineObjectAttribute : Attribute
+{
+    public BigMachineObjectAttribute()
+    {
+    }
+
+    public bool Default { get; set; } = false;
+}
+
+[AttributeUsage(AttributeTargets.Constructor, AllowMultiple = true, Inherited = false)]
+public sealed class AddMachineAttribute<TMachine> : Attribute
+where TMachine : Machine
+{
+    public AddMachineAttribute()
+    {
+    }
+
+    public bool Volatile { get; set; }
+}
 
 /// <summary>
 /// Enables the state machine features for the target class.<br/>

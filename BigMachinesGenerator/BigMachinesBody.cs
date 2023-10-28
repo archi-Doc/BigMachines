@@ -11,7 +11,6 @@ using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.Text;
 
 #pragma warning disable RS2008
-#pragma warning disable SA1306 // Field names should begin with lower-case letter
 #pragma warning disable SA1310 // Field names should not contain underscore
 #pragma warning disable SA1401 // Fields should be private
 #pragma warning disable SA1117 // Parameters should be on same line or separate lines
@@ -20,6 +19,8 @@ namespace BigMachines.Generator;
 
 public class BigMachinesBody : VisceralBody<BigMachinesObject>
 {
+    public const string BigMachineNamespace = "BigMachines";
+    public const string DefaultBigMachineObject = "BigMachine";
     public const string BigMachineIdentifier = "BigMachine";
     public const string IMachineGroupIdentifier = "IMachineGroup<TIdentifier>";
     public const string StateIdentifier = "State";
@@ -34,11 +35,11 @@ public class BigMachinesBody : VisceralBody<BigMachinesObject>
     public const string RegisterBM = "RegisterBM";
     public const string CommandIdentifier = "Command";
 
-    public const string StateResultFullName = "BigMachines.StateResult";
-    public const string StateParameterFullName = "BigMachines.StateParameter";
+    public const string StateResultFullName = BigMachineNamespace + ".StateResult";
+    public const string StateParameterFullName = BigMachineNamespace + ".StateParameter";
     public const string TaskFullName = "System.Threading.Tasks.Task";
     public const string TaskFullName2 = "System.Threading.Tasks.Task<TResult>";
-    public const string CommandParameterFullName = "BigMachines.CommandPost<{0}>.Command";
+    public const string CommandParameterFullName = BigMachineNamespace + ".CommandPost<{0}>.Command";
 
     public static readonly DiagnosticDescriptor Error_NotPartial = new DiagnosticDescriptor(
         id: "BMG001", title: "Not a partial class", messageFormat: "MachineObject '{0}' is not a partial class",
@@ -106,6 +107,8 @@ public class BigMachinesBody : VisceralBody<BigMachinesObject>
     {
     }
 
+    internal HashSet<BigMachine> BigMachines = new();
+
     internal Dictionary<uint, BigMachinesObject> Machines = new();
 
     internal Dictionary<string, List<BigMachinesObject>> Namespaces = new();
@@ -113,10 +116,10 @@ public class BigMachinesBody : VisceralBody<BigMachinesObject>
     public void Prepare()
     {
         // Configure objects.
-        var array = this.FullNameToObject.ToArray();
+        var array = this.FullNameToObject.Values.Where(x => x.ObjectFlag.HasFlag(BigMachinesObjectFlag.MachineObject)).ToArray();
         foreach (var x in array)
         {
-            x.Value.Configure();
+            x.Configure();
         }
 
         this.FlushDiagnostic();
@@ -125,16 +128,16 @@ public class BigMachinesBody : VisceralBody<BigMachinesObject>
             return;
         }
 
-        array = this.FullNameToObject.Where(x => x.Value.ObjectAttribute != null).ToArray();
+        array = array.Where(x => x.ObjectAttribute != null).ToArray();
         foreach (var x in array)
         {
-            x.Value.ConfigureRelation();
+            x.ConfigureRelation();
         }
 
         // Check
         foreach (var x in array)
         {
-            x.Value.Check();
+            x.Check();
         }
 
         this.FlushDiagnostic();
@@ -142,6 +145,9 @@ public class BigMachinesBody : VisceralBody<BigMachinesObject>
         {
             return;
         }
+
+        // BigMachines
+        this.PrepareBigMachines();
     }
 
     public void Generate(IGeneratorInformation generator, CancellationToken cancellationToken)
@@ -176,12 +182,12 @@ public class BigMachinesBody : VisceralBody<BigMachinesObject>
 
             if (generator.GenerateToFile && generator.TargetFolder != null && Directory.Exists(generator.TargetFolder))
             {
-                this.StringToFile(result, Path.Combine(generator.TargetFolder, $"gen.BigMachines.{x.Key}.cs"));
+                this.StringToFile(result, Path.Combine(generator.TargetFolder, $"gen.{BigMachineNamespace}.{x.Key}.cs"));
             }
             else
             {
-                this.Context?.AddSource($"gen.BigMachines.{x.Key}", SourceText.From(result, Encoding.UTF8));
-                this.Context2?.AddSource($"gen.BigMachines.{x.Key}", SourceText.From(result, Encoding.UTF8));
+                this.Context?.AddSource($"gen.{BigMachineNamespace}.{x.Key}", SourceText.From(result, Encoding.UTF8));
+                this.Context2?.AddSource($"gen.{BigMachineNamespace}.{x.Key}", SourceText.From(result, Encoding.UTF8));
             }
         }
 
@@ -189,6 +195,28 @@ public class BigMachinesBody : VisceralBody<BigMachinesObject>
         this.GenerateLoader(generator, info, rootObjects);
 
         this.FlushDiagnostic();
+    }
+
+    private void PrepareBigMachines()
+    {
+        // var defaultBigMachine = $"{BigMachinesBody.BigMachineNamespace}.{BigMachinesBody.DefaultBigMachineObject}";
+        var defaultBigMachine = new BigMachine(this, BigMachinesBody.BigMachineNamespace, BigMachinesBody.DefaultBigMachineObject);
+        defaultBigMachine.Default = true;
+        this.BigMachines.Add(defaultBigMachine);
+
+        var array = this.FullNameToObject.Values.Where(x => x.ObjectFlag.HasFlag(BigMachinesObjectFlag.BigMachineObject)).ToArray();
+        foreach (var x in array)
+        {
+            var bigMachine = new BigMachine(this, x.Namespace, x.LocalName);
+            this.BigMachines.Remove(bigMachine);
+            this.BigMachines.Add(bigMachine);
+            bigMachine.Object = x;
+        }
+
+        foreach (var x in this.BigMachines)
+        {
+            x.AddMachines();
+        }
     }
 
     private void GenerateHeader(ScopingStringBuilder ssb)
@@ -199,7 +227,7 @@ public class BigMachinesBody : VisceralBody<BigMachinesObject>
         ssb.AddUsing("System.Diagnostics.CodeAnalysis");
         ssb.AddUsing("System.Runtime.CompilerServices");
         ssb.AddUsing("System.Threading.Tasks");
-        ssb.AddUsing("BigMachines");
+        ssb.AddUsing(BigMachineNamespace);
 
         ssb.AppendLine("#nullable enable", false);
         ssb.AppendLine("#pragma warning disable CS1591", false);
@@ -212,7 +240,7 @@ public class BigMachinesBody : VisceralBody<BigMachinesObject>
         var ssb = new ScopingStringBuilder();
         this.GenerateHeader(ssb);
 
-        using (var scopeFormatter = ssb.ScopeNamespace("BigMachines.Generator"))
+        using (var scopeFormatter = ssb.ScopeNamespace($"{BigMachineNamespace}.Generator"))
         {
             using (var methods = ssb.ScopeBrace("static class Generated"))
             {
@@ -240,7 +268,7 @@ public class BigMachinesBody : VisceralBody<BigMachinesObject>
     private void GenerateInitializer(IGeneratorInformation generator, ScopingStringBuilder ssb, GeneratorInformation info)
     {
         // Namespace
-        var ns = "BigMachines";
+        var ns = BigMachinesBody.BigMachineNamespace;
         var assemblyId = string.Empty; // Assembly ID
         if (!string.IsNullOrEmpty(generator.CustomNamespace))
         {// Custom namespace.
@@ -255,7 +283,7 @@ public class BigMachinesBody : VisceralBody<BigMachinesObject>
             }
         }
 
-        info.ModuleInitializerClass.Add("BigMachines.Generator.Generated");
+        info.ModuleInitializerClass.Add($"{BigMachinesBody.BigMachineNamespace}.Generator.Generated");
 
         ssb.AppendLine();
         using (var scopeCrossLink = ssb.ScopeNamespace(ns!))

@@ -5,8 +5,6 @@ using System.Collections.Generic;
 using System.Linq;
 using Microsoft.CodeAnalysis;
 
-#pragma warning disable SA1602 // Enumeration items should be documented
-
 namespace BigMachines.Generator;
 
 public static class AttributeHelper
@@ -35,11 +33,63 @@ public static class AttributeHelper
 }
 
 [AttributeUsage(AttributeTargets.Class, AllowMultiple = false, Inherited = true)]
+public sealed class BigMachineObjectAttributeMock : Attribute
+{
+    public static readonly string SimpleName = "BigMachineObject";
+    public static readonly string StandardName = SimpleName + "Attribute";
+    public static readonly string FullName = BigMachinesBody.BigMachineNamespace + "." + StandardName;
+
+    public bool Default { get; set; }
+
+    public static BigMachineObjectAttributeMock FromArray(object?[] constructorArguments, KeyValuePair<string, object?>[] namedArguments)
+    {
+        var attribute = new BigMachineObjectAttributeMock();
+        object? val;
+
+        val = AttributeHelper.GetValue(-1, nameof(Default), constructorArguments, namedArguments);
+        if (val != null)
+        {
+            attribute.Default = (bool)val;
+        }
+
+        return attribute;
+    }
+}
+
+[AttributeUsage(AttributeTargets.Constructor, AllowMultiple = true, Inherited = false)]
+public sealed class AddMachineAttributeMock : Attribute
+{
+    public static readonly string SimpleName = "AddMachine";
+    public static readonly string StandardName = SimpleName + "Attribute";
+    public static readonly string FullName = BigMachinesBody.BigMachineNamespace + "." + StandardName;
+
+    public AddMachineAttributeMock()
+    {
+    }
+
+    public bool Volatile { get; set; }
+
+    public static AddMachineAttributeMock FromArray(object?[] constructorArguments, KeyValuePair<string, object?>[] namedArguments)
+    {
+        var attribute = new AddMachineAttributeMock();
+        object? val;
+
+        val = AttributeHelper.GetValue(-1, nameof(Volatile), constructorArguments, namedArguments);
+        if (val != null)
+        {
+            attribute.Volatile = (bool)val;
+        }
+
+        return attribute;
+    }
+}
+
+[AttributeUsage(AttributeTargets.Class, AllowMultiple = false, Inherited = true)]
 public sealed class MachineObjectAttributeMock : Attribute
 {
     public static readonly string SimpleName = "MachineObject";
     public static readonly string StandardName = SimpleName + "Attribute";
-    public static readonly string FullName = "BigMachines." + StandardName;
+    public static readonly string FullName = BigMachinesBody.BigMachineNamespace + "." + StandardName;
 
     public MachineObjectAttributeMock()
     {
@@ -83,7 +133,7 @@ public sealed class StateMethodAttributeMock : Attribute
 {
     public static readonly string SimpleName = "StateMethod";
     public static readonly string StandardName = SimpleName + "Attribute";
-    public static readonly string FullName = "BigMachines." + StandardName;
+    public static readonly string FullName = BigMachinesBody.BigMachineNamespace + "." + StandardName;
 
     public StateMethodAttributeMock()
     {
@@ -111,7 +161,7 @@ public sealed class CommandMethodAttributeMock : Attribute
 {
     public static readonly string SimpleName = "CommandMethod";
     public static readonly string StandardName = SimpleName + "Attribute";
-    public static readonly string FullName = "BigMachines." + StandardName;
+    public static readonly string FullName = BigMachinesBody.BigMachineNamespace + "." + StandardName;
 
     public CommandMethodAttributeMock()
     {
@@ -147,7 +197,7 @@ public sealed class BigMachinesGeneratorOptionAttributeMock : Attribute
 {
     public static readonly string SimpleName = "BigMachinesGeneratorOption";
     public static readonly string StandardName = SimpleName + "Attribute";
-    public static readonly string FullName = "BigMachines." + StandardName;
+    public static readonly string FullName = BigMachinesBody.BigMachineNamespace + "." + StandardName;
 
     public bool AttachDebugger { get; set; } = false;
 

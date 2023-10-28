@@ -2,18 +2,12 @@
 
 using System;
 using System.Collections.Generic;
-using System.ComponentModel;
-using System.Diagnostics;
 using System.Linq;
-using System.Text;
 using Arc.Visceral;
 using Microsoft.CodeAnalysis;
 
 #pragma warning disable SA1202 // Elements should be ordered by access
 #pragma warning disable SA1204 // Static elements should appear before instance elements
-#pragma warning disable SA1310 // Field names should not contain underscore
-#pragma warning disable SA1401 // Fields should be private
-#pragma warning disable SA1405 // Debug.Assert should provide message text
 #pragma warning disable SA1602 // Enumeration items should be documented
 
 namespace BigMachines.Generator;
@@ -32,6 +26,9 @@ public enum BigMachinesObjectFlag
     RelationConfigured = 1 << 1,
     Checked = 1 << 2,
 
+    BigMachineObject = 1 << 3,
+    MachineObject = 1 << 4,
+
     CanCreateInstance = 1 << 12, // Can create an instance
     HasSimpleConstructor = 1 << 13, // Has simple constructor: TestMachine(BigMachine<T> bigMachine)
     IsSimpleGenericMachine = 1 << 14, // Class<TIdentifier> : Machine<TIdentifier>
@@ -46,7 +43,7 @@ public class BigMachinesObject : VisceralObjectBase<BigMachinesObject>
 
     public new BigMachinesBody Body => (BigMachinesBody)((VisceralObjectBase<BigMachinesObject>)this).Body;
 
-    public BigMachinesObjectFlag ObjectFlag { get; private set; }
+    public BigMachinesObjectFlag ObjectFlag { get; set; }
 
     public MachineObjectAttributeMock? ObjectAttribute { get; private set; }
 
@@ -297,7 +294,7 @@ public class BigMachinesObject : VisceralObjectBase<BigMachinesObject>
         var derivedMachine = false;
         while (machineObject != null)
         {
-            if (machineObject.OriginalDefinition?.FullName == "BigMachines.Machine<TIdentifier>")
+            if (machineObject.OriginalDefinition?.FullName == $"{BigMachinesBody.BigMachineNamespace}.Machine<TIdentifier>")
             {
                 break;
             }
@@ -409,7 +406,7 @@ public class BigMachinesObject : VisceralObjectBase<BigMachinesObject>
             else if (x.Method_IsConstructor && x.ContainingObject == this)
             {// Constructor
                 if (x.Method_Parameters.Length == 1 &&
-                    x.Method_Parameters[0].StartsWith("BigMachines.BigMachine<"))
+                    x.Method_Parameters[0].StartsWith($"{BigMachinesBody.BigMachineNamespace}.BigMachine<"))
                 {
                     this.ObjectFlag |= BigMachinesObjectFlag.HasSimpleConstructor;
                 }

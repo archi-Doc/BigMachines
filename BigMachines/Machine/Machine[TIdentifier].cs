@@ -14,7 +14,7 @@ namespace BigMachines;
 public abstract partial class Machine<TIdentifier> : Machine // , ITinyhandSerialize<Machine<TIdentifier>>
     where TIdentifier : notnull
 {
-    internal Machine()
+    public Machine()
     {
         this.Identifier = default!;
     }

@@ -8,9 +8,6 @@ using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.CSharp;
 using Microsoft.CodeAnalysis.CSharp.Syntax;
 
-#pragma warning disable SA1306 // Field names should begin with lower-case letter
-#pragma warning disable SA1204 // Static elements should appear before instance elements
-
 namespace BigMachines.Generator;
 
 [Generator]
@@ -51,13 +48,19 @@ public class BigMachinesGeneratorV2 : IIncrementalGenerator, IGeneratorInformati
             foreach (var attribute in attributeList.Attributes)
             {
                 var name = attribute.Name.ToString();
-                if (name.EndsWith(BigMachinesGeneratorOptionAttributeMock.StandardName) ||
-                    name.EndsWith(BigMachinesGeneratorOptionAttributeMock.SimpleName))
+
+                if (name.EndsWith(BigMachineObjectAttributeMock.StandardName) ||
+                    name.EndsWith(BigMachineObjectAttributeMock.SimpleName))
                 {
                     return typeSyntax;
                 }
                 else if (name.EndsWith(MachineObjectAttributeMock.StandardName) ||
                     name.EndsWith(MachineObjectAttributeMock.SimpleName))
+                {
+                    return typeSyntax;
+                }
+                else if (name.EndsWith(BigMachinesGeneratorOptionAttributeMock.StandardName) ||
+                    name.EndsWith(BigMachinesGeneratorOptionAttributeMock.SimpleName))
                 {
                     return typeSyntax;
                 }
@@ -70,6 +73,12 @@ public class BigMachinesGeneratorV2 : IIncrementalGenerator, IGeneratorInformati
     private void Emit(SourceProductionContext context, (Compilation Compilation, ImmutableArray<TypeDeclarationSyntax?> Types) source)
     {
         var compilation = source.Compilation;
+        var bigMachineObjectAttributeSymbol = compilation.GetTypeByMetadataName(BigMachineObjectAttributeMock.FullName);
+        if (bigMachineObjectAttributeSymbol == null)
+        {
+            return;
+        }
+
         var machineObjectAttributeSymbol = compilation.GetTypeByMetadataName(MachineObjectAttributeMock.FullName);
         if (machineObjectAttributeSymbol == null)
         {
@@ -108,9 +117,22 @@ public class BigMachinesGeneratorV2 : IIncrementalGenerator, IGeneratorInformati
                 processed.Add(s);
                 foreach (var y in s.GetAttributes())
                 {
-                    if (SymbolEqualityComparer.Default.Equals(y.AttributeClass, machineObjectAttributeSymbol))
+                    if (SymbolEqualityComparer.Default.Equals(y.AttributeClass, bigMachineObjectAttributeSymbol))
+                    { // BigMachineObject
+                        if (body.Add(s) is { } obj)
+                        {
+                            obj.ObjectFlag |= BigMachinesObjectFlag.BigMachineObject;
+                        }
+
+                        break;
+                    }
+                    else if (SymbolEqualityComparer.Default.Equals(y.AttributeClass, machineObjectAttributeSymbol))
                     { // MachineObject
-                        body.Add(s);
+                        if (body.Add(s) is { } obj)
+                        {
+                            obj.ObjectFlag |= BigMachinesObjectFlag.MachineObject;
+                        }
+
                         break;
                     }
                     else if (!generatorOptionSet &&

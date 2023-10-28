@@ -1,17 +1,14 @@
 ﻿// Copyright (c) All contributors. All rights reserved. Licensed under the MIT license.
 
 using System;
-using System.Reflection.PortableExecutable;
 using System.Runtime.CompilerServices;
 using System.Threading;
 using System.Threading.Tasks;
 using Arc.Threading;
-using Microsoft.VisualBasic;
 using Tinyhand;
 using Tinyhand.IO;
 
 #pragma warning disable SA1202
-#pragma warning disable SA1307 // Accessible fields should begin with upper-case letter
 #pragma warning disable SA1401 // Fields should be private
 
 namespace BigMachines;
@@ -25,7 +22,7 @@ public abstract partial class Machine
     internal const int ReservedKeyNumber = 8;
     private static uint serialNumber;
 
-    internal Machine()
+    public Machine()
     {
         this.machineNumber = Interlocked.Increment(ref serialNumber);
     }
@@ -278,7 +275,7 @@ public abstract partial class Machine
     [IgnoreMember]
     protected object? interfaceInstance;
 
-    internal abstract ManMachineInterface InterfaceInstance { get; }
+    internal virtual ManMachineInterface InterfaceInstance => default!; // tempcode
 
     /// <summary>
     /// Gets or sets a value indicating whether the machine is going to re-run.
