@@ -114,6 +114,10 @@ public sealed partial class UnorderedMachineControl<TIdentifier, TMachine, TInte
         }
     }
 
+    internal override void Process(DateTime now, TimeSpan elapsed)
+    {
+    }
+
     #endregion
 
     #region Main

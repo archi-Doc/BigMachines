@@ -31,4 +31,6 @@ public abstract class MachineControl
     internal abstract Machine[] GetMachines();
 
     internal abstract bool RemoveMachine(Machine machine);
+
+    internal abstract void Process(DateTime now, TimeSpan elapsed);
 }

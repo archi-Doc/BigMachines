@@ -131,6 +131,10 @@ public sealed partial class SequentialMachineControl<TIdentifier, TMachine, TInt
         }
     }
 
+    internal override void Process(DateTime now, TimeSpan elapsed)
+    {
+    }
+
     #endregion
 
     #region Main

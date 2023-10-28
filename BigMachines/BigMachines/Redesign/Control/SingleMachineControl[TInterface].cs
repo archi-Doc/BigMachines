@@ -88,6 +88,11 @@ public partial class SingleMachineControl<TMachine, TInterface> : MachineControl
         }
     }
 
+    internal override void Process(DateTime now, TimeSpan elapsed)
+    {
+        this.machine?.Process(now, elapsed);
+    }
+
     static void ITinyhandSerialize<SingleMachineControl<TMachine, TInterface>>.Serialize(ref TinyhandWriter writer, scoped ref SingleMachineControl<TMachine, TInterface>? value, TinyhandSerializerOptions options)
     {
         TinyhandSerializer.Serialize(ref writer, value?.Machine, options);

@@ -10,6 +10,8 @@ public partial class BigMachineBase
 {
     public class BigMachineCore : TaskCore
     {
+        public int TimeIntervalInMilliseconds { get; set; } = 500; // 500 ms
+
         public BigMachineCore(BigMachineBase bigMachine)
             : base(null, Process, false)
         {
@@ -26,7 +28,7 @@ public partial class BigMachineBase
 
             while (!core.IsTerminated)
             {
-                if (await core.Delay(500) == false)
+                if (await core.Delay(core.TimeIntervalInMilliseconds) == false)
                 {// Terminated
                     break;
                 }
@@ -35,9 +37,6 @@ public partial class BigMachineBase
                 {
                     bigMachine.exceptionHandler(exception);
                 }
-
-                // tempcode
-                // bigMachine.Continuous.Process();
 
                 var now = DateTime.UtcNow;
                 if (bigMachine.LastRun == default)
@@ -50,6 +49,9 @@ public partial class BigMachineBase
                 {
                     elapsed = default;
                 }
+
+                // tempcode
+                // bigMachine.Continuous.Process();
 
                 foreach (var x in controls)
                 {
