@@ -30,11 +30,6 @@ public sealed class MachineObjectAttribute : Attribute
     public uint MachineTypeId { get; }
 
     /// <summary>
-    /// Gets or sets a machine group of the machine (e.g. <see cref="MachineGroup{TIdentifier}"/>(default), <see cref="SingleGroup{TIdentifier}"/>).
-    /// </summary>
-    public Type? Group { get; set; }
-
-    /// <summary>
     /// Gets or sets a value indicating whether or not the machine is continuous machine (runs continuously and uses one thread).
     /// </summary>
     public bool Continuous { get; set; }
@@ -195,7 +190,7 @@ public enum RunType
     NotRunning,
 
     /// <summary>
-    /// Machine is run by <see cref="ManMachineInterface{TIdentifier}.RunAsync"/> method.
+    /// Machine is run by <see cref="Machine.ManMachineInterface.RunAsync"/> method.
     /// </summary>
     Manual,
 
@@ -205,7 +200,7 @@ public enum RunType
     Timer,
 
     /// <summary>
-    /// Machine is run by <see cref="BigMachineContinuous{TIdentifier}"/>.
+    /// Machine is run by. // tempcode.
     /// </summary>
     Continuous,
 }

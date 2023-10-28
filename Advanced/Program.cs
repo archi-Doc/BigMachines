@@ -33,10 +33,8 @@ public class Program
     public static async Task Test()
     {
         var container = new Container(); // You can use DI container if you want.
-        container.RegisterDelegate<BigMachine<int>>(x => new BigMachine<int>(container), Reuse.Singleton);
         // container.Register<SomeService>(); // Register some service.
         // container.Register<ServiceProviderMachine>(Reuse.Transient); // Register machine.
-        var bigMachine = container.Resolve<BigMachine<int>>(); // Create BigMachine.
 
         // Load
         try
@@ -45,14 +43,14 @@ public class Program
             {
                 var bs = new byte[fs.Length];
                 fs.Read(bs);
-                bigMachine.Deserialize(bs);
+                // bigMachine.Deserialize(bs);
             }
         }
         catch
         {
         }
 
-        bigMachine.Start(); // Start BigMachine.
+        // bigMachine.Start(); // Start BigMachine.
 
         // TerminatorMachine<int>.Start(bigMachine, 0); // This machine will stop the app thread if there is no working machine.
 
@@ -73,13 +71,13 @@ public class Program
         await ThreadCore.Root.WaitForTerminationAsync(-1); // Wait for the termination infinitely.
 
         // Save
-        var data = await bigMachine.SerializeAsync();
+        /*var data = await bigMachine.SerializeAsync();
         if (data != null)
         {
             using (var fs = new FileStream("app.data", FileMode.Create))
             {
                 fs.Write(data);
             }
-        }
+        }*/
     }
 }

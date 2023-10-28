@@ -35,10 +35,6 @@ public class Program
         await Benchmark.Design.CommandDesign7.Test();
         await Benchmark.Design.CommandDesign8.Test();*/
 
-        var bm = new BigMachine<int>();
-        bm.LoopCheckerMode = LoopCheckerMode.EnabledAndThrowException;
-        await Benchmark.Design.SimpleBench.Test(bm); // 470/670
-
         DebugRun<Test.LoopCheckerBenchmark2>();
 
         var switcher = new BenchmarkSwitcher(new[]

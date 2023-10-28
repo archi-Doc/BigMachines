@@ -3,7 +3,6 @@ using System.Threading.Tasks;
 using Arc.Threading;
 using Arc.Unit;
 using BigMachines;
-using BigMachines.Redesign;
 using Microsoft.Extensions.DependencyInjection;
 using Tinyhand;
 
@@ -28,15 +27,15 @@ class Program
         var builder2 = new UnitBuilder();
         builder2.Configure(context =>
         {
-            context.AddSingleton<BigMachines.Redesign.SingleMachine>();
-            context.AddSingleton<BigMachines.Redesign.TestMachine>();
+            context.AddSingleton<BigMachines.SingleMachine>();
+            context.AddSingleton<BigMachines.TestMachine>();
         });
 
         var unit2 = builder2.Build();
         TinyhandSerializer.ServiceProvider = unit2.Context.ServiceProvider;
 
-        MachineRegistry.Register(new(0, typeof(BigMachines.Redesign.SingleMachine), typeof(SingleMachineControl<,>)) { Serializable = true, });
-        MachineRegistry.Register(new(1, typeof(BigMachines.Redesign.TestMachine), typeof(UnorderedMachineControl<,,>)) { Constructor = () => new BigMachines.Redesign.TestMachine(), IdentifierType = typeof(int), Serializable = true, });
+        MachineRegistry.Register(new(0, typeof(BigMachines.SingleMachine), typeof(SingleMachineControl<,>)) { Serializable = true, });
+        MachineRegistry.Register(new(1, typeof(BigMachines.TestMachine), typeof(UnorderedMachineControl<,,>)) { Constructor = () => new BigMachines.TestMachine(), IdentifierType = typeof(int), Serializable = true, });
 
         var testBigMachine = new TestBigMachine();
         var m = testBigMachine.TestMachines.GetOrCreate(1);
@@ -86,7 +85,7 @@ class Program
         ThreadCore.Root.TerminationEvent.Set(); // The termination process is complete (#1).
     }
 
-    public static void Test1(BigMachine<int> bigMachine)
+    /*public static void Test1(BigMachine<int> bigMachine)
     {
-    }
+    }*/
 }
