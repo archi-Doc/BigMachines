@@ -254,6 +254,11 @@ public abstract partial class Machine
     #region FieldAndProperty
 
     /// <summary>
+    /// Gets an instance of <see cref="BigMachineBase"/>.
+    /// </summary>
+    public BigMachineBase? BigMachine => this.Control?.BigMachine;
+
+    /// <summary>
     /// Gets an instance of <see cref="MachineControl"/>.
     /// </summary>
     public MachineControl? Control { get; private set; }
@@ -265,10 +270,10 @@ public abstract partial class Machine
     /// <see cref="TimeSpan.Zero"/>: No interval execution.<br/>
     /// This property is NOT serialization target.
     /// </summary>
-    protected internal readonly TimeSpan DefaultTimeout;
+    protected readonly TimeSpan DefaultTimeout;
 
     [IgnoreMember]
-    protected internal OperationalFlag operationalState;
+    protected OperationalFlag operationalState;
 
     [IgnoreMember]
     protected object? interfaceInstance;
@@ -396,7 +401,7 @@ RerunLoop:
 
         if (result == StateResult.Terminate)
         {
-            // this.LastRun = now;
+            this.LastRunTime = now;
             this.operationalState &= ~OperationalFlag.Running;
             return result;
         }

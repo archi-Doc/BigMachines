@@ -13,7 +13,7 @@ public abstract partial class BigMachineBase
 {
     public BigMachineBase()
     {
-        this.core = new(this);
+        this.Core = new(this);
     }
 
     public abstract MachineControl[] GetArray();
@@ -21,7 +21,7 @@ public abstract partial class BigMachineBase
     #region Core
 
     public void Start()
-        => this.core.Start();
+        => this.Core.Start();
 
     #endregion
 
@@ -32,9 +32,13 @@ public abstract partial class BigMachineBase
     /// </summary>
     public LoopCheckerMode LoopCheckerMode { get; set; } = LoopCheckerMode.EnabledAndThrowException;
 
+    /// <summary>
+    /// Gets an instance of <see cref="BigMachineCore"/>.
+    /// </summary>
+    public BigMachineCore Core { get; private set; }
+
     public DateTime LastRun { get; private set; }
 
-    private BigMachineCore core;
     private ExceptionHandlerDelegate exceptionHandler = DefaultExceptionHandler;
     private ConcurrentQueue<BigMachineException> exceptionQueue = new();
 

@@ -8,7 +8,7 @@ namespace BigMachines.Redesign;
 
 public partial class BigMachineBase
 {
-    internal class BigMachineCore : TaskCore
+    public class BigMachineCore : TaskCore
     {
         public BigMachineCore(BigMachineBase bigMachine)
             : base(null, Process, false)

@@ -2,7 +2,6 @@
 
 using System;
 using System.Linq;
-using System.Runtime.CompilerServices;
 using BigMachines.Redesign;
 using Tinyhand;
 using Tinyhand.IO;
@@ -16,9 +15,7 @@ public partial class TestBigMachine : BigMachineBase, ITinyhandSerialize<TestBig
 
     public TestBigMachine()
     {
-        this.TestMachines = new();
         this.TestMachines.Prepare(this);
-        this.SingleMachine = new();
         this.SingleMachine.Prepare(this);
 
         controls = new MachineControl[] { this.TestMachines, this.SingleMachine, };
@@ -27,9 +24,13 @@ public partial class TestBigMachine : BigMachineBase, ITinyhandSerialize<TestBig
     public override MachineControl[] GetArray()
         => controls;
 
-    public UnorderedMachineControl<int, TestMachine, TestMachine.Interface> TestMachines { get; private set; }
+    private UnorderedMachineControl<int, TestMachine, TestMachine.Interface> testMachines = new();
 
-    public SingleMachineControl<SingleMachine, SingleMachine.Interface> SingleMachine { get; private set; }
+    public UnorderedMachineControl<int, TestMachine, TestMachine.Interface> TestMachines => this.testMachines;
+
+    private SingleMachineControl<SingleMachine, SingleMachine.Interface> singleMachine = new();
+
+    public SingleMachineControl<SingleMachine, SingleMachine.Interface> SingleMachine => this.singleMachine;
 
     static void ITinyhandSerialize<TestBigMachine>.Serialize(ref TinyhandWriter writer, scoped ref TestBigMachine? value, TinyhandSerializerOptions options)
     {
@@ -58,7 +59,29 @@ public partial class TestBigMachine : BigMachineBase, ITinyhandSerialize<TestBig
 
     static void ITinyhandSerialize<TestBigMachine>.Deserialize(ref TinyhandReader reader, scoped ref TestBigMachine? value, TinyhandSerializerOptions options)
     {
-        throw new System.NotImplementedException();
+        if (reader.TryReadNil())
+        {
+            return;
+        }
+
+        value ??= new();
+        var count = reader.ReadMapHeader2();
+        while (count-- > 0)
+        {
+            var id = reader.ReadInt32();
+            if (id == 0)
+            {
+                TinyhandSerializer.DeserializeObject(ref reader, ref value.singleMachine!, options);
+            }
+            else if (id == 1)
+            {
+                TinyhandSerializer.DeserializeObject(ref reader, ref value.testMachines!, options);
+            }
+            else
+            {
+                reader.Skip();
+            }
+        }
     }
 
     IStructualRoot? IStructualObject.StructualRoot { get; set; }
