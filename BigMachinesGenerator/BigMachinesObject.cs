@@ -779,7 +779,7 @@ ModuleInitializerClass_Added:
     {
         if (this.CommandMethodList is null || this.CommandMethodList.Count == 0)
         {
-            // return;
+            return;
         }
 
         ssb.AppendLine($"public CommandList Command => new(({this.LocalName})this.Machine);");
@@ -790,7 +790,11 @@ ModuleInitializerClass_Added:
             ssb.AppendLine($"private readonly {this.LocalName} machine;");
             ssb.AppendLine();
 
-            //Command
+            // Generate commands
+            foreach (var x in this.CommandMethodList)
+            {
+                x.GenerateCommand(ssb, info);
+            }
         }
     }
 
@@ -850,7 +854,7 @@ ModuleInitializerClass_Added:
         ssb.AppendLine();
     }
 
-    internal void Generate_InternalCommand(ScopingStringBuilder ssb, GeneratorInformation info)
+    /*internal void Generate_InternalCommand(ScopingStringBuilder ssb, GeneratorInformation info)
     {
         if (this.MachineObject == null || this.IdentifierObject == null || this.CommandMethodList == null)
         {
@@ -899,7 +903,7 @@ ModuleInitializerClass_Added:
         }
 
         ssb.AppendLine();
-    }
+    }*/
 
     internal void Generate_ChangeStateInternal(ScopingStringBuilder ssb, GeneratorInformation info)
     {
@@ -997,5 +1001,21 @@ ModuleInitializerClass_Added:
             var continuous = "false";
             ssb.AppendLine($"MachineRegistry.Register(new({machineId}, {machineType}, {constructor}, {serializable}, {identifierType}, {continuous}));");
         }
+    }
+
+    internal string[] Method_ParameterNames()
+    {
+        if (this.symbol is IMethodSymbol ms)
+        {
+            var names = new string[ms.Parameters.Length];
+            for (var i = 0; i < names.Length; i++)
+            {
+                names[i] = ms.Parameters[i].Name;
+            }
+
+            return names;
+        }
+
+        return Array.Empty<string>();
     }
 }

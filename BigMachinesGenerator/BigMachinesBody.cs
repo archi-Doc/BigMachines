@@ -37,6 +37,8 @@ public class BigMachinesBody : VisceralBody<BigMachinesObject>
 
     public const string StateResultFullName = BigMachineNamespace + ".StateResult";
     public const string StateParameterFullName = BigMachineNamespace + ".StateParameter";
+    public const string CommandResultResultFullName = BigMachineNamespace + ".CommandResult";
+    public const string CommandResultResultFullName2 = BigMachineNamespace + ".CommandResult<TResponse>";
     public const string TaskFullName = "System.Threading.Tasks.Task";
     public const string TaskFullName2 = "System.Threading.Tasks.Task<TResult>";
     public const string CommandParameterFullName = BigMachineNamespace + ".CommandPost<{0}>.Command";
@@ -94,7 +96,7 @@ public class BigMachinesBody : VisceralBody<BigMachinesObject>
         category: "BigMachinesGenerator", DiagnosticSeverity.Error, isEnabledByDefault: true);
 
     public static readonly DiagnosticDescriptor Error_MethodFormat2 = new DiagnosticDescriptor(
-        id: "BMG014", title: "Invalid method", messageFormat: "Command method must be in the format of 'void Method()', 'Task Method()', 'TResponse Method()', 'Task<TResponse> Method()', 'void Method(TMessage)', 'Task Method(TMessage)', 'TResponse Method(TMessage)', 'Task<TResponse> Method(TMessage)'",
+        id: "BMG014", title: "Invalid method", messageFormat: "Command method must be in the format of 'CommandResult Method(any param)' or 'CommandResult<TResponse> Method(any param)'",
         category: "BigMachinesGenerator", DiagnosticSeverity.Error, isEnabledByDefault: true);
 
     public static readonly DiagnosticDescriptor Warning_MachineWithoutIdentifier = new DiagnosticDescriptor(

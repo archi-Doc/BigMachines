@@ -70,7 +70,7 @@ public class StateMethod
         var stateId = methodAttribute.StateId;
         if (stateId == uint.MaxValue)
         {
-            stateId = (uint)FarmHash.Hash64(method.LocalName);
+            stateId = (uint)FarmHash.Hash64(method.SimpleName);
         }
 
         var stateMethod = new StateMethod();

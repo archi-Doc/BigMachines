@@ -5,6 +5,7 @@ using System.Collections.Generic;
 using System.Text;
 using Arc.Visceral;
 using Microsoft.CodeAnalysis;
+using Tinyhand;
 
 namespace BigMachines.Generator;
 
@@ -23,55 +24,18 @@ public class CommandMethod
             return null;
         }
 
-        BigMachinesObject? responseObject = null;
-        string? messageFullName = null;
-
-        var flag = false;
-        if (method.Method_Parameters.Length == 0)
-        {// No message
-        }
-        else if (method.Method_Parameters.Length == 1)
-        {// TMessage
-            messageFullName = method.Method_Parameters[0];
-        }
-        else
-        {// Invalid parameter
-            flag = true;
-        }
-
         var returnObject = method.Method_ReturnObject;
-        var returnTypeName = returnObject?.FullName;
-        var returnTask = false;
-        if (returnTypeName == "void")
-        {// void (Sync + no responce)
+        BigMachinesObject? responseObject = null;
+        if (returnObject?.FullName == BigMachinesBody.CommandResultResultFullName)
+        {
         }
-        else if (returnTypeName == BigMachinesBody.TaskFullName)
-        {// Task (Async + no responce)
-            returnTask = true;
-        }
-        else if (returnObject?.Generics_Kind == VisceralGenericsKind.ClosedGeneric &&
-            returnObject.OriginalDefinition?.FullName == BigMachinesBody.TaskFullName2 &&
-            returnObject?.Generics_Arguments is { } args &&
-            args.Length == 1)
-        {// Task<TResponse> (Async + Response)
-            returnTask = true;
-            responseObject = args[0];
+        else if (returnObject?.OriginalDefinition?.FullName == BigMachinesBody.CommandResultResultFullName2)
+        {
+            responseObject = returnObject.Generics_Arguments[0];
         }
         else
-        {// Other (Sync + Response)
-            returnTask = false;
-            responseObject = returnObject;
-        }
-
-        if (flag)
         {
-            string? identifierTypeName = string.Empty;
-            if (machine.IdentifierObject != null)
-            {
-                identifierTypeName = machine.IdentifierObject.SimpleName;
-            }
-
-            method.Body.ReportDiagnostic(BigMachinesBody.Error_MethodFormat2, attribute.Location, method.SimpleName, identifierTypeName);
+            method.Body.ReportDiagnostic(BigMachinesBody.Error_MethodFormat2, method.Location);
         }
 
         if (method.Body.Abort)
@@ -79,19 +43,26 @@ public class CommandMethod
             return null;
         }
 
+        var commandId = methodAttribute.CommandId;
+        if (commandId == uint.MaxValue)
+        {
+            commandId = (uint)FarmHash.Hash64(method.SimpleName);
+        }
+
         var commandMethod = new CommandMethod();
         commandMethod.Location = attribute.Location;
+        commandMethod.Method = method;
         commandMethod.Name = method.SimpleName;
-        commandMethod.Id = methodAttribute.CommandId;
-        commandMethod.ReturnTask = returnTask;
+        commandMethod.Id = commandId;
         commandMethod.WithLock = methodAttribute.WithLock;
         commandMethod.ResponseObject = responseObject;
-        commandMethod.MessageFullName = messageFullName;
 
         return commandMethod;
     }
 
     public Location Location { get; private set; } = Location.None;
+
+    public BigMachinesObject? Method { get; private set; }
 
     public string Name { get; private set; } = string.Empty;
 
@@ -99,11 +70,63 @@ public class CommandMethod
 
     public bool DuplicateId { get; internal set; }
 
-    public bool ReturnTask { get; internal set; }
-
     public bool WithLock { get; internal set; }
 
     public BigMachinesObject? ResponseObject { get; private set; }
 
-    public string? MessageFullName { get; private set; }
+    public void GenerateCommand(ScopingStringBuilder ssb, GeneratorInformation info)
+    {
+        if (this.Method is null)
+        {
+            return;
+        }
+
+        var commandResult = this.ResponseObject is null ? "CommandResult" : $"CommandResult<{this.ResponseObject.FullName}>";
+
+        StringBuilder? sb = null;
+        var types = this.Method.Method_Parameters;
+        var names = this.Method.Method_ParameterNames();
+        for (var i = 0; i < types.Length; i++)
+        {
+            if (sb is null)
+            {
+                sb = new();
+            }
+            else
+            {
+                sb.Append(", ");
+            }
+
+            sb.Append(types[i]);
+            sb.Append(" ");
+            sb.Append(names[i]);
+        }
+
+        using (var method = ssb.ScopeBrace($"public async Task<{commandResult}> {this.Name}({sb?.ToString()})"))
+        {
+            if (this.WithLock)
+            {
+                ssb.AppendLine("await this.machine.Semaphore.EnterAsync().ConfigureAwait(false);");
+                ssb.AppendLine("try {");
+                ssb.IncrementIndent();
+            }
+
+            if (this.ResponseObject is null)
+            {
+                ssb.AppendLine("if (this.machine.operationalState == OperationalFlag.Terminated) return CommandResult.Terminated;");
+            }
+            else
+            {
+                ssb.AppendLine("if (this.machine.operationalState == OperationalFlag.Terminated) return new(CommandResult.Terminated, default);");
+            }
+
+            ssb.AppendLine($"return this.machine.{this.Name}({string.Join(", ", names)});");
+
+            if (this.WithLock)
+            {
+                ssb.DecrementIndent();
+                ssb.AppendLine("} finally { this.machine.Semaphore.Exit(); }");
+            }
+        }
+    }
 }

@@ -85,7 +85,7 @@ public sealed class MachineObjectAttribute : Attribute
 #pragma warning disable SA1629
 
 /// <summary>
-/// Adds the state method to the machine.<br/>
+/// Adds a state method to the machine.<br/>
 /// The format of the method is as follows: <br/><br/>
 /// <see langword="protected"/> <see cref="StateResult"/> ExampleState(<see cref="StateParameter"/> parameter)<br/>
 ///  => <see cref="StateResult.Continue"/>;<br/><br/>
@@ -119,16 +119,13 @@ public sealed class StateMethodAttribute : Attribute
 
 #pragma warning disable SA1629
 /// <summary>
-/// Adds a command method to the machine.<br/><br/>
-/// The format of the method is as follows: <br/>
-/// <see langword="protected"/> <see langword="void"/> ExampleCommand()<br/>
-/// <see langword="protected"/> <see langword="void"/> ExampleCommand(TMessage message)<br/>
-/// <see langword="protected"/> TResponse ExampleCommand()<br/>
-/// <see langword="protected"/> TResponse ExampleCommand(TMessage message)<br/>
-/// <see langword="protected"/> <see langword="async"/> Task ExampleCommand()<br/>
-/// <see langword="protected"/> <see langword="async"/> Task ExampleCommand(TMessage message)<br/>
-/// <see langword="protected"/> <see langword="async"/> Task&lt;TResponse&gt; ExampleCommand()<br/>
-/// <see langword="protected"/> <see langword="async"/> Task&lt;TResponse&gt; ExampleCommand(TMessage message)<br/>
+/// Adds a command method to the machine.<br/>
+/// Command methods are executed asynchronously.<br/>
+/// The format of the method is as follows: <br/><br/>
+/// <see langword="protected"/> <see cref="CommandResult"/> ExampleCommand(any param)<br/>
+/// => <see cref="CommandResult.Success"/>;<br/><br/>
+/// <see langword="protected"/> <see cref="CommandResult{TResponse}"/> ExampleCommand(any param)<br/>
+/// => new(<see cref="CommandResult.Success"/>, response);
 /// </summary>
 #pragma warning restore SA1629
 [AttributeUsage(AttributeTargets.Method, AllowMultiple = false, Inherited = true)]

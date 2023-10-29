@@ -38,7 +38,19 @@ public partial class TinyMachine : Machine<int>
     }
 
     [CommandMethod]
-    public async Task<CommandResult> FirstCommand()
+    public CommandResult FirstCommand(string name, int age)
+    {
+        return CommandResult.Success;
+    }
+
+    [CommandMethod]
+    public CommandResult<int> SecondCommand()
+    {
+        return new(CommandResult.Success, 2);
+    }
+
+    [CommandMethod(WithLock = false)]
+    public CommandResult ThirdCommand()
     {
         return CommandResult.Success;
     }
