@@ -275,7 +275,7 @@ public abstract partial class Machine
     [IgnoreMember]
     protected object? interfaceInstance;
 
-    internal virtual ManMachineInterface InterfaceInstance => default!; // tempcode
+    public virtual ManMachineInterface InterfaceInstance => default!; // tempcode
 
     /// <summary>
     /// Gets or sets a value indicating whether the machine is going to re-run.

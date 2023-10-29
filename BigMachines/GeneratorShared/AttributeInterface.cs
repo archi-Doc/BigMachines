@@ -35,17 +35,17 @@ public sealed class MachineObjectAttribute : Attribute
     /// <summary>
     /// Initializes a new instance of the <see cref="MachineObjectAttribute"/> class.
     /// </summary>
-    /// <param name="typeId">Machine Type id used for serialization.<br/>
-    /// Type id can be a random number, but it must be unique.</param>
-    public MachineObjectAttribute(uint typeId)
+    /// <param name="machineId">Machine id used for serialization.<br/>
+    /// Machine id can be a random number, but it must be unique.</param>
+    public MachineObjectAttribute(uint machineId = 0)
     {
-        this.MachineTypeId = typeId;
+        this.MachineId = machineId;
     }
 
     /// <summary>
     /// Gets a type id (unique identifier for serialization) of the machine.
     /// </summary>
-    public uint MachineTypeId { get; }
+    public uint MachineId { get; }
 
     /// <summary>
     /// Gets or sets a value indicating whether or not the machine is continuous machine (runs continuously and uses one thread).

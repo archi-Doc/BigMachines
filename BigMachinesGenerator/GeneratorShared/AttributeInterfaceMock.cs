@@ -95,9 +95,7 @@ public sealed class MachineObjectAttributeMock : Attribute
     {
     }
 
-    public uint MachineTypeId { get; set; }
-
-    public ISymbol? Group { get; set; }
+    public uint MachineId { get; set; }
 
     public bool Continuous { get; set; }
 
@@ -106,16 +104,10 @@ public sealed class MachineObjectAttributeMock : Attribute
         var attribute = new MachineObjectAttributeMock();
         object? val;
 
-        val = AttributeHelper.GetValue(0, nameof(MachineTypeId), constructorArguments, namedArguments);
+        val = AttributeHelper.GetValue(0, nameof(MachineId), constructorArguments, namedArguments);
         if (val != null)
         {
-            attribute.MachineTypeId = (uint)val;
-        }
-
-        val = AttributeHelper.GetValue(-1, nameof(Group), constructorArguments, namedArguments);
-        if (val != null)
-        {
-            attribute.Group = val as ISymbol;
+            attribute.MachineId = (uint)val;
         }
 
         val = AttributeHelper.GetValue(-1, nameof(Continuous), constructorArguments, namedArguments);

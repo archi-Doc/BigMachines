@@ -27,7 +27,7 @@ public partial class SingleMachine : Machine
         First = 1,
     }
 
-    internal override ManMachineInterface InterfaceInstance
+    public override ManMachineInterface InterfaceInstance
     {
         get
         {

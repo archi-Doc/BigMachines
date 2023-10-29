@@ -43,7 +43,7 @@ public partial class TestMachine : Machine<int>
         First = 1,
     }
 
-    internal override ManMachineInterface InterfaceInstance
+    /*public override ManMachineInterface InterfaceInstance
     {
         get
         {
@@ -55,10 +55,12 @@ public partial class TestMachine : Machine<int>
 
             return obj;
         }
-    }
+    }*/
+
+    public override ManMachineInterface InterfaceInstance => (ManMachineInterface)(this.interfaceInstance ??= new Interface(this));
 
     public class Interface : ManMachineInterface<int, State>
-    {
+    {// int: this.IdentifierObject!.FullName, State
         public Interface(TestMachine machine)
             : base(machine)
         {

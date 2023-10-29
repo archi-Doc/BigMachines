@@ -29,7 +29,7 @@ public partial class TestBigMachine2
 }
 
 
-[MachineObject(333)]
+[MachineObject]
 public partial class TinyMachine : Machine<int>
 {
     public TinyMachine()
@@ -38,13 +38,16 @@ public partial class TinyMachine : Machine<int>
     }
 }
 
-[TinyhandObject]
-[MachineObject(22)]
-public partial class TinyMachine2 : Machine<int>
+public partial class ParentClass
 {
-    public TinyMachine2()
-        : base()
+    [TinyhandObject]
+    [MachineObject(22)]
+    public partial class TinyMachine2<TData> : Machine
     {
+        public TinyMachine2()
+            : base()
+        {
+        }
     }
 }
 

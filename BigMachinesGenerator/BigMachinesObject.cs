@@ -5,6 +5,7 @@ using System.Collections.Generic;
 using System.Linq;
 using Arc.Visceral;
 using Microsoft.CodeAnalysis;
+using Tinyhand;
 
 #pragma warning disable SA1202 // Elements should be ordered by access
 #pragma warning disable SA1204 // Static elements should appear before instance elements
@@ -164,11 +165,22 @@ public class BigMachinesObject : VisceralObjectBase<BigMachinesObject>
 
     private void ConfigureObject()
     {
+        if (this.ObjectAttribute is null)
+        {
+            return;
+        }
+
         // Used keywords
         this.Identifier = new VisceralIdentifier("__gen_bm_identifier__");
         foreach (var x in this.AllMembers.Where(a => a.ContainingObject == this))
         {
             this.Identifier.Add(x.SimpleName);
+        }
+
+        // Machine id
+        if (this.ObjectAttribute.MachineId == 0)
+        {
+            this.ObjectAttribute.MachineId = (uint)FarmHash.Hash64(this.FullName);
         }
     }
 
@@ -271,7 +283,7 @@ public class BigMachinesObject : VisceralObjectBase<BigMachinesObject>
             }
         }
 
-        var id = this.ObjectAttribute!.MachineTypeId;
+        var id = this.ObjectAttribute!.MachineId;
         if (this.Body.Machines.ContainsKey(id))
         {
             this.Body.ReportDiagnostic(BigMachinesBody.Error_DuplicateTypeId, this.Location, id);
@@ -282,12 +294,10 @@ public class BigMachinesObject : VisceralObjectBase<BigMachinesObject>
         }
 
         // MachineGroup
-        if (this.ObjectAttribute.Group != null)
+        /*if (this.ObjectAttribute.Group != null)
         {
             this.GroupType = this.ObjectAttribute.Group.ToDisplayString();
-
-            // this.Body.ReportDiagnostic(BigMachinesBody.Error_GroupType, this.Location);
-        }
+        }*/
 
         // Machine<TIdentifier>
         var machineObject = this.BaseObject;
@@ -295,6 +305,10 @@ public class BigMachinesObject : VisceralObjectBase<BigMachinesObject>
         while (machineObject != null)
         {
             if (machineObject.OriginalDefinition?.FullName == $"{BigMachinesBody.BigMachineNamespace}.Machine<TIdentifier>")
+            {
+                break;
+            }
+            else if (machineObject.OriginalDefinition?.FullName == $"{BigMachinesBody.BigMachineNamespace}.Machine")
             {
                 break;
             }
@@ -318,12 +332,13 @@ public class BigMachinesObject : VisceralObjectBase<BigMachinesObject>
         }
         else
         {
+            this.MachineObject = machineObject;
+            this.StateName = this.FullName + "." + BigMachinesBody.StateIdentifier;
+            this.CommandName = this.FullName + "." + BigMachinesBody.CommandIdentifier;
+
             if (machineObject.Generics_Arguments.Length == 1)
             {
-                this.MachineObject = machineObject;
                 this.IdentifierObject = machineObject.Generics_Arguments[0];
-                this.StateName = this.FullName + "." + BigMachinesBody.StateIdentifier;
-                this.CommandName = this.FullName + "." + BigMachinesBody.CommandIdentifier;
             }
 
             if (this.Generics_Kind == VisceralGenericsKind.OpenGeneric)
@@ -522,7 +537,7 @@ ModuleInitializerClass_Added:
                 {
                     foreach (var x in list3)
                     {
-                        ssb.AppendLine($"{x.FullName}.RegisterBM({x.ObjectAttribute!.MachineTypeId});");
+                        ssb.AppendLine($"{x.FullName}.RegisterBM({x.ObjectAttribute!.MachineId});");
                     }
                 }
             }
@@ -544,7 +559,7 @@ ModuleInitializerClass_Added:
 
                 if (x.Generics_Kind != VisceralGenericsKind.OpenGeneric)
                 {// Register fixed types.
-                    ssb.AppendLine($"{x.FullName}.RegisterBM({x.ObjectAttribute.MachineTypeId});");
+                    ssb.AppendLine($"{x.FullName}.RegisterBM({x.ObjectAttribute.MachineId});");
                 }
             }
 
@@ -595,12 +610,13 @@ ModuleInitializerClass_Added:
 
     internal void Generate2(ScopingStringBuilder ssb, GeneratorInformation info)
     {
-        this.Generate_State(ssb, info);
-        this.Generate_Command(ssb, info);
+        this.Generate_State(ssb, info);//
+        // this.Generate_Command(ssb, info);
+        this.Generate_InterfaceInstance(ssb, info);
         this.Generate_Interface(ssb, info);
-        this.Generate_CreateInterface(ssb, info);
+        // this.Generate_CreateInterface(ssb, info);
         this.Generate_InternalRun(ssb, info);
-        this.Generate_InternalCommand(ssb, info);
+        // this.Generate_InternalCommand(ssb, info);
         this.Generate_ChangeStateInternal(ssb, info);
         this.Generate_RegisterBM(ssb, info);
 
@@ -650,6 +666,42 @@ ModuleInitializerClass_Added:
         ssb.AppendLine();
     }
 
+    internal void Generate_InterfaceInstance(ScopingStringBuilder ssb, GeneratorInformation info)
+    {
+        if (this.MachineObject == null)
+        {
+            return;
+        }
+
+        ssb.AppendLine("public override ManMachineInterface InterfaceInstance => (ManMachineInterface)(this.interfaceInstance ??= new Interface(this));");
+
+        /*ssb.AppendLine("public override ManMachineInterface InterfaceInstance");
+        ssb.AppendLine("{");
+        ssb.IncrementIndent();
+
+        ssb.AppendLine("get");
+        ssb.AppendLine("{");
+        ssb.IncrementIndent();
+
+        ssb.AppendLine("if (this.interfaceInstance is not Interface obj)");
+        ssb.AppendLine("{");
+        ssb.IncrementIndent();
+
+        ssb.AppendLine("obj = new(this);");
+        ssb.AppendLine("this.interfaceInstance = obj;");
+
+        ssb.DecrementIndent();
+        ssb.AppendLine("}");
+
+        ssb.AppendLine();
+        ssb.AppendLine("return obj;");
+
+        ssb.DecrementIndent();
+        ssb.AppendLine("}");
+        ssb.DecrementIndent();
+        ssb.AppendLine("}");*/
+    }
+
     internal void Generate_Interface(ScopingStringBuilder ssb, GeneratorInformation info)
     {
         if (this.MachineObject == null)
@@ -657,12 +709,19 @@ ModuleInitializerClass_Added:
             return;
         }
 
-        var identifierName = this.IdentifierObject!.FullName;
-        using (var scope = ssb.ScopeBrace($"public {this.NewIfDerived}class Interface : ManMachineInterface<{identifierName}, {this.StateName}, {this.CommandName}>"))
+        string interfaceName;
+        if (this.IdentifierObject is null)
         {
-            using (var scope2 = ssb.ScopeBrace($"public Interface(IMachineGroup<{identifierName}> group, {identifierName} identifier) : base(group, identifier)"))
-            {
-            }
+            interfaceName = $"public {this.NewIfDerived}class Interface : ManMachineInterface<{this.StateName}>";
+        }
+        else
+        {
+            interfaceName = $"public {this.NewIfDerived}class Interface : ManMachineInterface<{this.IdentifierObject.FullName}, {this.StateName}>";
+        }
+
+        using (var scopeInterface = ssb.ScopeBrace(interfaceName))
+        {
+            ssb.AppendLine($"public Interface({this.LocalName} machine) : base(machine) {{}}");
         }
 
         ssb.AppendLine();
@@ -697,7 +756,7 @@ ModuleInitializerClass_Added:
 
         using (var scope = ssb.ScopeBrace($"protected override async Task<StateResult> {BigMachinesBody.InternalRunIdentifier}(StateParameter parameter)"))
         {
-            ssb.AppendLine($"var state = Unsafe.As<int, {this.StateName}>(ref this.CurrentState);");
+            ssb.AppendLine($"var state = Unsafe.As<int, {this.StateName}>(ref this.machineState);");
             ssb.AppendLine("return state switch");
             ssb.AppendLine("{");
             ssb.IncrementIndent();
@@ -782,13 +841,13 @@ ModuleInitializerClass_Added:
 
         using (var scope = ssb.ScopeBrace($"protected override ChangeStateResult {BigMachinesBody.InternalChangeState}(int state, bool rerun)"))
         {
-            using (var scopeElse = ssb.ScopeBrace("if (this.CurrentState == state)"))
+            using (var scopeElse = ssb.ScopeBrace("if (this.machineState == state)"))
             {
                 ssb.AppendLine("return ChangeStateResult.Success;");
             }
 
             ssb.AppendLine();
-            ssb.AppendLine($"var current = Unsafe.As<int, {this.StateName}>(ref this.CurrentState);");
+            ssb.AppendLine($"var current = Unsafe.As<int, {this.StateName}>(ref this.machineState);");
             ssb.AppendLine("bool canExit = current switch");
             ssb.AppendLine("{");
             ssb.IncrementIndent();
@@ -838,7 +897,7 @@ ModuleInitializerClass_Added:
 
             using (var scope2 = ssb.ScopeBrace("else"))
             {
-                ssb.AppendLine($"this.CurrentState = state;");
+                ssb.AppendLine($"this.MachineState = state;");
                 using (var scope3 = ssb.ScopeBrace("if (rerun)"))
                 {
                     ssb.AppendLine($"this.RequestRerun = true;");
@@ -850,16 +909,6 @@ ModuleInitializerClass_Added:
         }
 
         ssb.AppendLine();
-        ssb.AppendLine($"protected ChangeStateResult ChangeState({this.StateName} state, bool rerun = false) => this.{BigMachinesBody.InternalChangeState}(Unsafe.As<{this.StateName}, int>(ref state), rerun);");
-        ssb.AppendLine();
-        ssb.AppendLine($"protected {this.NewIfDerived}{this.StateName} GetCurrentState() => Unsafe.As<int, {this.StateName}>(ref this.CurrentState);");
-        ssb.AppendLine();
-
-        /*if (this.DefaultStateMethod != null)
-        {
-            ssb.AppendLine();
-            ssb.AppendLine($"protected override void IntInitState() => this.CurrentState = {this.DefaultStateMethod.Id};");
-        }*/
     }
 
     internal void Generate_RegisterBM(ScopingStringBuilder ssb, GeneratorInformation info)
