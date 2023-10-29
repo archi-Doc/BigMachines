@@ -41,12 +41,24 @@ public partial class TinyMachine : Machine<int>
 public partial class ParentClass
 {
     [TinyhandObject]
-    [MachineObject(22)]
+    [MachineObject(22, Control = MachineControlKind.Single)]
     public partial class TinyMachine2<TData> : Machine
     {
         public TinyMachine2()
             : base()
         {
+        }
+
+        [StateMethod(0)]
+        public StateResult Initial(StateParameter parameter)
+        {
+            return StateResult.Terminate;
+        }
+
+        [StateMethod]
+        public StateResult Second(StateParameter parameter)
+        {
+            return StateResult.Terminate;
         }
     }
 }

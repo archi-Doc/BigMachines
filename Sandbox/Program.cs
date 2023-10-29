@@ -37,14 +37,14 @@ class Program
         // MachineRegistry.Register(new(0, typeof(BigMachines.SingleMachine), typeof(SingleMachineControl<,>)) { Serializable = true, });
         // MachineRegistry.Register(new(1, typeof(BigMachines.TestMachine), typeof(UnorderedMachineControl<,,>)) { Constructor = () => new BigMachines.TestMachine(), IdentifierType = typeof(int), Serializable = true, });
 
-        var testBigMachine = new TestBigMachine();
+        /*var testBigMachine = new TestBigMachine();
         var m = testBigMachine.TestMachines.GetOrCreate(1);
         m = testBigMachine.TestMachines.GetOrCreate(1);
         m.PauseMachine();
         m.UnpauseMachine();
         var m2 = testBigMachine.SingleMachine.Get();
         var bin = TinyhandSerializer.Serialize(testBigMachine);
-        var testBigMachine2 = TinyhandSerializer.Deserialize<TestBigMachine>(bin);
+        var testBigMachine2 = TinyhandSerializer.Deserialize<TestBigMachine>(bin);*/
 
         Console.WriteLine("BigMachines Sandbox");
 

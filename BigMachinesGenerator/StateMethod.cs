@@ -69,7 +69,7 @@ public class StateMethod
         var stateMethod = new StateMethod();
         stateMethod.Location = attribute.Location;
         stateMethod.Name = method.SimpleName;
-        stateMethod.Id = methodAttribute.Id;
+        stateMethod.Id = methodAttribute.StateId;
         stateMethod.ReturnTask = returnTask;
 
         foreach (var x in machine.GetMembers(VisceralTarget.Method))

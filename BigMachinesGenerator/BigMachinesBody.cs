@@ -97,6 +97,10 @@ public class BigMachinesBody : VisceralBody<BigMachinesObject>
         id: "BMG014", title: "Invalid method", messageFormat: "Command method must be in the format of 'void Method()', 'Task Method()', 'TResponse Method()', 'Task<TResponse> Method()', 'void Method(TMessage)', 'Task Method(TMessage)', 'TResponse Method(TMessage)', 'Task<TResponse> Method(TMessage)'",
         category: "BigMachinesGenerator", DiagnosticSeverity.Error, isEnabledByDefault: true);
 
+    public static readonly DiagnosticDescriptor Warning_MachineWithoutIdentifier = new DiagnosticDescriptor(
+        id: "BMG015", title: "Machine control", messageFormat: "'Since the target machine does not have an identifier, MachineControl will be changed to SingleMachineControl",
+        category: "BigMachinesGenerator", DiagnosticSeverity.Warning, isEnabledByDefault: true);
+
     public BigMachinesBody(GeneratorExecutionContext context)
         : base(context)
     {

@@ -315,12 +315,6 @@ public class BigMachinesObject : VisceralObjectBase<BigMachinesObject>
             this.Body.Machines.Add(id, this);
         }
 
-        // MachineControl
-        /*if (this.ObjectAttribute.Group != null)
-        {
-            this.GroupType = this.ObjectAttribute.Group.ToDisplayString();
-        }*/
-
         // Machine<TIdentifier>
         var machineObject = this.BaseObject;
         var derivedMachine = false;
@@ -382,6 +376,35 @@ public class BigMachinesObject : VisceralObjectBase<BigMachinesObject>
                 {
                     this.Body.AddDiagnostic(BigMachinesBody.Error_IdentifierIsNotSerializable, this.IdentifierObject.Location, this.IdentifierObject.FullName);
                 }
+            }
+        }
+
+        // MachineControl
+        if (this.ObjectAttribute.Control == MachineControlKind.Single)
+        {// Single
+            /*if (this.IdentifierObject is not null)
+            {// Change to the unordered control.
+                this.ObjectAttribute.Control = MachineControlKind.Unordered;
+            }*/
+        }
+        else if (this.ObjectAttribute.Control == MachineControlKind.Unordered ||
+            this.ObjectAttribute.Control == MachineControlKind.Sequential)
+        {// Multi
+            if (this.IdentifierObject is null)
+            {// Change to the single control.
+                this.ObjectAttribute.Control = MachineControlKind.Single;
+                this.Body.AddDiagnostic(BigMachinesBody.Warning_MachineWithoutIdentifier, this.Location);
+            }
+        }
+        else
+        {// Default
+            if (this.IdentifierObject is null)
+            {
+                this.ObjectAttribute.Control = MachineControlKind.Single;
+            }
+            else
+            {
+                this.ObjectAttribute.Control = MachineControlKind.Unordered;
             }
         }
 

@@ -49,8 +49,8 @@ where TMachine : Machine
 }
 
 /// <summary>
-/// Enables the state machine features for the target class.<br/>
-/// Class must be a partial type.
+/// Add the attribute to the target class to create a machine.<br/>
+/// The class must be a partial class and inherit from either <see cref="Machine"/> or <see cref="Machine{TIdentifier}"/>.
 /// </summary>
 [AttributeUsage(AttributeTargets.Class, AllowMultiple = false, Inherited = true)]
 public sealed class MachineObjectAttribute : Attribute
@@ -58,8 +58,9 @@ public sealed class MachineObjectAttribute : Attribute
     /// <summary>
     /// Initializes a new instance of the <see cref="MachineObjectAttribute"/> class.
     /// </summary>
-    /// <param name="machineId">Machine id used for serialization.<br/>
-    /// Machine id can be a random number, but it must be unique.</param>
+    /// <param name="machineId">The identifier for the Machine.<br/>
+    /// You can set a random number, but it needs to be unique.<br/>
+    /// If you specify 0, the hash of the class name is used.</param>
     public MachineObjectAttribute(uint machineId = 0)
     {
         this.MachineId = machineId;
@@ -82,12 +83,13 @@ public sealed class MachineObjectAttribute : Attribute
 }
 
 #pragma warning disable SA1629
+
 /// <summary>
-/// Adds the target method to the state machine.<br/>
+/// Adds the state method to the machine.<br/>
 /// The format of the method is as follows: <br/><br/>
-/// <see langword="protected"/> <see cref="StateResult"/> ExampleState(<see cref="StateParameter"/> parameter)<br/>
+/// <see langword="public"/> <see cref="StateResult"/> ExampleState(<see cref="StateParameter"/> parameter)<br/>
 ///  or<br/>
-///  <see langword="protected"/> <see langword="async"/> Task&lt;<see cref="StateResult"/>&gt; ExampleState(<see cref="StateParameter"/> parameter)<br/>
+///  <see langword="public"/> <see langword="async"/> Task&lt;<see cref="StateResult"/>&gt; ExampleState(<see cref="StateParameter"/> parameter)<br/>
 ///  => <see cref="StateResult.Continue"/>;
 /// </summary>
 #pragma warning restore SA1629
@@ -97,20 +99,22 @@ public sealed class StateMethodAttribute : Attribute
     /// <summary>
     /// Initializes a new instance of the <see cref="StateMethodAttribute"/> class.
     /// </summary>
-    /// <param name="id">The identifier used for serialization.<br/>
-    /// 0: Default state method.<br/>
-    /// Id must be a unique number (can be a random number).</param>
-    public StateMethodAttribute(uint id)
+    /// <param name="stateId">The identifier for the state method.<br/>
+    /// State method with an id of 0 is the default (first to be executed) state method and is required to be present in every machine.<br/>
+    /// You can set a random number, but it needs to be unique.<br/>
+    /// If you specify <see cref="uint.MaxValue"/>, the hash of the method name is used.</param>
+    public StateMethodAttribute(uint stateId = uint.MaxValue)
     {
-        this.Id = id;
+        this.StateId = stateId;
     }
 
     /// <summary>
-    /// Gets an identifier used for serialization.<br/>
-    /// 0: Default state method.<br/>
-    /// Id must be a unique number (can be a random number).
+    /// Gets the identifier for the state method.<br/>
+    /// State method with an id of 0 is the default (first to be executed) state method and is required to be present in every machine.<br/>
+    /// You can set a random number, but it needs to be unique.<br/>
+    /// If you specify <see cref="uint.MaxValue"/>, the hash of the method name is used.
     /// </summary>
-    public uint Id { get; }
+    public uint StateId { get; }
 }
 
 #pragma warning disable SA1629

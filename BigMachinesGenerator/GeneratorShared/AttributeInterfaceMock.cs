@@ -116,6 +116,8 @@ public sealed class MachineObjectAttributeMock : Attribute
 
     public uint MachineId { get; set; }
 
+    public MachineControlKind Control { get; set; }
+
     public bool Continuous { get; set; }
 
     public static MachineObjectAttributeMock FromArray(object?[] constructorArguments, KeyValuePair<string, object?>[] namedArguments)
@@ -127,6 +129,12 @@ public sealed class MachineObjectAttributeMock : Attribute
         if (val != null)
         {
             attribute.MachineId = (uint)val;
+        }
+
+        val = AttributeHelper.GetValue(-1, nameof(Control), constructorArguments, namedArguments);
+        if (val != null)
+        {
+            attribute.Control = (MachineControlKind)val;
         }
 
         val = AttributeHelper.GetValue(-1, nameof(Continuous), constructorArguments, namedArguments);
@@ -150,17 +158,17 @@ public sealed class StateMethodAttributeMock : Attribute
     {
     }
 
-    public uint Id { get; set; }
+    public uint StateId { get; set; }
 
     public static StateMethodAttributeMock FromArray(object?[] constructorArguments, KeyValuePair<string, object?>[] namedArguments)
     {
         var attribute = new StateMethodAttributeMock();
         object? val;
 
-        val = AttributeHelper.GetValue(0, nameof(Id), constructorArguments, namedArguments);
+        val = AttributeHelper.GetValue(0, nameof(StateId), constructorArguments, namedArguments);
         if (val != null)
         {
-            attribute.Id = (uint)val;
+            attribute.StateId = (uint)val;
         }
 
         return attribute;
