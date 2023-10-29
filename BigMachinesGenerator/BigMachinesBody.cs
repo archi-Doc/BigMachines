@@ -199,18 +199,26 @@ public class BigMachinesBody : VisceralBody<BigMachinesObject>
 
     private void PrepareBigMachines()
     {
-        // var defaultBigMachine = $"{BigMachinesBody.BigMachineNamespace}.{BigMachinesBody.DefaultBigMachineObject}";
-        var defaultBigMachine = new BigMachine(this, BigMachinesBody.BigMachineNamespace, BigMachinesBody.DefaultBigMachineObject);
-        defaultBigMachine.Default = true;
-        this.BigMachines.Add(defaultBigMachine);
+        BigMachine bigMachine;
+        var defaultFullName = $"{BigMachinesBody.BigMachineNamespace}.{BigMachinesBody.DefaultBigMachineObject}";
 
         var array = this.FullNameToObject.Values.Where(x => x.ObjectFlag.HasFlag(BigMachinesObjectFlag.BigMachineObject)).ToArray();
         foreach (var x in array)
         {
-            var bigMachine = new BigMachine(this, x.Namespace, x.LocalName);
-            this.BigMachines.Remove(bigMachine);
+            bigMachine = new BigMachine(this, x);
             this.BigMachines.Add(bigMachine);
-            bigMachine.Object = x;
+        }
+
+        bigMachine = this.BigMachines.FirstOrDefault(x => x.Object?.FullName == defaultFullName);
+        if (bigMachine is not null)
+        {// Override the default bigmachine.
+            bigMachine.Default = true;
+        }
+        else
+        {// Add
+            var defaultBigMachine = new BigMachine(this, null);
+            defaultBigMachine.Default = true;
+            this.BigMachines.Add(defaultBigMachine);
         }
 
         foreach (var x in this.BigMachines)

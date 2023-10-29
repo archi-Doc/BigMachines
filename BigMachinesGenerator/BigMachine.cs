@@ -9,11 +9,10 @@ namespace BigMachines.Generator;
 
 internal class BigMachine : IEquatable<BigMachine>
 {
-    public BigMachine(BigMachinesBody body, string @namespace, string name)
+    public BigMachine(BigMachinesBody body, BigMachinesObject? obj)
     {
         this.Body = body;
-        this.Namespace = @namespace;
-        this.Name = name;
+        this.Object = obj;
     }
 
     public void AddMachines()
@@ -62,21 +61,17 @@ internal class BigMachine : IEquatable<BigMachine>
 
     public BigMachinesBody Body { get; }
 
-    public string Namespace { get; }
-
-    public string Name { get; }
+    public BigMachinesObject? Object { get; }
 
     public bool Default { get; set; }
-
-    public BigMachinesObject? Object { get; set; }
 
     public Location? Location { get; private set; }
 
     public Dictionary<BigMachinesObject, AddMachineAttributeMock?> AddedMachines { get; } = new();
 
     public override int GetHashCode()
-        => this.Namespace.GetHashCode() ^ this.Name.GetHashCode();
+        => this.Object is null ? 0 : this.Object.GetHashCode();
 
     bool IEquatable<BigMachine>.Equals(BigMachine other)
-        => this.Namespace == other.Namespace && this.Name == other.Name;
+        => this.Object == other.Object;
 }
