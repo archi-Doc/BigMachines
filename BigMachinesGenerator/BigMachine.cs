@@ -15,6 +15,22 @@ internal class BigMachine : IEquatable<BigMachine>
         this.Object = obj;
     }
 
+    public BigMachinesBody Body { get; }
+
+    public BigMachinesObject? Object { get; }
+
+    public bool Default { get; set; }
+
+    public Location? Location { get; private set; }
+
+    public Dictionary<BigMachinesObject, AddMachineAttributeMock?> AddedMachines { get; } = new();
+
+    public override int GetHashCode()
+        => this.Object is null ? 0 : this.Object.GetHashCode();
+
+    bool IEquatable<BigMachine>.Equals(BigMachine other)
+        => this.Object == other.Object;
+
     public void AddMachines()
     {
         var start = AddMachineAttributeMock.FullName + "<";
@@ -59,19 +75,28 @@ internal class BigMachine : IEquatable<BigMachine>
         }
     }
 
-    public BigMachinesBody Body { get; }
+    public void Check()
+    {
+        if (this.Object is null)
+        {
+            return;
+        }
 
-    public BigMachinesObject? Object { get; }
+        if (!this.Object.IsPartial)
+        {
+            this.Body.ReportDiagnostic(BigMachinesBody.Error_NotPartial, this.Object.Location, this.Object.FullName);
+        }
 
-    public bool Default { get; set; }
+        // Parent class also needs to be a partial class.
+        var parent = this.Object.ContainingObject;
+        while (parent != null)
+        {
+            if (!parent.IsPartial)
+            {
+                this.Body.ReportDiagnostic(BigMachinesBody.Error_NotPartialParent, parent.Location, parent.FullName);
+            }
 
-    public Location? Location { get; private set; }
-
-    public Dictionary<BigMachinesObject, AddMachineAttributeMock?> AddedMachines { get; } = new();
-
-    public override int GetHashCode()
-        => this.Object is null ? 0 : this.Object.GetHashCode();
-
-    bool IEquatable<BigMachine>.Equals(BigMachine other)
-        => this.Object == other.Object;
+            parent = parent.ContainingObject;
+        }
+    }
 }

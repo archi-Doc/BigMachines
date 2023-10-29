@@ -8,7 +8,7 @@ using static Sandbox.ParentClass;
 
 namespace Sandbox;
 
-public class TestC
+public partial class TestC
 {
     [BigMachineObject(Default = true)]
     public partial class TestBigMachine2

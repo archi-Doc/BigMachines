@@ -44,7 +44,7 @@ public class BigMachinesBody : VisceralBody<BigMachinesObject>
     public const string CommandParameterFullName = BigMachineNamespace + ".CommandPost<{0}>.Command";
 
     public static readonly DiagnosticDescriptor Error_NotPartial = new DiagnosticDescriptor(
-        id: "BMG001", title: "Not a partial class", messageFormat: "MachineObject '{0}' is not a partial class",
+        id: "BMG001", title: "Not a partial class", messageFormat: "The target class '{0} must be a partial class",
         category: "BigMachinesGenerator", DiagnosticSeverity.Error, isEnabledByDefault: true);
 
     public static readonly DiagnosticDescriptor Error_NotPartialParent = new DiagnosticDescriptor(
@@ -154,6 +154,18 @@ public class BigMachinesBody : VisceralBody<BigMachinesObject>
 
         // BigMachines
         this.PrepareBigMachines();
+
+        // Check
+        foreach (var x in this.BigMachines)
+        {
+            x.Check();
+        }
+
+        this.FlushDiagnostic();
+        if (this.Abort)
+        {
+            return;
+        }
     }
 
     public void Generate(IGeneratorInformation generator, CancellationToken cancellationToken)
