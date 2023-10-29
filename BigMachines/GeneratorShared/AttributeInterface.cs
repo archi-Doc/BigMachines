@@ -4,6 +4,29 @@ using System;
 
 namespace BigMachines;
 
+public enum MachineControlKind
+{
+    /// <summary>
+    /// Assigns <see cref="BigMachines.Control.SingleMachineControl{TMachine, TInterface}"/> if the machine is derived from <see cref="Machine"/>, or <see cref="BigMachines.Control.UnorderedMachineControl{TIdentifier, TMachine, TInterface}"/> if the machine is derived from <see cref="Machine{TIdentifier}"/>.
+    /// </summary>
+    Default,
+
+    /// <summary>
+    /// Manages a single machine (<see cref="BigMachines.Control.SingleMachineControl{TMachine, TInterface}"/>).
+    /// </summary>
+    Single,
+
+    /// <summary>
+    /// Manage multiple machines with identifiers (<see cref="BigMachines.Control.UnorderedMachineControl{TIdentifier, TMachine, TInterface}"/>.
+    /// </summary>
+    Unordered,
+
+    /// <summary>
+    /// Manage multiple machines and run them sequentially (<see cref="BigMachines.Control.SequentialMachineControl{TIdentifier, TMachine, TInterface}"/>.
+    /// </summary>
+    Sequential,
+}
+
 [AttributeUsage(AttributeTargets.Class, AllowMultiple = false, Inherited = true)]
 public sealed class BigMachineObjectAttribute : Attribute
 {
@@ -41,6 +64,11 @@ public sealed class MachineObjectAttribute : Attribute
     {
         this.MachineId = machineId;
     }
+
+    /// <summary>
+    /// Gets or sets a value indicating which <see cref="BigMachines.Control.MachineControl"/> is assigned to the machine.
+    /// </summary>
+    public MachineControlKind Control { get; set; }
 
     /// <summary>
     /// Gets a type id (unique identifier for serialization) of the machine.

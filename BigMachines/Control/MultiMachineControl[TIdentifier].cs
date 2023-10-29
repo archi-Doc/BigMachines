@@ -1,8 +1,6 @@
 ﻿// Copyright (c) All contributors. All rights reserved. Licensed under the MIT license.
 
-using System.Threading.Tasks;
-
-namespace BigMachines;
+namespace BigMachines.Control;
 
 /// <summary>
 /// Represents the abstract class for managing multiple machines.<br/>

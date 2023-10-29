@@ -80,8 +80,6 @@ public class BigMachinesObject : VisceralObjectBase<BigMachinesObject>
 
     public BigMachinesObject? ClosedGenericHint { get; private set; }
 
-    public string? GroupType { get; private set; }
-
     public string NewIfDerived { get; private set; } = string.Empty;
 
     public Arc.Visceral.NullableAnnotation NullableAnnotationIfReferenceType
@@ -293,7 +291,7 @@ public class BigMachinesObject : VisceralObjectBase<BigMachinesObject>
             this.Body.Machines.Add(id, this);
         }
 
-        // MachineGroup
+        // MachineControl
         /*if (this.ObjectAttribute.Group != null)
         {
             this.GroupType = this.ObjectAttribute.Group.ToDisplayString();
@@ -722,9 +720,31 @@ ModuleInitializerClass_Added:
         using (var scopeInterface = ssb.ScopeBrace(interfaceName))
         {
             ssb.AppendLine($"public Interface({this.LocalName} machine) : base(machine) {{}}");
+            // ssb.AppendLine($"private new {this.LocalName} Machine => ({this.LocalName})((ManMachineInterface)this).Machine;");
+
+            this.Generate_CommandList(ssb, info);
         }
 
         ssb.AppendLine();
+    }
+
+    internal void Generate_CommandList(ScopingStringBuilder ssb, GeneratorInformation info)
+    {
+        if (this.CommandMethodList is null || this.CommandMethodList.Count == 0)
+        {
+            // return;
+        }
+
+        ssb.AppendLine($"public CommandList Command => new(({this.LocalName})this.Machine);");
+
+        using (var scopeCommandList = ssb.ScopeBrace("public readonly struct CommandList"))
+        {
+            ssb.AppendLine($"public CommandList({this.LocalName} machine) {{ this.machine = machine; }}");
+            ssb.AppendLine($"private readonly {this.LocalName} machine;");
+            ssb.AppendLine();
+
+            //Command
+        }
     }
 
     internal void Generate_CreateInterface(ScopingStringBuilder ssb, GeneratorInformation info)
@@ -900,7 +920,7 @@ ModuleInitializerClass_Added:
                 ssb.AppendLine($"this.MachineState = state;");
                 using (var scope3 = ssb.ScopeBrace("if (rerun)"))
                 {
-                    ssb.AppendLine($"this.RequestRerun = true;");
+                    ssb.AppendLine($"this.requestRerun = true;");
                 }
 
                 ssb.AppendLine();
@@ -926,6 +946,12 @@ ModuleInitializerClass_Added:
             var hasAsync = hasAsyncMethod ? "true" : "false";
             var continuous = this.ObjectAttribute.Continuous ? "true" : "false";
             ssb.AppendLine($"{BigMachinesBody.BigMachineIdentifier}<{this.IdentifierObject.FullName}>.StaticInfo[typeof({this.FullName}.{BigMachinesBody.InterfaceIdentifier})] = new(typeof({this.FullName}), typeId, {hasAsync}, {continuous}, {constructor}, {group});");
+
+            // 
+            var machineId = this.ObjectAttribute.MachineId.ToString();
+            var machineType = $"typeof({this.FullName})";
+            var controlType = $"typeof()";
+            ssb.AppendLine($"MachineRegistry.Register({});");
         }
     }
 }

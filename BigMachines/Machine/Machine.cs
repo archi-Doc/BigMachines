@@ -5,6 +5,7 @@ using System.Runtime.CompilerServices;
 using System.Threading;
 using System.Threading.Tasks;
 using Arc.Threading;
+using BigMachines.Control;
 using Tinyhand;
 using Tinyhand.IO;
 
@@ -281,7 +282,7 @@ public abstract partial class Machine
     /// Gets or sets a value indicating whether the machine is going to re-run.
     /// </summary>
     [IgnoreMember]
-    private bool requestRerun;
+    protected bool requestRerun;
 
     /// <summary>
     /// Get the serial (unique) number of this machine.

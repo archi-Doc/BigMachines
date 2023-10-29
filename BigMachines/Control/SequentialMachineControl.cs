@@ -9,7 +9,7 @@ using ValueLink;
 #pragma warning disable SA1202
 #pragma warning disable SA1204
 
-namespace BigMachines;
+namespace BigMachines.Control;
 
 public interface ISequentialMachineControl
 {

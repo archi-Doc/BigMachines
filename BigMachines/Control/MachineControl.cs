@@ -3,7 +3,7 @@
 using System;
 using Tinyhand;
 
-namespace BigMachines;
+namespace BigMachines.Control;
 
 /// <summary>
 /// Represents the abstract class for managing machines.

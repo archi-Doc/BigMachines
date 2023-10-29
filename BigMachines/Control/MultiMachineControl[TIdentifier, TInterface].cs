@@ -2,7 +2,7 @@
 
 using System.Threading.Tasks;
 
-namespace BigMachines;
+namespace BigMachines.Control;
 
 /// <summary>
 /// Represents the abstract class for managing machines.<br/>

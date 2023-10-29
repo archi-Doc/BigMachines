@@ -77,6 +77,8 @@ public partial class TestMachine : Machine<int>
                 this.machine = machine;
             }
 
+            private readonly TestMachine machine;
+
             public async Task<CommandResult> Command1()
             {
                 await this.machine.Semaphore.EnterAsync().ConfigureAwait(false);
@@ -95,7 +97,7 @@ public partial class TestMachine : Machine<int>
                 }
             }
 
-            private readonly TestMachine machine;
+
         }
 
         /*public readonly struct CommandAll

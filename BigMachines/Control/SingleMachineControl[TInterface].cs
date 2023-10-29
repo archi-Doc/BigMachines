@@ -6,7 +6,7 @@ using Tinyhand.IO;
 
 #pragma warning disable SA1202
 
-namespace BigMachines;
+namespace BigMachines.Control;
 
 /// <summary>
 /// Represents a class for managing single machine.<br/>

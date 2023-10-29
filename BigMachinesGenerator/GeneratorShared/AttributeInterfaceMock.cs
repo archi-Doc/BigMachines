@@ -5,10 +5,29 @@ using System.Collections.Generic;
 using System.Linq;
 using Microsoft.CodeAnalysis;
 
+#pragma warning disable SA1602
+
 namespace BigMachines.Generator;
+
+public enum MachineControlKind
+{
+    Default,
+    Single,
+    Unordered,
+    Sequential,
+}
 
 public static class AttributeHelper
 {
+    public static string MachineControlKindToString(this MachineControlKind kind)
+        => kind switch
+        {
+            MachineControlKind.Single => "BigMachines.Control.SingleMachineControl<,>",
+            MachineControlKind.Unordered => "BigMachines.Control.UnorderedMachineControl<,,>",
+            MachineControlKind.Sequential => "BigMachines.Control.SequentialMachineControl<,,>",
+            _ => string.Empty,
+        };
+
     public static object? GetValue(int constructorIndex, string? name, object?[] constructorArguments, KeyValuePair<string, object?>[] namedArguments)
     {
         if (constructorIndex >= 0 && constructorIndex < constructorArguments.Length)
