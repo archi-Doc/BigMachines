@@ -87,9 +87,9 @@ public sealed class MachineObjectAttribute : Attribute
 /// <summary>
 /// Adds the state method to the machine.<br/>
 /// The format of the method is as follows: <br/><br/>
-/// <see langword="public"/> <see cref="StateResult"/> ExampleState(<see cref="StateParameter"/> parameter)<br/>
+/// <see langword="protected"/> <see cref="StateResult"/> ExampleState(<see cref="StateParameter"/> parameter)<br/>
 ///  => <see cref="StateResult.Continue"/>;<br/><br/>
-///  <see langword="public"/> <see langword="async"/> Task&lt;<see cref="StateResult"/>&gt; ExampleState(<see cref="StateParameter"/> parameter)<br/>
+///  <see langword="protected"/> <see langword="async"/> Task&lt;<see cref="StateResult"/>&gt; ExampleState(<see cref="StateParameter"/> parameter)<br/>
 ///  => <see cref="StateResult.Terminate"/>;
 /// </summary>
 #pragma warning restore SA1629
@@ -140,7 +140,7 @@ public sealed class CommandMethodAttribute : Attribute
     /// <param name="commandId">The identifier for the command method.<br/>
     /// You can set a random number, but it needs to be unique.<br/>
     /// If you specify <see cref="uint.MaxValue"/>, the hash of the method name is used.</param>
-    public CommandMethodAttribute(uint commandId)
+    public CommandMethodAttribute(uint commandId = uint.MaxValue)
     {
         this.CommandId = commandId;
     }

@@ -4,30 +4,30 @@ using System;
 using System.Threading.Tasks;
 using BigMachines;
 using Tinyhand;
+using static Sandbox.ParentClass;
 
 namespace Sandbox;
 
 public class TestC
 {
+    [BigMachineObject(Default = true)]
+    public partial class TestBigMachine2
+    {
+        public TestBigMachine2()
+        {
+        }
+    }
 }
 
 [BigMachineObject]
 public partial class TestBigMachine
 {
     [AddMachine<TinyMachine>(Volatile = true)]
+    [AddMachine<TinyMachine2<int>>]
     public TestBigMachine()
-    {
+    {// MachineRegistry.Register(new(721092537, typeof(Sandbox.TinyMachine2<int>), () => new TinyMachine2<int>(), false, null, false));
     }
 }
-
-[BigMachineObject(Default = true)]
-public partial class TestBigMachine2
-{
-    public TestBigMachine2()
-    {
-    }
-}
-
 
 [MachineObject]
 public partial class TinyMachine : Machine<int>
@@ -36,7 +36,49 @@ public partial class TinyMachine : Machine<int>
         : base()
     {
     }
+
+    [CommandMethod]
+    public async Task<CommandResult> FirstCommand()
+    {
+        return CommandResult.Success;
+    }
 }
+
+[MachineObject]
+public partial class AccessibilityMachine : Machine
+{
+    public AccessibilityMachine()
+        : base()
+    {
+    }
+
+    [StateMethod(0)]
+    public StateResult PublicState(StateParameter parameter)
+    {
+        return StateResult.Terminate;
+    }
+
+    [StateMethod]
+    protected StateResult ProtectedState(StateParameter parameter)
+    {
+        return StateResult.Terminate;
+    }
+
+    [StateMethod]
+    private StateResult PrivateState(StateParameter parameter)
+    {
+        return StateResult.Terminate;
+    }
+}
+
+/*[MachineObject]
+public partial class AccessibilityMachine2 : AccessibilityMachine
+{// PrivateState() is currently not supported.
+    public AccessibilityMachine2()
+        : base()
+    {
+    }
+}*/
 
 public partial class ParentClass
 {
@@ -63,6 +105,35 @@ public partial class ParentClass
 
         [StateMethod]
         public async Task<StateResult> Third(StateParameter parameter)
+        {
+            return StateResult.Terminate;
+        }
+    }
+
+    [MachineObject]
+    private partial class PrivateMachine : Machine
+    {
+        public PrivateMachine()
+            : base()
+        {
+        }
+
+        [StateMethod(0)]
+        public StateResult Initial(StateParameter parameter)
+            => StateResult.Terminate;
+    }
+
+    // [MachineObject]
+    public partial class TinyMachine3<TIdentifier> : Machine<TIdentifier>
+        where TIdentifier : notnull
+    {
+        public TinyMachine3()
+            : base()
+        {
+        }
+
+        [StateMethod(0)]
+        public StateResult Initial(StateParameter parameter)
         {
             return StateResult.Terminate;
         }

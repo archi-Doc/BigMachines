@@ -97,6 +97,34 @@ public partial class TestMachine : Machine<int>
                     this.machine.Semaphore.Exit();
                 }
             }
+
+            public async Task<CommandResult<int>> Command2()
+            {
+                await this.machine.Semaphore.EnterAsync().ConfigureAwait(false);
+                try
+                {
+                    if (this.machine.operationalState == OperationalFlag.Terminated)
+                    {
+                        return new(CommandResult.Terminated, default);
+                    }
+
+                    return this.machine.Command2();
+                }
+                finally
+                {
+                    this.machine.Semaphore.Exit();
+                }
+            }
+
+            public async Task<CommandResult> Command3()
+            {
+                if (this.machine.operationalState == OperationalFlag.Terminated)
+                {
+                    return CommandResult.Terminated;
+                }
+
+                return this.machine.Command3();
+            }
         }
 
         /*public readonly struct CommandAll
@@ -134,6 +162,16 @@ public partial class TestMachine : Machine<int>
     }
 
     protected CommandResult Command1()
+    {
+        return CommandResult.Success;
+    }
+
+    protected CommandResult<int> Command2()
+    {
+        return new(CommandResult.Success, 1);
+    }
+
+    protected CommandResult Command3()
     {
         return CommandResult.Success;
     }

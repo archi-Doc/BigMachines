@@ -560,7 +560,7 @@ ModuleInitializerClass_Added:
             }
         }*/
 
-        string? loaderIdentifier = null;
+        /*string? loaderIdentifier = null;
         var list3 = list2.Where(x => x.ObjectFlag.HasFlag(BigMachinesObjectFlag.IsSimpleGenericMachine)).ToArray();
         if (list3.Length > 0)
         {
@@ -586,7 +586,7 @@ ModuleInitializerClass_Added:
                     }
                 }
             }
-        }
+        }*/
 
         if (parent != null)
         {
@@ -597,7 +597,7 @@ ModuleInitializerClass_Added:
         {
             foreach (var x in list2)
             {
-                if (x.ObjectAttribute == null || x.IdentifierObject == null)
+                if (x.ObjectAttribute == null)
                 {
                     continue;
                 }
@@ -613,10 +613,10 @@ ModuleInitializerClass_Added:
                 ssb.AppendLine($"{x.FullName}.RegisterBM();");
             }
 
-            if (loaderIdentifier != null)
+            /*if (loaderIdentifier != null)
             {// Loader
                 ssb.AppendLine($"MachineLoader.Add(typeof({loaderIdentifier}<>));");
-            }
+            }*/
         }
     }
 
@@ -982,14 +982,14 @@ ModuleInitializerClass_Added:
 
     internal void Generate_RegisterBM(ScopingStringBuilder ssb, GeneratorInformation info)
     {
-        if (this.MachineObject == null || this.IdentifierObject == null || this.ObjectAttribute == null)
+        if (this.MachineObject == null || this.ObjectAttribute == null)
         {
             return;
         }
 
         using (var scope = ssb.ScopeBrace($"public static {this.NewIfDerived}void RegisterBM(uint typeId)"))
         {// public record MachineInformation(int Id, Type MachineType, Func<Machine>? Constructor, bool Serializable, Type? IdentifierType, bool Continuous)
-            var machineId = this.ObjectAttribute.MachineId.ToString();
+            var machineId = $"{this.ObjectAttribute.MachineId.ToString()}u";
             var machineType = $"typeof({this.FullName})";
             var constructor = this.TinyhandAttribute?.UseServiceProvider == true ? "null" : $"() => new {this.LocalName}()";
             var serializable = this.TinyhandAttribute is not null ? "true" : "false";
