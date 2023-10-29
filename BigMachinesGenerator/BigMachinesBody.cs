@@ -70,15 +70,15 @@ public class BigMachinesBody : VisceralBody<BigMachinesObject>
         category: "BigMachinesGenerator", DiagnosticSeverity.Error, isEnabledByDefault: true);
 
     public static readonly DiagnosticDescriptor Error_DuplicateTypeId = new DiagnosticDescriptor(
-        id: "BMG008", title: "Duplicate TypeId", messageFormat: "Machine Type Id '{0}' must be unique",
+        id: "BMG008", title: "Duplicate TypeId", messageFormat: "Machine id '{0}' must be unique",
         category: "BigMachinesGenerator", DiagnosticSeverity.Error, isEnabledByDefault: true);
 
     public static readonly DiagnosticDescriptor Error_DuplicateStateId = new DiagnosticDescriptor(
-        id: "BMG009", title: "Duplicate state id", messageFormat: "State id must be unique",
+        id: "BMG009", title: "Duplicate state id", messageFormat: "State method id must be unique",
         category: "BigMachinesGenerator", DiagnosticSeverity.Error, isEnabledByDefault: true);
 
     public static readonly DiagnosticDescriptor Error_NoDefaultStateMethod = new DiagnosticDescriptor(
-        id: "BMG010", title: "No default state method", messageFormat: "Default state method (state method id = 0) is required",
+        id: "BMG010", title: "No default state method", messageFormat: "A default state method with an id of 0 is required",
         category: "BigMachinesGenerator", DiagnosticSeverity.Error, isEnabledByDefault: true);
 
     public static readonly DiagnosticDescriptor Error_GroupType = new DiagnosticDescriptor(

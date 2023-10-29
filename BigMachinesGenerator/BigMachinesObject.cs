@@ -675,7 +675,7 @@ ModuleInitializerClass_Added:
             return;
         }
 
-        using (var scope = ssb.ScopeBrace($"public {this.NewIfDerived}enum {BigMachinesBody.StateIdentifier}"))
+        using (var scope = ssb.ScopeBrace($"public {this.NewIfDerived}enum {BigMachinesBody.StateIdentifier} : uint"))
         {
             foreach (var x in this.StateMethodList)
             {
@@ -821,7 +821,7 @@ ModuleInitializerClass_Added:
             return;
         }
 
-        using (var scope = ssb.ScopeBrace($"protected override async Task<StateResult> {BigMachinesBody.InternalRunIdentifier}(StateParameter parameter)"))
+        using (var scope = ssb.ScopeBrace($"protected override Task<StateResult> {BigMachinesBody.InternalRunIdentifier}(StateParameter parameter)"))
         {
             ssb.AppendLine($"var state = Unsafe.As<int, {this.StateName}>(ref this.machineState);");
             ssb.AppendLine("return state switch");
@@ -832,15 +832,17 @@ ModuleInitializerClass_Added:
             {
                 if (x.ReturnTask)
                 {
-                    ssb.AppendLine($"State.{x.Name} => await this.{x.Name}(parameter).ConfigureAwait(false),");
+                    // ssb.AppendLine($"State.{x.Name} => await this.{x.Name}(parameter).ConfigureAwait(false),");
+                    ssb.AppendLine($"State.{x.Name} => this.{x.Name}(parameter),");
                 }
                 else
                 {
-                    ssb.AppendLine($"State.{x.Name} => this.{x.Name}(parameter),");
+                    // ssb.AppendLine($"State.{x.Name} => this.{x.Name}(parameter),");
+                    ssb.AppendLine($"State.{x.Name} => Task<StateResult>.FromResult(this.{x.Name}(parameter)),");
                 }
             }
 
-            ssb.AppendLine("_ => StateResult.Terminate,");
+            ssb.AppendLine("_ => Task<StateResult>.FromResult(StateResult.Terminate),");
             ssb.DecrementIndent();
             ssb.AppendLine("};");
         }

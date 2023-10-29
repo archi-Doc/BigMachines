@@ -5,6 +5,7 @@ using System.Collections.Generic;
 using System.Text;
 using Arc.Visceral;
 using Microsoft.CodeAnalysis;
+using Tinyhand;
 
 namespace BigMachines.Generator;
 
@@ -66,10 +67,16 @@ public class StateMethod
             return null;
         }
 
+        var stateId = methodAttribute.StateId;
+        if (stateId == uint.MaxValue)
+        {
+            stateId = (uint)FarmHash.Hash64(method.LocalName);
+        }
+
         var stateMethod = new StateMethod();
         stateMethod.Location = attribute.Location;
         stateMethod.Name = method.SimpleName;
-        stateMethod.Id = methodAttribute.StateId;
+        stateMethod.Id = stateId;
         stateMethod.ReturnTask = returnTask;
 
         foreach (var x in machine.GetMembers(VisceralTarget.Method))

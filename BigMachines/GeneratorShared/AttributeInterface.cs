@@ -88,9 +88,9 @@ public sealed class MachineObjectAttribute : Attribute
 /// Adds the state method to the machine.<br/>
 /// The format of the method is as follows: <br/><br/>
 /// <see langword="public"/> <see cref="StateResult"/> ExampleState(<see cref="StateParameter"/> parameter)<br/>
-///  or<br/>
+///  => <see cref="StateResult.Continue"/>;<br/><br/>
 ///  <see langword="public"/> <see langword="async"/> Task&lt;<see cref="StateResult"/>&gt; ExampleState(<see cref="StateParameter"/> parameter)<br/>
-///  => <see cref="StateResult.Continue"/>;
+///  => <see cref="StateResult.Terminate"/>;
 /// </summary>
 #pragma warning restore SA1629
 [AttributeUsage(AttributeTargets.Method, AllowMultiple = false, Inherited = true)]
@@ -137,18 +137,19 @@ public sealed class CommandMethodAttribute : Attribute
     /// <summary>
     /// Initializes a new instance of the <see cref="CommandMethodAttribute"/> class.
     /// </summary>
-    /// <param name="id">The identifier used for serialization.<br/>
-    /// Id can be a random number, but it must be unique.</param>
-    public CommandMethodAttribute(uint id)
+    /// <param name="commandId">The identifier for the command method.<br/>
+    /// You can set a random number, but it needs to be unique.<br/>
+    /// If you specify <see cref="uint.MaxValue"/>, the hash of the method name is used.</param>
+    public CommandMethodAttribute(uint commandId)
     {
-        this.Id = id;
+        this.CommandId = commandId;
     }
 
     /// <summary>
     /// Gets an identifier of the command.<br/>
     /// Id must be a unique number (can be a random number).
     /// </summary>
-    public uint Id { get; }
+    public uint CommandId { get; }
 
     /// <summary>
     /// Gets or sets a value indicating whether the command method executes with locking the machine [the default is <see langword="true"/>].
@@ -162,12 +163,12 @@ public sealed class CommandMethodAttribute : Attribute
 public enum StateResult
 {
     /// <summary>
-    /// Informs that the machine will continue to run.
+    /// The machine will continue to run.
     /// </summary>
     Continue,
 
     /// <summary>
-    /// Informs that the machine is going to be terminated.
+    /// The machine is going to be terminated.
     /// </summary>
     Terminate,
 }

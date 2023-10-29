@@ -82,7 +82,7 @@ public class CommandMethod
         var commandMethod = new CommandMethod();
         commandMethod.Location = attribute.Location;
         commandMethod.Name = method.SimpleName;
-        commandMethod.Id = methodAttribute.Id;
+        commandMethod.Id = methodAttribute.CommandId;
         commandMethod.ReturnTask = returnTask;
         commandMethod.WithLock = methodAttribute.WithLock;
         commandMethod.ResponseObject = responseObject;

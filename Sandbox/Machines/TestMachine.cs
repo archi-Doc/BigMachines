@@ -60,6 +60,12 @@ public partial class ParentClass
         {
             return StateResult.Terminate;
         }
+
+        [StateMethod]
+        public async Task<StateResult> Third(StateParameter parameter)
+        {
+            return StateResult.Terminate;
+        }
     }
 }
 
