@@ -88,6 +88,10 @@ public sealed class AddMachineAttributeMock : Attribute
 
     public bool Volatile { get; set; }
 
+    public string Name { get; set; } = string.Empty;
+
+    internal Location? Location { get; set; }
+
     public static AddMachineAttributeMock FromArray(object?[] constructorArguments, KeyValuePair<string, object?>[] namedArguments)
     {
         var attribute = new AddMachineAttributeMock();
@@ -97,6 +101,12 @@ public sealed class AddMachineAttributeMock : Attribute
         if (val != null)
         {
             attribute.Volatile = (bool)val;
+        }
+
+        val = AttributeHelper.GetValue(-1, nameof(Name), constructorArguments, namedArguments);
+        if (val != null)
+        {
+            attribute.Name = (string)val;
         }
 
         return attribute;

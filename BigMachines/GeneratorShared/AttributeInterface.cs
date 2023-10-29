@@ -46,6 +46,8 @@ where TMachine : Machine
     }
 
     public bool Volatile { get; set; }
+
+    public string Name { get; set; } = string.Empty;
 }
 
 /// <summary>

@@ -23,7 +23,8 @@ public partial class TestC
 public partial class TestBigMachine
 {
     [AddMachine<TinyMachine>(Volatile = true)]
-    [AddMachine<TinyMachine2<int>>]
+    [AddMachine<AccessibilityMachine>(Name = "TinyMachine")]
+    [AddMachine<TinyMachine2<int>>()]
     public TestBigMachine()
     {// MachineRegistry.Register(new(721092537, typeof(Sandbox.TinyMachine2<int>), () => new TinyMachine2<int>(), false, null, false));
     }

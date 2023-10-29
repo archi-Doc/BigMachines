@@ -103,6 +103,10 @@ public class BigMachinesBody : VisceralBody<BigMachinesObject>
         id: "BMG015", title: "Machine control", messageFormat: "'Since the target machine does not have an identifier, MachineControl will be changed to SingleMachineControl",
         category: "BigMachinesGenerator", DiagnosticSeverity.Warning, isEnabledByDefault: true);
 
+    public static readonly DiagnosticDescriptor Error_DuplicateMachineControl = new DiagnosticDescriptor(
+        id: "BMG016", title: "Duplicate machine control", messageFormat: "Machine control name '{0}' must be unique",
+        category: "BigMachinesGenerator", DiagnosticSeverity.Error, isEnabledByDefault: true);
+
     public BigMachinesBody(GeneratorExecutionContext context)
         : base(context)
     {
