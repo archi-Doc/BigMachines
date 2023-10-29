@@ -6,6 +6,7 @@ using System.Linq;
 using Arc.Visceral;
 using Microsoft.CodeAnalysis;
 using Tinyhand;
+using Tinyhand.Generator;
 
 #pragma warning disable SA1202 // Elements should be ordered by access
 #pragma warning disable SA1204 // Static elements should appear before instance elements
@@ -29,11 +30,13 @@ public enum BigMachinesObjectFlag
 
     BigMachineObject = 1 << 3,
     MachineObject = 1 << 4,
+    TinyhandObject = 1 << 5,
 
     CanCreateInstance = 1 << 12, // Can create an instance
     HasSimpleConstructor = 1 << 13, // Has simple constructor: TestMachine(BigMachine<T> bigMachine)
     IsSimpleGenericMachine = 1 << 14, // Class<TIdentifier> : Machine<TIdentifier>
     HasRegisterBM = 1 << 15, // RegisterBM() declared
+    StructualEnabled = 1 << 16, // Tinyhand structual
 }
 
 public class BigMachinesObject : VisceralObjectBase<BigMachinesObject>
@@ -47,6 +50,8 @@ public class BigMachinesObject : VisceralObjectBase<BigMachinesObject>
     public BigMachinesObjectFlag ObjectFlag { get; set; }
 
     public MachineObjectAttributeMock? ObjectAttribute { get; private set; }
+
+    public TinyhandObjectAttributeMock? TinyhandAttribute { get; private set; }
 
     public BigMachinesObject? MachineObject { get; private set; }
 
@@ -141,17 +146,36 @@ public class BigMachinesObject : VisceralObjectBase<BigMachinesObject>
             }
         }
 
-        // MachineObjectAttribute
-        if (this.AllAttributes.FirstOrDefault(x => x.FullName == MachineObjectAttributeMock.FullName) is { } objectAttribute)
+        foreach (var attribute in this.AllAttributes)
         {
-            this.Location = objectAttribute.Location;
-            try
-            {
-                this.ObjectAttribute = MachineObjectAttributeMock.FromArray(objectAttribute.ConstructorArguments, objectAttribute.NamedArguments);
+            if (attribute.FullName == MachineObjectAttributeMock.FullName)
+            {// MachineObjectAttribute
+                this.Location = attribute.Location;
+                try
+                {
+                    this.ObjectAttribute = MachineObjectAttributeMock.FromArray(attribute.ConstructorArguments, attribute.NamedArguments);
+                }
+                catch (InvalidCastException)
+                {
+                    this.Body.ReportDiagnostic(BigMachinesBody.Error_AttributePropertyError, attribute.Location);
+                }
             }
-            catch (InvalidCastException)
-            {
-                this.Body.ReportDiagnostic(BigMachinesBody.Error_AttributePropertyError, objectAttribute.Location);
+            else if (attribute.FullName == TinyhandObjectAttributeMock.FullName)
+            {// TinyhandObjectAttribute
+                try
+                {
+                    this.TinyhandAttribute = TinyhandObjectAttributeMock.FromArray(attribute.ConstructorArguments, attribute.NamedArguments);
+                }
+                catch (InvalidCastException)
+                {
+                    this.Body.ReportDiagnostic(BigMachinesBody.Error_AttributePropertyError, attribute.Location);
+                }
+
+                this.ObjectFlag |= BigMachinesObjectFlag.TinyhandObject;
+                if (this.TinyhandAttribute?.Structual == true)
+                {
+                    this.ObjectFlag |= BigMachinesObjectFlag.StructualEnabled;
+                }
             }
         }
 
@@ -939,19 +963,14 @@ ModuleInitializerClass_Added:
         }
 
         using (var scope = ssb.ScopeBrace($"public static {this.NewIfDerived}void RegisterBM(uint typeId)"))
-        {
-            var constructor = this.ObjectFlag.HasFlag(BigMachinesObjectFlag.HasSimpleConstructor) ? $"x => new {this.FullName}(x)" : "null";
-            var group = this.GroupType == null ? "null" : $"typeof({this.GroupType})";
-            var hasAsyncMethod = this.StateMethodList?.Any(a => a.ReturnTask) == true || this.CommandMethodList?.Any(a => a.ReturnTask) == true;
-            var hasAsync = hasAsyncMethod ? "true" : "false";
-            var continuous = this.ObjectAttribute.Continuous ? "true" : "false";
-            ssb.AppendLine($"{BigMachinesBody.BigMachineIdentifier}<{this.IdentifierObject.FullName}>.StaticInfo[typeof({this.FullName}.{BigMachinesBody.InterfaceIdentifier})] = new(typeof({this.FullName}), typeId, {hasAsync}, {continuous}, {constructor}, {group});");
-
-            // 
+        {// public record MachineInformation(int Id, Type MachineType, Func<Machine>? Constructor, bool Serializable, Type? IdentifierType, bool Continuous)
             var machineId = this.ObjectAttribute.MachineId.ToString();
             var machineType = $"typeof({this.FullName})";
-            var controlType = $"typeof()";
-            ssb.AppendLine($"MachineRegistry.Register({});");
+            var constructor = this.TinyhandAttribute?.UseServiceProvider == true ? "null" : $"() => new {this.LocalName}()";
+            var serializable = this.TinyhandAttribute is not null ? "true" : "false";
+            var identifierType = this.IdentifierObject is not null ? $"typeof({this.IdentifierObject.FullName})" : "null";
+            var continuous = "false";
+            ssb.AppendLine($"MachineRegistry.Register(new({machineId}, {machineType}, {constructor}, {serializable}, {identifierType}, {continuous}));");
         }
     }
 }

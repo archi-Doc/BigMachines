@@ -173,8 +173,19 @@ public enum StateResult
 /// </summary>
 public enum CommandResult
 {
+    /// <summary>
+    /// The command was successfully executed.
+    /// </summary>
     Success,
+
+    /// <summary>
+    /// The command execution failed.
+    /// </summary>
     Failure,
+
+    /// <summary>
+    /// The command was not executed because the machine is terminated.
+    /// </summary>
     Terminated,
 }
 

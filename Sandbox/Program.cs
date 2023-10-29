@@ -34,8 +34,8 @@ class Program
         var unit2 = builder2.Build();
         TinyhandSerializer.ServiceProvider = unit2.Context.ServiceProvider;
 
-        MachineRegistry.Register(new(0, typeof(BigMachines.SingleMachine), typeof(SingleMachineControl<,>)) { Serializable = true, });
-        MachineRegistry.Register(new(1, typeof(BigMachines.TestMachine), typeof(UnorderedMachineControl<,,>)) { Constructor = () => new BigMachines.TestMachine(), IdentifierType = typeof(int), Serializable = true, });
+        // MachineRegistry.Register(new(0, typeof(BigMachines.SingleMachine), typeof(SingleMachineControl<,>)) { Serializable = true, });
+        // MachineRegistry.Register(new(1, typeof(BigMachines.TestMachine), typeof(UnorderedMachineControl<,,>)) { Constructor = () => new BigMachines.TestMachine(), IdentifierType = typeof(int), Serializable = true, });
 
         var testBigMachine = new TestBigMachine();
         var m = testBigMachine.TestMachines.GetOrCreate(1);

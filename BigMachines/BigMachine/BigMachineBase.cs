@@ -3,6 +3,7 @@
 using System;
 using System.Collections.Concurrent;
 using System.Threading;
+using BigMachines.Control;
 
 namespace BigMachines;
 

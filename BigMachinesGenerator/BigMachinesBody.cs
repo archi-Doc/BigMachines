@@ -215,7 +215,7 @@ public class BigMachinesBody : VisceralBody<BigMachinesObject>
             bigMachine.Default = true;
         }
         else
-        {// Add
+        {// Add the default bigmachine.
             var defaultBigMachine = new BigMachine(this, null);
             defaultBigMachine.Default = true;
             this.BigMachines.Add(defaultBigMachine);

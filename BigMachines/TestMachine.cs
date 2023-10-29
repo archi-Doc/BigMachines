@@ -2,6 +2,7 @@
 
 using System;
 using System.Threading.Tasks;
+using BigMachines.Control;
 using Tinyhand;
 
 #pragma warning disable SA1401
@@ -19,7 +20,7 @@ public partial class TestMachine : Machine<int>
 
     public static async Task Test1()
     {
-        MachineRegistry.Register(new(0, typeof(TestMachine), typeof(UnorderedMachineControl<,,>)) { Constructor = () => new TestMachine(), IdentifierType = typeof(int), });
+        // MachineRegistry.Register(new(0, typeof(TestMachine), typeof(UnorderedMachineControl<,,>)) { Constructor = () => new TestMachine(), IdentifierType = typeof(int), });
 
         var bigMachine = new TestBigMachine();
         var machine = bigMachine.TestMachines.TryGet(0);
@@ -96,8 +97,6 @@ public partial class TestMachine : Machine<int>
                     this.machine.Semaphore.Exit();
                 }
             }
-
-
         }
 
         /*public readonly struct CommandAll
