@@ -656,12 +656,9 @@ ModuleInitializerClass_Added:
     internal void Generate2(ScopingStringBuilder ssb, GeneratorInformation info)
     {
         this.Generate_State(ssb, info);//
-        // this.Generate_Command(ssb, info);
         this.Generate_InterfaceInstance(ssb, info);
         this.Generate_Interface(ssb, info);
-        // this.Generate_CreateInterface(ssb, info);
         this.Generate_InternalRun(ssb, info);
-        // this.Generate_InternalCommand(ssb, info);
         this.Generate_ChangeStateInternal(ssb, info);
         this.Generate_RegisterBM(ssb, info);
 
@@ -680,31 +677,6 @@ ModuleInitializerClass_Added:
             foreach (var x in this.StateMethodList)
             {
                 ssb.AppendLine($"{x.Name} = {x.Id},");
-            }
-        }
-
-        ssb.AppendLine();
-    }
-
-    internal void Generate_Command(ScopingStringBuilder ssb, GeneratorInformation info)
-    {
-        if (this.CommandMethodList == null)
-        {
-            return;
-        }
-
-        using (var scope = ssb.ScopeBrace($"public {this.NewIfDerived}enum {BigMachinesBody.CommandIdentifier}"))
-        {
-            if (this.CommandMethodList.Count == 0)
-            {
-                ssb.AppendLine("NoCommand = 0,");
-            }
-            else
-            {
-                foreach (var x in this.CommandMethodList)
-                {
-                    ssb.AppendLine($"{x.Name} = {x.Id},");
-                }
             }
         }
 
@@ -798,26 +770,6 @@ ModuleInitializerClass_Added:
         }
     }
 
-    internal void Generate_CreateInterface(ScopingStringBuilder ssb, GeneratorInformation info)
-    {
-        if (this.MachineObject == null)
-        {
-            return;
-        }
-
-        var identifierName = this.IdentifierObject!.FullName;
-        using (var scope = ssb.ScopeBrace($"protected override void CreateInterface({identifierName} identifier)"))
-        {
-            using (var scope2 = ssb.ScopeBrace("if (this.InterfaceInstance == null)"))
-            {
-                ssb.AppendLine("this.Identifier = identifier;");
-                ssb.AppendLine("this.InterfaceInstance = new Interface(this.Group, identifier);");
-            }
-        }
-
-        ssb.AppendLine();
-    }
-
     internal void Generate_InternalRun(ScopingStringBuilder ssb, GeneratorInformation info)
     {
         if (this.MachineObject == null || this.StateMethodList == null)
@@ -853,57 +805,6 @@ ModuleInitializerClass_Added:
 
         ssb.AppendLine();
     }
-
-    /*internal void Generate_InternalCommand(ScopingStringBuilder ssb, GeneratorInformation info)
-    {
-        if (this.MachineObject == null || this.IdentifierObject == null || this.CommandMethodList == null)
-        {
-            return;
-        }
-
-        using (var scope = ssb.ScopeBrace($"protected override async Task {BigMachinesBody.InternalCommand}(CommandPost<{this.IdentifierObject.FullName}>.Command command)"))
-        {
-            for (var i = 0; i < this.CommandMethodList.Count; i++)
-            {
-                var method = this.CommandMethodList[i];
-
-                var messageVariable = method.MessageFullName == null ? string.Empty : $"message{i}";
-                var messageCondition = method.MessageFullName == null ? string.Empty : $" && command.Message is {method.MessageFullName} {messageVariable}";
-
-                var prefix = i == 0 ? "if" : "else if";
-                using (var scopeIf = ssb.ScopeBrace($"{prefix} (command.Data == {method.Id}{messageCondition})"))
-                {
-                    ScopingStringBuilder.IScope? scopeTry = null;
-                    if (method.WithLock)
-                    {
-                        scopeTry = ssb.ScopeBrace("try");
-                        ssb.AppendLine("await this.LockMachineAsync().ConfigureAwait(false);");
-                    }
-
-                    var responseCode = method.ResponseObject == null ? string.Empty : $"command.Response = ";
-                    if (method.ReturnTask == false)
-                    {
-                        ssb.AppendLine($"{responseCode}this.{method.Name}({messageVariable});");
-                    }
-                    else
-                    {
-                        ssb.AppendLine($"{responseCode}await this.{method.Name}({messageVariable}).ConfigureAwait(false);");
-                    }
-
-                    if (scopeTry != null)
-                    {
-                        scopeTry.Dispose();
-                        using (var scopeFinally = ssb.ScopeBrace("finally"))
-                        {
-                            ssb.AppendLine("this.UnlockMachine();");
-                        }
-                    }
-                }
-            }
-        }
-
-        ssb.AppendLine();
-    }*/
 
     internal void Generate_ChangeStateInternal(ScopingStringBuilder ssb, GeneratorInformation info)
     {
