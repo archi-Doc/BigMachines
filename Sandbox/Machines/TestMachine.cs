@@ -107,7 +107,7 @@ public partial class AccessibilityMachine2 : AccessibilityMachine
 public partial class ParentClass
 {
     [TinyhandObject]
-    [MachineObject(22, Control = MachineControlKind.Single)]
+    [MachineObject(Control = MachineControlKind.Single)]
     public partial class TinyMachine2<TData> : Machine
     {
         public TinyMachine2()

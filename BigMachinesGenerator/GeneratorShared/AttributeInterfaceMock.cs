@@ -124,7 +124,7 @@ public sealed class MachineObjectAttributeMock : Attribute
     {
     }
 
-    public uint MachineId { get; set; }
+    // public uint MachineId { get; set; }
 
     public MachineControlKind Control { get; set; }
 
@@ -135,11 +135,11 @@ public sealed class MachineObjectAttributeMock : Attribute
         var attribute = new MachineObjectAttributeMock();
         object? val;
 
-        val = AttributeHelper.GetValue(0, nameof(MachineId), constructorArguments, namedArguments);
+        /*val = AttributeHelper.GetValue(0, nameof(MachineId), constructorArguments, namedArguments);
         if (val != null)
         {
             attribute.MachineId = (uint)val;
-        }
+        }*/
 
         val = AttributeHelper.GetValue(-1, nameof(Control), constructorArguments, namedArguments);
         if (val != null)

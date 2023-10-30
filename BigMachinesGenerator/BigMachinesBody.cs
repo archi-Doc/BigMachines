@@ -119,7 +119,7 @@ public class BigMachinesBody : VisceralBody<BigMachinesObject>
 
     internal HashSet<BigMachine> BigMachines = new();
 
-    internal Dictionary<uint, BigMachinesObject> Machines = new();
+    // internal Dictionary<uint, BigMachinesObject> Machines = new();
 
     internal Dictionary<string, List<BigMachinesObject>> Namespaces = new();
 

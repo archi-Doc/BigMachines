@@ -60,12 +60,8 @@ public sealed class MachineObjectAttribute : Attribute
     /// <summary>
     /// Initializes a new instance of the <see cref="MachineObjectAttribute"/> class.
     /// </summary>
-    /// <param name="machineId">The identifier for the Machine.<br/>
-    /// You can set a random number, but it needs to be unique.<br/>
-    /// If you specify 0, the hash of the class name is used.</param>
-    public MachineObjectAttribute(uint machineId = 0)
+    public MachineObjectAttribute()
     {
-        this.MachineId = machineId;
     }
 
     /// <summary>
@@ -73,10 +69,13 @@ public sealed class MachineObjectAttribute : Attribute
     /// </summary>
     public MachineControlKind Control { get; set; }
 
+    /*
     /// <summary>
-    /// Gets a type id (unique identifier for serialization) of the machine.
+    /// Gets the identifier for the Machine.<br/>
+    /// You can set a random number, but it needs to be unique.<br/>
+    /// If you specify 0, the hash of the class name is used.
     /// </summary>
-    public uint MachineId { get; }
+    public uint MachineId { get; }*/
 
     /// <summary>
     /// Gets or sets a value indicating whether or not the machine is continuous machine (runs continuously and uses one thread).

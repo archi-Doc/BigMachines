@@ -200,10 +200,10 @@ public class BigMachinesObject : VisceralObjectBase<BigMachinesObject>
         }
 
         // Machine id
-        if (this.ObjectAttribute.MachineId == 0)
+        /*if (this.ObjectAttribute.MachineId == 0)
         {
             this.ObjectAttribute.MachineId = (uint)FarmHash.Hash64(this.FullName);
-        }
+        }*/
     }
 
     public void ConfigureRelation()
@@ -273,6 +273,11 @@ public class BigMachinesObject : VisceralObjectBase<BigMachinesObject>
 
     public void CheckObject()
     {
+        if (this.ObjectAttribute is null)
+        {
+            return;
+        }
+
         if (!this.IsAbstractOrInterface)
         {
             this.ObjectFlag |= BigMachinesObjectFlag.CanCreateInstance;
@@ -305,7 +310,7 @@ public class BigMachinesObject : VisceralObjectBase<BigMachinesObject>
             }
         }
 
-        var id = this.ObjectAttribute!.MachineId;
+        /*var id = this.ObjectAttribute!.MachineId;
         if (this.Body.Machines.ContainsKey(id))
         {
             this.Body.ReportDiagnostic(BigMachinesBody.Error_DuplicateTypeId, this.Location, id);
@@ -313,7 +318,7 @@ public class BigMachinesObject : VisceralObjectBase<BigMachinesObject>
         else
         {
             this.Body.Machines.Add(id, this);
-        }
+        }*/
 
         // Machine<TIdentifier>
         var machineObject = this.BaseObject;
@@ -604,7 +609,7 @@ ModuleInitializerClass_Added:
 
                 if (x.Generics_Kind != VisceralGenericsKind.OpenGeneric)
                 {// Register fixed types.
-                    ssb.AppendLine($"{x.FullName}.RegisterBM({x.ObjectAttribute.MachineId});");
+                    ssb.AppendLine($"{x.FullName}.RegisterBM();"); // {x.ObjectAttribute.MachineId}
                 }
             }
 
@@ -892,9 +897,9 @@ ModuleInitializerClass_Added:
             return;
         }
 
-        using (var scope = ssb.ScopeBrace($"public static {this.NewIfDerived}void RegisterBM(uint typeId)"))
+        using (var scope = ssb.ScopeBrace($"public static {this.NewIfDerived}void RegisterBM()"))
         {// public record MachineInformation(int Id, Type MachineType, Func<Machine>? Constructor, bool Serializable, Type? IdentifierType, bool Continuous)
-            var machineId = $"{this.ObjectAttribute.MachineId.ToString()}u";
+            var machineId = "0"; //  $"{this.ObjectAttribute.MachineId.ToString()}u";
             var machineType = $"typeof({this.FullName})";
             var constructor = this.TinyhandAttribute?.UseServiceProvider == true ? "null" : $"() => new {this.LocalName}()";
             var serializable = this.TinyhandAttribute is not null ? "true" : "false";
