@@ -149,7 +149,7 @@ public class BigMachinesObject : VisceralObjectBase<BigMachinesObject>
         {
             if (attribute.FullName == MachineObjectAttributeMock.FullName)
             {// MachineObjectAttribute
-                this.Location = attribute.Location;
+                // this.Location = attribute.Location;
                 try
                 {
                     this.ObjectAttribute = MachineObjectAttributeMock.FromArray(attribute.ConstructorArguments, attribute.NamedArguments);
@@ -320,6 +320,11 @@ public class BigMachinesObject : VisceralObjectBase<BigMachinesObject>
                 }
 
                 parent = parent.ContainingObject;
+            }
+
+            if (this.symbol?.DeclaredAccessibility == Accessibility.Private)
+            {// Private machine
+                this.Body.ReportDiagnostic(BigMachinesBody.Error_PrivateMachine, this.Location);
             }
         }
 
@@ -665,7 +670,7 @@ ModuleInitializerClass_Added:
 
     internal void Generate2(ScopingStringBuilder ssb, GeneratorInformation info)
     {
-        this.Generate_State(ssb, info);//
+        this.Generate_State(ssb, info);
         this.Generate_InterfaceInstance(ssb, info);
         this.Generate_Interface(ssb, info);
         this.Generate_InternalRun(ssb, info);

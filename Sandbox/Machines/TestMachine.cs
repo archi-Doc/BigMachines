@@ -21,7 +21,7 @@ public partial class TestC
 [BigMachineObject]
 public partial class TestBigMachine
 {
-    [AddMachine<TinyMachine>(Volatile = true)]
+    [AddMachine<CommandTestMachine>(Volatile = true)]
     [AddMachine<AccessibilityMachine>(Name = "AccessibilityMachine")]
     [AddMachine<ParentClass.TinyMachine2<int>>()]
     public TestBigMachine()
@@ -30,42 +30,32 @@ public partial class TestBigMachine
 }
 
 [MachineObject]
-public partial class TinyMachine : Machine<int>
+public partial class CommandTestMachine : Machine<int>
 {
-    public TinyMachine()
+    public CommandTestMachine()
         : base()
     {
     }
 
-    [CommandMethod]
-    public CommandResult FirstCommand(string name, int age)
-    {
-        return CommandResult.Success;
-    }
+    [CommandMethod(All = true)]
+    public CommandResult CommandParam(string name, int age)
+        => CommandResult.Success;
 
-    [CommandMethod]
-    public CommandResult<int> SecondCommand()
-    {
-        return new(CommandResult.Success, 2);
-    }
+    [CommandMethod(All = true)]
+    public CommandResult<int> CommandResponse(int x)
+        => new(CommandResult.Success, x + 2);
 
-    [CommandMethod(WithLock = false)]
-    public CommandResult ThirdCommand()
-    {
-        return CommandResult.Success;
-    }
+    [CommandMethod(WithLock = false, All = true)]
+    public CommandResult CommandNoLock()
+        => CommandResult.Success;
 
-    [CommandMethod]
-    public async Task<CommandResult<int>> TaskCommand()
-    {
-        return new(CommandResult.Success, 2);
-    }
+    [CommandMethod(All = true)]
+    public async Task<CommandResult<int>> TaskCommandResponse(int x)
+        => new(CommandResult.Success, x + 3);
 
-    [CommandMethod]
-    public async Task<CommandResult> TaskCommand2()
-    {
-        return CommandResult.Success;
-    }
+    [CommandMethod(All = true)]
+    public async Task<CommandResult> TaskCommandParam(string name, int age)
+        => CommandResult.Success;
 }
 
 [MachineObject]
@@ -78,22 +68,25 @@ public partial class AccessibilityMachine : Machine
 
     [StateMethod(0)]
     public StateResult PublicState(StateParameter parameter)
-    {
-        return StateResult.Terminate;
-    }
+        => StateResult.Terminate;
 
     [StateMethod]
     protected StateResult ProtectedState(StateParameter parameter)
-    {
-        return StateResult.Terminate;
-    }
+        => StateResult.Terminate;
 
     [StateMethod]
     private StateResult PrivateState(StateParameter parameter)
-    {
-        return StateResult.Terminate;
-    }
+        => StateResult.Terminate;
 }
+
+/*[MachineObject]
+public partial class AccessibilityMachine2 : AccessibilityMachine
+{// PrivateState() is currently not supported.
+    public AccessibilityMachine2()
+        : base()
+    {
+    }
+}*/
 
 [MachineObject(UseServiceProvider = true)]
 public partial class NoDefaultConstructorMachine : Machine
@@ -105,19 +98,8 @@ public partial class NoDefaultConstructorMachine : Machine
 
     [StateMethod(0)]
     public StateResult PublicState(StateParameter parameter)
-    {
-        return StateResult.Terminate;
-    }
+        => StateResult.Terminate;
 }
-
-/*[MachineObject]
-public partial class AccessibilityMachine2 : AccessibilityMachine
-{// PrivateState() is currently not supported.
-    public AccessibilityMachine2()
-        : base()
-    {
-    }
-}*/
 
 public partial class ParentClass
 {
@@ -132,26 +114,20 @@ public partial class ParentClass
 
         [StateMethod(0)]
         public StateResult Initial(StateParameter parameter)
-        {
-            return StateResult.Terminate;
-        }
+            => StateResult.Terminate;
 
         [StateMethod]
         public StateResult Second(StateParameter parameter)
-        {
-            return StateResult.Terminate;
-        }
+            => StateResult.Terminate;
 
         [StateMethod]
         public async Task<StateResult> Third(StateParameter parameter)
-        {
-            return StateResult.Terminate;
-        }
+            => StateResult.Terminate;
     }
 
-    [MachineObject]
+    /*[MachineObject]
     private partial class PrivateMachine : Machine
-    {
+    {// Private machine is not supported.
         public PrivateMachine()
             : base()
         {
@@ -160,23 +136,7 @@ public partial class ParentClass
         [StateMethod(0)]
         public StateResult Initial(StateParameter parameter)
             => StateResult.Terminate;
-    }
-
-    // [MachineObject]
-    public partial class TinyMachine3<TIdentifier> : Machine<TIdentifier>
-        where TIdentifier : notnull
-    {
-        public TinyMachine3()
-            : base()
-        {
-        }
-
-        [StateMethod(0)]
-        public StateResult Initial(StateParameter parameter)
-        {
-            return StateResult.Terminate;
-        }
-    }
+    }*/
 }
 
 

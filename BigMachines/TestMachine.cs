@@ -12,13 +12,13 @@ namespace BigMachines;
 
 public static class TestMachineExtension
 {
-    public static async Task<IdentifierAndCommandResult<int>[]> AllCommand1(this UnorderedMachineControl<int, TestMachine, TestMachine.Interface> control)
+    public static async Task<IdentifierAndCommandResult<int>[]> AllCommand1(this MultiMachineControl<int, TestMachine.Interface> control)
     {
         var machines = control.GetArray();
         var results = new IdentifierAndCommandResult<int>[machines.Length];
         for (var i = 0; i < machines.Length; i++)
         {
-            results[i] = new(machines[i].Machine.Identifier, await machines[i].Command.Command1().ConfigureAwait(false));
+            results[i] = new(machines[i].Identifier, await machines[i].Command.Command1().ConfigureAwait(false));
         }
 
         return results;
@@ -48,7 +48,7 @@ public partial class TestMachine : Machine<int>
         }
 
         var testMachines = bigMachine.TestMachines;
-        await testMachines.RunAllAsync();
+        await testMachines.AllRunAsync();
 
         bigMachine.TestMachines.GetArray();
     }

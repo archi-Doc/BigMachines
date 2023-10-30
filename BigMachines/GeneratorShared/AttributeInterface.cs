@@ -158,6 +158,11 @@ public sealed class CommandMethodAttribute : Attribute
     /// Gets or sets a value indicating whether the command method executes with locking the machine [the default is <see langword="true"/>].
     /// </summary>
     public bool WithLock { get; set; } = true;
+
+    /// <summary>
+    /// Gets or sets a value indicating whether or not to add an extension method for issuing commands to all machines [the default is <see langword="false"/>].
+    /// </summary>
+    public bool All { get; set; } = false;
 }
 
 /// <summary>
@@ -197,6 +202,18 @@ public enum CommandResult
     Terminated,
 }
 
+public readonly struct CommandResult<TResponse>
+{
+    public CommandResult(CommandResult result, TResponse response)
+    {
+        this.Result = result;
+        this.Resnpose = response;
+    }
+
+    public readonly CommandResult Result;
+    public readonly TResponse Resnpose;
+}
+
 public readonly struct IdentifierAndCommandResult<TIdentifier>
     where TIdentifier : notnull
 {
@@ -210,16 +227,17 @@ public readonly struct IdentifierAndCommandResult<TIdentifier>
     public readonly CommandResult Result;
 }
 
-public readonly struct CommandResult<TResponse>
+public readonly struct IdentifierAndCommandResult<TIdentifier, TResponse>
+    where TIdentifier : notnull
 {
-    public CommandResult(CommandResult result, TResponse response)
+    public IdentifierAndCommandResult(TIdentifier identifier, CommandResult<TResponse> result)
     {
+        this.Identifier = identifier;
         this.Result = result;
-        this.Resnpose = response;
     }
 
-    public readonly CommandResult Result;
-    public readonly TResponse Resnpose;
+    public readonly TIdentifier Identifier;
+    public readonly CommandResult<TResponse> Result;
 }
 
 /// <summary>

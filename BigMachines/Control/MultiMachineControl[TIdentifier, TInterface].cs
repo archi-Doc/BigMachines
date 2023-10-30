@@ -23,7 +23,7 @@ public abstract class MultiMachineControl<TIdentifier, TInterface> : MultiMachin
     /// Runs all the machines managed by the control class.
     /// </summary>
     /// <returns>A <see cref="Task"/> representing the asynchronous operation.</returns>
-    public async Task RunAllAsync()
+    public async Task AllRunAsync()
     {
         var machines = this.GetArray();
         foreach (var x in machines)
@@ -31,4 +31,6 @@ public abstract class MultiMachineControl<TIdentifier, TInterface> : MultiMachin
             await x.RunAsync().ConfigureAwait(false);
         }
     }
+
+    public override abstract TInterface[] GetArray();
 }

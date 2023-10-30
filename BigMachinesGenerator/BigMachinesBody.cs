@@ -111,6 +111,10 @@ public class BigMachinesBody : VisceralBody<BigMachinesObject>
         id: "BMG017", title: "No default constructor", messageFormat: "Default constructor is required unless the UseServiceProvider property is set to true",
         category: "BigMachinesGenerator", DiagnosticSeverity.Error, isEnabledByDefault: true);
 
+    public static readonly DiagnosticDescriptor Error_PrivateMachine = new DiagnosticDescriptor(
+        id: "BMG018", title: "Private machine", messageFormat: "Machines with private accessibility are not supported",
+        category: "BigMachinesGenerator", DiagnosticSeverity.Error, isEnabledByDefault: true);
+
     public BigMachinesBody(GeneratorExecutionContext context)
         : base(context)
     {
