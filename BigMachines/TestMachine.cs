@@ -10,6 +10,21 @@ using Tinyhand;
 
 namespace BigMachines;
 
+public static class TestMachineExtension
+{
+    public static async Task<IdentifierAndCommandResult<int>[]> AllCommand1(this UnorderedMachineControl<int, TestMachine, TestMachine.Interface> control)
+    {
+        var machines = control.GetArray();
+        var results = new IdentifierAndCommandResult<int>[machines.Length];
+        for (var i = 0; i < machines.Length; i++)
+        {
+            results[i] = new(machines[i].Machine.Identifier, await machines[i].Command.Command1().ConfigureAwait(false));
+        }
+
+        return results;
+    }
+}
+
 // [MachineObject] // ulong id = FarmHash.Hash64(Type.FullName)
 [TinyhandObject(UseServiceProvider = true, Structual = true)]
 public partial class TestMachine : Machine<int>
