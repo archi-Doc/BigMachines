@@ -29,9 +29,9 @@ public abstract partial class BigMachineBase
     #region FieldAndProperty
 
     /// <summary>
-    /// Gets or sets a value to specify the operation mode of the loop checker.
+    /// Gets or sets a value to specify the operation mode of the detection of recursive calls.
     /// </summary>
-    public LoopCheckerMode LoopCheckerMode { get; set; } = LoopCheckerMode.EnabledAndThrowException;
+    public RecursiveDetectionMode RecursiveDetectionMode { get; set; } = RecursiveDetectionMode.Disabled;
 
     /// <summary>
     /// Gets an instance of <see cref="BigMachineCore"/>.

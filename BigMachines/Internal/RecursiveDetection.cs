@@ -9,17 +9,17 @@ namespace BigMachines;
 
 #pragma warning disable SA1401 // Fields should be private
 
-public enum LoopCheckerMode
+public enum RecursiveDetectionMode
 {
     /// <summary>
-    /// The loop checker is enabled and will throw an exception when it detects a recursive command.
-    /// </summary>
-    EnabledAndThrowException,
-
-    /// <summary>
-    /// The loop checker is disabled.
+    /// Detection of recursive calls is disabled.
     /// </summary>
     Disabled,
+
+    /*/// <summary>
+    /// Detection of recursive calls is enabled.
+    /// </summary>
+    EnabledAndThrowException,*/
 }
 
 internal class LoopChecker
