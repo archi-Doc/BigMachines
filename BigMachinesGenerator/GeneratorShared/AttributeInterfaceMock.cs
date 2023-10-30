@@ -208,6 +208,8 @@ public sealed class CommandMethodAttributeMock : Attribute
 
     public bool WithLock { get; set; } = true;
 
+    public bool All { get; set; } = true;
+
     public static CommandMethodAttributeMock FromArray(object?[] constructorArguments, KeyValuePair<string, object?>[] namedArguments)
     {
         var attribute = new CommandMethodAttributeMock();
@@ -223,6 +225,12 @@ public sealed class CommandMethodAttributeMock : Attribute
         if (val != null)
         {
             attribute.WithLock = (bool)val;
+        }
+
+        val = AttributeHelper.GetValue(-1, nameof(All), constructorArguments, namedArguments);
+        if (val != null)
+        {
+            attribute.All = (bool)val;
         }
 
         return attribute;

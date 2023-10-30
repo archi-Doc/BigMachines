@@ -474,6 +474,12 @@ public class BigMachinesObject : VisceralObjectBase<BigMachinesObject>
                 if (commandMethod != null)
                 {// Add
                     this.CommandMethodList.Add(commandMethod);
+                    if (commandMethod.All &&
+                        (this.ObjectAttribute.Control == MachineControlKind.Unordered ||
+                        this.ObjectAttribute.Control == MachineControlKind.Sequential))
+                    {
+                        this.Body.AddAllCommand(this, commandMethod);
+                    }
 
                     /*if (idToCommandMethod.TryGetValue(commandMethod.CommandId, out var s))
                     {// Duplicated

@@ -131,6 +131,13 @@ public class BigMachinesBody : VisceralBody<BigMachinesObject>
 
     internal Dictionary<string, List<BigMachinesObject>> Namespaces = new();
 
+    internal List<(BigMachinesObject Machine, CommandMethod CommandMethod)> AllCommands = new();
+
+    public void AddAllCommand(BigMachinesObject machine, CommandMethod commandMethod)
+    {
+        this.AllCommands.Add(new(machine, commandMethod));
+    }
+
     public void Prepare()
     {
         // Configure objects.
@@ -266,6 +273,7 @@ public class BigMachinesBody : VisceralBody<BigMachinesObject>
         ssb.AddUsing("System.Runtime.CompilerServices");
         ssb.AddUsing("System.Threading.Tasks");
         ssb.AddUsing(BigMachineNamespace);
+        ssb.AddUsing(BigMachineNamespace + ".Control");
 
         ssb.AppendLine("#nullable enable", false);
         ssb.AppendLine("#pragma warning disable CS1591", false);
@@ -306,7 +314,7 @@ public class BigMachinesBody : VisceralBody<BigMachinesObject>
     private void GenerateInitializer(IGeneratorInformation generator, ScopingStringBuilder ssb, GeneratorInformation info)
     {
         // Namespace
-        var ns = BigMachinesBody.BigMachineNamespace;
+        var ns = BigMachineNamespace;
         var assemblyId = string.Empty; // Assembly ID
         if (!string.IsNullOrEmpty(generator.CustomNamespace))
         {// Custom namespace.
@@ -325,24 +333,67 @@ public class BigMachinesBody : VisceralBody<BigMachinesObject>
 
         ssb.AppendLine();
         using (var scopeCrossLink = ssb.ScopeNamespace(ns!))
-        using (var scopeClass = ssb.ScopeBrace("public static class BigMachinesModule" + assemblyId))
         {
-            ssb.AppendLine("private static bool Initialized;");
-            ssb.AppendLine();
-            ssb.AppendLine("[ModuleInitializer]");
-
-            using (var scopeMethod = ssb.ScopeBrace("public static void Initialize()"))
+            using (var scopeClass = ssb.ScopeBrace("public static class BigMachinesModule" + assemblyId))
             {
-                ssb.AppendLine("if (Initialized) return;");
-                ssb.AppendLine("Initialized = true;");
+                ssb.AppendLine("private static bool Initialized;");
                 ssb.AppendLine();
+                ssb.AppendLine("[ModuleInitializer]");
 
-                foreach (var x in info.ModuleInitializerClass)
+                using (var scopeMethod = ssb.ScopeBrace("public static void Initialize()"))
                 {
-                    ssb.Append(x, true);
-                    ssb.AppendLine(".RegisterBM();", false);
+                    ssb.AppendLine("if (Initialized) return;");
+                    ssb.AppendLine("Initialized = true;");
+                    ssb.AppendLine();
+
+                    foreach (var x in info.ModuleInitializerClass)
+                    {
+                        ssb.Append(x, true);
+                        ssb.AppendLine(".RegisterBM();", false);
+                    }
                 }
             }
+
+            this.GenerateAllCommand(generator, ssb, info);
+        }
+    }
+
+    private void GenerateAllCommand(IGeneratorInformation generator, ScopingStringBuilder ssb, GeneratorInformation info)
+    {
+        if (this.AllCommands.Count == 0)
+        {
+            return;
+        }
+
+        ssb.AppendLine();
+        using (var scopeExtension = ssb.ScopeBrace("public static class AllCommandExtension"))
+        {
+            foreach (var x in this.AllCommands)
+            {
+                this.GenerateAllCommandMethod(ssb, info, x.Machine, x.CommandMethod);
+            }
+        }
+    }
+
+    private void GenerateAllCommandMethod(ScopingStringBuilder ssb, GeneratorInformation info, BigMachinesObject machine, CommandMethod commandMethod)
+    {
+        if (machine.IdentifierObject is null)
+        {
+            return;
+        }
+
+        var identifierType = machine.IdentifierObject.FullName;
+        var interfaceType = machine.FullName + ".Interface";
+        var responseType = commandMethod.ResponseObject?.FullName;
+        var resultType = responseType is null ? $"IdentifierAndCommandResult<{identifierType}>" : $"IdentifierAndCommandResult<{identifierType}, {responseType}>";
+        var param = string.IsNullOrEmpty(commandMethod.ParameterTypesAndNames) ? string.Empty : ", ";
+
+        using (var scopeMethod = ssb.ScopeBrace($"public static async Task<{resultType}[]> All{commandMethod.Name}(this MultiMachineControl<{identifierType}, {interfaceType}> control{param}{commandMethod.ParameterTypesAndNames})"))
+        {
+            ssb.AppendLine("var machines = control.GetArray();");
+            ssb.AppendLine($"var results = new {resultType}[machines.Length];");
+            ssb.AppendLine($"for (var i = 0; i < machines.Length; i++) results[i] = new(machines[i].Identifier, await machines[i].Command.{commandMethod.Name}({commandMethod.ParameterNames}).ConfigureAwait(false));");
+            ssb.AppendLine("return results;");
         }
     }
 }

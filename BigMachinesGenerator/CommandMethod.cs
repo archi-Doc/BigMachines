@@ -81,40 +81,13 @@ public class CommandMethod
         commandMethod.Name = method.SimpleName;
         // commandMethod.CommandId = commandId;
         commandMethod.WithLock = methodAttribute.WithLock;
+        commandMethod.All = methodAttribute.All;
         commandMethod.ReturnTask = returnTask;
         commandMethod.ResponseObject = responseObject;
 
-        return commandMethod;
-    }
-
-    public Location Location { get; private set; } = Location.None;
-
-    public BigMachinesObject? Method { get; private set; }
-
-    public string Name { get; private set; } = string.Empty;
-
-    // public uint CommandId { get; internal set; }
-
-    // public bool DuplicateId { get; internal set; }
-
-    public bool WithLock { get; internal set; }
-
-    public bool ReturnTask { get; private set; }
-
-    public BigMachinesObject? ResponseObject { get; private set; }
-
-    public void GenerateCommand(ScopingStringBuilder ssb, GeneratorInformation info)
-    {
-        if (this.Method is null)
-        {
-            return;
-        }
-
-        var commandResult = this.ResponseObject is null ? "CommandResult" : $"CommandResult<{this.ResponseObject.FullName}>";
-
         StringBuilder? sb = null;
-        var types = this.Method.Method_Parameters;
-        var names = this.Method.Method_ParameterNames();
+        var types = commandMethod.Method.Method_Parameters;
+        var names = commandMethod.Method.Method_ParameterNames();
         for (var i = 0; i < types.Length; i++)
         {
             if (sb is null)
@@ -131,7 +104,47 @@ public class CommandMethod
             sb.Append(names[i]);
         }
 
-        using (var method = ssb.ScopeBrace($"public async Task<{commandResult}> {this.Name}({sb?.ToString()})"))
+        if (sb is not null)
+        {
+            commandMethod.ParameterTypesAndNames = sb.ToString();
+            commandMethod.ParameterNames = string.Join(", ", names);
+        }
+
+        return commandMethod;
+    }
+
+    public Location Location { get; private set; } = Location.None;
+
+    public BigMachinesObject? Method { get; private set; }
+
+    public string Name { get; private set; } = string.Empty;
+
+    // public uint CommandId { get; internal set; }
+
+    // public bool DuplicateId { get; internal set; }
+
+    public bool WithLock { get; internal set; }
+
+    public bool All { get; internal set; }
+
+    public bool ReturnTask { get; private set; }
+
+    public BigMachinesObject? ResponseObject { get; private set; }
+
+    public string ParameterTypesAndNames { get; private set; } = string.Empty;
+
+    public string ParameterNames { get; private set; } = string.Empty;
+
+    public void GenerateCommand(ScopingStringBuilder ssb, GeneratorInformation info)
+    {
+        if (this.Method is null)
+        {
+            return;
+        }
+
+        var commandResult = this.ResponseObject is null ? "CommandResult" : $"CommandResult<{this.ResponseObject.FullName}>";
+
+        using (var method = ssb.ScopeBrace($"public async Task<{commandResult}> {this.Name}({this.ParameterTypesAndNames})"))
         {
             if (this.WithLock)
             {
@@ -151,11 +164,11 @@ public class CommandMethod
 
             if (this.ReturnTask)
             {
-                ssb.AppendLine($"return await this.machine.{this.Name}({string.Join(", ", names)}).ConfigureAwait(false);");
+                ssb.AppendLine($"return await this.machine.{this.Name}({this.ParameterNames}).ConfigureAwait(false);");
             }
             else
             {
-                ssb.AppendLine($"return this.machine.{this.Name}({string.Join(", ", names)});");
+                ssb.AppendLine($"return this.machine.{this.Name}({this.ParameterNames});");
             }
 
             if (this.WithLock)
