@@ -1,6 +1,7 @@
 ﻿// Copyright (c) All contributors. All rights reserved. Licensed under the MIT license.
 
 using System;
+using Tinyhand;
 
 namespace BigMachines;
 
@@ -68,6 +69,11 @@ public sealed class MachineObjectAttribute : Attribute
     /// Gets or sets a value indicating which <see cref="BigMachines.Control.MachineControl"/> is assigned to the machine.
     /// </summary>
     public MachineControlKind Control { get; set; }
+
+    /// <summary>
+    /// Gets or sets a value indicating whether or not to use <seealso cref="IServiceProvider"/> to create an instance [default is <see langword="false"/>]. Set <see cref="TinyhandSerializer.ServiceProvider"/>.
+    /// </summary>
+    public bool UseServiceProvider { get; set; } = false;
 
     /*
     /// <summary>

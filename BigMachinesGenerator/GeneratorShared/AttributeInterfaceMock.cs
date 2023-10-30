@@ -128,6 +128,8 @@ public sealed class MachineObjectAttributeMock : Attribute
 
     public MachineControlKind Control { get; set; }
 
+    public bool UseServiceProvider { get; set; } = false;
+
     public bool Continuous { get; set; }
 
     public static MachineObjectAttributeMock FromArray(object?[] constructorArguments, KeyValuePair<string, object?>[] namedArguments)
@@ -145,6 +147,12 @@ public sealed class MachineObjectAttributeMock : Attribute
         if (val != null)
         {
             attribute.Control = (MachineControlKind)val;
+        }
+
+        val = AttributeHelper.GetValue(-1, nameof(UseServiceProvider), constructorArguments, namedArguments);
+        if (val != null)
+        {
+            attribute.UseServiceProvider = (bool)val;
         }
 
         val = AttributeHelper.GetValue(-1, nameof(Continuous), constructorArguments, namedArguments);

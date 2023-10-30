@@ -107,6 +107,10 @@ public class BigMachinesBody : VisceralBody<BigMachinesObject>
         id: "BMG016", title: "Duplicate machine control", messageFormat: "Machine control name '{0}' must be unique",
         category: "BigMachinesGenerator", DiagnosticSeverity.Error, isEnabledByDefault: true);
 
+    public static readonly DiagnosticDescriptor Error_NoDefaultConstructor = new DiagnosticDescriptor(
+        id: "BMG017", title: "No default constructor", messageFormat: "Default constructor is required unless the UseServiceProvider property is set to true",
+        category: "BigMachinesGenerator", DiagnosticSeverity.Error, isEnabledByDefault: true);
+
     public BigMachinesBody(GeneratorExecutionContext context)
         : base(context)
     {

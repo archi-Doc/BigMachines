@@ -95,7 +95,7 @@ public partial class AccessibilityMachine : Machine
     }
 }
 
-[MachineObject]
+[MachineObject(UseServiceProvider = true)]
 public partial class NoDefaultConstructorMachine : Machine
 {
     public NoDefaultConstructorMachine(IServiceProvider serviceProvider)

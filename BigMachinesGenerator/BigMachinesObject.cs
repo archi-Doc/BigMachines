@@ -56,6 +56,8 @@ public class BigMachinesObject : VisceralObjectBase<BigMachinesObject>
 
     public BigMachinesObject? IdentifierObject { get; private set; }
 
+    public bool UseServiceProvider { get; private set; } = false;
+
     public string StateName { get; private set; } = string.Empty;
 
     public string CommandName { get; private set; } = string.Empty;
@@ -63,8 +65,6 @@ public class BigMachinesObject : VisceralObjectBase<BigMachinesObject>
     public List<StateMethod>? StateMethodList { get; private set; }
 
     public List<CommandMethod>? CommandMethodList { get; private set; }
-
-    public StateMethod? DefaultStateMethod { get; private set; }
 
     public string? LoaderIdentifier { get; private set; }
 
@@ -196,6 +196,20 @@ public class BigMachinesObject : VisceralObjectBase<BigMachinesObject>
         foreach (var x in this.AllMembers.Where(a => a.ContainingObject == this))
         {
             this.Identifier.Add(x.SimpleName);
+        }
+
+        // Default constructor
+        if (this.ObjectAttribute.UseServiceProvider == true ||
+            this.TinyhandAttribute?.UseServiceProvider == true)
+        {// ServiceProvider
+            this.UseServiceProvider = true;
+        }
+        else
+        {
+            if (!this.HasDefaultConstructor())
+            {// Default constructor required.
+                this.Body.ReportDiagnostic(BigMachinesBody.Error_NoDefaultConstructor, this.Location);
+            }
         }
 
         // Machine id
@@ -892,9 +906,7 @@ ModuleInitializerClass_Added:
         {// public record MachineInformation(Type MachineType, Func<Machine>? Constructor, bool Serializable, Type? IdentifierType, bool Continuous)
             // var machineId = $"{this.ObjectAttribute.MachineId.ToString()}u";
             var machineType = $"typeof({this.FullName})";
-
-            var constructor = this.HasDefaultConstructor() ? $"() => new {this.LocalName}()" : "null"; // this.TinyhandAttribute?.UseServiceProvider == true
-
+            var constructor = this.UseServiceProvider ? "null" : $"() => new {this.LocalName}()";
             var serializable = this.TinyhandAttribute is not null ? "true" : "false";
             var identifierType = this.IdentifierObject is not null ? $"typeof({this.IdentifierObject.FullName})" : "null";
             var continuous = "false";
