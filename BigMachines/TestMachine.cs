@@ -105,10 +105,10 @@ public partial class TestMachine : Machine<int>
                 {
                     if (this.machine.operationalState == OperationalFlag.Terminated)
                     {
-                        return new(CommandResult.Terminated, default);
+                        return new CommandResult<int>(CommandResult.Terminated, default);
                     }
 
-                    return this.machine.Command2();
+                    return await this.machine.Command2().ConfigureAwait(false);
                 }
                 finally
                 {
@@ -166,7 +166,7 @@ public partial class TestMachine : Machine<int>
         return CommandResult.Success;
     }
 
-    protected CommandResult<int> Command2()
+    protected async Task<CommandResult<int>> Command2()
     {
         return new(CommandResult.Success, 1);
     }

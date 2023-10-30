@@ -96,7 +96,7 @@ public class BigMachinesBody : VisceralBody<BigMachinesObject>
         category: "BigMachinesGenerator", DiagnosticSeverity.Error, isEnabledByDefault: true);
 
     public static readonly DiagnosticDescriptor Error_MethodFormat2 = new DiagnosticDescriptor(
-        id: "BMG014", title: "Invalid method", messageFormat: "Command method must be in the format of 'CommandResult Method(any param)' or 'CommandResult<TResponse> Method(any param)'",
+        id: "BMG014", title: "Invalid method", messageFormat: "Command method must be in the format of 'CommandResult Method(any param)' or 'CommandResult<TResponse> Method(any param)' or 'Task<CommandResult> Method(any param)' or 'Task<CommandResult<TResponse>> Method(any param)'",
         category: "BigMachinesGenerator", DiagnosticSeverity.Error, isEnabledByDefault: true);
 
     public static readonly DiagnosticDescriptor Warning_MachineWithoutIdentifier = new DiagnosticDescriptor(

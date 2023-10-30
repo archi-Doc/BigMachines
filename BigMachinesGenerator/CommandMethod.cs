@@ -25,15 +25,41 @@ public class CommandMethod
         }
 
         var returnObject = method.Method_ReturnObject;
-        BigMachinesObject? responseObject = null;
-        if (returnObject?.FullName == BigMachinesBody.CommandResultResultFullName)
+        if (returnObject is null)
         {
+            return null;
         }
-        else if (returnObject?.OriginalDefinition?.FullName == BigMachinesBody.CommandResultResultFullName2)
-        {
+
+        var check = false;
+        var returnTask = false;
+        BigMachinesObject? responseObject = null;
+        if (returnObject.FullName == BigMachinesBody.CommandResultResultFullName)
+        {// CommandResult
+            check = true;
+        }
+        else if (returnObject.OriginalDefinition?.FullName == BigMachinesBody.CommandResultResultFullName2)
+        {// CommandResult<TResponse>
+            check = true;
             responseObject = returnObject.Generics_Arguments[0];
         }
-        else
+        else if (returnObject.Generics_Kind == VisceralGenericsKind.ClosedGeneric &&
+                returnObject.OriginalDefinition?.FullName == BigMachinesBody.TaskFullName2 &&
+                returnObject.Generics_Arguments is { } args &&
+                args.Length == 1)
+        {// Task<TResult>
+            returnTask = true;
+            if (args[0].FullName == BigMachinesBody.CommandResultResultFullName)
+            {// Task<CommandResult>
+                check = true;
+            }
+            else if (args[0].OriginalDefinition?.FullName == BigMachinesBody.CommandResultResultFullName2)
+            {// Task<CommandResult<TResponse>>
+                check = true;
+                responseObject = args[0].Generics_Arguments[0];
+            }
+        }
+
+        if (!check)
         {
             method.Body.ReportDiagnostic(BigMachinesBody.Error_MethodFormat2, method.Location);
         }
@@ -55,6 +81,7 @@ public class CommandMethod
         commandMethod.Name = method.SimpleName;
         // commandMethod.CommandId = commandId;
         commandMethod.WithLock = methodAttribute.WithLock;
+        commandMethod.ReturnTask = returnTask;
         commandMethod.ResponseObject = responseObject;
 
         return commandMethod;
@@ -71,6 +98,8 @@ public class CommandMethod
     // public bool DuplicateId { get; internal set; }
 
     public bool WithLock { get; internal set; }
+
+    public bool ReturnTask { get; private set; }
 
     public BigMachinesObject? ResponseObject { get; private set; }
 
@@ -120,7 +149,14 @@ public class CommandMethod
                 ssb.AppendLine("if (this.machine.operationalState == OperationalFlag.Terminated) return new(CommandResult.Terminated, default);");
             }
 
-            ssb.AppendLine($"return this.machine.{this.Name}({string.Join(", ", names)});");
+            if (this.ReturnTask)
+            {
+                ssb.AppendLine($"return await this.machine.{this.Name}({string.Join(", ", names)}).ConfigureAwait(false);");
+            }
+            else
+            {
+                ssb.AppendLine($"return this.machine.{this.Name}({string.Join(", ", names)});");
+            }
 
             if (this.WithLock)
             {

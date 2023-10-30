@@ -54,6 +54,18 @@ public partial class TinyMachine : Machine<int>
     {
         return CommandResult.Success;
     }
+
+    [CommandMethod]
+    public async Task<CommandResult<int>> TaskCommand()
+    {
+        return new(CommandResult.Success, 2);
+    }
+
+    [CommandMethod]
+    public async Task<CommandResult> TaskCommand2()
+    {
+        return CommandResult.Success;
+    }
 }
 
 [MachineObject]
