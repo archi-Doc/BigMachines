@@ -4,7 +4,6 @@ using System;
 using System.Threading.Tasks;
 using BigMachines;
 using Tinyhand;
-using static Sandbox.ParentClass;
 
 namespace Sandbox;
 
@@ -23,8 +22,8 @@ public partial class TestC
 public partial class TestBigMachine
 {
     [AddMachine<TinyMachine>(Volatile = true)]
-    [AddMachine<AccessibilityMachine>(Name = "TinyMachine")]
-    [AddMachine<TinyMachine2<int>>()]
+    [AddMachine<AccessibilityMachine>(Name = "AccessibilityMachine")]
+    [AddMachine<ParentClass.TinyMachine2<int>>()]
     public TestBigMachine()
     {// MachineRegistry.Register(new(721092537, typeof(Sandbox.TinyMachine2<int>), () => new TinyMachine2<int>(), false, null, false));
     }

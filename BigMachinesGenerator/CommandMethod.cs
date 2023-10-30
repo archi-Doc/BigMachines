@@ -43,17 +43,17 @@ public class CommandMethod
             return null;
         }
 
-        var commandId = methodAttribute.CommandId;
+        /*var commandId = methodAttribute.CommandId;
         if (commandId == uint.MaxValue)
         {
             commandId = (uint)FarmHash.Hash64(method.SimpleName);
-        }
+        }*/
 
         var commandMethod = new CommandMethod();
         commandMethod.Location = attribute.Location;
         commandMethod.Method = method;
         commandMethod.Name = method.SimpleName;
-        commandMethod.Id = commandId;
+        // commandMethod.CommandId = commandId;
         commandMethod.WithLock = methodAttribute.WithLock;
         commandMethod.ResponseObject = responseObject;
 
@@ -66,9 +66,9 @@ public class CommandMethod
 
     public string Name { get; private set; } = string.Empty;
 
-    public uint Id { get; internal set; }
+    // public uint CommandId { get; internal set; }
 
-    public bool DuplicateId { get; internal set; }
+    // public bool DuplicateId { get; internal set; }
 
     public bool WithLock { get; internal set; }
 

@@ -424,7 +424,7 @@ public class BigMachinesObject : VisceralObjectBase<BigMachinesObject>
         this.StateMethodList = new();
         var idToStateMethod = new Dictionary<uint, StateMethod>();
         this.CommandMethodList = new();
-        var idToCommandMethod = new Dictionary<uint, CommandMethod>();
+        // var idToCommandMethod = new Dictionary<uint, CommandMethod>();
         foreach (var x in this.GetMembers(VisceralTarget.Method))
         {
             if (x.AllAttributes.FirstOrDefault(x => x.FullName == StateMethodAttributeMock.FullName) is { } attribute)
@@ -452,15 +452,15 @@ public class BigMachinesObject : VisceralObjectBase<BigMachinesObject>
                 {// Add
                     this.CommandMethodList.Add(commandMethod);
 
-                    if (idToCommandMethod.TryGetValue(commandMethod.Id, out var s))
+                    /*if (idToCommandMethod.TryGetValue(commandMethod.CommandId, out var s))
                     {// Duplicated
                         commandMethod.DuplicateId = true;
                         s.DuplicateId = true;
                     }
                     else
                     {
-                        idToCommandMethod.Add(commandMethod.Id, commandMethod);
-                    }
+                        idToCommandMethod.Add(commandMethod.CommandId, commandMethod);
+                    }*/
                 }
             }
             else if (x.Method_IsConstructor && x.ContainingObject == this)
@@ -483,10 +483,10 @@ public class BigMachinesObject : VisceralObjectBase<BigMachinesObject>
             this.Body.AddDiagnostic(BigMachinesBody.Error_DuplicateStateId, x.Location);
         }
 
-        foreach (var x in this.CommandMethodList.Where(a => a.DuplicateId))
+        /*foreach (var x in this.CommandMethodList.Where(a => a.DuplicateId))
         {// Duplicate command method
             this.Body.AddDiagnostic(BigMachinesBody.Error_DuplicateCommandId, x.Location);
-        }
+        }*/
     }
 
     public bool CheckKeyword(string keyword, Location? location = null)
@@ -525,7 +525,7 @@ public class BigMachinesObject : VisceralObjectBase<BigMachinesObject>
             return;
         }
 
-        var classFormat = "__gen__bm__{0:D4}";
+        // var classFormat = "__gen__bm__{0:D4}";
         var list2 = list.SelectMany(x => x.ConstructedObjects).Where(x => x.ObjectAttribute != null).ToArray();
 
         /*if (list2.Length > 0 && list2[0].ContainingObject is { } containingObject)

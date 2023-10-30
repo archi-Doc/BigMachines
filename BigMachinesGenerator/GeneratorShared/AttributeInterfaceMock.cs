@@ -196,7 +196,7 @@ public sealed class CommandMethodAttributeMock : Attribute
     {
     }
 
-    public uint CommandId { get; set; }
+    // public uint CommandId { get; set; }
 
     public bool WithLock { get; set; } = true;
 
@@ -205,11 +205,11 @@ public sealed class CommandMethodAttributeMock : Attribute
         var attribute = new CommandMethodAttributeMock();
         object? val;
 
-        val = AttributeHelper.GetValue(0, nameof(CommandId), constructorArguments, namedArguments);
+        /*val = AttributeHelper.GetValue(0, nameof(CommandId), constructorArguments, namedArguments);
         if (val != null)
         {
             attribute.CommandId = (uint)val;
-        }
+        }*/
 
         val = AttributeHelper.GetValue(-1, nameof(WithLock), constructorArguments, namedArguments);
         if (val != null)

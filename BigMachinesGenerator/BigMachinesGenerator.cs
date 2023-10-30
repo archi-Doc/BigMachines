@@ -8,6 +8,8 @@ using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.CSharp;
 using Microsoft.CodeAnalysis.CSharp.Syntax;
 
+#pragma warning disable RS1036
+
 namespace BigMachines.Generator;
 
 [Generator]

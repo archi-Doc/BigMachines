@@ -136,19 +136,18 @@ public sealed class CommandMethodAttribute : Attribute
     /// <summary>
     /// Initializes a new instance of the <see cref="CommandMethodAttribute"/> class.
     /// </summary>
-    /// <param name="commandId">The identifier for the command method.<br/>
-    /// You can set a random number, but it needs to be unique.<br/>
-    /// If you specify <see cref="uint.MaxValue"/>, the hash of the method name is used.</param>
-    public CommandMethodAttribute(uint commandId = uint.MaxValue)
+    public CommandMethodAttribute()
     {
-        this.CommandId = commandId;
+        // this.CommandId = commandId;
     }
 
+    /*
     /// <summary>
-    /// Gets an identifier of the command.<br/>
-    /// Id must be a unique number (can be a random number).
+    /// Gets the identifier for the command method.<br/>
+    /// You can set a random number, but it needs to be unique.<br/>
+    /// If you specify <see cref="uint.MaxValue"/>, the hash of the method name is used.
     /// </summary>
-    public uint CommandId { get; }
+    public uint CommandId { get; }*/
 
     /// <summary>
     /// Gets or sets a value indicating whether the command method executes with locking the machine [the default is <see langword="true"/>].
