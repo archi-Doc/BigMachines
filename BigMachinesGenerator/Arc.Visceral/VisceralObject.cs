@@ -2958,6 +2958,9 @@ public abstract class VisceralObjectBase<T> : IComparable<T>
         return sb.ToString();
     }
 
+    public bool HasDefaultConstructor()
+        => this.GetMembers(VisceralTarget.Method).Any(a => a.Method_IsConstructor && a.Method_Parameters.Length == 0 && a.ContainingObject == this);
+
     private ImmutableArray<VisceralAttribute> SymbolToAttribute(ISymbol symbol)
     {
         var builder = ImmutableArray.CreateBuilder<VisceralAttribute>();

@@ -46,13 +46,13 @@ public partial class TestBigMachine : BigMachineBase, ITinyhandSerialize<TestBig
 
         if (value.TestMachines.MachineInformation.Serializable)
         {
-            writer.Write(value.TestMachines.MachineInformation.Id);
+            writer.Write(12);
             TinyhandSerializer.SerializeObject(ref writer, value.TestMachines, options);
         }
 
         if (value.SingleMachine.MachineInformation.Serializable)
         {
-            writer.Write(value.SingleMachine.MachineInformation.Id);
+            writer.Write(23);
             TinyhandSerializer.SerializeObject(ref writer, value.SingleMachine, options);
         }
     }

@@ -95,6 +95,21 @@ public partial class AccessibilityMachine : Machine
     }
 }
 
+[MachineObject]
+public partial class NoDefaultConstructorMachine : Machine
+{
+    public NoDefaultConstructorMachine(IServiceProvider serviceProvider)
+        : base()
+    {
+    }
+
+    [StateMethod(0)]
+    public StateResult PublicState(StateParameter parameter)
+    {
+        return StateResult.Terminate;
+    }
+}
+
 /*[MachineObject]
 public partial class AccessibilityMachine2 : AccessibilityMachine
 {// PrivateState() is currently not supported.

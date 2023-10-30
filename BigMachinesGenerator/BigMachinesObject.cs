@@ -33,10 +33,9 @@ public enum BigMachinesObjectFlag
     TinyhandObject = 1 << 5,
 
     CanCreateInstance = 1 << 12, // Can create an instance
-    HasSimpleConstructor = 1 << 13, // Has simple constructor: TestMachine(BigMachine<T> bigMachine)
-    IsSimpleGenericMachine = 1 << 14, // Class<TIdentifier> : Machine<TIdentifier>
-    HasRegisterBM = 1 << 15, // RegisterBM() declared
-    StructualEnabled = 1 << 16, // Tinyhand structual
+    IsSimpleGenericMachine = 1 << 13, // Class<TIdentifier> : Machine<TIdentifier>
+    HasRegisterBM = 1 << 14, // RegisterBM() declared
+    StructualEnabled = 1 << 15, // Tinyhand structual
 }
 
 public class BigMachinesObject : VisceralObjectBase<BigMachinesObject>
@@ -468,14 +467,6 @@ public class BigMachinesObject : VisceralObjectBase<BigMachinesObject>
                     }*/
                 }
             }
-            else if (x.Method_IsConstructor && x.ContainingObject == this)
-            {// Constructor
-                if (x.Method_Parameters.Length == 1 &&
-                    x.Method_Parameters[0].StartsWith($"{BigMachinesBody.BigMachineNamespace}.BigMachine<"))
-                {
-                    this.ObjectFlag |= BigMachinesObjectFlag.HasSimpleConstructor;
-                }
-            }
         }
 
         if (this.StateMethodList.Count > 0 && !idToStateMethod.ContainsKey(0))
@@ -898,14 +889,16 @@ ModuleInitializerClass_Added:
         }
 
         using (var scope = ssb.ScopeBrace($"public static {this.NewIfDerived}void RegisterBM()"))
-        {// public record MachineInformation(int Id, Type MachineType, Func<Machine>? Constructor, bool Serializable, Type? IdentifierType, bool Continuous)
-            var machineId = "0"; //  $"{this.ObjectAttribute.MachineId.ToString()}u";
+        {// public record MachineInformation(Type MachineType, Func<Machine>? Constructor, bool Serializable, Type? IdentifierType, bool Continuous)
+            // var machineId = $"{this.ObjectAttribute.MachineId.ToString()}u";
             var machineType = $"typeof({this.FullName})";
-            var constructor = this.TinyhandAttribute?.UseServiceProvider == true ? "null" : $"() => new {this.LocalName}()";
+
+            var constructor = this.HasDefaultConstructor() ? $"() => new {this.LocalName}()" : "null"; // this.TinyhandAttribute?.UseServiceProvider == true
+
             var serializable = this.TinyhandAttribute is not null ? "true" : "false";
             var identifierType = this.IdentifierObject is not null ? $"typeof({this.IdentifierObject.FullName})" : "null";
             var continuous = "false";
-            ssb.AppendLine($"MachineRegistry.Register(new({machineId}, {machineType}, {constructor}, {serializable}, {identifierType}, {continuous}));");
+            ssb.AppendLine($"MachineRegistry.Register(new({machineType}, {constructor}, {serializable}, {identifierType}, {continuous}));");
         }
     }
 
