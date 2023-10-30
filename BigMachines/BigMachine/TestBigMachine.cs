@@ -11,18 +11,18 @@ namespace BigMachines;
 [TinyhandObject]
 public partial class TestBigMachine : BigMachineBase, ITinyhandSerialize<TestBigMachine>, IStructualObject
 {
-    private static MachineControl[] controls = Array.Empty<MachineControl>();
+    private MachineControl[] controls = Array.Empty<MachineControl>();
 
     public TestBigMachine()
     {
         this.TestMachines.Prepare(this);
         this.SingleMachine.Prepare(this);
 
-        controls = new MachineControl[] { this.TestMachines, this.SingleMachine, };
+        this.controls = new MachineControl[] { this.TestMachines, this.SingleMachine, };
     }
 
     public override MachineControl[] GetArray()
-        => controls;
+        => this.controls;
 
     private UnorderedMachineControl<int, TestMachine, TestMachine.Interface> testMachines = new();
 
@@ -40,8 +40,7 @@ public partial class TestBigMachine : BigMachineBase, ITinyhandSerialize<TestBig
             return;
         }
 
-        var count = controls.Count(x => x.MachineInformation.Serializable);
-
+        var count = value.controls.Count(x => x.MachineInformation.Serializable);
         writer.WriteMapHeader(count);
 
         if (value.TestMachines.MachineInformation.Serializable)

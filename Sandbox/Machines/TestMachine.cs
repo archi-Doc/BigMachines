@@ -7,27 +7,16 @@ using Tinyhand;
 
 namespace Sandbox;
 
-public partial class TestC
-{
-    [BigMachineObject(Default = true)]
-    public partial class TestBigMachine2
-    {
-        public TestBigMachine2()
-        {
-        }
-    }
-}
-
-[BigMachineObject]
+/*[BigMachineObject]
 public partial class TestBigMachine
 {
     [AddMachine<CommandTestMachine>(Volatile = true)]
     [AddMachine<AccessibilityMachine>(Name = "AccessibilityMachine")]
     [AddMachine<ParentClass.TinyMachine2<int>>()]
-    public TestBigMachine()
+    public TestBigMachine(int x)
     {// MachineRegistry.Register(new(721092537, typeof(Sandbox.TinyMachine2<int>), () => new TinyMachine2<int>(), false, null, false));
     }
-}
+}*/
 
 [MachineObject]
 public partial class CommandTestMachine : Machine<int>
@@ -103,6 +92,31 @@ public partial class NoDefaultConstructorMachine : Machine
 
 public partial class ParentClass
 {
+    /*[BigMachineObject]
+    public partial class NestedBigMachine
+    {
+        public NestedBigMachine()
+        {
+        }
+    }*/
+
+    [MachineObject]
+    public partial class TinyMachine : Machine
+    {
+        public TinyMachine()
+            : base()
+        {
+        }
+
+        [StateMethod(0)]
+        public StateResult Initial(StateParameter parameter)
+            => StateResult.Terminate;
+
+        [CommandMethod]
+        protected CommandResult<int> Command1(int x)
+            => new(CommandResult.Success, x + 2);
+    }
+
     [TinyhandObject]
     [MachineObject(Control = MachineControlKind.Single)]
     public partial class TinyMachine2<TData> : Machine

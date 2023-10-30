@@ -48,6 +48,11 @@ class Program
 
         Console.WriteLine("BigMachines Sandbox");
 
+        var bigMachine = new BigMachine();
+        var tinyControl = bigMachine.TinyMachine;
+        var machine = tinyControl.Get();
+        var result = await bigMachine.TinyMachine.Get().Command.Command1(10);
+
         // Load
         /*try
         {

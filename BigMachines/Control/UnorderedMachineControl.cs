@@ -17,7 +17,7 @@ public sealed partial class UnorderedMachineControl<TIdentifier, TMachine, TInte
     where TMachine : Machine<TIdentifier>
     where TInterface : Machine.ManMachineInterface
 {
-    internal UnorderedMachineControl()
+    public UnorderedMachineControl()
         : base()
     {
         this.MachineInformation = MachineRegistry.Get<TMachine>();

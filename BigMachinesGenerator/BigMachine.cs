@@ -1,9 +1,13 @@
 ﻿// Copyright (c) All contributors. All rights reserved. Licensed under the MIT license.
 
 using System;
+using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
+using System.Text;
+using Arc.Visceral;
 using Microsoft.CodeAnalysis;
+using Tinyhand;
 
 namespace BigMachines.Generator;
 
@@ -13,6 +17,8 @@ internal class BigMachine : IEquatable<BigMachine>
     {
         this.Body = body;
         this.Object = obj;
+        this.Namespace = this.Object is null ? BigMachinesBody.BigMachineNamespace : this.Object.Namespace;
+        this.SimpleName = this.Object is null ? BigMachinesBody.DefaultBigMachineObject : this.Object.SimpleName;
     }
 
     internal class Machine
@@ -24,27 +30,72 @@ internal class BigMachine : IEquatable<BigMachine>
                 return null;
             }
 
+            if (machineObject.Generics_Kind == VisceralGenericsKind.OpenGeneric)
+            {
+                return null;
+            }
+
             var machine = new Machine();
             machine.Name = name;
+            machine.FullName = machineObject.FullName;
             machine.Control = machineObject.ObjectAttribute.Control;
             machine.MachineObject = machineObject;
             machine.IdentifierObject = machineObject.IdentifierObject;
+
+            if (machine.Control == MachineControlKind.Single)
+            {
+                machine.ControlType = $"SingleMachineControl<{machine.FullName}, {machine.FullName}.Interface>";
+            }
+            else if (machine.Control == MachineControlKind.Unordered)
+            {
+                if (machine.IdentifierObject is null)
+                {
+                    return null;
+                }
+
+                machine.ControlType = $"UnorderedMachineControl<{machine.IdentifierObject.FullName}, {machine.FullName}, {machine.FullName}.Interface>";
+            }
+            else if (machine.Control == MachineControlKind.Sequential)
+            {
+                if (machine.IdentifierObject is null)
+                {
+                    return null;
+                }
+
+                machine.ControlType = $"SequentialMachineControl<{machine.IdentifierObject.FullName}, {machine.FullName}, {machine.FullName}.Interface>";
+            }
+            else
+            {
+                return null;
+            }
+
+            machine.Key = (int)FarmHash.Hash64(machine.ControlType);
 
             return machine;
         }
 
         public string Name { get; private set; } = string.Empty;
 
+        public string FullName { get; private set; } = string.Empty;
+
         public MachineControlKind Control { get; private set; }
 
         public BigMachinesObject MachineObject { get; private set; } = default!;
 
         public BigMachinesObject? IdentifierObject { get; private set; }
+
+        public string ControlType { get; private set; } = string.Empty;
+
+        public int Key { get; private set; }
     }
 
     public BigMachinesBody Body { get; }
 
     public BigMachinesObject? Object { get; }
+
+    public string Namespace { get; }
+
+    public string SimpleName { get; }
 
     public bool Default { get; set; }
 
@@ -106,26 +157,29 @@ internal class BigMachine : IEquatable<BigMachine>
 
     public void Check()
     {
-        if (this.Object is null)
+        if (this.Object is not null)
         {
-            return;
-        }
-
-        if (!this.Object.IsPartial)
-        {
-            this.Body.ReportDiagnostic(BigMachinesBody.Error_NotPartial, this.Object.Location, this.Object.FullName);
-        }
-
-        // Parent class also needs to be a partial class.
-        var parent = this.Object.ContainingObject;
-        while (parent != null)
-        {
-            if (!parent.IsPartial)
+            if (this.Object.ContainingObject is not null)
             {
-                this.Body.ReportDiagnostic(BigMachinesBody.Error_NotPartialParent, parent.Location, parent.FullName);
+                this.Body.ReportDiagnostic(BigMachinesBody.Error_BigMachineClass, this.Object.Location);
             }
 
-            parent = parent.ContainingObject;
+            if (!this.Object.IsPartial)
+            {
+                this.Body.ReportDiagnostic(BigMachinesBody.Error_NotPartial, this.Object.Location, this.Object.FullName);
+            }
+
+            // Parent class also needs to be a partial class.
+            var parent = this.Object.ContainingObject;
+            while (parent != null)
+            {
+                if (!parent.IsPartial)
+                {
+                    this.Body.ReportDiagnostic(BigMachinesBody.Error_NotPartialParent, parent.Location, parent.FullName);
+                }
+
+                parent = parent.ContainingObject;
+            }
         }
 
         foreach (var x in this.AddedMachines)
@@ -143,6 +197,137 @@ internal class BigMachine : IEquatable<BigMachine>
                     this.Machines.Add(name, machine);
                 }
             }
+        }
+    }
+
+    public void Generate(ScopingStringBuilder ssb, GeneratorInformation info)
+    {
+        ssb.AppendLine("[TinyhandObject]");
+        using (var scopeClass = ssb.ScopeBrace($"public partial class {this.SimpleName} : BigMachineBase, ITinyhandSerialize<{this.SimpleName}>, IStructualObject"))
+        {
+            this.GenerateMembers(ssb, info);
+            ssb.AppendLine();
+
+            this.GenerateConstructor(ssb, info);
+            ssb.AppendLine();
+
+            this.GenerateSerialize(ssb, info);
+            ssb.AppendLine();
+
+            this.GenerateDeserialize(ssb, info);
+            ssb.AppendLine();
+
+            this.GenerateStructual(ssb, info);
+        }
+    }
+
+    public void GenerateConstructor(ScopingStringBuilder ssb, GeneratorInformation info)
+    {
+        using (var scopeMethod = ssb.ScopeBrace($"public {this.SimpleName}()"))
+        {
+            var sb = new StringBuilder();
+            sb.Append("this.controls = new MachineControl[] { ");
+
+            foreach (var x in this.Machines.Values)
+            {
+                ssb.AppendLine($"this.{x.Name}.Prepare(this);");
+                sb.Append($"this.{x.Name}, ");
+            }
+
+            sb.Append("};");
+            ssb.AppendLine(sb.ToString());
+        }
+    }
+
+    public void GenerateMembers(ScopingStringBuilder ssb, GeneratorInformation info)
+    {
+        ssb.AppendLine("private MachineControl[] controls = Array.Empty<MachineControl>();");
+        ssb.AppendLine("public override MachineControl[] GetArray() => controls;");
+        foreach (var x in this.Machines.Values)
+        {
+            ssb.AppendLine($"private {x.ControlType} _{x.Name} = new();");
+            ssb.AppendLine($"public {x.ControlType} {x.Name} => this._{x.Name};");
+        }
+    }
+
+    public void GenerateSerialize(ScopingStringBuilder ssb, GeneratorInformation info)
+    {
+        using (var scopeMethod = ssb.ScopeBrace($"static void ITinyhandSerialize<{this.SimpleName}>.Serialize(ref TinyhandWriter writer, scoped ref {this.SimpleName}? value, TinyhandSerializerOptions options)"))
+        {
+            ssb.AppendLine("if (value == null) { writer.WriteNil(); return; }");
+            ssb.AppendLine("var count = value.controls.Count(x => x.MachineInformation.Serializable);");
+            ssb.AppendLine("writer.WriteMapHeader(count);");
+
+            foreach (var x in this.Machines.Values)
+            {
+                ssb.AppendLine();
+                using (var scopeSerialize = ssb.ScopeBrace($"if (value.{x.Name}.MachineInformation.Serializable)"))
+                {
+                    ssb.AppendLine($"writer.Write({x.Key.ToString()});");
+                    ssb.AppendLine($"TinyhandSerializer.SerializeObject(ref writer, value.{x.Name}, options);");
+                }
+            }
+        }
+    }
+
+    public void GenerateDeserialize(ScopingStringBuilder ssb, GeneratorInformation info)
+    {
+        using (var scopeMethod = ssb.ScopeBrace($"static void ITinyhandSerialize<{this.SimpleName}>.Deserialize(ref TinyhandReader reader, scoped ref {this.SimpleName}? value, TinyhandSerializerOptions options)"))
+        {
+            ssb.AppendLine("if (reader.TryReadNil()) return;");
+            ssb.AppendLine("value ??= new();");
+            ssb.AppendLine("var count = reader.ReadMapHeader2();");
+
+            var trie = new VisceralTrieInt<Machine>(default!);
+            foreach (var x in this.Machines.Values)
+            {
+                trie.AddNode(x.Key, x);
+            }
+
+            var context = new VisceralTrieInt<Machine>.VisceralTrieContext(
+                ssb,
+                (ctx, obj, node) =>
+                {
+                    ssb.AppendLine($"TinyhandSerializer.DeserializeObject(ref reader, ref value._{node.Member.Name}!, options);");
+                });
+
+            using (var scopeWhile = ssb.ScopeBrace("while (count-- > 0)"))
+            {
+                trie.Generate(context);
+            }
+        }
+    }
+
+    public void GenerateStructual(ScopingStringBuilder ssb, GeneratorInformation info)
+    {
+        ssb.AppendLine("IStructualRoot? IStructualObject.StructualRoot { get; set; }");
+        ssb.AppendLine("IStructualObject? IStructualObject.StructualParent { get; set; }");
+        ssb.AppendLine("int IStructualObject.StructualKey { get; set; }");
+
+        using (var scopeMethod = ssb.ScopeBrace("bool IStructualObject.ReadRecord(ref TinyhandReader reader)"))
+        {
+            ssb.AppendLine("if (!reader.TryRead(out JournalRecord record)) return false;");
+
+            var trie = new VisceralTrieInt<Machine>(default!);
+            foreach (var x in this.Machines.Values)
+            {
+                trie.AddNode(x.Key, x);
+            }
+
+            var context = new VisceralTrieInt<Machine>.VisceralTrieContext(
+                ssb,
+                (ctx, obj, node) =>
+                {
+                    ssb.AppendLine($"return ((IStructualObject)this.{node.Member.Name}).ReadRecord(ref reader);");
+                });
+
+            using (var scopeKey = ssb.ScopeBrace("if (record == JournalRecord.Key)"))
+            {
+                trie.Generate(context);
+            }
+
+            ssb.AppendLine();
+            ssb.AppendLine("return false;");
         }
     }
 }

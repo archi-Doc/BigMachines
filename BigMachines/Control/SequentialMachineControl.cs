@@ -22,7 +22,7 @@ public sealed partial class SequentialMachineControl<TIdentifier, TMachine, TInt
     where TMachine : Machine<TIdentifier>
     where TInterface : Machine.ManMachineInterface
 {
-    internal SequentialMachineControl()
+    public SequentialMachineControl()
         : base()
     {
         this.MachineInformation = MachineRegistry.Get<TMachine>();
