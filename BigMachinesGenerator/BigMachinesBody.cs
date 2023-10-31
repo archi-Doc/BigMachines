@@ -119,6 +119,10 @@ public class BigMachinesBody : VisceralBody<BigMachinesObject>
         id: "BMG019", title: "BigMachine class", messageFormat: "BigMachines must be a public class and defined at the top level",
         category: "BigMachinesGenerator", DiagnosticSeverity.Error, isEnabledByDefault: true);
 
+    public static readonly DiagnosticDescriptor Error_ExplicitDefaultConstructor = new DiagnosticDescriptor(
+        id: "BMG020", title: "Excpliti default constructor", messageFormat: "Default constructor cannot be explicitly defined, since it's created by the source generator",
+        category: "BigMachinesGenerator", DiagnosticSeverity.Error, isEnabledByDefault: true);
+
     public BigMachinesBody(GeneratorExecutionContext context)
         : base(context)
     {
@@ -245,27 +249,18 @@ public class BigMachinesBody : VisceralBody<BigMachinesObject>
         var defaultFullName = $"{BigMachinesBody.BigMachineNamespace}.{BigMachinesBody.DefaultBigMachineObject}";
 
         var array = this.FullNameToObject.Values.Where(x => x.ObjectFlag.HasFlag(BigMachinesObjectFlag.BigMachineObject)).ToArray();
-        foreach (var x in array)
-        {
-            bigMachine = new BigMachine(this, x);
+        if (!array.Any(x => x.FullName == defaultFullName))
+        {// Add the default BigMachine
+            bigMachine = new BigMachine(this, default);
+            bigMachine.Prepare();
             this.BigMachines.Add(bigMachine);
         }
 
-        bigMachine = this.BigMachines.FirstOrDefault(x => x.Object?.FullName == defaultFullName);
-        if (bigMachine is not null)
-        {// Override the default bigmachine.
-            bigMachine.Default = true;
-        }
-        else
-        {// Add the default bigmachine.
-            var defaultBigMachine = new BigMachine(this, null);
-            defaultBigMachine.Default = true;
-            this.BigMachines.Add(defaultBigMachine);
-        }
-
-        foreach (var x in this.BigMachines)
+        foreach (var x in array)
         {
-            x.AddMachines();
+            bigMachine = new BigMachine(this, x);
+            bigMachine.Prepare();
+            this.BigMachines.Add(bigMachine);
         }
     }
 

@@ -940,4 +940,7 @@ ModuleInitializerClass_Added:
 
         return Array.Empty<string>();
     }
+
+    internal bool HasExplicitDefaultConstructor()
+        => this.GetMembers(VisceralTarget.Method).Any(a => a.Method_IsConstructor && a.Method_Parameters.Length == 0 && a.ContainingObject == this && a.symbol?.IsImplicitlyDeclared == false);
 }

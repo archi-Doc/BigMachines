@@ -7,16 +7,9 @@ using Tinyhand;
 
 namespace Sandbox;
 
-/*[BigMachineObject]
-public partial class TestBigMachine
-{
-    [AddMachine<CommandTestMachine>(Volatile = true)]
-    [AddMachine<AccessibilityMachine>(Name = "AccessibilityMachine")]
-    [AddMachine<ParentClass.TinyMachine2<int>>()]
-    public TestBigMachine(int x)
-    {// MachineRegistry.Register(new(721092537, typeof(Sandbox.TinyMachine2<int>), () => new TinyMachine2<int>(), false, null, false));
-    }
-}*/
+[BigMachineObject(Comprehensive = true)]
+[AddMachine<ParentClass.TinyMachine2<int>>()]
+public partial class TestBigMachine;
 
 [MachineObject]
 public partial class CommandTestMachine : Machine<int>

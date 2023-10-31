@@ -93,11 +93,13 @@ internal class BigMachine : IEquatable<BigMachine>
 
     public BigMachinesObject? Object { get; }
 
+    public BigMachineObjectAttributeMock? Attribute { get; private set; }
+
     public string Namespace { get; }
 
     public string SimpleName { get; }
 
-    public bool Default { get; set; }
+    public bool Comprehensive { get; set; }
 
     public Dictionary<BigMachinesObject, AddMachineAttributeMock?> AddedMachines { get; } = new();
 
@@ -109,12 +111,33 @@ internal class BigMachine : IEquatable<BigMachine>
     bool IEquatable<BigMachine>.Equals(BigMachine other)
         => this.Object == other.Object;
 
-    public void AddMachines()
+    public void Prepare()
     {
+        if (this.Object?.AllAttributes.FirstOrDefault(x => x.FullName == BigMachineObjectAttributeMock.FullName) is { } attr)
+        {
+            try
+            {
+                this.Attribute = BigMachineObjectAttributeMock.FromArray(attr.ConstructorArguments, attr.NamedArguments);
+            }
+            catch (InvalidCastException)
+            {
+                this.Body.ReportDiagnostic(BigMachinesBody.Error_AttributePropertyError, attr.Location);
+            }
+        }
+
+        if (this.Object is null)
+        {
+            this.Comprehensive = true;
+        }
+        else
+        {
+            this.Comprehensive = this.Attribute?.Comprehensive == true;
+        }
+
         var start = AddMachineAttributeMock.FullName + "<";
 
-        if (this.Default)
-        {// Default big machine
+        if (this.Comprehensive)
+        {// Comprehensive big machine
             var array = this.Body.FullNameToObject.Values.Where(x => x.ObjectFlag.HasFlag(BigMachinesObjectFlag.MachineObject)).ToArray();
             foreach (var x in array)
             {
@@ -124,31 +147,28 @@ internal class BigMachine : IEquatable<BigMachine>
 
         if (this.Object is not null)
         {
-            foreach (var x in this.Object.GetMembers(Arc.Visceral.VisceralTarget.Method).Where(x => x.Method_IsConstructor))
+            foreach (var objectAttribute in this.Object.AllAttributes)
             {
-                foreach (var objectAttribute in x.AllAttributes)
-                {
-                    if (objectAttribute.FullName.StartsWith(start) && objectAttribute.FullName.EndsWith(">"))
-                    {// MachineObjectAttribute
-                        var machineName = objectAttribute.FullName.Substring(start.Length, objectAttribute.FullName.Length - start.Length - 1);
-                        if (this.Body.TryGet(machineName, out var obj))
+                if (objectAttribute.FullName.StartsWith(start) && objectAttribute.FullName.EndsWith(">"))
+                {// MachineObjectAttribute
+                    var machineName = objectAttribute.FullName.Substring(start.Length, objectAttribute.FullName.Length - start.Length - 1);
+                    if (this.Body.TryGet(machineName, out var obj))
+                    {
+                        AddMachineAttributeMock? attribute = null;
+                        try
                         {
-                            AddMachineAttributeMock? attribute = null;
-                            try
-                            {
-                                attribute = AddMachineAttributeMock.FromArray(objectAttribute.ConstructorArguments, objectAttribute.NamedArguments);
-                                attribute.Location = objectAttribute.Location;
-                            }
-                            catch (InvalidCastException)
-                            {
-                                this.Body.ReportDiagnostic(BigMachinesBody.Error_AttributePropertyError, objectAttribute.Location);
-                            }
+                            attribute = AddMachineAttributeMock.FromArray(objectAttribute.ConstructorArguments, objectAttribute.NamedArguments);
+                            attribute.Location = objectAttribute.Location;
+                        }
+                        catch (InvalidCastException)
+                        {
+                            this.Body.ReportDiagnostic(BigMachinesBody.Error_AttributePropertyError, objectAttribute.Location);
+                        }
 
-                            this.AddedMachines[obj] = attribute;
-                        }
-                        else
-                        {
-                        }
+                        this.AddedMachines[obj] = attribute;
+                    }
+                    else
+                    {
                     }
                 }
             }
@@ -179,6 +199,11 @@ internal class BigMachine : IEquatable<BigMachine>
                 }
 
                 parent = parent.ContainingObject;
+            }
+
+            if (this.Object.HasExplicitDefaultConstructor())
+            {
+                this.Body.ReportDiagnostic(BigMachinesBody.Error_ExplicitDefaultConstructor, this.Object.Location);
             }
         }
 

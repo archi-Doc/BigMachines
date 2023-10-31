@@ -16,9 +16,12 @@ public interface IBigMachine
     /// </summary>
     public BigMachineCore Core { get; }
 
-    public DateTime LastRun { get; }
-
     public void Start();
+
+    /// <summary>
+    /// Gets <see cref="DateTime"/> when the BigMachine was last executed.
+    /// </summary>
+    public DateTime LastRun { get; }
 
     // public MachineControl[] GetControls();
 
@@ -40,5 +43,8 @@ public interface IBigMachine
     /// <param name="handler">The exception handler.</param>
     public void SetExceptionHandler(ExceptionHandlerDelegate handler);
 
+    /// <summary>
+    /// Processes the queued exceptions.
+    /// </summary>
     public void ProcessException();
 }

@@ -1,33 +1,41 @@
 ﻿// Copyright (c) All contributors. All rights reserved. Licensed under the MIT license.
 
 using System;
+using BigMachines.Control;
 using Tinyhand;
 
 namespace BigMachines;
 
+/// <summary>
+/// Represents the type of MachineControl.
+/// </summary>
 public enum MachineControlKind
 {
     /// <summary>
-    /// Assigns <see cref="BigMachines.Control.SingleMachineControl{TMachine, TInterface}"/> if the machine is derived from <see cref="Machine"/>, or <see cref="BigMachines.Control.UnorderedMachineControl{TIdentifier, TMachine, TInterface}"/> if the machine is derived from <see cref="Machine{TIdentifier}"/>.
+    /// Assigns <see cref="SingleMachineControl{TMachine, TInterface}"/> if the machine is derived from <see cref="Machine"/>, or <see cref="UnorderedMachineControl{TIdentifier, TMachine, TInterface}"/> if the machine is derived from <see cref="Machine{TIdentifier}"/>.
     /// </summary>
     Default,
 
     /// <summary>
-    /// Manages a single machine (<see cref="BigMachines.Control.SingleMachineControl{TMachine, TInterface}"/>).
+    /// Manages a single machine (<see cref="SingleMachineControl{TMachine, TInterface}"/>).
     /// </summary>
     Single,
 
     /// <summary>
-    /// Manage multiple machines with identifiers (<see cref="BigMachines.Control.UnorderedMachineControl{TIdentifier, TMachine, TInterface}"/>.
+    /// Manage multiple machines with identifiers (<see cref="UnorderedMachineControl{TIdentifier, TMachine, TInterface}"/>.
     /// </summary>
     Unordered,
 
     /// <summary>
-    /// Manage multiple machines and run them sequentially (<see cref="BigMachines.Control.SequentialMachineControl{TIdentifier, TMachine, TInterface}"/>.
+    /// Manage multiple machines and run them sequentially (<see cref="SequentialMachineControl{TIdentifier, TMachine, TInterface}"/>.
     /// </summary>
     Sequential,
 }
 
+/// <summary>
+/// Add the attribute to the target class to create a big machine.<br/>
+/// The target class must be an empty partial class and must not have a default constructor.
+/// </summary>
 [AttributeUsage(AttributeTargets.Class, AllowMultiple = false, Inherited = true)]
 public sealed class BigMachineObjectAttribute : Attribute
 {
@@ -35,10 +43,17 @@ public sealed class BigMachineObjectAttribute : Attribute
     {
     }
 
-    public bool Default { get; set; } = false;
+    /// <summary>
+    /// Gets or sets a value indicating whether or not to include all machines contained in this assembly [default is <see langword="false"/>].
+    /// </summary>
+    public bool Comprehensive { get; set; } = false;
 }
 
-[AttributeUsage(AttributeTargets.Constructor, AllowMultiple = true, Inherited = false)]
+/// <summary>
+/// Add a machine to the BigMachine.
+/// </summary>
+/// <typeparam name="TMachine">The type of the machine.</typeparam>
+[AttributeUsage(AttributeTargets.Class, AllowMultiple = true, Inherited = false)]
 public sealed class AddMachineAttribute<TMachine> : Attribute
 where TMachine : Machine
 {
@@ -46,9 +61,15 @@ where TMachine : Machine
     {
     }
 
-    public bool Volatile { get; set; }
-
+    /// <summary>
+    /// Gets or sets the name to identify the machine.
+    /// </summary>
     public string Name { get; set; } = string.Empty;
+
+    /// <summary>
+    /// Gets or sets a value indicating whether or not to make the machine volatile and exclude it during data persistence. [default is <see langword="false"/>].
+    /// </summary>
+    public bool Volatile { get; set; }
 }
 
 /// <summary>

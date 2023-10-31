@@ -49,17 +49,17 @@ public sealed class BigMachineObjectAttributeMock : Attribute
     public static readonly string StandardName = SimpleName + "Attribute";
     public static readonly string FullName = BigMachinesBody.BigMachineNamespace + "." + StandardName;
 
-    public bool Default { get; set; }
+    public bool Comprehensive { get; set; }
 
     public static BigMachineObjectAttributeMock FromArray(object?[] constructorArguments, KeyValuePair<string, object?>[] namedArguments)
     {
         var attribute = new BigMachineObjectAttributeMock();
         object? val;
 
-        val = AttributeHelper.GetValue(-1, nameof(Default), constructorArguments, namedArguments);
+        val = AttributeHelper.GetValue(-1, nameof(Comprehensive), constructorArguments, namedArguments);
         if (val != null)
         {
-            attribute.Default = (bool)val;
+            attribute.Comprehensive = (bool)val;
         }
 
         return attribute;
@@ -77,9 +77,9 @@ public sealed class AddMachineAttributeMock : Attribute
     {
     }
 
-    public bool Volatile { get; set; }
-
     public string Name { get; set; } = string.Empty;
+
+    public bool Volatile { get; set; }
 
     internal Location? Location { get; set; }
 
