@@ -15,11 +15,6 @@ public partial class TestBigMachine;
 [MachineObject]
 public partial class CommandTestMachine : Machine<int>
 {
-    public CommandTestMachine()
-        : base()
-    {
-    }
-
     [CommandMethod(All = true)]
     public CommandResult CommandParam(string name, int age)
         => CommandResult.Success;
@@ -44,11 +39,6 @@ public partial class CommandTestMachine : Machine<int>
 [MachineObject]
 public partial class AccessibilityMachine : Machine
 {
-    public AccessibilityMachine()
-        : base()
-    {
-    }
-
     [StateMethod(0)]
     public StateResult PublicState(StateParameter parameter)
         => StateResult.Terminate;

@@ -10,7 +10,6 @@ namespace Sandbox;
 public partial class TerminatorMachine : Machine
 {
     public TerminatorMachine()
-        : base()
     {
         this.DefaultTimeout = TimeSpan.FromSeconds(1);
     }

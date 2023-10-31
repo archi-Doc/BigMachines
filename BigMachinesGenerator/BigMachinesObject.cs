@@ -904,6 +904,9 @@ ModuleInitializerClass_Added:
         }
 
         ssb.AppendLine();
+        ssb.AppendLine($"protected ChangeStateResult ChangeState({this.StateName} state, bool rerun = false) => this.{BigMachinesBody.InternalChangeState}(Unsafe.As<{this.StateName}, int>(ref state), rerun);");
+        ssb.AppendLine($"protected {this.NewIfDerived}{this.StateName} GetState() => Unsafe.As<int, {this.StateName}>(ref this.machineState);");
+        ssb.AppendLine();
     }
 
     internal void Generate_RegisterBM(ScopingStringBuilder ssb, GeneratorInformation info)

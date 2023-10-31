@@ -140,14 +140,14 @@ public partial class Machine
         /// </summary>
         /// <returns>The remaining lifespan of the machine.</returns>
         public TimeSpan GetLifespan()
-            => new(this.Machine.Lifespan);
+            => this.Machine.Lifespan;
 
         /// <summary>
         /// Set the remaining lifespan of the machine.
         /// </summary>
         /// <param name="lifespan">The remaining lifespan of the machine.</param>
         public void SetLifespan(TimeSpan lifespan)
-            => this.Machine.Lifespan = lifespan.Ticks;
+            => this.Machine.Lifespan = lifespan;
 
         /// <summary>
         /// Gets the time for the machine to shut down automatically.

@@ -56,7 +56,7 @@ public abstract partial class Machine
 
     #region Keys
 
-    // Machine<TIdentifier>
+    // Defined in Machine<TIdentifier>
     // [Key(0)]
     // public TIdentifier Identifier { get; protected set; }
 
@@ -192,12 +192,12 @@ public abstract partial class Machine
     protected long lifespan = long.MaxValue; // TimeSpan.Ticks (for interlocked)
 
     [IgnoreMember]
-    protected long Lifespan
+    protected TimeSpan Lifespan
     {
-        get => this.lifespan;
+        get => new(this.lifespan);
         set
         {
-            if (this.lifespan == value)
+            if (this.lifespan == value.Ticks)
             {
                 return;
             }
@@ -208,11 +208,11 @@ public abstract partial class Machine
                 writer.Write_Key();
                 writer.Write(5);
                 writer.Write_Value();
-                writer.Write(value);
+                writer.Write(value.Ticks);
                 root.AddJournal(writer);
             }
 
-            this.lifespan = value;
+            this.lifespan = value.Ticks;
         }
     }
 
