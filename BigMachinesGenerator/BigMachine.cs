@@ -278,7 +278,7 @@ internal class BigMachine : IEquatable<BigMachine>
             ssb.AppendLine("value ??= new();");
             ssb.AppendLine("var count = reader.ReadMapHeader2();");
 
-            var trie = new VisceralTrieInt<Machine>(default!);
+            var trie = new VisceralTrieInt<Machine>(null);
             foreach (var x in this.Machines.Values)
             {
                 trie.AddNode(x.Key, x);
@@ -308,7 +308,7 @@ internal class BigMachine : IEquatable<BigMachine>
         {
             ssb.AppendLine("if (!reader.TryRead(out JournalRecord record)) return false;");
 
-            var trie = new VisceralTrieInt<Machine>(default!);
+            var trie = new VisceralTrieInt<Machine>(null);
             foreach (var x in this.Machines.Values)
             {
                 trie.AddNode(x.Key, x);

@@ -8,15 +8,15 @@ namespace Arc.Visceral;
 
 internal class VisceralTrieInt<TObject>
 {
-    public VisceralTrieInt(TObject obj)
+    public VisceralTrieInt(TObject? baseObject)
     {
-        this.Object = obj;
+        this.BaseObject = baseObject;
         this.root = new Node(this, 0);
     }
 
     internal class VisceralTrieContext
     {
-        public VisceralTrieContext(ScopingStringBuilder ssb, Action<VisceralTrieContext, TObject, Node> generateMethod)
+        public VisceralTrieContext(ScopingStringBuilder ssb, Action<VisceralTrieContext, TObject?, Node> generateMethod)
         {
             this.Ssb = ssb;
             this.GenerateMethod = generateMethod;
@@ -28,7 +28,7 @@ internal class VisceralTrieInt<TObject>
 
         public string FallbackStatement { get; } = "reader.Skip();";
 
-        public Action<VisceralTrieContext, TObject, Node> GenerateMethod { get; }
+        public Action<VisceralTrieContext, TObject?, Node> GenerateMethod { get; }
 
         public object? ExtraInfo { get; }
 
@@ -43,7 +43,7 @@ internal class VisceralTrieInt<TObject>
         }
     }
 
-    public TObject Object { get; }
+    public TObject? BaseObject { get; }
 
     public (Node? Node, VisceralTrieAddNodeResult Result) AddNode(int key, TObject member)
     {
@@ -133,7 +133,7 @@ internal class VisceralTrieInt<TObject>
             firstFlag = false;
             using (var c = context.Ssb.ScopeBrace(condition))
             {
-                context.GenerateMethod(context, this.Object, x);
+                context.GenerateMethod(context, this.BaseObject, x);
             }
         }
 

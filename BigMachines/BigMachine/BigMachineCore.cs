@@ -40,12 +40,12 @@ public partial class BigMachineBase
                 }
 
                 var now = DateTime.UtcNow;
-                if (bigMachine.LastRun == default)
+                if (bigMachine.lastRun == default)
                 {
-                    bigMachine.LastRun = now;
+                    bigMachine.lastRun = now;
                 }
 
-                var elapsed = now - bigMachine.LastRun;
+                var elapsed = now - bigMachine.lastRun;
                 if (elapsed.Ticks < 0)
                 {
                     elapsed = default;

@@ -389,7 +389,7 @@ RerunLoop:
         catch (Exception ex)
         {
             result = StateResult.Terminate;
-            this.Control?.BigMachine?.ReportException(new(this, ex));
+            (this.Control?.BigMachine as IBigMachine)?.ReportException(new(this, ex));
         }
 
         if (result == StateResult.Terminate)

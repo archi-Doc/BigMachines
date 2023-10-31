@@ -10,19 +10,19 @@ namespace BigMachines;
 /// <summary>
 ///  The top-level abstract class for managing groups of machines.
 /// </summary>
-public abstract partial class BigMachineBase
+public abstract partial class BigMachineBase : IBigMachine
 {
     public BigMachineBase()
     {
-        this.Core = new(this);
+        this.core = new(this);
     }
 
     public abstract MachineControl[] GetArray();
 
     #region Core
 
-    public void Start()
-        => this.Core.Start();
+    void IBigMachine.Start()
+        => ((IBigMachine)this).Core.Start();
 
     #endregion
 
@@ -33,13 +33,12 @@ public abstract partial class BigMachineBase
     /// </summary>
     public RecursiveDetectionMode RecursiveDetectionMode { get; set; } = RecursiveDetectionMode.Disabled;
 
-    /// <summary>
-    /// Gets an instance of <see cref="BigMachineCore"/>.
-    /// </summary>
-    public BigMachineCore Core { get; private set; }
+    BigMachineCore IBigMachine.Core => this.core;
 
-    public DateTime LastRun { get; private set; }
+    DateTime IBigMachine.LastRun => this.lastRun;
 
+    private BigMachineCore core;
+    private DateTime lastRun;
     private ExceptionHandlerDelegate exceptionHandler = DefaultExceptionHandler;
     private ConcurrentQueue<BigMachineException> exceptionQueue = new();
 
@@ -51,27 +50,27 @@ public abstract partial class BigMachineBase
     /// Gets the number of exceptions queued.
     /// </summary>
     /// <returns>The number of exceptions queued.</returns>
-    public int GetExceptionCount()
+    int IBigMachine.GetExceptionCount()
         => this.exceptionQueue.Count;
 
     /// <summary>
     /// Add the exception to BigMachine's exception queue.
     /// </summary>
     /// <param name="exception">The exception to be queued.</param>
-    public void ReportException(BigMachineException exception)
+    void IBigMachine.ReportException(BigMachineException exception)
         => this.exceptionQueue.Enqueue(exception);
 
     /// <summary>
     /// Sets an exception handler.
     /// </summary>
     /// <param name="handler">The exception handler.</param>
-    public void SetExceptionHandler(ExceptionHandlerDelegate handler)
+    void IBigMachine.SetExceptionHandler(ExceptionHandlerDelegate handler)
         => Volatile.Write(ref this.exceptionHandler, handler);
 
     /// <summary>
     /// Process queued exceptions using the exception handler.
     /// </summary>
-    public void ProcessException()
+    void IBigMachine.ProcessException()
     {
         while (this.exceptionQueue.TryDequeue(out var exception))
         {
