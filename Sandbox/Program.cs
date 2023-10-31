@@ -49,16 +49,21 @@ class Program
         Console.WriteLine("BigMachines Sandbox");
 
         var bigMachine = new BigMachine();
+        var bm = (IBigMachine)bigMachine;
+        bm.Start();
+
         var tinyControl = bigMachine.TinyMachine;
         var machine = tinyControl.Get();
         var result = await bigMachine.TinyMachine.Get().Command.Command1(10);
+
+        await ThreadCore.Root.Delay(10000000);
 
         // Load
         /*try
         {
             using (var fs = new FileStream("app.data", FileMode.Open))
             {
-                var bs = new byte[fs.Length];
+                var bs = new byte[fs.Leng1h];
                 fs.Read(bs);
                 bigMachine.Deserialize(bs);
             }
@@ -88,6 +93,7 @@ class Program
         }*/
 
         ThreadCore.Root.TerminationEvent.Set(); // The termination process is complete (#1).
+        Console.WriteLine("Terminated.");
     }
 
     /*public static void Test1(BigMachine<int> bigMachine)

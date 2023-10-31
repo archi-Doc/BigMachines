@@ -264,11 +264,11 @@ public abstract partial class Machine
     protected readonly SemaphoreLock Semaphore = new();
 
     /// <summary>
-    /// Gets or sets the default time interval at which the machine will run.<br/>
+    /// Gets the default time interval at which the machine will run.<br/>
     /// <see cref="TimeSpan.Zero"/>: No interval execution.<br/>
     /// This property is NOT serialization target.
     /// </summary>
-    protected readonly TimeSpan DefaultTimeout;
+    protected TimeSpan DefaultTimeout { get; init; }
 
     [IgnoreMember]
     protected OperationalFlag operationalState;

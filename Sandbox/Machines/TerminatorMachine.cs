@@ -10,11 +10,11 @@ using BigMachines;
 
 namespace Sandbox;
 
-/*[MachineObject(0x48eb1f0f, Group = typeof(SingleGroup<>))] // Change groups from MachineGroup<> to MachineSingle<>.
+[MachineObject] // Change groups from MachineGroup<> to MachineSingle<>.
 public partial class TerminatorMachine : Machine<int>
 {
-    public TerminatorMachine(BigMachine<int> bigMachine)
-        : base(bigMachine)
+    public TerminatorMachine()
+        : base()
     {
         this.DefaultTimeout = TimeSpan.FromSeconds(1);
     }
@@ -27,9 +27,9 @@ public partial class TerminatorMachine : Machine<int>
             return StateResult.Continue;
         }
 
-        foreach (var x in this.BigMachine.GetGroups())
+        foreach (var x in this.BigMachine.GetArray())
         {
-            if (x.Info.MachineType != typeof(TerminatorMachine) && x.Count > 0)
+            if (x.MachineInformation.MachineType != typeof(TerminatorMachine) && x.Count > 0)
             {
                 foreach (var y in x.GetIdentifiers())
                 {
@@ -41,7 +41,7 @@ public partial class TerminatorMachine : Machine<int>
             }
         }
 
-        if (this.BigMachine.GetExceptionCount() > 0)
+        if (((IBigMachine)this.BigMachine).GetExceptionCount() > 0)
         {// Remaining exceptions.
             return StateResult.Continue;
         }
@@ -50,4 +50,4 @@ public partial class TerminatorMachine : Machine<int>
         ThreadCore.Root.Terminate();
         return StateResult.Terminate;
     }
-}*/
+}

@@ -2,6 +2,7 @@
 
 using System;
 using System.Threading.Tasks;
+using Arc.Threading;
 using BigMachines;
 using Tinyhand;
 
@@ -99,15 +100,32 @@ public partial class ParentClass
         public TinyMachine()
             : base()
         {
+            this.DefaultTimeout = TimeSpan.FromSeconds(1);
         }
 
         [StateMethod(0)]
         public StateResult Initial(StateParameter parameter)
-            => StateResult.Terminate;
+        {
+            Console.WriteLine($"Tiny machine: {this.count++}");
+            if (this.count > 4)
+            {
+                ThreadCore.Root.Terminate();
+                return StateResult.Terminate;
+            }
+
+            return StateResult.Continue;
+        }
 
         [CommandMethod]
         protected CommandResult<int> Command1(int x)
             => new(CommandResult.Success, x + 2);
+
+        protected override void OnTermination()
+        {
+            Console.WriteLine($"Tiny machine: Terminated");
+        }
+
+        private int count;
     }
 
     [TinyhandObject]

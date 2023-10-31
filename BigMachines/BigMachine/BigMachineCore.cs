@@ -75,6 +75,8 @@ public partial class BigMachineBase
                         }
                     }
                 }
+
+                bigMachine.lastRun = now;
             }
 
             return;
