@@ -69,6 +69,9 @@ public sealed partial class UnorderedMachineControl<TIdentifier, TMachine, TInte
 
     #region Abstract
 
+    public override int Count
+        => this.items.Count;
+
     public override TIdentifier[] GetIdentifiers()
     {
         lock (this.items.SyncObject)

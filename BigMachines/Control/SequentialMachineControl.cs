@@ -73,6 +73,9 @@ public sealed partial class SequentialMachineControl<TIdentifier, TMachine, TInt
 
     #region Abstract
 
+    public override int Count
+        => this.items.Count;
+
     public Machine.ManMachineInterface? GetFirst()
     {
         lock (this.items.SyncObject)

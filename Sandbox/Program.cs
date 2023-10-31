@@ -52,6 +52,7 @@ class Program
         var bm = (IBigMachine)bigMachine;
         bm.Start();
 
+        bigMachine.TerminatorMachine.Get();
         var tinyControl = bigMachine.TinyMachine;
         var machine = tinyControl.Get();
         var result = await bigMachine.TinyMachine.Get().Command.Command1(10);

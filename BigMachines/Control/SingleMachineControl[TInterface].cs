@@ -51,6 +51,9 @@ public partial class SingleMachineControl<TMachine, TInterface> : MachineControl
     public TInterface Get()
         => (TInterface)this.Machine.InterfaceInstance;
 
+    public override int Count
+        => this.machine is null ? 0 : 1;
+
     public override Machine.ManMachineInterface[] GetArray()
     {
         if (this.machine?.InterfaceInstance is { } obj)

@@ -1,17 +1,13 @@
 ﻿// Copyright (c) All contributors. All rights reserved. Licensed under the MIT license.
 
 using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 using Arc.Threading;
 using BigMachines;
 
 namespace Sandbox;
 
-[MachineObject] // Change groups from MachineGroup<> to MachineSingle<>.
-public partial class TerminatorMachine : Machine<int>
+[MachineObject]
+public partial class TerminatorMachine : Machine
 {
     public TerminatorMachine()
         : base()
@@ -22,18 +18,18 @@ public partial class TerminatorMachine : Machine<int>
     [StateMethod(0)]
     protected StateResult Initial(StateParameter parameter)
     {
-        if (this.BigMachine.Continuous.GetInfo(true).Length > 0)
+        /*if (this.BigMachine.Continuous.GetInfo(true).Length > 0)
         {
             return StateResult.Continue;
-        }
+        }*/
 
         foreach (var x in this.BigMachine.GetArray())
         {
             if (x.MachineInformation.MachineType != typeof(TerminatorMachine) && x.Count > 0)
             {
-                foreach (var y in x.GetIdentifiers())
+                foreach (var y in x.GetArray())
                 {
-                    if (x.TryGet<ManMachineInterface<int>>(y)?.IsActive() == true)
+                    if (y.IsActive() == true)
                     {
                         return StateResult.Continue;
                     }

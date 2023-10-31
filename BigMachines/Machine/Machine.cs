@@ -254,12 +254,12 @@ public abstract partial class Machine
     /// <summary>
     /// Gets an instance of <see cref="BigMachineBase"/>.
     /// </summary>
-    public BigMachineBase? BigMachine => this.Control?.BigMachine;
+    public BigMachineBase BigMachine => this.Control.BigMachine;
 
     /// <summary>
     /// Gets an instance of <see cref="MachineControl"/>.
     /// </summary>
-    public MachineControl? Control { get; private set; }
+    public MachineControl Control { get; private set; } = default!;
 
     protected readonly SemaphoreLock Semaphore = new();
 

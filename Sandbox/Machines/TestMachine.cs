@@ -109,7 +109,6 @@ public partial class ParentClass
             Console.WriteLine($"Tiny machine: {this.count++}");
             if (this.count > 4)
             {
-                ThreadCore.Root.Terminate();
                 return StateResult.Terminate;
             }
 

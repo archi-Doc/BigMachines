@@ -18,7 +18,12 @@ public abstract class MachineControl
     /// Gets or sets a <see cref="BigMachineBase"/> instance.
     /// </summary>
     [IgnoreMember]
-    public BigMachineBase? BigMachine { get; protected set; }
+    public BigMachineBase BigMachine { get; protected set; } = default!;
+
+    /// <summary>
+    /// Gets the number of machines.
+    /// </summary>
+    public abstract int Count { get; }
 
     /// <summary>
     /// Gets a <see cref="MachineInformation"/> instance.
