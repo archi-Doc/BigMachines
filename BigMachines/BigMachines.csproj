@@ -28,7 +28,7 @@
     <PackageReference Include="Arc.Visceral" Version="0.1.0" GeneratePathProperty="true" PrivateAssets="all" />
     <PackageReference Include="Arc.Collections" Version="1.7.1" />
     <PackageReference Include="Arc.Threading" Version="0.26.0" />
-    <PackageReference Include="Tinyhand" Version="0.68.0" />
+    <PackageReference Include="Tinyhand" Version="0.69.0" />
     <PackageReference Include="ValueLink" Version="0.49.0" />
     <PackageReference Include="StyleCop.Analyzers" Version="1.2.0-beta.507">
       <PrivateAssets>all</PrivateAssets>

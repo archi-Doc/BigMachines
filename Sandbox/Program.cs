@@ -49,8 +49,7 @@ class Program
         Console.WriteLine("BigMachines Sandbox");
 
         var bigMachine = new BigMachine();
-        var bm = (IBigMachine)bigMachine;
-        bm.Start(ThreadCore.Root);
+        bigMachine.Start(ThreadCore.Root);
 
         var tinyControl = bigMachine.TinyMachine;
         var machine = tinyControl.Get();

@@ -1,21 +1,16 @@
 ﻿// Copyright (c) All contributors. All rights reserved. Licensed under the MIT license.
 
-using System;
-using BigMachines;
-
 namespace Advanced;
 
-/*[MachineObject(0x2862ff37, Group = typeof(SingleGroup<>))] // Change groups from MachineGroup<> to SingleGroup<>.
-public partial class SingleMachine : Machine<int>
-{
-    public static void Test(BigMachine<int> bigMachine)
+[MachineObject]
+public partial class SingleMachine : Machine
+{// A machine without an identifier is derived from the Machine class.
+    public static void Test(BigMachine bigMachine)
     {
-        bigMachine.CreateOrGet<SingleMachine.Interface>(0);
-        bigMachine.CreateOrGet<SingleMachine.Interface>(1); // Only one machine is created since SingleMachine belongs to SingleGroup<> group.
+        bigMachine.SingleMachine.Get(); // Only one machine is created.
     }
 
-    public SingleMachine(BigMachine<int> bigMachine)
-        : base(bigMachine)
+    public SingleMachine()
     {
         this.DefaultTimeout = TimeSpan.FromSeconds(1);
     }
@@ -25,18 +20,7 @@ public partial class SingleMachine : Machine<int>
     [StateMethod(0)]
     protected StateResult Initial(StateParameter parameter)
     {
-        Console.WriteLine($"Single: ({this.Identifier.ToString()}) - {this.Count++}");
-
-        var testGroup = this.BigMachine.GetGroup<TestMachine.Interface>();
-        foreach (var x in testGroup.GetIdentifiers())
-        {
-            var machine = testGroup.TryGet<TestMachine.Interface>(x);
-            if (machine != null)
-            {
-                var result = machine.CommandAndReceiveAsync<int>(TestMachine.Command.GetCount).Result;
-                Console.WriteLine($"Single: TestMachine found {x} - {result}");
-            }
-        }
+        Console.WriteLine($"Single machine: {this.Count++}");
 
         if (this.Count >= 5)
         {
@@ -45,4 +29,4 @@ public partial class SingleMachine : Machine<int>
 
         return StateResult.Continue;
     }
-}*/
+}

@@ -52,7 +52,7 @@ public class Program
     public static async Task Main(string[] args)
     {
         var bigMachine = new BigMachine(); // Create a BigMachine instance.
-        ((IBigMachine)bigMachine).Start(ThreadCore.Root); // Launch BigMachine to run machines and change the parent of the BigMachine thread to the application thread.
+        bigMachine.Start(ThreadCore.Root); // Launch BigMachine to run machines and change the parent of the BigMachine thread to the application thread.
 
         var testMachine = bigMachine.FirstMachine.GetOrCreate(42); // Machine is created via an interface class and the identifier, not the machine class itself.
         testMachine.TryGetState(out var state); // Get the current state. You can operate machines using the interface class.

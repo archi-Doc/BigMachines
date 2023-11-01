@@ -1,23 +1,19 @@
 ﻿// Copyright (c) All contributors. All rights reserved. Licensed under the MIT license.
 
-using System;
-using BigMachines;
-
 namespace Advanced;
 
-/*[MachineObject(0xf761dd51)]
+[MachineObject]
 public partial class DerivedMachine : IntermittentMachine
 {
-    public static void Test2(BigMachine<int> bigMachine)
+    public static void Test2(BigMachine bigMachine)
     {
-        var m = bigMachine.CreateOrGet<DerivedMachine.Interface>(0);
+        var machine = bigMachine.DerivedMachine.GetOrCreate(0);
     }
 
-    public DerivedMachine(BigMachine<int> bigMachine)
-        : base(bigMachine)
+    public DerivedMachine()
     {
         this.DefaultTimeout = TimeSpan.FromSeconds(1); // Default time interval for machine execution.
-        this.SetLifespan(TimeSpan.FromSeconds(5)); // The time until the machine automatically terminates.
+        this.Lifespan = TimeSpan.FromSeconds(5); // The time until the machine automatically terminates.
     }
 
     // [StateMethod(0)]
@@ -35,8 +31,7 @@ public partial class DerivedMachine : IntermittentMachine
 
 public class EmptyMachineBase : Machine<int>
 {
-    public EmptyMachineBase(BigMachine<int> bigMachine)
-        : base(bigMachine)
+    public EmptyMachineBase()
     {
     }
 
@@ -45,19 +40,18 @@ public class EmptyMachineBase : Machine<int>
     public string Text { get; set; } = "EmptyMachine";
 }
 
-[MachineObject(0x609284ed)]
+[MachineObject]
 public partial class DerivedMachine2 : EmptyMachineBase
 {
-    public static void Test(BigMachine<int> bigMachine)
+    public static void Test(BigMachine bigMachine)
     {
-        var m = bigMachine.CreateOrGet<DerivedMachine2.Interface>(0);
+        var m = bigMachine.DerivedMachine2.GetOrCreate(0);
     }
 
-    public DerivedMachine2(BigMachine<int> bigMachine)
-        : base(bigMachine)
+    public DerivedMachine2()
     {
         this.DefaultTimeout = TimeSpan.FromSeconds(1); // Default time interval for machine execution.
-        this.SetLifespan(TimeSpan.FromSeconds(3)); // The time until the machine automatically terminates.
+        this.Lifespan = TimeSpan.FromSeconds(3); // The time until the machine automatically terminates.
     }
 
     [StateMethod(0)]
@@ -67,4 +61,4 @@ public partial class DerivedMachine2 : EmptyMachineBase
 
         return StateResult.Continue;
     }
-}*/
+}

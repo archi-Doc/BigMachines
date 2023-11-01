@@ -22,10 +22,11 @@ public abstract partial class BigMachineBase : IBigMachine
 
     #region Core
 
-    void IBigMachine.Start(ThreadCoreBase? parent)
+    public void Start(ThreadCoreBase? parent)
     {
-        ((IBigMachine)this).Core.ChangeParent(parent);
-        ((IBigMachine)this).Core.Start();
+        var core = ((IBigMachine)this).Core;
+        core.ChangeParent(parent);
+        core.Start();
     }
 
     #endregion

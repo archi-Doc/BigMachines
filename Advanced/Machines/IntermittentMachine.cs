@@ -1,29 +1,20 @@
 ﻿// Copyright (c) All contributors. All rights reserved. Licensed under the MIT license.
 
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-using BigMachines;
-
 namespace Advanced;
 
-/*[MachineObject(0x1b431670)]
+[MachineObject]
 public partial class IntermittentMachine : Machine<int>
 {
-    public static void Test(BigMachine<int> bigMachine)
+    public static void Test(BigMachine bigMachine)
     {
-        var m = bigMachine.CreateOrGet<IntermittentMachine.Interface>(0);
-
         // The machine will run at regular intervals (1 second).
+        var machine = bigMachine.IntermittentMachine.GetOrCreate(0);
     }
 
-    public IntermittentMachine(BigMachine<int> bigMachine)
-        : base(bigMachine)
+    public IntermittentMachine()
     {
         this.DefaultTimeout = TimeSpan.FromSeconds(1); // Default time interval for machine execution.
-        this.SetLifespan(TimeSpan.FromSeconds(5)); // The time until the machine automatically terminates.
+        this.Lifespan = TimeSpan.FromSeconds(5); // The time until the machine automatically terminates.
     }
 
     public int Count { get; set; }
@@ -44,7 +35,7 @@ public partial class IntermittentMachine : Machine<int>
     protected StateResult First(StateParameter parameter)
     {
         Console.WriteLine($"IntermittentMachine: First - {this.Count++}");
-        this.SetTimeout(TimeSpan.FromSeconds(0.5)); // Change the timeout of the machine.
+        this.TimeUntilRun = TimeSpan.FromSeconds(0.5); // Change the timeout of the machine.
         return StateResult.Continue;
     }
-}*/
+}

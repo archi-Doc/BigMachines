@@ -220,7 +220,7 @@ public abstract partial class Machine
     /// Gets or sets the time for the machine to shut down automatically.
     /// </summary>
     [Key(6)]
-    protected DateTime internalTerminationTime = DateTime.MaxValue.ToUniversalTime();//
+    protected DateTime internalTerminationTime = DateTime.MaxValue;
 
     [IgnoreMember]
     protected DateTime TerminationTime

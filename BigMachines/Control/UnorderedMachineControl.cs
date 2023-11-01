@@ -27,7 +27,8 @@ public sealed partial class UnorderedMachineControl<TIdentifier, TMachine, TInte
     public void Prepare(BigMachineBase bigMachine)
     {
         this.BigMachine = bigMachine;
-        if (this.BigMachine is IStructualObject obj)
+        if (this.MachineInformation.Serializable &&
+            this.BigMachine is IStructualObject obj)
         {
             ((IStructualObject)this.items).SetParent(obj);
         }

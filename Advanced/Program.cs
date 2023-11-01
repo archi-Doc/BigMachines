@@ -29,19 +29,13 @@ public class Program
             ThreadCore.Root.Terminate(); // Send a termination signal to the root.
         };
 
-        /*var dt = DateTime.MaxValue;
-        dt = dt.ToUniversalTime();
-        var aa = dt.Ticks;
-        var st = dt.ToString("o", CultureInfo.InvariantCulture);
-        DateTime.Parse(st, CultureInfo.InvariantCulture).ToUniversalTime(); //
-        DateTime.Parse("2023-11-01T08:28:53.4299242Z", CultureInfo.InvariantCulture).ToUniversalTime();
-        DateTime.Parse("9999-12-31T23:59:59.9999999Z", CultureInfo.InvariantCulture).ToUniversalTime();*/
-
         // Create a builder for BigMachine and CrystalData.
         var builder = new CrystalControl.Builder()
             .Configure(context =>
             {
                 context.AddSingleton<BigMachine>();
+                context.AddSingleton<SomeService>();
+                context.AddTransient<ServiceProviderMachine>();
             })
             .ConfigureCrystal(context =>
             {
@@ -62,16 +56,15 @@ public class Program
         await crystalizer.PrepareAndLoadAll(false);
 
         var bigMachine = unit.Context.ServiceProvider.GetRequiredService<BigMachine>();
-        ((IBigMachine)bigMachine).Start(ThreadCore.Root); // Start BigMachine.
+        bigMachine.Start(ThreadCore.Root); // Start BigMachine.
 
         bigMachine.TerminatorMachine.Get(); // This machine will stop the app thread if there is no working machine.
 
-        TestMachine.Test(bigMachine);
+        // TestMachine.Test(bigMachine);
         // await PassiveMachine.Test(bigMachine);
         // IntermittentMachine.Test(bigMachine);
         // ContinuousMachine.Test(bigMachine);
 
-        // Other test code.
         // DerivedMachine.Test2(bigMachine);
         // DerivedMachine2.Test(bigMachine);
         // GenericMachine<int>.Test(bigMachine);
