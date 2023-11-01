@@ -25,7 +25,7 @@ public abstract partial class Machine
 
     public Machine()
     {
-        this.machineNumber = Interlocked.Increment(ref serialNumber);
+        this.machineSerial = Interlocked.Increment(ref serialNumber);
     }
 
     internal void Prepare(MachineControl control)
@@ -293,7 +293,7 @@ public abstract partial class Machine
     /// Get the serial (unique) number of this machine.
     /// </summary>
     [IgnoreMember]
-    private uint machineNumber;
+    protected uint machineSerial;
 
     #endregion
 

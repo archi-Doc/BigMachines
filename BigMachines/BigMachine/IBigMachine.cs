@@ -22,6 +22,8 @@ public interface IBigMachine
     /// </summary>
     public RecursiveDetectionMode RecursiveDetectionMode { get; set; }
 
+    public void CheckRecursive(ulong id);
+
     /// <summary>
     /// Gets <see cref="DateTime"/> when the BigMachine was last executed.
     /// </summary>

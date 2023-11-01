@@ -13,8 +13,8 @@ public partial class RecursiveMachine : Machine<int>
         var machine1 = bigMachine.RecursiveMachine.GetOrCreate(1);
         var machine2 = bigMachine.RecursiveMachine.GetOrCreate(2);
 
-        // Case 1: Machine1 -> LoopMachine
-        await machine1.Command.RelayInt(2);
+        // Case 1: Machine1 -> Machine1
+        await machine1.Command.RelayInt(1);
 
         // Case 2: LoopMachine -> TestMachine -> LoopMachine
         // bigMachine.CreateOrGet<TestMachine.Interface>(3);
@@ -32,6 +32,7 @@ public partial class RecursiveMachine : Machine<int>
     protected CommandResult RelayInt(int n)
     {// LoopMachine
         Console.WriteLine($"RelayInt: {n}");
+        ((BigMachine)this.BigMachine).RecursiveMachine.TryGet(this.Identifier)?.Command.RelayInt(n);
         // this.BigMachine.(this.Identifier)?.CommandAsync(Command.RelayInt, n);
         return CommandResult.Success;
     }

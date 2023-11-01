@@ -22,123 +22,137 @@ public enum RecursiveDetectionMode
     EnabledAndThrowException,
 }
 
-internal class LoopChecker
+internal readonly struct RecursiveDetection
 {
-    public const int InitialArray = 4;
+    public static AsyncLocal<RecursiveDetection> AsyncLocalInstance = new();
+    private const string IdToString = "x4";
 
-    public static AsyncLocal<LoopChecker> AsyncLocalInstance = new();
+    public readonly ulong Id0;
+    public readonly ulong Id1;
+    public readonly ulong Id2;
+    public readonly ulong Id3;
+    public readonly ulong Id4;
+    public readonly ulong Id5;
 
-    public LoopChecker()
+    public RecursiveDetection()
     {
     }
 
-    public LoopChecker(LoopChecker loopChecker)
+    public RecursiveDetection(ulong id0)
     {
-        this.IdCount = loopChecker.IdCount;
-        if (loopChecker.IdArray != null)
+        this.Id0 = id0;
+    }
+
+    public RecursiveDetection(ulong id0, ulong id1)
+    {
+        this.Id0 = id0;
+        this.Id1 = id1;
+    }
+
+    public RecursiveDetection(ulong id0, ulong id1, ulong id2)
+    {
+        this.Id0 = id0;
+        this.Id1 = id1;
+        this.Id2 = id2;
+    }
+
+    public RecursiveDetection(ulong id0, ulong id1, ulong id2, ulong id3)
+    {
+        this.Id0 = id0;
+        this.Id1 = id1;
+        this.Id2 = id2;
+        this.Id3 = id3;
+    }
+
+    public RecursiveDetection(ulong id0, ulong id1, ulong id2, ulong id3, ulong id4)
+    {
+        this.Id0 = id0;
+        this.Id1 = id1;
+        this.Id2 = id2;
+        this.Id3 = id3;
+        this.Id4 = id4;
+    }
+
+    public RecursiveDetection(ulong id0, ulong id1, ulong id2, ulong id3, ulong id4, ulong id5)
+    {
+        this.Id0 = id0;
+        this.Id1 = id1;
+        this.Id2 = id2;
+        this.Id3 = id3;
+        this.Id4 = id4;
+        this.Id5 = id5;
+    }
+
+    public bool TryAdd(ulong id, out RecursiveDetection newDetetcion)
+    {
+        if (this.Id0 == 0)
         {
-            this.IdArray = new ulong[loopChecker.IdArray.Length];
-            for (var n = 0; n < loopChecker.IdCount; n++)
+            newDetetcion = new(id);
+        }
+        else if (this.Id1 == 0)
+        {
+            if (id == this.Id0)
             {
-                this.IdArray[n] = loopChecker.IdArray[n];
+                newDetetcion = default;
+                return false;
             }
+
+            newDetetcion = new(this.Id0, id);
+        }
+        else if (this.Id2 == 0)
+        {
+            if (id == this.Id0 || id == this.Id1)
+            {
+                newDetetcion = default;
+                return false;
+            }
+
+            newDetetcion = new(this.Id0, this.Id1, id);
+        }
+        else if (this.Id3 == 0)
+        {
+            if (id == this.Id0 || id == this.Id1 || id == this.Id2)
+            {
+                newDetetcion = default;
+                return false;
+            }
+
+            newDetetcion = new(this.Id0, this.Id1, this.Id2, id);
+        }
+        else if (this.Id4 == 0)
+        {
+            if (id == this.Id0 || id == this.Id1 || id == this.Id2 || id == this.Id3)
+            {
+                newDetetcion = default;
+                return false;
+            }
+
+            newDetetcion = new(this.Id0, this.Id1, this.Id2, this.Id3, id);
+        }
+        else if (this.Id5 == 0)
+        {
+            if (id == this.Id0 || id == this.Id1 || id == this.Id2 || id == this.Id3 || id == this.Id4)
+            {
+                newDetetcion = default;
+                return false;
+            }
+
+            newDetetcion = new(this.Id0, this.Id1, this.Id2, this.Id3, this.Id4, id);
         }
         else
         {
-            this.Id0 = loopChecker.Id0;
-            this.Id1 = loopChecker.Id1;
-        }
-    }
-
-    [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public void AddId(ulong id)
-    {
-        if (this.IdCount == 0)
-        {
-            this.Id0 = id;
-            this.IdCount = 1;
-        }
-        else if (this.IdCount == 1)
-        {
-            this.Id1 = id;
-            this.IdCount = 2;
-        }
-        else
-        {
-            if (this.IdArray == null)
+            if (id == this.Id0 || id == this.Id1 || id == this.Id2 || id == this.Id3 || id == this.Id4 || id == this.Id5)
             {
-                this.IdArray = new ulong[InitialArray];
-                this.IdArray[0] = this.Id0;
-                this.IdArray[1] = this.Id1;
-            }
-            else if (this.IdCount >= this.IdArray.Length)
-            {
-                Array.Resize(ref this.IdArray, this.IdArray.Length + InitialArray);
+                newDetetcion = default;
+                return false;
             }
 
-            this.IdArray[this.IdCount++] = id;
+            newDetetcion = new(this.Id0, this.Id1, this.Id2, this.Id3, this.Id4, this.Id5);
         }
+
+        return true;
     }
 
-    [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public bool FindId(ulong id)
-    {
-        if (this.IdCount == 0)
-        {
-            return false;
-        }
-        else if (this.IdCount == 1)
-        {
-            return this.Id0 == id;
-        }
-        else if (this.IdCount == 2)
-        {
-            return this.Id0 == id || this.Id1 == id;
-        }
-        else
-        {
-            for (var n = 0; n < this.IdCount; n++)
-            {
-                if (this.IdArray![n] == id)
-                {
-                    return true;
-                }
-            }
-        }
-
-        return false;
-    }
-
-    public IEnumerable<ulong> EnumerateId()
-    {
-        if (this.IdCount == 0)
-        {
-            yield break;
-        }
-        else if (this.IdCount == 1)
-        {
-            yield return this.Id0;
-        }
-        else if (this.IdCount == 2)
-        {
-            yield return this.Id0;
-            yield return this.Id1;
-        }
-        else
-        {
-            for (var n = 0; n < this.IdCount; n++)
-            {
-                yield return this.IdArray![n];
-            }
-        }
-    }
-
-    internal int IdCount;
-    internal ulong Id0;
-    internal ulong Id1;
-    internal ulong[]? IdArray;
-
-    public LoopChecker Clone() => new(this);
-
-    public override string ToString() => $"Ids {this.IdCount}";
+    public override string ToString()
+        => $"{((ushort)this.Id0).ToString(IdToString)}, {((ushort)this.Id1).ToString(IdToString)}, {((ushort)this.Id2).ToString(IdToString)}, {((ushort)this.Id3).ToString(IdToString)}, {((ushort)this.Id4).ToString(IdToString)}, {((ushort)this.Id5).ToString(IdToString)}, ";
 }

@@ -146,6 +146,7 @@ public class CommandMethod
 
         using (var method = ssb.ScopeBrace($"public async Task<{commandResult}> {this.Name}({this.ParameterTypesAndNames})"))
         {
+            ssb.AppendLine($"((IBigMachine)this.machine.BigMachine).CheckRecursive((this.machine.machineSerial << 32) | {(uint)FarmHash.Hash64(this.Method.FullName)});");
             if (this.WithLock)
             {
                 ssb.AppendLine("await this.machine.Semaphore.EnterAsync().ConfigureAwait(false);");

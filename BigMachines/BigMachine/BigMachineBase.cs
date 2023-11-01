@@ -46,6 +46,22 @@ public abstract partial class BigMachineBase : IBigMachine
 
     #endregion
 
+    void IBigMachine.CheckRecursive(ulong id)
+    {
+        if (((IBigMachine)this).RecursiveDetectionMode == RecursiveDetectionMode.Disabled)
+        {
+            return;
+        }
+
+        var detection = RecursiveDetection.AsyncLocalInstance.Value;
+        if (!detection.TryAdd(id, out var newDetection))
+        {
+            throw new CircularCommandException($"Circular commands detected");
+        }
+
+        RecursiveDetection.AsyncLocalInstance.Value = newDetection;
+    }
+
     #region Exception
 
     /// <summary>
