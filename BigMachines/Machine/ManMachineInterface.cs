@@ -25,8 +25,7 @@ public partial class Machine
         /// <summary>
         /// Gets the operational state of the machine.
         /// </summary>
-        /// <returns>The operational state of the machine.<br/>
-        /// <see langword="null"/>: Machine is not available.</returns>
+        /// <returns>The operational state of the machine.</returns>
         public OperationalFlag GetOperationalState()
             => this.Machine.operationalState;
 

@@ -2,8 +2,6 @@
 
 using System;
 using Arc.Threading;
-using BigMachines.Control;
-using static BigMachines.BigMachineBase;
 
 namespace BigMachines;
 
@@ -13,9 +11,9 @@ namespace BigMachines;
 public interface IBigMachine
 {
     /// <summary>
-    /// Gets an instance of <see cref="BigMachineCore"/>.
+    /// Gets an instance of <see cref="BigMachineBase.BigMachineCore"/>.
     /// </summary>
-    public BigMachineCore Core { get; }
+    public BigMachineBase.BigMachineCore Core { get; }
 
     public void Start(ThreadCoreBase? parent);
 

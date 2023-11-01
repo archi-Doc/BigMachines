@@ -228,7 +228,7 @@ internal class BigMachine : IEquatable<BigMachine>
     public void Generate(ScopingStringBuilder ssb, GeneratorInformation info)
     {
         ssb.AppendLine("[TinyhandObject]");
-        using (var scopeClass = ssb.ScopeBrace($"public partial class {this.SimpleName} : BigMachineBase, ITinyhandSerialize<{this.SimpleName}>, IStructualObject"))
+        using (var scopeClass = ssb.ScopeBrace($"public partial class {this.SimpleName} : BigMachineBase, ITinyhandSerialize<{this.SimpleName}>, ITinyhandReconstruct<{this.SimpleName}>, IStructualObject"))
         {
             this.GenerateMembers(ssb, info);
             ssb.AppendLine();
@@ -240,6 +240,9 @@ internal class BigMachine : IEquatable<BigMachine>
             ssb.AppendLine();
 
             this.GenerateDeserialize(ssb, info);
+            ssb.AppendLine();
+
+            ssb.AppendLine($"static void ITinyhandReconstruct<{this.SimpleName}>.Reconstruct([NotNull] scoped ref {this.SimpleName}? value, TinyhandSerializerOptions options) => value ??= new();");
             ssb.AppendLine();
 
             this.GenerateStructual(ssb, info);

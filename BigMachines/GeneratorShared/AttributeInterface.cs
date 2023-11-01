@@ -231,6 +231,12 @@ public readonly struct CommandResult<TResponse>
         this.Resnpose = response;
     }
 
+    public CommandResult(TResponse response)
+    {
+        this.Result = CommandResult.Success;
+        this.Resnpose = response;
+    }
+
     public readonly CommandResult Result;
     public readonly TResponse Resnpose;
 }
@@ -255,6 +261,12 @@ public readonly struct IdentifierAndCommandResult<TIdentifier, TResponse>
     {
         this.Identifier = identifier;
         this.Result = result;
+    }
+
+    public IdentifierAndCommandResult(TIdentifier identifier, TResponse response)
+    {
+        this.Identifier = identifier;
+        this.Result = new(response);
     }
 
     public readonly TIdentifier Identifier;

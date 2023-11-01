@@ -1,6 +1,7 @@
 ﻿// Copyright (c) All contributors. All rights reserved. Licensed under the MIT license.
 
 using System;
+using System.Diagnostics.CodeAnalysis;
 using System.Linq;
 using BigMachines.Control;
 using Tinyhand;
@@ -9,7 +10,7 @@ using Tinyhand.IO;
 namespace BigMachines;
 
 [TinyhandObject]
-public partial class TestBigMachine : BigMachineBase, ITinyhandSerialize<TestBigMachine>, IStructualObject
+public partial class TestBigMachine : BigMachineBase, ITinyhandSerialize<TestBigMachine>, ITinyhandReconstruct<TestBigMachine>, IStructualObject
 {
     private MachineControl[] controls = Array.Empty<MachineControl>();
 
@@ -82,6 +83,9 @@ public partial class TestBigMachine : BigMachineBase, ITinyhandSerialize<TestBig
             }
         }
     }
+
+    static void ITinyhandReconstruct<TestBigMachine>.Reconstruct([NotNull] scoped ref TestBigMachine? value, TinyhandSerializerOptions options)
+        => value ??= new();
 
     IStructualRoot? IStructualObject.StructualRoot { get; set; }
 
