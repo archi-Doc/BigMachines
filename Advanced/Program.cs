@@ -32,8 +32,7 @@ public class Program
         // Create a builder for BigMachine and CrystalData.
         var builder = new CrystalControl.Builder()
             .Configure(context =>
-            {
-                context.AddSingleton<BigMachine>();
+            {// Register some services.
                 context.AddSingleton<SomeService>();
                 context.AddTransient<ServiceProviderMachine>();
             })
@@ -60,7 +59,7 @@ public class Program
 
         bigMachine.TerminatorMachine.Get(); // This machine will stop the app thread if there is no working machine.
 
-        // TestMachine.Test(bigMachine);
+        TestMachine.Test(bigMachine);
         // await PassiveMachine.Test(bigMachine);
         // IntermittentMachine.Test(bigMachine);
         // ContinuousMachine.Test(bigMachine);

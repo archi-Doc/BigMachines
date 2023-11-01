@@ -25,6 +25,9 @@ public class BigMachineException
     public Machine Machine { get; }
 
     public Exception Exception { get; }
+
+    public override string ToString()
+        => $"{this.Machine.ToString()} Exception: {this.Exception.ToString()}";
 }
 
 /// <summary>

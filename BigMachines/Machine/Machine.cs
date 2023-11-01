@@ -461,4 +461,7 @@ RerunLoop:
     protected virtual void OnTermination()
     {
     }
+
+    public override string ToString()
+        => $"Machine: {this.GetType().Name}";
 }

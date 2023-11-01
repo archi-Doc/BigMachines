@@ -84,7 +84,9 @@ public abstract partial class BigMachineBase : IBigMachine
     }
 
     private static void DefaultExceptionHandler(BigMachineException exception)
-        => throw exception.Exception;
+    {// throw exception.Exception;
+        Console.WriteLine(exception.ToString());
+    }
 
     #endregion
 }

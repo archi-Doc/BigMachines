@@ -24,7 +24,8 @@ public partial class SingleMachine : Machine
 
         if (this.Count >= 5)
         {
-            return StateResult.Terminate;
+            throw new Exception("Exception thrown by Single machine");
+            // return StateResult.Terminate;
         }
 
         return StateResult.Continue;
