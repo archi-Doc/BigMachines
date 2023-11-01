@@ -20,7 +20,7 @@ namespace BigMachines;
 [TinyhandObject(ReservedKeys = ReservedKeyNumber)]
 public abstract partial class Machine
 {
-    internal const int ReservedKeyNumber = 8;
+    internal const int ReservedKeyNumber = 9;
     private static uint serialNumber;
 
     public Machine()
@@ -37,9 +37,9 @@ public abstract partial class Machine
             obj.SetParent(parent);
         }
 
-        if (this.DefaultTimeout != TimeSpan.Zero && this.timeToStart == long.MaxValue)
+        if (this.DefaultTimeout != TimeSpan.Zero && this.internalTimeUntilRun == long.MaxValue)
         {
-            this.timeToStart = 0;
+            this.internalTimeUntilRun = 0;
         }
 
         /*if (information.Continuous)
@@ -64,15 +64,15 @@ public abstract partial class Machine
     /// Gets or sets the current state of this machine.
     /// </summary>
     [Key(1)]
-    protected int machineState;
+    protected int internalMachineState;
 
     [IgnoreMember]
     protected int MachineState
     {
-        get => this.machineState;
+        get => this.internalMachineState;
         set
         {
-            if (this.machineState == value)
+            if (this.internalMachineState == value)
             {
                 return;
             }
@@ -87,7 +87,7 @@ public abstract partial class Machine
                 root.AddJournal(writer);
             }
 
-            this.machineState = value;
+            this.internalMachineState = value;
         }
     }
 
@@ -95,15 +95,15 @@ public abstract partial class Machine
     /// The time until the machine starts.
     /// </summary>
     [Key(2)]
-    protected long timeToStart = long.MaxValue; // TimeSpan.Ticks (for interlocked)
+    protected long internalTimeUntilRun = long.MaxValue; // TimeSpan.Ticks (for interlocked)
 
     [IgnoreMember]
-    protected long TimeToStart
+    protected TimeSpan TimeUntilRun
     {
-        get => this.timeToStart;
+        get => new(this.internalTimeUntilRun);
         set
         {
-            if (this.timeToStart == value)
+            if (this.internalTimeUntilRun == value.Ticks)
             {
                 return;
             }
@@ -114,11 +114,11 @@ public abstract partial class Machine
                 writer.Write_Key();
                 writer.Write(2);
                 writer.Write_Value();
-                writer.Write(value);
+                writer.Write(value.Ticks);
                 root.AddJournal(writer);
             }
 
-            this.timeToStart = value;
+            this.internalTimeUntilRun = value.Ticks;
         }
     }
 
@@ -126,15 +126,15 @@ public abstract partial class Machine
     /// The last <see cref="DateTime"/> when this machine ran.
     /// </summary>
     [Key(3)]
-    protected DateTime lastRunTime;
+    protected DateTime internalLastRunTime;
 
     [IgnoreMember]
     protected DateTime LastRunTime
     {
-        get => this.lastRunTime;
+        get => this.internalLastRunTime;
         set
         {
-            if (this.lastRunTime == value)
+            if (this.internalLastRunTime == value)
             {
                 return;
             }
@@ -149,7 +149,7 @@ public abstract partial class Machine
                 root.AddJournal(writer);
             }
 
-            this.lastRunTime = value;
+            this.internalLastRunTime = value;
         }
     }
 
@@ -157,15 +157,15 @@ public abstract partial class Machine
     /// The next scheduled <see cref="DateTime"/> for this machine to run.
     /// </summary>
     [Key(4)]
-    protected DateTime nextRunTime;
+    protected DateTime internalNextRunTime;
 
     [IgnoreMember]
     protected DateTime NextRunTime
     {
-        get => this.nextRunTime;
+        get => this.internalNextRunTime;
         set
         {
-            if (this.nextRunTime == value)
+            if (this.internalNextRunTime == value)
             {
                 return;
             }
@@ -180,7 +180,7 @@ public abstract partial class Machine
                 root.AddJournal(writer);
             }
 
-            this.nextRunTime = value;
+            this.internalNextRunTime = value;
         }
     }
 
@@ -189,15 +189,15 @@ public abstract partial class Machine
     /// When it reaches 0, the machine will terminate.
     /// </summary>
     [Key(5)]
-    protected long lifespan = long.MaxValue; // TimeSpan.Ticks (for interlocked)
+    private long internalLifespan = long.MaxValue; // TimeSpan.Ticks (for interlocked)
 
     [IgnoreMember]
     protected TimeSpan Lifespan
     {
-        get => new(this.lifespan);
+        get => new(this.internalLifespan);
         set
         {
-            if (this.lifespan == value.Ticks)
+            if (this.internalLifespan == value.Ticks)
             {
                 return;
             }
@@ -212,7 +212,7 @@ public abstract partial class Machine
                 root.AddJournal(writer);
             }
 
-            this.lifespan = value.Ticks;
+            this.internalLifespan = value.Ticks;
         }
     }
 
@@ -220,15 +220,15 @@ public abstract partial class Machine
     /// Gets or sets the time for the machine to shut down automatically.
     /// </summary>
     [Key(6)]
-    protected DateTime terminationTime = DateTime.MaxValue;
+    protected DateTime internalTerminationTime = DateTime.MaxValue;
 
     [IgnoreMember]
     protected DateTime TerminationTime
     {
-        get => this.terminationTime;
+        get => this.internalTerminationTime;
         set
         {
-            if (this.terminationTime == value)
+            if (this.internalTerminationTime == value)
             {
                 return;
             }
@@ -243,7 +243,7 @@ public abstract partial class Machine
                 root.AddJournal(writer);
             }
 
-            this.terminationTime = value;
+            this.internalTerminationTime = value;
         }
     }
 
@@ -261,6 +261,8 @@ public abstract partial class Machine
     /// </summary>
     public MachineControl Control { get; private set; } = default!;
 
+    public virtual ManMachineInterface InterfaceInstance => default!;
+
     protected readonly SemaphoreLock Semaphore = new();
 
     /// <summary>
@@ -268,6 +270,7 @@ public abstract partial class Machine
     /// <see cref="TimeSpan.Zero"/>: No interval execution.<br/>
     /// This property is NOT serialization target.
     /// </summary>
+    [IgnoreMember]
     protected TimeSpan DefaultTimeout { get; init; }
 
     [IgnoreMember]
@@ -275,8 +278,6 @@ public abstract partial class Machine
 
     [IgnoreMember]
     protected object? interfaceInstance;
-
-    public virtual ManMachineInterface InterfaceInstance => default!;
 
     /// <summary>
     /// Gets or sets a value indicating whether the machine is going to re-run.
@@ -296,17 +297,17 @@ public abstract partial class Machine
     {
         var canRun = true;
 
-        Interlocked.Add(ref this.lifespan, -elapsed.Ticks);
+        Interlocked.Add(ref this.internalLifespan, -elapsed.Ticks);
         if (this.operationalState == 0)
         {// Stand-by
-            Interlocked.Add(ref this.timeToStart, -elapsed.Ticks);
+            Interlocked.Add(ref this.internalTimeUntilRun, -elapsed.Ticks);
         }
 
-        if (this.lifespan <= 0 || this.terminationTime <= now)
+        if (this.internalLifespan <= 0 || this.internalTerminationTime <= now)
         {// Terminate
             this.InterfaceInstance.TerminateMachine();
         }
-        else if (canRun && (this.timeToStart <= 0 || this.nextRunTime >= now) && !this.operationalState.HasFlag(OperationalFlag.Running))
+        else if (canRun && (this.internalTimeUntilRun <= 0 || this.internalNextRunTime >= now) && !this.operationalState.HasFlag(OperationalFlag.Running))
         {// Screening
             _ = Task.Run(() =>
             {
@@ -335,23 +336,23 @@ public abstract partial class Machine
     private StateResult TryRun(DateTime now)
     {
         var runFlag = false;
-        if (this.timeToStart <= 0)
+        if (this.internalTimeUntilRun <= 0)
         {// Timeout
             if (this.DefaultTimeout <= TimeSpan.Zero)
             {
-                Volatile.Write(ref this.timeToStart, long.MinValue);
+                Volatile.Write(ref this.internalTimeUntilRun, long.MinValue);
             }
             else
             {
-                Volatile.Write(ref this.timeToStart, this.DefaultTimeout.Ticks);
+                Volatile.Write(ref this.internalTimeUntilRun, this.DefaultTimeout.Ticks);
             }
 
             runFlag = true;
         }
 
-        if (this.nextRunTime >= now)
+        if (this.internalNextRunTime >= now)
         {
-            this.nextRunTime = default;
+            this.internalNextRunTime = default;
             runFlag = true;
         }
 

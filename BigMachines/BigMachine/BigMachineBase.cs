@@ -3,6 +3,7 @@
 using System;
 using System.Collections.Concurrent;
 using System.Threading;
+using Arc.Threading;
 using BigMachines.Control;
 
 namespace BigMachines;
@@ -21,8 +22,11 @@ public abstract partial class BigMachineBase : IBigMachine
 
     #region Core
 
-    void IBigMachine.Start()
-        => ((IBigMachine)this).Core.Start();
+    void IBigMachine.Start(ThreadCoreBase? parent)
+    {
+        ((IBigMachine)this).Core.ChangeParent(parent);
+        ((IBigMachine)this).Core.Start();
+    }
 
     #endregion
 

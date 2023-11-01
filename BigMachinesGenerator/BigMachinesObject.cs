@@ -800,7 +800,7 @@ ModuleInitializerClass_Added:
 
         using (var scope = ssb.ScopeBrace($"protected override Task<StateResult> {BigMachinesBody.InternalRunIdentifier}(StateParameter parameter)"))
         {
-            ssb.AppendLine($"var state = Unsafe.As<int, {this.StateName}>(ref this.machineState);");
+            ssb.AppendLine($"var state = Unsafe.As<int, {this.StateName}>(ref this.internalMachineState);");
             ssb.AppendLine("return state switch");
             ssb.AppendLine("{");
             ssb.IncrementIndent();
@@ -836,13 +836,13 @@ ModuleInitializerClass_Added:
 
         using (var scope = ssb.ScopeBrace($"protected override ChangeStateResult {BigMachinesBody.InternalChangeState}(int state, bool rerun)"))
         {
-            using (var scopeElse = ssb.ScopeBrace("if (this.machineState == state)"))
+            using (var scopeElse = ssb.ScopeBrace("if (this.internalMachineState == state)"))
             {
                 ssb.AppendLine("return ChangeStateResult.Success;");
             }
 
             ssb.AppendLine();
-            ssb.AppendLine($"var current = Unsafe.As<int, {this.StateName}>(ref this.machineState);");
+            ssb.AppendLine($"var current = Unsafe.As<int, {this.StateName}>(ref this.internalMachineState);");
             ssb.AppendLine("bool canExit = current switch");
             ssb.AppendLine("{");
             ssb.IncrementIndent();
@@ -905,7 +905,7 @@ ModuleInitializerClass_Added:
 
         ssb.AppendLine();
         ssb.AppendLine($"protected ChangeStateResult ChangeState({this.StateName} state, bool rerun = false) => this.{BigMachinesBody.InternalChangeState}(Unsafe.As<{this.StateName}, int>(ref state), rerun);");
-        ssb.AppendLine($"protected {this.NewIfDerived}{this.StateName} GetState() => Unsafe.As<int, {this.StateName}>(ref this.machineState);");
+        ssb.AppendLine($"protected {this.NewIfDerived}{this.StateName} GetState() => Unsafe.As<int, {this.StateName}>(ref this.internalMachineState);");
         ssb.AppendLine();
     }
 

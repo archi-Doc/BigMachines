@@ -1,6 +1,7 @@
 ﻿// Copyright (c) All contributors. All rights reserved. Licensed under the MIT license.
 
 using System;
+using Arc.Threading;
 using BigMachines.Control;
 using static BigMachines.BigMachineBase;
 
@@ -16,7 +17,7 @@ public interface IBigMachine
     /// </summary>
     public BigMachineCore Core { get; }
 
-    public void Start();
+    public void Start(ThreadCoreBase? parent);
 
     /// <summary>
     /// Gets <see cref="DateTime"/> when the BigMachine was last executed.

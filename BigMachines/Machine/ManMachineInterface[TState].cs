@@ -32,7 +32,7 @@ public partial class Machine
                 return false;
             }
 
-            state = Unsafe.As<int, TState>(ref this.Machine.machineState);
+            state = Unsafe.As<int, TState>(ref this.Machine.internalMachineState);
             return true;
         }
 

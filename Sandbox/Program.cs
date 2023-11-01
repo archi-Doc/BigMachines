@@ -50,7 +50,7 @@ class Program
 
         var bigMachine = new BigMachine();
         var bm = (IBigMachine)bigMachine;
-        bm.Start();
+        bm.Start(ThreadCore.Root);
 
         bigMachine.TerminatorMachine.Get();
         var tinyControl = bigMachine.TinyMachine;

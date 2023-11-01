@@ -100,11 +100,11 @@ public partial class Machine
         public bool IsTerminated()
             => this.Machine.operationalState.HasFlag(OperationalFlag.Terminated);
 
-        public TimeSpan GetTimeToStart()
-            => new(this.Machine.TimeToStart);
+        public TimeSpan GetTimeUntilRun()
+            => this.Machine.TimeUntilRun;
 
-        public void SetTimeToStart(TimeSpan timeToStart)
-            => this.Machine.TimeToStart = timeToStart.Ticks;
+        public void SetTimeUntilRun(TimeSpan timeUntilRun)
+            => this.Machine.TimeUntilRun = timeUntilRun;
 
         /// <summary>
         /// Gets the last run time of the machine.
