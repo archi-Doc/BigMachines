@@ -59,9 +59,10 @@ public class Program
 
         bigMachine.TerminatorMachine.Get(); // This machine will stop the app thread if there is no working machine.
 
-        TestMachine.Test(bigMachine);
+        // TestMachine.Test(bigMachine);
         // await PassiveMachine.Test(bigMachine);
         // IntermittentMachine.Test(bigMachine);
+        SequentialMachine.Test(bigMachine);
         // ContinuousMachine.Test(bigMachine);
 
         // DerivedMachine.Test2(bigMachine);
@@ -70,7 +71,6 @@ public class Program
         // LoopMachine.Test(bigMachine);
         // SingleMachine.Test(bigMachine);
         // ServiceProviderMachine.Test(bigMachine);
-        // QueuedMachine.Test(bigMachine);
 
         await ThreadCore.Root.WaitForTerminationAsync(-1); // Wait for the termination infinitely.
 

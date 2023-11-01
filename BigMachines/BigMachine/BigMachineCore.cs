@@ -56,24 +56,7 @@ public partial class BigMachineBase
 
                 foreach (var x in controls)
                 {
-                    if (x.MachineInformation.Continuous)
-                    {// Omit continuous machines
-                        continue;
-                    }
-                    else if (x is ISequentialMachineControl sequential)
-                    {
-                        if (sequential.GetFirst() is { } obj)
-                        {
-                            obj.Machine.Process(now, elapsed);
-                        }
-                    }
-                    else
-                    {
-                        foreach (var y in x.GetMachines())
-                        {
-                            y.Process(now, elapsed);
-                        }
-                    }
+                    x.Process(now, elapsed);
                 }
 
                 bigMachine.lastRun = now;

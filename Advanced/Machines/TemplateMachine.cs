@@ -1,19 +1,15 @@
 ﻿// Copyright (c) All contributors. All rights reserved. Licensed under the MIT license.
 
-using System;
-using BigMachines;
-
 namespace Advanced;
 
-/*[MachineObject(0x6c51e7cf)]
+/*[MachineObject]
 public partial class TemplateMachine : Machine<int>
 {
-    public static void Test(BigMachine<int> bigMachine)
+    public static void Test(BigMachine bigMachine)
     {
     }
 
-    public TemplateMachine(BigMachine<int> bigMachine)
-        : base(bigMachine)
+    public TemplateMachine()
     {
         this.DefaultTimeout = TimeSpan.FromSeconds(1);
     }

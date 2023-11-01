@@ -263,6 +263,10 @@ public abstract partial class Machine
 
     public virtual ManMachineInterface InterfaceInstance => default!;
 
+    internal OperationalFlag OperationalState => this.operationalState;
+
+    internal long InternalTimeUntilRun => this.internalTimeUntilRun;
+
     protected readonly SemaphoreLock Semaphore = new();
 
     /// <summary>
@@ -309,32 +313,38 @@ public abstract partial class Machine
         }
         else if (canRun && (this.internalTimeUntilRun <= 0 || this.internalNextRunTime >= now) && !this.operationalState.HasFlag(OperationalFlag.Running))
         {// Screening
-            _ = Task.Run(() =>
-            {
-                this.Semaphore.Enter();
-                try
-                {
-                    if (this.TryRun(now) == StateResult.Terminate)
-                    {
-                        this.operationalState |= OperationalFlag.Terminated;
-                        this.OnTermination();
-                    }
-                }
-                finally
-                {
-                    this.Semaphore.Exit();
-
-                    if (this.operationalState.HasFlag(OperationalFlag.Terminated))
-                    {
-                        this.RemoveFromControl();
-                    }
-                }
-            });
+            this.RunAndForget(now);
         }
     }
 
-    private StateResult TryRun(DateTime now)
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    internal void RunAndForget(DateTime now)
     {
+        _ = Task.Run(() =>
+        {
+            this.Semaphore.Enter();
+            try
+            {
+                if (this.TryRun(now) == StateResult.Terminate)
+                {
+                    this.operationalState |= OperationalFlag.Terminated;
+                    this.OnTermination();
+                }
+            }
+            finally
+            {
+                this.Semaphore.Exit();
+
+                if (this.operationalState.HasFlag(OperationalFlag.Terminated))
+                {
+                    this.RemoveFromControl();
+                }
+            }
+        });
+    }
+
+    private StateResult TryRun(DateTime now)
+    {// Locked
         var runFlag = false;
         if (this.internalTimeUntilRun <= 0)
         {// Timeout

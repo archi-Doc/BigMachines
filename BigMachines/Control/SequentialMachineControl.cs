@@ -32,7 +32,8 @@ public sealed partial class SequentialMachineControl<TIdentifier, TMachine, TInt
     public void Prepare(BigMachineBase bigMachine)
     {
         this.BigMachine = bigMachine;
-        if (this.BigMachine is IStructualObject obj)
+        if (this.MachineInformation.Serializable &&
+            this.BigMachine is IStructualObject obj)
         {
             ((IStructualObject)this.items).SetParent(obj);
         }
@@ -120,22 +121,44 @@ public sealed partial class SequentialMachineControl<TIdentifier, TMachine, TInt
             return false;
         }
 
+        var result = false;
         lock (this.items.SyncObject)
         {
             if (this.items.IdentifierChain.TryGetValue(m.Identifier, out var item))
             {
                 item.Goshujin = null;
-                return true;
+                result = true;
             }
-            else
+
+            if (this.items.SequentialChain.TryPeek(out var first))
             {
-                return false;
+                var next = first.Machine;
+                if (next.OperationalState == 0 &&
+                next.InternalTimeUntilRun == 0)
+                {// Stand-by
+                    next.RunAndForget(DateTime.UtcNow);
+                }
             }
         }
+
+        return result;
     }
 
     internal override void Process(DateTime now, TimeSpan elapsed)
     {
+        lock (this.items.SyncObject)
+        {
+            if (!this.items.SequentialChain.TryPeek(out var first))
+            {
+                return;
+            }
+
+            var machine = first.Machine;
+            if (machine.OperationalState == 0)
+            {// Stand-by
+                machine.Process(now, elapsed);
+            }
+        }
     }
 
     #endregion
