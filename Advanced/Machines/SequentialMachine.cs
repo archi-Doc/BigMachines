@@ -2,6 +2,7 @@
 
 namespace Advanced;
 
+[TinyhandObject]
 [MachineObject(Control = MachineControlKind.Sequential)]
 public partial class SequentialMachine : Machine<int>
 {// SequentialMachine executes one at a time, in the order of their creation.
@@ -17,6 +18,7 @@ public partial class SequentialMachine : Machine<int>
         this.DefaultTimeout = TimeSpan.FromSeconds(1);
     }
 
+    [Key(10)]
     public int Count { get; set; }
 
     [StateMethod(0)]

@@ -18,6 +18,11 @@ public interface IBigMachine
     public void Start(ThreadCoreBase? parent);
 
     /// <summary>
+    /// Gets or sets a value to specify the operation mode of the detection of recursive calls.
+    /// </summary>
+    public RecursiveDetectionMode RecursiveDetectionMode { get; set; }
+
+    /// <summary>
     /// Gets <see cref="DateTime"/> when the BigMachine was last executed.
     /// </summary>
     public DateTime LastRun { get; }

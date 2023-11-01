@@ -16,10 +16,10 @@ public enum RecursiveDetectionMode
     /// </summary>
     Disabled,
 
-    /*/// <summary>
+    /// <summary>
     /// Detection of recursive calls is enabled.
     /// </summary>
-    EnabledAndThrowException,*/
+    EnabledAndThrowException,
 }
 
 internal class LoopChecker

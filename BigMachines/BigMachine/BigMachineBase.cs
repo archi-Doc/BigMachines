@@ -33,10 +33,7 @@ public abstract partial class BigMachineBase : IBigMachine
 
     #region FieldAndProperty
 
-    /// <summary>
-    /// Gets or sets a value to specify the operation mode of the detection of recursive calls.
-    /// </summary>
-    public RecursiveDetectionMode RecursiveDetectionMode { get; set; } = RecursiveDetectionMode.Disabled;
+    RecursiveDetectionMode IBigMachine.RecursiveDetectionMode { get; set; }
 
     BigMachineCore IBigMachine.Core => this.core;
 
