@@ -111,4 +111,10 @@ public partial class TestBigMachine : BigMachineBase, ITinyhandSerialize<TestBig
 
         return false;
     }
+
+    void IStructualObject.SetParent(IStructualObject? parent, int key)
+    {
+        ((IStructualObject)this).SetParentActual(parent, key);
+        ((IStructualObject)this.testMachines)?.SetParent(this, 1);
+    }
 }

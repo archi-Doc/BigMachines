@@ -259,6 +259,8 @@ internal class BigMachine : IEquatable<BigMachine>
             foreach (var x in this.Machines.Values)
             {
                 ssb.AppendLine($"this.{x.Name}.Prepare(this);");
+                ssb.AppendLine($"((IStructualObject)this.{x.Name}).SetParent(this, {x.Key.ToString()});");
+
                 sb.Append($"this.{x.Name}, ");
             }
 
@@ -357,5 +359,15 @@ internal class BigMachine : IEquatable<BigMachine>
             ssb.AppendLine();
             ssb.AppendLine("return false;");
         }
+
+        /*ssb.AppendLine();
+        using (var scopeMethod = ssb.ScopeBrace("void IStructualObject.SetParent(IStructualObject? parent, int key)"))
+        {
+            ssb.AppendLine("((IStructualObject)this).SetParentActual(parent, key);");
+            foreach (var x in this.Machines.Values)
+            {
+                ssb.AppendLine($"((IStructualObject)this.{x.Name})?.SetParent(this, {x.Key.ToString()});");
+            }
+        }*/
     }
 }

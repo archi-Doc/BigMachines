@@ -50,7 +50,7 @@ public partial class RecursiveMachine : Machine<int>
     protected CommandResult RelayInt2(int n)
     {// LoopMachine: Lock(Machine) -> Lock(Control)
         Console.WriteLine($"RelayInt2: {n}");
-        var result = this.InterfaceInstance.Command.RelayInt(n).Result;
+        var result = CommandResult.Success; // this.InterfaceInstance.Command.RelayInt(n).Result;
 
         return result;
     }
