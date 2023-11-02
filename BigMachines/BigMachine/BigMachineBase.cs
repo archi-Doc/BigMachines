@@ -56,6 +56,7 @@ public abstract partial class BigMachineBase : IBigMachine
         var detection = RecursiveDetection.AsyncLocalInstance.Value;
         if (!detection.TryAdd(id, out var newDetection))
         {
+            // this.exceptionQueue.Enqueue(new BigMachineException(default!, new CircularCommandException($"Circular commands detected")));
             throw new CircularCommandException($"Circular commands detected");
         }
 

@@ -32,9 +32,18 @@ public partial class RecursiveMachine : Machine<int>
     protected CommandResult RelayInt(int n)
     {// LoopMachine
         Console.WriteLine($"RelayInt: {n}");
-        ((BigMachine)this.BigMachine).RecursiveMachine.TryGet(this.Identifier)?.Command.RelayInt(n);
+        CommandResult result;
+        if (((BigMachine)this.BigMachine).RecursiveMachine.TryGet(this.Identifier) is { } machine)
+        {
+            result = machine.Command.RelayInt(n).Result;
+        }
+        else
+        {
+            result = CommandResult.Failure;
+        }
+
         // this.BigMachine.(this.Identifier)?.CommandAsync(Command.RelayInt, n);
-        return CommandResult.Success;
+        return result;
     }
 
     [CommandMethod]

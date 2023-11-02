@@ -1,13 +1,8 @@
 ﻿// Copyright (c) All contributors. All rights reserved. Licensed under the MIT license.
 
-using System;
-using System.Collections.Generic;
-using System.Runtime.CompilerServices;
 using System.Threading;
 
 namespace BigMachines;
-
-#pragma warning disable SA1401 // Fields should be private
 
 public enum RecursiveDetectionMode
 {
@@ -25,7 +20,6 @@ public enum RecursiveDetectionMode
 internal readonly struct RecursiveDetection
 {
     public static AsyncLocal<RecursiveDetection> AsyncLocalInstance = new();
-    private const string IdToString = "x4";
 
     public readonly ulong Id0;
     public readonly ulong Id1;
@@ -34,46 +28,7 @@ internal readonly struct RecursiveDetection
     public readonly ulong Id4;
     public readonly ulong Id5;
 
-    public RecursiveDetection()
-    {
-    }
-
-    public RecursiveDetection(ulong id0)
-    {
-        this.Id0 = id0;
-    }
-
-    public RecursiveDetection(ulong id0, ulong id1)
-    {
-        this.Id0 = id0;
-        this.Id1 = id1;
-    }
-
-    public RecursiveDetection(ulong id0, ulong id1, ulong id2)
-    {
-        this.Id0 = id0;
-        this.Id1 = id1;
-        this.Id2 = id2;
-    }
-
-    public RecursiveDetection(ulong id0, ulong id1, ulong id2, ulong id3)
-    {
-        this.Id0 = id0;
-        this.Id1 = id1;
-        this.Id2 = id2;
-        this.Id3 = id3;
-    }
-
-    public RecursiveDetection(ulong id0, ulong id1, ulong id2, ulong id3, ulong id4)
-    {
-        this.Id0 = id0;
-        this.Id1 = id1;
-        this.Id2 = id2;
-        this.Id3 = id3;
-        this.Id4 = id4;
-    }
-
-    public RecursiveDetection(ulong id0, ulong id1, ulong id2, ulong id3, ulong id4, ulong id5)
+    public RecursiveDetection(ulong id0, ulong id1 = 0, ulong id2 = 0, ulong id3 = 0, ulong id4 = 0, ulong id5 = 0)
     {
         this.Id0 = id0;
         this.Id1 = id1;
@@ -154,5 +109,8 @@ internal readonly struct RecursiveDetection
     }
 
     public override string ToString()
-        => $"{((ushort)this.Id0).ToString(IdToString)}, {((ushort)this.Id1).ToString(IdToString)}, {((ushort)this.Id2).ToString(IdToString)}, {((ushort)this.Id3).ToString(IdToString)}, {((ushort)this.Id4).ToString(IdToString)}, {((ushort)this.Id5).ToString(IdToString)}, ";
+    {
+        const string IdToString = "x4";
+        return $"{((ushort)this.Id0).ToString(IdToString)}, {((ushort)this.Id1).ToString(IdToString)}, {((ushort)this.Id2).ToString(IdToString)}, {((ushort)this.Id3).ToString(IdToString)}, {((ushort)this.Id4).ToString(IdToString)}, {((ushort)this.Id5).ToString(IdToString)}, ";
+    }
 }

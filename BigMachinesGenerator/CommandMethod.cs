@@ -146,12 +146,12 @@ public class CommandMethod
 
         using (var method = ssb.ScopeBrace($"public async Task<{commandResult}> {this.Name}({this.ParameterTypesAndNames})"))
         {
+            ssb.AppendLine("try {");
+            ssb.IncrementIndent();
             ssb.AppendLine($"((IBigMachine)this.machine.BigMachine).CheckRecursive((this.machine.machineSerial << 32) | {(uint)FarmHash.Hash64(this.Method.FullName)});");
             if (this.WithLock)
             {
                 ssb.AppendLine("await this.machine.Semaphore.EnterAsync().ConfigureAwait(false);");
-                ssb.AppendLine("try {");
-                ssb.IncrementIndent();
             }
 
             if (this.ResponseObject is null)
@@ -172,10 +172,20 @@ public class CommandMethod
                 ssb.AppendLine($"return this.machine.{this.Name}({this.ParameterNames});");
             }
 
+            ssb.DecrementIndent();
+            ssb.AppendLine("}");
+            if (this.ResponseObject is null)
+            {
+                ssb.AppendLine("catch (Exception e) { ((IBigMachine)this.machine.BigMachine).ReportException(new(default!, e)); return CommandResult.Failure; }");
+            }
+            else
+            {
+                ssb.AppendLine("catch (Exception e) { ((IBigMachine)this.machine.BigMachine).ReportException(new(default!, e)); return new(CommandResult.Failure, default); }");
+            }
+
             if (this.WithLock)
             {
-                ssb.DecrementIndent();
-                ssb.AppendLine("} finally { this.machine.Semaphore.Exit(); }");
+                ssb.AppendLine("finally { this.machine.Semaphore.Exit(); }");
             }
         }
     }
