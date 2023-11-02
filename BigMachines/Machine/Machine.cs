@@ -259,7 +259,7 @@ public abstract partial class Machine
     /// <summary>
     /// Gets an instance of <see cref="MachineControl"/>.
     /// </summary>
-    public MachineControl Control { get; private set; } = default!;
+    public virtual MachineControl Control { get; private set; } = default!;
 
     public virtual ManMachineInterface InterfaceInstance => default!;
 
