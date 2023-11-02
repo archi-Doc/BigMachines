@@ -38,7 +38,320 @@ internal readonly struct RecursiveDetection
         this.Id5 = id5;
     }
 
-    public bool TryAdd(ulong id, out RecursiveDetection newDetetcion)
+    public int TryAdd(uint machineSerial, ulong id, out RecursiveDetection newDetetcion)
+    {// -1: Id collision, 0: Machine collision, 1: No collision
+        var result = 1;
+        if (this.Id0 == 0)
+        {
+            newDetetcion = new(id);
+            return 1;
+        }
+        else if (this.Id1 == 0)
+        {
+            if ((this.Id0 >> 32) == machineSerial)
+            {
+                if (this.Id0 == id)
+                {
+                    newDetetcion = default;
+                    return -1;
+                }
+                else
+                {
+                    result = 0;
+                }
+            }
+
+            newDetetcion = new(this.Id0, id);
+            return result;
+        }
+        else if (this.Id2 == 0)
+        {
+            if ((this.Id0 >> 32) == machineSerial)
+            {
+                if (this.Id0 == id)
+                {
+                    newDetetcion = default;
+                    return -1;
+                }
+                else
+                {
+                    result = 0;
+                }
+            }
+
+            if ((this.Id1 >> 32) == machineSerial)
+            {
+                if (this.Id1 == id)
+                {
+                    newDetetcion = default;
+                    return -1;
+                }
+                else
+                {
+                    result = 0;
+                }
+            }
+
+            newDetetcion = new(this.Id0, this.Id1, id);
+            return result;
+        }
+        else if (this.Id3 == 0)
+        {
+            if ((this.Id0 >> 32) == machineSerial)
+            {
+                if (this.Id0 == id)
+                {
+                    newDetetcion = default;
+                    return -1;
+                }
+                else
+                {
+                    result = 0;
+                }
+            }
+
+            if ((this.Id1 >> 32) == machineSerial)
+            {
+                if (this.Id1 == id)
+                {
+                    newDetetcion = default;
+                    return -1;
+                }
+                else
+                {
+                    result = 0;
+                }
+            }
+
+            if ((this.Id2 >> 32) == machineSerial)
+            {
+                if (this.Id2 == id)
+                {
+                    newDetetcion = default;
+                    return -1;
+                }
+                else
+                {
+                    result = 0;
+                }
+            }
+
+            newDetetcion = new(this.Id0, this.Id1, this.Id2, id);
+            return result;
+        }
+        else if (this.Id4 == 0)
+        {
+            if ((this.Id0 >> 32) == machineSerial)
+            {
+                if (this.Id0 == id)
+                {
+                    newDetetcion = default;
+                    return -1;
+                }
+                else
+                {
+                    result = 0;
+                }
+            }
+
+            if ((this.Id1 >> 32) == machineSerial)
+            {
+                if (this.Id1 == id)
+                {
+                    newDetetcion = default;
+                    return -1;
+                }
+                else
+                {
+                    result = 0;
+                }
+            }
+
+            if ((this.Id2 >> 32) == machineSerial)
+            {
+                if (this.Id2 == id)
+                {
+                    newDetetcion = default;
+                    return -1;
+                }
+                else
+                {
+                    result = 0;
+                }
+            }
+
+            if ((this.Id3 >> 32) == machineSerial)
+            {
+                if (this.Id3 == id)
+                {
+                    newDetetcion = default;
+                    return -1;
+                }
+                else
+                {
+                    result = 0;
+                }
+            }
+
+            newDetetcion = new(this.Id0, this.Id1, this.Id2, this.Id3, id);
+            return result;
+        }
+        else if (this.Id5 == 0)
+        {
+            if ((this.Id0 >> 32) == machineSerial)
+            {
+                if (this.Id0 == id)
+                {
+                    newDetetcion = default;
+                    return -1;
+                }
+                else
+                {
+                    result = 0;
+                }
+            }
+
+            if ((this.Id1 >> 32) == machineSerial)
+            {
+                if (this.Id1 == id)
+                {
+                    newDetetcion = default;
+                    return -1;
+                }
+                else
+                {
+                    result = 0;
+                }
+            }
+
+            if ((this.Id2 >> 32) == machineSerial)
+            {
+                if (this.Id2 == id)
+                {
+                    newDetetcion = default;
+                    return -1;
+                }
+                else
+                {
+                    result = 0;
+                }
+            }
+
+            if ((this.Id3 >> 32) == machineSerial)
+            {
+                if (this.Id3 == id)
+                {
+                    newDetetcion = default;
+                    return -1;
+                }
+                else
+                {
+                    result = 0;
+                }
+            }
+
+            if ((this.Id4 >> 32) == machineSerial)
+            {
+                if (this.Id4 == id)
+                {
+                    newDetetcion = default;
+                    return -1;
+                }
+                else
+                {
+                    result = 0;
+                }
+            }
+
+            newDetetcion = new(this.Id0, this.Id1, this.Id2, this.Id3, this.Id4, id);
+            return result;
+        }
+        else
+        {
+            if ((this.Id0 >> 32) == machineSerial)
+            {
+                if (this.Id0 == id)
+                {
+                    newDetetcion = default;
+                    return -1;
+                }
+                else
+                {
+                    result = 0;
+                }
+            }
+
+            if ((this.Id1 >> 32) == machineSerial)
+            {
+                if (this.Id1 == id)
+                {
+                    newDetetcion = default;
+                    return -1;
+                }
+                else
+                {
+                    result = 0;
+                }
+            }
+
+            if ((this.Id2 >> 32) == machineSerial)
+            {
+                if (this.Id2 == id)
+                {
+                    newDetetcion = default;
+                    return -1;
+                }
+                else
+                {
+                    result = 0;
+                }
+            }
+
+            if ((this.Id3 >> 32) == machineSerial)
+            {
+                if (this.Id3 == id)
+                {
+                    newDetetcion = default;
+                    return -1;
+                }
+                else
+                {
+                    result = 0;
+                }
+            }
+
+            if ((this.Id4 >> 32) == machineSerial)
+            {
+                if (this.Id4 == id)
+                {
+                    newDetetcion = default;
+                    return -1;
+                }
+                else
+                {
+                    result = 0;
+                }
+            }
+
+            if ((this.Id5 >> 32) == machineSerial)
+            {
+                if (this.Id5 == id)
+                {
+                    newDetetcion = default;
+                    return -1;
+                }
+                else
+                {
+                    result = 0;
+                }
+            }
+
+            newDetetcion = this;
+            return result;
+        }
+    }
+
+    /*public bool TryAdd(ulong id, out RecursiveDetection newDetetcion)
     {
         if (this.Id0 == 0)
         {
@@ -106,7 +419,7 @@ internal readonly struct RecursiveDetection
         }
 
         return true;
-    }
+    }*/
 
     public override string ToString()
     {

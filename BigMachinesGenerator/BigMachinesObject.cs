@@ -33,9 +33,8 @@ public enum BigMachinesObjectFlag
     TinyhandObject = 1 << 5,
 
     CanCreateInstance = 1 << 12, // Can create an instance
-    IsSimpleGenericMachine = 1 << 13, // Class<TIdentifier> : Machine<TIdentifier>
-    HasRegisterBM = 1 << 14, // RegisterBM() declared
-    StructualEnabled = 1 << 15, // Tinyhand structual
+    HasRegisterBM = 1 << 13, // RegisterBM() declared
+    StructualEnabled = 1 << 14, // Tinyhand structual
 }
 
 public class BigMachinesObject : VisceralObjectBase<BigMachinesObject>
@@ -85,6 +84,8 @@ public class BigMachinesObject : VisceralObjectBase<BigMachinesObject>
     public BigMachinesObject? ClosedGenericHint { get; private set; }
 
     public string NewIfDerived { get; private set; } = string.Empty;
+
+    public string OverrideOrNew { get; private set; } = string.Empty;
 
     public Arc.Visceral.NullableAnnotation NullableAnnotationIfReferenceType
     {
@@ -362,6 +363,11 @@ public class BigMachinesObject : VisceralObjectBase<BigMachinesObject>
         if (derivedMachine)
         {
             this.NewIfDerived = "new ";
+            this.OverrideOrNew = "new";
+        }
+        else
+        {
+            this.OverrideOrNew = "override";
         }
 
         if (machineObject == null)
@@ -380,7 +386,7 @@ public class BigMachinesObject : VisceralObjectBase<BigMachinesObject>
                 this.IdentifierObject = machineObject.Generics_Arguments[0];
             }
 
-            if (this.Generics_Kind == VisceralGenericsKind.OpenGeneric)
+            /*if (this.Generics_Kind == VisceralGenericsKind.OpenGeneric)
             {
                 if (machineObject.Generics_Kind == VisceralGenericsKind.OpenGeneric &&
                     this.Generics_Arguments.Length == 1 &&
@@ -388,7 +394,7 @@ public class BigMachinesObject : VisceralObjectBase<BigMachinesObject>
                 {// Class<TIdentifier> : Machine<TIdentifier>
                     this.ObjectFlag |= BigMachinesObjectFlag.IsSimpleGenericMachine;
                 }
-            }
+            }*/
         }
 
         if (this.IdentifierObject != null && this.IdentifierObject.Kind != VisceralObjectKind.TypeParameter)
@@ -711,7 +717,8 @@ ModuleInitializerClass_Added:
             return;
         }
 
-        ssb.AppendLine("public override ManMachineInterface InterfaceInstance => (ManMachineInterface)(this.interfaceInstance ??= new Interface(this));");
+        ssb.AppendLine($"public {this.OverrideOrNew} Interface InterfaceInstance => (Interface)(this.interfaceInstance ??= new Interface(this));");
+        // ssb.AppendLine($"public override ManMachineInterface InterfaceInstance => (ManMachineInterface)(this.interfaceInstance ??= new Interface(this));");
 
         /*ssb.AppendLine("public override ManMachineInterface InterfaceInstance");
         ssb.AppendLine("{");

@@ -22,7 +22,7 @@ public interface IBigMachine
     /// </summary>
     public RecursiveDetectionMode RecursiveDetectionMode { get; set; }
 
-    public void CheckRecursive(ulong id);
+    public int CheckRecursive(uint machineSerial, ulong id);
 
     /// <summary>
     /// Gets <see cref="DateTime"/> when the BigMachine was last executed.

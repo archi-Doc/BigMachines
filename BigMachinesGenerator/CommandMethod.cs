@@ -146,12 +146,13 @@ public class CommandMethod
 
         using (var method = ssb.ScopeBrace($"public async Task<{commandResult}> {this.Name}({this.ParameterTypesAndNames})"))
         {
+            ssb.AppendLine("var locked = 0;");
             ssb.AppendLine("try {");
             ssb.IncrementIndent();
-            ssb.AppendLine($"((IBigMachine)this.machine.BigMachine).CheckRecursive((this.machine.machineSerial << 32) | {(uint)FarmHash.Hash64(this.Method.FullName)});");
+            ssb.AppendLine($"locked = ((IBigMachine)this.machine.BigMachine).CheckRecursive(this.machine.machineSerial, ((ulong)this.machine.machineSerial << 32) | {(uint)FarmHash.Hash64(this.Method.FullName)});");
             if (this.WithLock)
             {
-                ssb.AppendLine("await this.machine.Semaphore.EnterAsync().ConfigureAwait(false);");
+                ssb.AppendLine("if (locked > 0) await this.machine.Semaphore.EnterAsync().ConfigureAwait(false);");
             }
 
             if (this.ResponseObject is null)
@@ -176,16 +177,16 @@ public class CommandMethod
             ssb.AppendLine("}");
             if (this.ResponseObject is null)
             {
-                ssb.AppendLine("catch (Exception e) { ((IBigMachine)this.machine.BigMachine).ReportException(new(default!, e)); return CommandResult.Failure; }");
+                ssb.AppendLine("catch (Exception e) { ((IBigMachine)this.machine.BigMachine).ReportException(new(this.machine, e)); return CommandResult.Failure; }");
             }
             else
             {
-                ssb.AppendLine("catch (Exception e) { ((IBigMachine)this.machine.BigMachine).ReportException(new(default!, e)); return new(CommandResult.Failure, default); }");
+                ssb.AppendLine("catch (Exception e) { ((IBigMachine)this.machine.BigMachine).ReportException(new(this.machine, e)); return new(CommandResult.Failure, default); }");
             }
 
             if (this.WithLock)
             {
-                ssb.AppendLine("finally { this.machine.Semaphore.Exit(); }");
+                ssb.AppendLine("finally { if (locked > 0) this.machine.Semaphore.Exit(); }");
             }
         }
     }

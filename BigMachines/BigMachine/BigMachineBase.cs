@@ -46,21 +46,23 @@ public abstract partial class BigMachineBase : IBigMachine
 
     #endregion
 
-    void IBigMachine.CheckRecursive(ulong id)
+    int IBigMachine.CheckRecursive(uint machineSerial, ulong id)
     {
         if (((IBigMachine)this).RecursiveDetectionMode == RecursiveDetectionMode.Disabled)
         {
-            return;
+            return -1;
         }
 
         var detection = RecursiveDetection.AsyncLocalInstance.Value;
-        if (!detection.TryAdd(id, out var newDetection))
+        var result = detection.TryAdd(machineSerial, id, out var newDetection); // -1: Id collision, 0: Machine collision, 1: No collision
+        if (result < 0)
         {
             // this.exceptionQueue.Enqueue(new BigMachineException(default!, new CircularCommandException($"Circular commands detected")));
             throw new CircularCommandException($"Circular commands detected");
         }
 
         RecursiveDetection.AsyncLocalInstance.Value = newDetection;
+        return result;
     }
 
     #region Exception

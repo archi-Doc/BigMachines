@@ -73,7 +73,7 @@ public partial class TestMachine : Machine<int>
         }
     }*/
 
-    public override ManMachineInterface InterfaceInstance => (ManMachineInterface)(this.interfaceInstance ??= new Interface(this));
+    public override Interface InterfaceInstance => (Interface)(this.interfaceInstance ??= new Interface(this));
 
     public class Interface : ManMachineInterface<int, State>
     {// int: this.IdentifierObject!.FullName, State

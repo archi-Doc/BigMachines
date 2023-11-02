@@ -10,11 +10,12 @@ public partial class RecursiveMachine : Machine<int>
         var bm = (IBigMachine)bigMachine;
         bm.RecursiveDetectionMode = RecursiveDetectionMode.EnabledAndThrowException;
 
-        var machine1 = bigMachine.RecursiveMachine.GetOrCreate(1);
+        var machine1 = bigMachine.RecursiveMachine.GetOrCreate(1); // Lock(Control)
         var machine2 = bigMachine.RecursiveMachine.GetOrCreate(2);
 
         // Case 1: Machine1 -> Machine1
-        await machine1.Command.RelayInt(1);
+        // await machine1.Command.RelayInt(1);
+        await machine1.Command.RelayInt2(1);
 
         // Case 2: LoopMachine -> TestMachine -> LoopMachine
         // bigMachine.CreateOrGet<TestMachine.Interface>(3);
@@ -30,7 +31,7 @@ public partial class RecursiveMachine : Machine<int>
 
     [CommandMethod]
     protected CommandResult RelayInt(int n)
-    {// LoopMachine
+    {// LoopMachine: Lock(Machine) -> Lock(Control)
         Console.WriteLine($"RelayInt: {n}");
         CommandResult result;
         if (((BigMachine)this.BigMachine).RecursiveMachine.TryGet(this.Identifier) is { } machine)
@@ -42,33 +43,15 @@ public partial class RecursiveMachine : Machine<int>
             result = CommandResult.Failure;
         }
 
-        // this.BigMachine.(this.Identifier)?.CommandAsync(Command.RelayInt, n);
         return result;
     }
 
     [CommandMethod]
-    protected CommandResult RelayString(string st)
-    {// LoopMachine -> TestMachine
-        Console.WriteLine($"RelayString: {st}");
-        // this.BigMachine.TryGet<TestMachine.Interface>(3)?.CommandAsync(TestMachine.Command.RelayString, st);
-        return CommandResult.Success;
-    }
-
-    [CommandMethod]
     protected CommandResult RelayInt2(int n)
-    {// LoopMachine -> LoopMachine n
-        if (this.Identifier == 0)
-        {
-            Console.WriteLine($"RelayInt2: {n}");
-            // this.BigMachine.TryGet<Interface>(n)?.CommandAsync(Command.RelayInt2, n);
-        }
-        else
-        {
-            n = 0;
-            Console.WriteLine($"RelayInt2: {n}");
-            // this.BigMachine.TryGet<Interface>(n)?.CommandAsync(Command.RelayInt2, n);
-        }
+    {// LoopMachine: Lock(Machine) -> Lock(Control)
+        Console.WriteLine($"RelayInt2: {n}");
+        var result = this.InterfaceInstance.Command.RelayInt(n).Result;
 
-        return CommandResult.Success;
+        return result;
     }
 }
