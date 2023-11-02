@@ -199,7 +199,7 @@ public sealed class CommandMethodAttributeMock : Attribute
 
     public bool WithLock { get; set; } = true;
 
-    public bool All { get; set; } = true;
+    public bool All { get; set; } = false;
 
     public static CommandMethodAttributeMock FromArray(object?[] constructorArguments, KeyValuePair<string, object?>[] namedArguments)
     {

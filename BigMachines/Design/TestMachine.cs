@@ -73,7 +73,7 @@ public partial class TestMachine : Machine<int>
         }
     }*/
 
-    public override MachineControl Control => base.Control;
+    public override UnorderedMachineControl<int, TestMachine, Interface> Control => (UnorderedMachineControl<int, TestMachine, Interface>)this.control;
 
     public override Interface InterfaceInstance => (Interface)(this.interfaceInstance ??= new Interface(this));
 

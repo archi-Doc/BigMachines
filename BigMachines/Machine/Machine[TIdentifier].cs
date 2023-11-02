@@ -23,7 +23,7 @@ public abstract partial class Machine<TIdentifier> : Machine
     /// <summary>
     /// Gets an instance of <see cref="MultiMachineControl{TIdentifier}"/>.
     /// </summary>
-    public override MultiMachineControl<TIdentifier> Control { get; private set; } = default!;
+    public override MultiMachineControl<TIdentifier> Control { get; } = default!;
 
     /// <summary>
     /// Gets or sets the identifier.

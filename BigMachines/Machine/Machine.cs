@@ -30,7 +30,7 @@ public abstract partial class Machine
 
     internal void Prepare(MachineControl control)
     {// Deserialize
-        this.Control = control;
+        this.control = control;
         if (this is IStructualObject obj &&
             this.Control is IStructualObject parent)
         {
@@ -259,7 +259,7 @@ public abstract partial class Machine
     /// <summary>
     /// Gets an instance of <see cref="MachineControl"/>.
     /// </summary>
-    public virtual MachineControl Control { get; private set; } = default!;
+    public virtual MachineControl Control => default!;
 
     public virtual ManMachineInterface InterfaceInstance => default!;
 
@@ -279,6 +279,9 @@ public abstract partial class Machine
 
     [IgnoreMember]
     protected OperationalFlag operationalState;
+
+    [IgnoreMember]
+    protected object control = default!;
 
     [IgnoreMember]
     protected object? interfaceInstance;

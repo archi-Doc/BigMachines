@@ -717,7 +717,31 @@ ModuleInitializerClass_Added:
             return;
         }
 
-        ssb.AppendLine($"public {this.OverrideOrNew} Interface InterfaceInstance => (Interface)(this.interfaceInstance ??= new Interface(this));");
+        string? controlType = default;
+        if (this.ObjectAttribute?.Control == MachineControlKind.Single)
+        {
+            controlType = $"SingleMachineControl<{this.FullName}, {this.FullName}.Interface>";
+        }
+        else if (this.ObjectAttribute?.Control == MachineControlKind.Unordered)
+        {
+            if (this.IdentifierObject is not null)
+            {
+                controlType = $"UnorderedMachineControl<{this.IdentifierObject.FullName}, {this.FullName}, {this.FullName}.Interface>";
+            }
+        }
+        else if (this.ObjectAttribute?.Control == MachineControlKind.Sequential)
+        {
+            if (this.IdentifierObject is not null)
+            {
+                controlType = $"SequentialMachineControl<{this.IdentifierObject.FullName}, {this.FullName}, {this.FullName}.Interface>";
+            }
+        }
+
+        if (controlType is not null)
+        {
+            ssb.AppendLine($"public {this.OverrideOrNew} {controlType} Control => ({controlType})this.control;");
+        }
+
         ssb.AppendLine($"public {this.OverrideOrNew} Interface InterfaceInstance => (Interface)(this.interfaceInstance ??= new Interface(this));");
         // ssb.AppendLine($"public override ManMachineInterface InterfaceInstance => (ManMachineInterface)(this.interfaceInstance ??= new Interface(this));");
 
