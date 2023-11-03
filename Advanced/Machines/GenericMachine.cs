@@ -7,8 +7,9 @@ using Advanced;
 namespace BigMachines
 {
     [BigMachineObject(Comprehensive = true)]
-    [AddMachine<Advanced.TestMachine>]
+    // [AddMachine<Advanced.TestMachine>]
     [AddMachine<GenericMachine<string>>]
+    [AddMachine<ExternalMachine.Machine1>]
     public partial class BigMachine;
 }
 

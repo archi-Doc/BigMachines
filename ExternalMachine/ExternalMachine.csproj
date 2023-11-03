@@ -1,0 +1,14 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFramework>net7.0</TargetFramework>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <Nullable>enable</Nullable>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\BigMachinesGenerator\BigMachinesGenerator.csproj" ReferenceOutputAssembly="false" OutputItemType="Analyzer" />
+    <ProjectReference Include="..\BigMachines\BigMachines.csproj" />
+  </ItemGroup>
+
+</Project>
