@@ -150,9 +150,32 @@ internal class BigMachine : IEquatable<BigMachine>
             foreach (var objectAttribute in this.Object.AllAttributes)
             {
                 if (objectAttribute.FullName.StartsWith(start) && objectAttribute.FullName.EndsWith(">"))
-                {// MachineObjectAttribute
-                    var machineName = objectAttribute.FullName.Substring(start.Length, objectAttribute.FullName.Length - start.Length - 1);
-                    if (this.Body.TryGet(machineName, out var obj))
+                {// AddMachineAttribute
+                    // var machineName = objectAttribute.FullName.Substring(start.Length, objectAttribute.FullName.Length - start.Length - 1);
+
+                    BigMachinesObject? obj = default;
+                    var args = objectAttribute.AttributeData?.AttributeClass?.TypeArguments;
+                    if (args.HasValue && args.Value.Length > 0 && args.Value[0] is INamedTypeSymbol machineType)
+                    {// AddMachineAttribute<machineType>
+                        this.Body.TryGet(machineType, out obj);
+                        if (obj is null && machineType.IsGenericType)
+                        {
+                            if (this.Body.TryGet(machineType.ConstructedFrom, out var obj2))
+                            {
+                                if (obj2 is not null && obj2.ObjectAttribute is not null)
+                                {
+                                    obj = this.Body.Add(machineType);
+                                    if (obj is not null)
+                                    {
+                                        obj.ObjectAttribute = obj2.ObjectAttribute;
+                                        obj.IdentifierObject = obj2.IdentifierObject;
+                                    }
+                                }
+                            }
+                        }
+                    }
+
+                    if (obj is not null)
                     {
                         AddMachineAttributeMock? attribute = null;
                         try
@@ -258,6 +281,12 @@ internal class BigMachine : IEquatable<BigMachine>
 
             foreach (var x in this.Machines.Values)
             {
+                if (x.MachineObject.Generics_Kind == VisceralGenericsKind.ClosedGeneric)
+                {
+                    ssb.AppendLine($"{x.FullName}.RegisterBM();");
+                }
+
+                ssb.AppendLine($"this._{x.Name} = new();");
                 ssb.AppendLine($"this.{x.Name}.Prepare(this);");
                 ssb.AppendLine($"((IStructualObject)this.{x.Name}).SetParent(this, {x.Key.ToString()});");
 
@@ -275,7 +304,7 @@ internal class BigMachine : IEquatable<BigMachine>
         ssb.AppendLine("public override MachineControl[] GetArray() => controls;");
         foreach (var x in this.Machines.Values)
         {
-            ssb.AppendLine($"private {x.ControlType} _{x.Name} = new();");
+            ssb.AppendLine($"private {x.ControlType} _{x.Name};");
             ssb.AppendLine($"public {x.ControlType} {x.Name} => this._{x.Name};");
         }
     }

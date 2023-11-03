@@ -213,6 +213,8 @@ public class VisceralAttribute : IComparable<VisceralAttribute>
 
     public SyntaxReference? SyntaxReference => this.attributeData?.ApplicationSyntaxReference;
 
+    public AttributeData? AttributeData => this.attributeData;
+
     protected AttributeData? attributeData;
 }
 

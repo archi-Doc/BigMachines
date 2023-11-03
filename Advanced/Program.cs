@@ -67,8 +67,8 @@ public class Program
 
         // DerivedMachine.Test2(bigMachine);
         // DerivedMachine2.Test(bigMachine);
-        // GenericMachine<int>.Test(bigMachine);
-        await RecursiveMachine.Test(bigMachine);
+        GenericMachine<string>.Test(bigMachine, "gen");
+        // await RecursiveMachine.Test(bigMachine);
         // SingleMachine.Test(bigMachine);
         // ServiceProviderMachine.Test(bigMachine);
 

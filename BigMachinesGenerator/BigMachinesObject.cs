@@ -47,13 +47,13 @@ public class BigMachinesObject : VisceralObjectBase<BigMachinesObject>
 
     public BigMachinesObjectFlag ObjectFlag { get; set; }
 
-    public MachineObjectAttributeMock? ObjectAttribute { get; private set; }
+    public MachineObjectAttributeMock? ObjectAttribute { get; internal set; }
 
     public TinyhandObjectAttributeMock? TinyhandAttribute { get; private set; }
 
     public BigMachinesObject? MachineObject { get; private set; }
 
-    public BigMachinesObject? IdentifierObject { get; private set; }
+    public BigMachinesObject? IdentifierObject { get; internal set; }
 
     public bool UseServiceProvider { get; private set; } = false;
 
