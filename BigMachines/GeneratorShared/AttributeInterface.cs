@@ -101,6 +101,12 @@ public sealed class MachineObjectAttribute : Attribute
     /// </summary>
     public bool UseServiceProvider { get; set; } = false;
 
+    /// <summary>
+    /// Gets or sets a value indicating whether or not to start the machine by default.<br/>
+    /// This feature is only active for a single machine. [default is <see langword="false"/>].
+    /// </summary>
+    public bool StartByDefault { get; set; } = false;
+
     /*
     /// <summary>
     /// Gets the identifier for the Machine.<br/>

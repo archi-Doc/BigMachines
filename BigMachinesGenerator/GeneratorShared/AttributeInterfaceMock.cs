@@ -129,6 +129,8 @@ public sealed class MachineObjectAttributeMock : Attribute
 
     public bool UseServiceProvider { get; set; } = false;
 
+    public bool StartByDefault { get; set; }
+
     public bool Continuous { get; set; }
 
     public static MachineObjectAttributeMock FromArray(object?[] constructorArguments, KeyValuePair<string, object?>[] namedArguments)
@@ -152,6 +154,12 @@ public sealed class MachineObjectAttributeMock : Attribute
         if (val != null)
         {
             attribute.UseServiceProvider = (bool)val;
+        }
+
+        val = AttributeHelper.GetValue(-1, nameof(StartByDefault), constructorArguments, namedArguments);
+        if (val != null)
+        {
+            attribute.StartByDefault = (bool)val;
         }
 
         val = AttributeHelper.GetValue(-1, nameof(Continuous), constructorArguments, namedArguments);

@@ -6,6 +6,8 @@ using System.Threading;
 using Arc.Threading;
 using BigMachines.Control;
 
+#pragma warning disable SA1202
+
 namespace BigMachines;
 
 /// <summary>
@@ -33,6 +35,7 @@ public abstract partial class BigMachineBase : IBigMachine
         var core = ((IBigMachine)this).Core;
         core.ChangeParent(parent);
         core.Start();
+        this.StartByDefault();
 
         return true;
     }
@@ -72,6 +75,10 @@ public abstract partial class BigMachineBase : IBigMachine
 
         RecursiveChecker.AsyncLocalInstance.Value = newDetection;
         return result;
+    }
+
+    protected virtual void StartByDefault()
+    {
     }
 
     #region Exception
