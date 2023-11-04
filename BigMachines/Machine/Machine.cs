@@ -267,6 +267,8 @@ public abstract partial class Machine
 
     internal long InternalTimeUntilRun => this.internalTimeUntilRun;
 
+    internal long InternalLifespan => this.internalLifespan;
+
     protected readonly SemaphoreLock Semaphore = new();
 
     /// <summary>
@@ -320,7 +322,7 @@ public abstract partial class Machine
         }
     }
 
-    internal void ProcessImmediately(DateTime now)
+    internal Task ProcessImmediately(DateTime now)
     {
         Volatile.Write(ref this.internalTimeUntilRun, 0);
         if (this.internalLifespan <= 0 || this.internalTerminationTime <= now)
@@ -329,8 +331,10 @@ public abstract partial class Machine
         }
         else if (!this.operationalState.HasFlag(OperationalFlag.Running))
         {// Screening
-            this.RunAndForget(now);
+            return this.RunAndForget(now);
         }
+
+        return Task.CompletedTask;
     }
 
     internal void ProcessLifespan(DateTime now, TimeSpan elapsed)
@@ -343,9 +347,9 @@ public abstract partial class Machine
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    internal void RunAndForget(DateTime now)
+    internal Task RunAndForget(DateTime now)
     {
-        _ = Task.Run(() =>
+        return Task.Run(() =>
         {
             this.Semaphore.Enter();
             try

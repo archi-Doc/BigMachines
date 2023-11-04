@@ -59,10 +59,10 @@ public class Program
 
         // bigMachine.TerminatorMachine.Get(); // This machine will stop the app thread if there is no working machine. -> Start by default
 
-        TestMachine.Test(bigMachine);
+        // TestMachine.Test(bigMachine);
         // await PassiveMachine.Test(bigMachine);
         // IntermittentMachine.Test(bigMachine);
-        // SequentialMachine.Test(bigMachine);
+        SequentialMachine.Test(bigMachine);
         // ContinuousMachine.Test(bigMachine);
 
         // DerivedMachine.Test2(bigMachine);

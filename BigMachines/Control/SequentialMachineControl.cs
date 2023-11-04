@@ -13,6 +13,8 @@ namespace BigMachines.Control;
 
 public interface ISequentialMachineControl
 {
+    void Start();
+
     Machine.ManMachineInterface? GetFirst();
 }
 
@@ -26,6 +28,7 @@ public sealed partial class SequentialMachineControl<TIdentifier, TMachine, TInt
         : base()
     {
         this.MachineInformation = MachineRegistry.Get<TMachine>();
+        this.core = new(this);
         this.items = new();
     }
 
@@ -70,12 +73,18 @@ public sealed partial class SequentialMachineControl<TIdentifier, TMachine, TInt
 
     public override MachineInformation MachineInformation { get; }
 
+    private SequentialCore core;
     private Item.GoshujinClass items;
 
     #region Abstract
 
     public override int Count
         => this.items.Count;
+
+    public void Start()
+    {
+        this.core.Start(((IBigMachine)this.BigMachine).Core.GetParent());
+    }
 
     public Machine.ManMachineInterface? GetFirst()
     {
@@ -133,8 +142,9 @@ public sealed partial class SequentialMachineControl<TIdentifier, TMachine, TInt
             if (this.items.SequentialChain.TryPeek(out var first))
             {
                 var next = first.Machine;
-                if (next.OperationalState == 0 &&
-                next.InternalTimeUntilRun == 0)
+                if (next.InternalLifespan > 0 &&
+                    next.OperationalState == 0 &&
+                    next.InternalTimeUntilRun == 0)
                 {// Stand-by
                     next.RunAndForget(DateTime.UtcNow);
                 }
@@ -148,7 +158,12 @@ public sealed partial class SequentialMachineControl<TIdentifier, TMachine, TInt
     {
         lock (this.items.SyncObject)
         {
-            if (!this.items.SequentialChain.TryPeek(out var first))
+            foreach (var x in this.items)
+            {
+                x.Machine.ProcessLifespan(now, elapsed);
+            }
+
+            /*if (!this.items.SequentialChain.TryPeek(out var first))
             {
                 return;
             }
@@ -157,7 +172,7 @@ public sealed partial class SequentialMachineControl<TIdentifier, TMachine, TInt
             if (machine.OperationalState == 0)
             {// Stand-by
                 machine.Process(now, elapsed);
-            }
+            }*/
         }
     }
 
@@ -195,6 +210,7 @@ public sealed partial class SequentialMachineControl<TIdentifier, TMachine, TInt
                 machine.PrepareAndCreate(this, createParam);
                 item = new(identifier, machine);
                 item.Goshujin = this.items;
+                this.core.Pulse();
             }
 
             return (TInterface)item.Machine.InterfaceInstance;
@@ -212,6 +228,7 @@ public sealed partial class SequentialMachineControl<TIdentifier, TMachine, TInt
                 machine.PrepareAndCreate(this, createParam);
                 item = new(identifier, machine);
                 item.Goshujin = this.items;
+                this.core.Pulse();
             }
 
             return (TInterface)item.Machine.InterfaceInstance;

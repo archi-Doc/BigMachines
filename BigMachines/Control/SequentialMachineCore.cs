@@ -3,8 +3,6 @@
 using System;
 using System.Threading.Tasks;
 using Arc.Threading;
-using BigMachines.Control;
-using Tinyhand;
 
 namespace BigMachines.Control;
 
@@ -17,10 +15,16 @@ public sealed partial class SequentialMachineControl<TIdentifier, TMachine, TInt
     {
         public const double TimeIntervalInMilliseconds = 2_000;
 
-        public SequentialCore(SequentialMachineControl<TIdentifier, TMachine, TInterface> control, ThreadCoreBase? parent)
-            : base(parent, Process, false)
+        public SequentialCore(SequentialMachineControl<TIdentifier, TMachine, TInterface> control)
+            : base(null, Process, false)
         {
             this.control = control;
+        }
+
+        public void Start(ThreadCoreBase? parent)
+        {
+            this.ChangeParent(parent);
+            this.Start();
         }
 
         public void Pulse() => this.updateEvent.Pulse();
@@ -40,7 +44,7 @@ public sealed partial class SequentialMachineControl<TIdentifier, TMachine, TInt
                     break;
                 }*/
 
-                await core.updateEvent.WaitAsync(TimeSpan.FromMilliseconds(TimeIntervalInMilliseconds), core.CancellationToken);
+                await core.updateEvent.WaitAsync(TimeSpan.FromMilliseconds(TimeIntervalInMilliseconds), core.CancellationToken).ConfigureAwait(false);
                 if (core.IsTerminated)
                 {
                     break;
@@ -54,7 +58,7 @@ public sealed partial class SequentialMachineControl<TIdentifier, TMachine, TInt
                         break;
                     }
 
-                    machine.ProcessImmediately(DateTime.UtcNow);
+                    await machine.ProcessImmediately(DateTime.UtcNow).ConfigureAwait(false);
                 }
             }
 

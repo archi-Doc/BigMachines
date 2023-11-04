@@ -15,6 +15,7 @@ public partial class SequentialMachine : Machine<int>
 
     public SequentialMachine()
     {
+        this.Lifespan = TimeSpan.FromSeconds(5);
         this.DefaultTimeout = TimeSpan.FromSeconds(1);
     }
 
@@ -22,9 +23,10 @@ public partial class SequentialMachine : Machine<int>
     public int Count { get; set; }
 
     [StateMethod(0)]
-    protected StateResult Initial(StateParameter parameter)
+    protected async Task<StateResult> Initial(StateParameter parameter)
     {
         Console.WriteLine($"SequentialMachine machine[{this.Identifier}]: {this.Count++}");
+        await Task.Delay(500).ConfigureAwait(false);
 
         if (this.Count >= 3)
         {
