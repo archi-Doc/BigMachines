@@ -320,6 +320,28 @@ public abstract partial class Machine
         }
     }
 
+    internal void ProcessImmediately(DateTime now)
+    {
+        Volatile.Write(ref this.internalTimeUntilRun, 0);
+        if (this.internalLifespan <= 0 || this.internalTerminationTime <= now)
+        {// Terminate
+            this.InterfaceInstance.TerminateMachine();
+        }
+        else if (!this.operationalState.HasFlag(OperationalFlag.Running))
+        {// Screening
+            this.RunAndForget(now);
+        }
+    }
+
+    internal void ProcessLifespan(DateTime now, TimeSpan elapsed)
+    {
+        Interlocked.Add(ref this.internalLifespan, -elapsed.Ticks);
+        if (this.internalLifespan <= 0 || this.internalTerminationTime <= now)
+        {// Terminate
+            this.InterfaceInstance.TerminateMachine();
+        }
+    }
+
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     internal void RunAndForget(DateTime now)
     {

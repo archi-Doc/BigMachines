@@ -220,6 +220,28 @@ public sealed partial class SequentialMachineControl<TIdentifier, TMachine, TInt
 
     #endregion
 
+    private TMachine? GetMachineToProcess()
+    {
+        lock (this.items.SyncObject)
+        {
+            if (!this.items.SequentialChain.TryPeek(out var item))
+            {
+                return default;
+            }
+
+            while (item.Machine.OperationalState.HasFlag(OperationalFlag.Running))
+            {
+                item = item.SequentialLink.Next;
+                if (item is null)
+                {
+                    return default;
+                }
+            }
+
+            return item.Machine;
+        }
+    }
+
     #region Tinyhand
 
     static void ITinyhandSerialize<SequentialMachineControl<TIdentifier, TMachine, TInterface>>.Serialize(ref TinyhandWriter writer, scoped ref SequentialMachineControl<TIdentifier, TMachine, TInterface>? value, TinyhandSerializerOptions options)

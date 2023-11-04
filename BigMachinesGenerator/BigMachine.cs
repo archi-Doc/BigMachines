@@ -271,7 +271,7 @@ internal class BigMachine : IEquatable<BigMachine>
 
     public void GenerateStartByDefault(ScopingStringBuilder ssb, GeneratorInformation info)
     {
-        using (var scopeMethod = ssb.ScopeBrace($"protected override void StartByDefault()"))
+        using (var scopeMethod = ssb.ScopeBrace($"protected override void StartBigMachine()"))
         {
             foreach (var x in this.Machines.Values.Where(a => a.MachineObject.ObjectAttribute?.StartByDefault == true && a.MachineObject.ObjectAttribute.Control == MachineControlKind.Single))
             {

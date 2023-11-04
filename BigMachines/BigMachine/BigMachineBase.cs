@@ -35,7 +35,7 @@ public abstract partial class BigMachineBase : IBigMachine
         var core = ((IBigMachine)this).Core;
         core.ChangeParent(parent);
         core.Start();
-        this.StartByDefault();
+        this.StartBigMachine();
 
         return true;
     }
@@ -77,7 +77,7 @@ public abstract partial class BigMachineBase : IBigMachine
         return result;
     }
 
-    protected virtual void StartByDefault()
+    protected virtual void StartBigMachine()
     {
     }
 
