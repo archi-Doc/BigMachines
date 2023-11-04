@@ -75,9 +75,8 @@ public class CommandMethod
             commandId = (uint)FarmHash.Hash64(method.SimpleName);
         }*/
 
-        var commandMethod = new CommandMethod();
+        var commandMethod = new CommandMethod(machine, method);
         commandMethod.Location = attribute.Location;
-        commandMethod.Method = method;
         commandMethod.Name = method.SimpleName;
         // commandMethod.CommandId = commandId;
         commandMethod.WithLock = methodAttribute.WithLock;
@@ -113,9 +112,17 @@ public class CommandMethod
         return commandMethod;
     }
 
+    public CommandMethod(BigMachinesObject machineObject, BigMachinesObject method)
+    {
+        this.MachineObject = machineObject;
+        this.Method = method;
+    }
+
+    public BigMachinesObject MachineObject { get; private set; }
+
     public Location Location { get; private set; } = Location.None;
 
-    public BigMachinesObject? Method { get; private set; }
+    public BigMachinesObject Method { get; private set; }
 
     public string Name { get; private set; } = string.Empty;
 
@@ -146,13 +153,26 @@ public class CommandMethod
 
         using (var method = ssb.ScopeBrace($"public async Task<{commandResult}> {this.Name}({this.ParameterTypesAndNames})"))
         {
-            ssb.AppendLine("var locked = 0;");
-            ssb.AppendLine("try {");
-            ssb.IncrementIndent();
-            ssb.AppendLine($"locked = ((IBigMachine)this.machine.BigMachine).CheckRecursive(this.machine.machineSerial, ((ulong)this.machine.machineSerial << 32) | {(uint)FarmHash.Hash64(this.Method.FullName)});");
-            if (this.WithLock)
+            if (BigMachinesBody.EnableRecursiveDetection)
             {
-                ssb.AppendLine("if (locked > 0) await this.machine.Semaphore.EnterAsync().ConfigureAwait(false);");
+                ssb.AppendLine("var locked = 0;");
+                ssb.AppendLine("try {");
+                ssb.IncrementIndent();
+                ssb.AppendLine($"locked = ((IBigMachine)this.machine.BigMachine).CheckRecursive(this.machine.machineSerial, ((ulong)this.machine.machineSerial << 32) | {(uint)FarmHash.Hash64(this.Method.FullName)});");
+                if (this.WithLock)
+                {
+                    ssb.AppendLine("if (locked > 0) await this.machine.Semaphore.EnterAsync().ConfigureAwait(false);");
+                }
+            }
+            else
+            {
+                if (this.WithLock)
+                {
+                    ssb.AppendLine("await this.machine.Semaphore.EnterAsync().ConfigureAwait(false);");
+                }
+
+                ssb.AppendLine("try {");
+                ssb.IncrementIndent();
             }
 
             if (this.ResponseObject is null)
@@ -186,7 +206,14 @@ public class CommandMethod
 
             if (this.WithLock)
             {
-                ssb.AppendLine("finally { if (locked > 0) this.machine.Semaphore.Exit(); }");
+                if (BigMachinesBody.EnableRecursiveDetection)
+                {
+                    ssb.AppendLine("finally { if (locked > 0) this.machine.Semaphore.Exit(); }");
+                }
+                else
+                {
+                    ssb.AppendLine("finally { this.machine.Semaphore.Exit(); }");
+                }
             }
         }
     }

@@ -15,12 +15,12 @@ public interface IBigMachine
     /// </summary>
     public BigMachineBase.BigMachineCore Core { get; }
 
-    public bool Start(ThreadCoreBase? parent);
-
     /// <summary>
-    /// Gets or sets a value to specify the operation mode of the detection of recursive calls.
+    /// Initiate BigMachine to process active machines.
     /// </summary>
-    public RecursiveDetectionMode RecursiveDetectionMode { get; set; }
+    /// <param name="parent">Specify the parent for the BigMachine's processing tasks. If <see langword="null"/> is specified, it becomes an independent task.</param>
+    /// <returns><see langword="true"/>: Success; otherwise <see langword="false"/>.</returns>
+    public bool Start(ThreadCoreBase? parent);
 
     public int CheckRecursive(uint machineSerial, ulong id);
 

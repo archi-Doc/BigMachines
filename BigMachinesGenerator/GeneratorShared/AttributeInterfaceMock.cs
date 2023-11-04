@@ -51,6 +51,8 @@ public sealed class BigMachineObjectAttributeMock : Attribute
 
     public bool Inclusive { get; set; }
 
+    public bool RecursiveDetection { get; set; }
+
     public static BigMachineObjectAttributeMock FromArray(object?[] constructorArguments, KeyValuePair<string, object?>[] namedArguments)
     {
         var attribute = new BigMachineObjectAttributeMock();
@@ -60,6 +62,12 @@ public sealed class BigMachineObjectAttributeMock : Attribute
         if (val != null)
         {
             attribute.Inclusive = (bool)val;
+        }
+
+        val = AttributeHelper.GetValue(-1, nameof(RecursiveDetection), constructorArguments, namedArguments);
+        if (val != null)
+        {
+            attribute.RecursiveDetection = (bool)val;
         }
 
         return attribute;

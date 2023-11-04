@@ -47,6 +47,11 @@ public sealed class BigMachineObjectAttribute : Attribute
     /// Gets or sets a value indicating whether or not to include all machines contained in this assembly [default is <see langword="false"/>].
     /// </summary>
     public bool Inclusive { get; set; } = false;
+
+    /// <summary>
+    /// Gets or sets a value indicating whether or not to enable the check function for recursive calls of state methods and command methods [default is <see langword="false"/>].
+    /// </summary>
+    public bool RecursiveDetection { get; set; } = false;
 }
 
 /// <summary>

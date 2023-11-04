@@ -4,7 +4,7 @@ using System.Threading;
 
 namespace BigMachines;
 
-public enum RecursiveDetectionMode
+/*public enum RecursiveDetectionMode
 {
     /// <summary>
     /// Detection of recursive calls is disabled.
@@ -15,11 +15,11 @@ public enum RecursiveDetectionMode
     /// Detection of recursive calls is enabled.
     /// </summary>
     EnabledAndThrowException,
-}
+}*/
 
-internal readonly struct RecursiveDetection
+internal readonly struct RecursiveChecker
 {
-    public static AsyncLocal<RecursiveDetection> AsyncLocalInstance = new();
+    public static AsyncLocal<RecursiveChecker> AsyncLocalInstance = new();
 
     public readonly ulong Id0;
     public readonly ulong Id1;
@@ -28,7 +28,7 @@ internal readonly struct RecursiveDetection
     public readonly ulong Id4;
     public readonly ulong Id5;
 
-    public RecursiveDetection(ulong id0, ulong id1 = 0, ulong id2 = 0, ulong id3 = 0, ulong id4 = 0, ulong id5 = 0)
+    public RecursiveChecker(ulong id0, ulong id1 = 0, ulong id2 = 0, ulong id3 = 0, ulong id4 = 0, ulong id5 = 0)
     {
         this.Id0 = id0;
         this.Id1 = id1;
@@ -38,7 +38,7 @@ internal readonly struct RecursiveDetection
         this.Id5 = id5;
     }
 
-    public int TryAdd(uint machineSerial, ulong id, out RecursiveDetection newDetetcion)
+    public int TryAdd(uint machineSerial, ulong id, out RecursiveChecker newDetetcion)
     {// -1: Id collision, 0: Machine collision, 1: No collision
         var result = 1;
         if (this.Id0 == 0)

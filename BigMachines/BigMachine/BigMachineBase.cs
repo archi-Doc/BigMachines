@@ -41,11 +41,11 @@ public abstract partial class BigMachineBase : IBigMachine
 
     #region FieldAndProperty
 
-    RecursiveDetectionMode IBigMachine.RecursiveDetectionMode { get; set; }
-
     BigMachineCore IBigMachine.Core => this.core;
 
     DateTime IBigMachine.LastRun => this.lastRun;
+
+    // RecursiveDetectionMode IBigMachine.RecursiveDetectionMode { get; set; }
 
     private bool started;
     private BigMachineCore core;
@@ -57,12 +57,12 @@ public abstract partial class BigMachineBase : IBigMachine
 
     int IBigMachine.CheckRecursive(uint machineSerial, ulong id)
     {
-        if (((IBigMachine)this).RecursiveDetectionMode == RecursiveDetectionMode.Disabled)
+        /*if (((IBigMachine)this).RecursiveDetectionMode == RecursiveDetectionMode.Disabled)
         {
             return -1;
-        }
+        }*/
 
-        var detection = RecursiveDetection.AsyncLocalInstance.Value;
+        var detection = RecursiveChecker.AsyncLocalInstance.Value;
         var result = detection.TryAdd(machineSerial, id, out var newDetection); // -1: Id collision, 0: Machine collision, 1: No collision
         if (result < 0)
         {
@@ -70,7 +70,7 @@ public abstract partial class BigMachineBase : IBigMachine
             throw new CircularCommandException($"Circular commands detected");
         }
 
-        RecursiveDetection.AsyncLocalInstance.Value = newDetection;
+        RecursiveChecker.AsyncLocalInstance.Value = newDetection;
         return result;
     }
 

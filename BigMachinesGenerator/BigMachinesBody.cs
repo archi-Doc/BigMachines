@@ -43,6 +43,8 @@ public class BigMachinesBody : VisceralBody<BigMachinesObject>
     public const string TaskFullName2 = "System.Threading.Tasks.Task<TResult>";
     public const string CommandParameterFullName = BigMachineNamespace + ".CommandPost<{0}>.Command";
 
+    public static readonly bool EnableRecursiveDetection = false;
+
     public static readonly DiagnosticDescriptor Error_NotPartial = new DiagnosticDescriptor(
         id: "BMG001", title: "Not a partial class", messageFormat: "The target class '{0} must be a partial class",
         category: "BigMachinesGenerator", DiagnosticSeverity.Error, isEnabledByDefault: true);

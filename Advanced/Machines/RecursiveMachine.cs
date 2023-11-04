@@ -8,14 +8,13 @@ public partial class RecursiveMachine : Machine<int>
     public static async Task Test(BigMachine bigMachine)
     {
         var bm = (IBigMachine)bigMachine;
-        bm.RecursiveDetectionMode = RecursiveDetectionMode.EnabledAndThrowException;
 
         var machine1 = bigMachine.RecursiveMachine.GetOrCreate(1); // Lock(Control)
         var machine2 = bigMachine.RecursiveMachine.GetOrCreate(2);
 
         // Case 1: Machine1 -> Machine1
         // await machine1.Command.RelayInt(1);
-        await machine1.Command.RelayInt2(1);
+        await machine1.Command.RelayInt(1);
 
         // Case 2: LoopMachine -> TestMachine -> LoopMachine
         // bigMachine.CreateOrGet<TestMachine.Interface>(3);
