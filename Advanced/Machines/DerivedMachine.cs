@@ -2,7 +2,7 @@
 
 namespace Advanced;
 
-/*[MachineObject]
+[MachineObject]
 public partial class DerivedMachine : IntermittentMachine
 {
     public static void Test2(BigMachine bigMachine)
@@ -27,7 +27,7 @@ public partial class DerivedMachine : IntermittentMachine
 
         return StateResult.Continue;
     }
-}*/
+}
 
 public class EmptyMachineBase : Machine<int>
 {

@@ -226,9 +226,13 @@ public class BigMachinesObject : VisceralObjectBase<BigMachinesObject>
             {
                 break;
             }
-            else if (machineObject.ObjectAttribute != null)
+            else
             {
-                derivedMachine = true;
+                machineObject.Configure();
+                if (machineObject.ObjectAttribute != null)
+                {
+                    derivedMachine = true;
+                }
             }
 
             machineObject = machineObject.BaseObject;
@@ -729,8 +733,16 @@ ModuleInitializerClass_Added:
             ssb.AppendLine($"public {this.OverrideOrNew} {controlType} Control => ({controlType})this.control;");
         }
 
-        ssb.AppendLine($"public {this.OverrideOrNew} Interface InterfaceInstance => (Interface)(this.interfaceInstance ??= new Interface(this));");
-        // ssb.AppendLine($"public override ManMachineInterface InterfaceInstance => (ManMachineInterface)(this.interfaceInstance ??= new Interface(this));");
+        /*if (this.FullName == "Advanced.DerivedMachine")
+        {
+            ssb.AppendLine($"public override Advanced.IntermittentMachine.Interface InterfaceInstance => (Interface)(this.interfaceInstance ??= new Advanced.DerivedMachine.Interface(this));");
+            // ssb.AppendLine($"public new Interface InterfaceInstance => (Interface)(this.interfaceInstance ??= new Advanced.DerivedMachine.Interface(this));");
+        }
+        else
+        {
+            ssb.AppendLine($"public {this.OverrideOrNew} Interface InterfaceInstance => (Interface)(this.interfaceInstance ??= new Interface(this));");
+        }*/
+        ssb.AppendLine($"public override Interface InterfaceInstance => (Interface)(this.interfaceInstance ??= new Interface(this));");
 
         /*ssb.AppendLine("public override ManMachineInterface InterfaceInstance");
         ssb.AppendLine("{");
