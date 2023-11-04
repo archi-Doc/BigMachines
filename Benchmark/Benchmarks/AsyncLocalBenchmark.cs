@@ -22,13 +22,13 @@ public class AsyncLocalBenchmark
     {
     }
 
-    [Benchmark]
+    // [Benchmark]
     public string? AsyncLocal_Get()
     {
         return asyncLocal.Value;
     }
 
-    [Benchmark]
+    // [Benchmark]
     public string? AsyncLocal_GetSet()
     {
         var st = asyncLocal.Value;
@@ -42,6 +42,27 @@ public class AsyncLocalBenchmark
         var r = RecursiveDetection.AsyncLocalInstance.Value;
         r.TryAdd(123, ((ulong)123 << 32) | 456, out var r2);
         RecursiveDetection.AsyncLocalInstance.Value = r2;
+
+        return r2.Id0;
+    }
+
+    [Benchmark]
+    public ulong RecursiveDetection2_GetSet()
+    {
+        var r = RecursiveDetection2.AsyncLocalInstance.Value ?? new();
+        r.TryAdd(123, ((ulong)123 << 32) | 456);
+        RecursiveDetection2.AsyncLocalInstance.Value = r;
+
+        return r.Id0;
+    }
+
+    [Benchmark]
+    public ulong RecursiveDetection3_GetSet()
+    {
+        var r = RecursiveDetection3.AsyncLocalInstance.Value;
+        r.TryAdd(123, ((ulong)123 << 32) | 456, out var r2);
+        RecursiveDetection3.AsyncLocalInstance.Value = r2;
+
         return r2.Id0;
     }
 }
