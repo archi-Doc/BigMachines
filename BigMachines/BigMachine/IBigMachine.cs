@@ -15,7 +15,7 @@ public interface IBigMachine
     /// </summary>
     public BigMachineBase.BigMachineCore Core { get; }
 
-    public void Start(ThreadCoreBase? parent);
+    public bool Start(ThreadCoreBase? parent);
 
     /// <summary>
     /// Gets or sets a value to specify the operation mode of the detection of recursive calls.

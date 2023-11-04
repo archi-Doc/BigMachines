@@ -22,11 +22,19 @@ public abstract partial class BigMachineBase : IBigMachine
 
     #region Core
 
-    public void Start(ThreadCoreBase? parent)
+    public bool Start(ThreadCoreBase? parent)
     {
+        if (this.started)
+        {
+            return false;
+        }
+
+        this.started = true;
         var core = ((IBigMachine)this).Core;
         core.ChangeParent(parent);
         core.Start();
+
+        return true;
     }
 
     #endregion
@@ -39,6 +47,7 @@ public abstract partial class BigMachineBase : IBigMachine
 
     DateTime IBigMachine.LastRun => this.lastRun;
 
+    private bool started;
     private BigMachineCore core;
     private DateTime lastRun;
     private ExceptionHandlerDelegate exceptionHandler = DefaultExceptionHandler;

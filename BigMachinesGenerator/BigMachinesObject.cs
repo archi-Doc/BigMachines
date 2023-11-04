@@ -733,6 +733,10 @@ ModuleInitializerClass_Added:
             ssb.AppendLine($"public {this.OverrideOrNew} {controlType} Control => ({controlType})this.control;");
         }
 
+        ssb.AppendLine($"public override ManMachineInterface InterfaceInstance => (Interface)(this.interfaceInstance ??= new Interface(this));");
+
+        // ssb.AppendLine($"public override ManMachineInterface CreateInterface() => new Interface(this);");
+
         /*if (this.FullName == "Advanced.DerivedMachine")
         {
             ssb.AppendLine($"public override Advanced.IntermittentMachine.Interface InterfaceInstance => (Interface)(this.interfaceInstance ??= new Advanced.DerivedMachine.Interface(this));");
@@ -742,7 +746,8 @@ ModuleInitializerClass_Added:
         {
             ssb.AppendLine($"public {this.OverrideOrNew} Interface InterfaceInstance => (Interface)(this.interfaceInstance ??= new Interface(this));");
         }*/
-        ssb.AppendLine($"public override Interface InterfaceInstance => (Interface)(this.interfaceInstance ??= new Interface(this));");
+
+        //ssb.AppendLine($"public {this.OverrideOrNew} Interface InterfaceInstance => (Interface)(this.interfaceInstance ??= this.CreateInterface());");
 
         /*ssb.AppendLine("public override ManMachineInterface InterfaceInstance");
         ssb.AppendLine("{");
@@ -790,7 +795,16 @@ ModuleInitializerClass_Added:
 
         using (var scopeInterface = ssb.ScopeBrace(interfaceName))
         {
-            ssb.AppendLine($"public Interface({this.LocalName} machine) : base(machine) {{}}");
+            if (this.FullName == "Advanced.DerivedMachine")
+            {
+                // ssb.AppendLine($"public Interface({this.LocalName} machine) : base(machine) {{ throw new Exception(); }}");
+                ssb.AppendLine($"public Interface({this.LocalName} machine) : base(machine) {{ }}");
+            }
+            else
+            {
+                ssb.AppendLine($"public Interface({this.LocalName} machine) : base(machine) {{ }}");
+            }
+
             // ssb.AppendLine($"private new {this.LocalName} Machine => ({this.LocalName})((ManMachineInterface)this).Machine;");
 
             this.Generate_CommandList(ssb, info);

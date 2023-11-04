@@ -76,14 +76,6 @@ public partial class NoDefaultConstructorMachine : Machine
 
 public partial class ParentClass
 {
-    /*[BigMachineObject]
-    public partial class NestedBigMachine
-    {
-        public NestedBigMachine()
-        {
-        }
-    }*/
-
     [MachineObject]
     public partial class TinyMachine : Machine
     {
@@ -112,6 +104,7 @@ public partial class ParentClass
         protected override void OnTermination()
         {
             Console.WriteLine($"Tiny machine: Terminated");
+            ThreadCore.Root.Terminate();
         }
 
         private int count;

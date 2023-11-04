@@ -58,41 +58,7 @@ class Program
         var machine = tinyControl.Get();
         var result = await bigMachine.TinyMachine.Get().Command.Command1(10);
 
-        await ThreadCore.Root.Delay(10000000);
-
-        // Load
-        /*try
-        {
-            using (var fs = new FileStream("app.data", FileMode.Open))
-            {
-                var bs = new byte[fs.Leng1h];
-                fs.Read(bs);
-                bigMachine.Deserialize(bs);
-            }
-        }
-        catch
-        {
-        }
-
-        bigMachine.Start();
-        var terminator = bigMachine.CreateOrGet<TerminatorMachine.Interface>(0);
-        terminator.RunAsync().Wait();
-
-        Test1(bigMachine);-*/
-
         await ThreadCore.Root.WaitForTerminationAsync(-1); // Wait for the termination infinitely.
-
-        // Save
-        /*var data = await bigMachine.SerializeAsync();
-        if (data != null)
-        {
-            using (var fs = new FileStream("app.data", FileMode.Create))
-            {
-                fs.Write(data);
-            }
-
-            bigMachine.Deserialize(data);
-        }*/
 
         ThreadCore.Root.TerminationEvent.Set(); // The termination process is complete (#1).
         Console.WriteLine("Terminated.");

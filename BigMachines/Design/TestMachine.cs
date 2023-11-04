@@ -75,8 +75,6 @@ public partial class TestMachine : Machine<int>
 
     public override UnorderedMachineControl<int, TestMachine, Interface> Control => (UnorderedMachineControl<int, TestMachine, Interface>)this.control;
 
-    public override Interface InterfaceInstance => (Interface)(this.interfaceInstance ??= new Interface(this));
-
     public class Interface : ManMachineInterface<int, State>
     {// int: this.IdentifierObject!.FullName, State
         public Interface(TestMachine machine)

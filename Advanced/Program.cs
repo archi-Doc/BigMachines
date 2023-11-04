@@ -62,10 +62,10 @@ public class Program
         // TestMachine.Test(bigMachine);
         // await PassiveMachine.Test(bigMachine);
         // IntermittentMachine.Test(bigMachine);
-        // SequentialMachine.Test(bigMachine);
+        SequentialMachine.Test(bigMachine);
         // ContinuousMachine.Test(bigMachine);
 
-        DerivedMachine.Test2(bigMachine);
+        // DerivedMachine.Test2(bigMachine);
         // DerivedMachine2.Test(bigMachine);
         // GenericMachine<string>.Test(bigMachine, "gen");
         // await RecursiveMachine.Test(bigMachine);

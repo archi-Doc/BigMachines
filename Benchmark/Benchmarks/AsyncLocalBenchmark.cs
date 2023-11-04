@@ -1,15 +1,8 @@
 ﻿// Copyright (c) All contributors. All rights reserved. Licensed under the MIT license.
 
-using System;
-using System.Buffers;
-using System.Collections.Generic;
-using System.ComponentModel;
-using System.IO;
-using System.Linq;
-using System.Linq.Expressions;
-using System.Reflection;
 using System.Threading;
 using BenchmarkDotNet.Attributes;
+using BigMachines;
 
 namespace Benchmark.Test;
 
@@ -41,5 +34,14 @@ public class AsyncLocalBenchmark
         var st = asyncLocal.Value;
         asyncLocal.Value = "1234";
         return st;
+    }
+
+    [Benchmark]
+    public ulong RecursiveDetection_GetSet()
+    {
+        var r = RecursiveDetection.AsyncLocalInstance.Value;
+        r.TryAdd(123, ((ulong)123 << 32) | 456, out var r2);
+        RecursiveDetection.AsyncLocalInstance.Value = r2;
+        return r2.Id0;
     }
 }
