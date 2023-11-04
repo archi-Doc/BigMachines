@@ -9,7 +9,8 @@ namespace QuickStart;
 
 // Create a BigMachine class that acts as the root for managing machines.
 // In particular, define an empty partial class, add a BigMachineObject attribute, and then add AddMachine attributes for the Machine you want to include.
-[BigMachineObject(Inclusive = true)]
+[BigMachineObject]
+[AddMachine<FirstMachine>]
 public partial class BigMachine { }
 
 [MachineObject] // Add a MachineObject attribute.

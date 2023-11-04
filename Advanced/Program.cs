@@ -49,7 +49,7 @@ public class Program
             });
 
         var unit = builder.Build();
-        TinyhandSerializer.ServiceProvider = unit.Context.ServiceProvider;
+        TinyhandSerializer.ServiceProvider = unit.Context.ServiceProvider; // Set ServiceProvider (required).
 
         var crystalizer = unit.Context.ServiceProvider.GetRequiredService<Crystalizer>();
         await crystalizer.PrepareAndLoadAll(false);
@@ -59,7 +59,7 @@ public class Program
 
         bigMachine.TerminatorMachine.Get(); // This machine will stop the app thread if there is no working machine.
 
-        // TestMachine.Test(bigMachine);
+        TestMachine.Test(bigMachine);
         // await PassiveMachine.Test(bigMachine);
         // IntermittentMachine.Test(bigMachine);
         // SequentialMachine.Test(bigMachine);
@@ -72,6 +72,9 @@ public class Program
         // SingleMachine.Test(bigMachine);
         // ServiceProviderMachine.Test(bigMachine);
         // ExternalMachineTest.Test(bigMachine);
+
+        // var bin = TinyhandSerializer.Serialize(bigMachine);
+        // var bigMachine2 = TinyhandSerializer.Deserialize<BigMachine>(bin);
 
         await ThreadCore.Root.WaitForTerminationAsync(-1); // Wait for the termination infinitely.
 

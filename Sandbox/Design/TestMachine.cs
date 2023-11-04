@@ -10,7 +10,7 @@ using Tinyhand;
 
 namespace BigMachines;
 
-public static class TestMachineExtension
+internal static class TestMachineExtension
 {
     public static async Task<IdentifierAndCommandResult<int>[]> AllCommand1(this MultiMachineControl<int, TestMachine.Interface> control)
     {
@@ -27,7 +27,7 @@ public static class TestMachineExtension
 
 // [MachineObject] // ulong id = FarmHash.Hash64(Type.FullName)
 [TinyhandObject(UseServiceProvider = true, Structual = true)]
-public partial class TestMachine : Machine<int>
+internal partial class TestMachine : Machine<int>
 {
     public TestMachine()
     {
@@ -82,9 +82,9 @@ public partial class TestMachine : Machine<int>
         {
         }
 
-        public CommandList Command => new(this.Machine);
+        public CommandList Command => new((TestMachine)this.Machine);
 
-        private new TestMachine Machine => (TestMachine)((ManMachineInterface)this).Machine;
+        // private new TestMachine Machine => (TestMachine)((ManMachineInterface)this).Machine;
 
         public readonly struct CommandList
         {

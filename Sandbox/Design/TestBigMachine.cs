@@ -3,6 +3,7 @@
 using System;
 using System.Diagnostics.CodeAnalysis;
 using System.Linq;
+using System.Runtime.Intrinsics.X86;
 using BigMachines.Control;
 using Tinyhand;
 using Tinyhand.IO;
@@ -10,7 +11,7 @@ using Tinyhand.IO;
 namespace BigMachines;
 
 [TinyhandObject]
-public partial class TestBigMachine : BigMachineBase, ITinyhandSerialize<TestBigMachine>, ITinyhandReconstruct<TestBigMachine>, IStructualObject
+internal partial class TestBigMachine : BigMachineBase, ITinyhandSerialize<TestBigMachine>, ITinyhandReconstruct<TestBigMachine>, ITinyhandClone<TestBigMachine>, IStructualObject
 {
     private MachineControl[] controls = Array.Empty<MachineControl>();
 
@@ -86,6 +87,9 @@ public partial class TestBigMachine : BigMachineBase, ITinyhandSerialize<TestBig
 
     static void ITinyhandReconstruct<TestBigMachine>.Reconstruct([NotNull] scoped ref TestBigMachine? value, TinyhandSerializerOptions options)
         => value ??= new();
+
+    static TestBigMachine? ITinyhandClone<TestBigMachine>.Clone(scoped ref TestBigMachine? v, TinyhandSerializerOptions options)
+        => v == null ? null : TinyhandSerializer.Deserialize<TestBigMachine>(TinyhandSerializer.Serialize(v));
 
     IStructualRoot? IStructualObject.StructualRoot { get; set; }
 

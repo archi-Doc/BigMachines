@@ -11,7 +11,7 @@ namespace BigMachines;
 
 // [MachineObject] // ulong id = FarmHash.Hash64(Type.FullName)
 [TinyhandObject(UseServiceProvider = true, Structual = true)]
-public partial class SingleMachine : Machine
+internal partial class SingleMachine : Machine
 {
     public SingleMachine()
     {

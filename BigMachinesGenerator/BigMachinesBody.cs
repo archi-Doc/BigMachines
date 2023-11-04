@@ -354,6 +354,12 @@ public class BigMachinesBody : VisceralBody<BigMachinesObject>
                     ssb.AppendLine("Initialized = true;");
                     ssb.AppendLine();
 
+                    // BigMachine formatter
+                    foreach (var x in this.BigMachines)
+                    {
+                        ssb.AppendLine($"Tinyhand.Resolvers.GeneratedResolver.Instance.SetFormatter(new Tinyhand.Formatters.TinyhandObjectFormatter<{x.Object.FullName}>());");
+                    }
+
                     foreach (var x in info.ModuleInitializerClass)
                     {
                         ssb.Append(x, true);
