@@ -48,14 +48,17 @@ Install-Package BigMachines
 This is a small sample code to use **BigMachines**.
 
 ```csharp
-// Copyright (c) All contributors. All rights reserved. Licensed under the MIT license.
-
 using System;
 using System.Threading.Tasks;
 using Arc.Threading;
 using BigMachines;
 
 namespace QuickStart;
+
+// Create a BigMachine class that acts as the root for managing machines.
+// In particular, define an empty partial class, add a BigMachineObject attribute, and then add AddMachine attributes for the Machine you want to include.
+[BigMachineObject(Inclusive = true)]
+public partial class BigMachine { }
 
 [MachineObject] // Add a MachineObject attribute.
 public partial class FirstMachine : Machine<int> // Inherit Machine class. The type of an identifier is int.
@@ -68,7 +71,7 @@ public partial class FirstMachine : Machine<int> // Inherit Machine class. The t
 
     public int Count { get; set; }
 
-    [StateMethod(0)] // Add a StateMethod attribute and set the state method id (0 for default state).
+    [StateMethod(0)] // Add a StateMethod attribute and set the state method id 0 (default state).
     protected StateResult Initial(StateParameter parameter)
     {// This code is inside the machine's exclusive lock.
         Console.WriteLine($"FirstMachine {this.Identifier}: Initial");
@@ -102,7 +105,7 @@ public class Program
     public static async Task Main(string[] args)
     {
         var bigMachine = new BigMachine(); // Create a BigMachine instance.
-        ((IBigMachine)bigMachine).Start(ThreadCore.Root); // Launch BigMachine to run machines and change the parent of the BigMachine thread to the application thread.
+        bigMachine.Start(ThreadCore.Root); // Launch BigMachine to run machines and change the parent of the BigMachine thread to the application thread.
 
         var testMachine = bigMachine.FirstMachine.GetOrCreate(42); // Machine is created via an interface class and the identifier, not the machine class itself.
         testMachine.TryGetState(out var state); // Get the current state. You can operate machines using the interface class.

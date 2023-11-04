@@ -7,6 +7,8 @@ using BigMachines;
 
 namespace QuickStart;
 
+// Create a BigMachine class that acts as the root for managing machines.
+// In particular, define an empty partial class, add a BigMachineObject attribute, and then add AddMachine attributes for the Machine you want to include.
 [BigMachineObject(Inclusive = true)]
 public partial class BigMachine { }
 
@@ -21,7 +23,7 @@ public partial class FirstMachine : Machine<int> // Inherit Machine class. The t
 
     public int Count { get; set; }
 
-    [StateMethod(0)] // Add a StateMethod attribute and set the state method id (0 for default state).
+    [StateMethod(0)] // Add a StateMethod attribute and set the state method id 0 (default state).
     protected StateResult Initial(StateParameter parameter)
     {// This code is inside the machine's exclusive lock.
         Console.WriteLine($"FirstMachine {this.Identifier}: Initial");
