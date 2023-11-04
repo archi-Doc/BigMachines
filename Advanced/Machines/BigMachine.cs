@@ -6,4 +6,4 @@ namespace Advanced;
 // [AddMachine<Advanced.TestMachine>]
 [AddMachine<GenericMachine<string>>]
 [AddMachine<ExternalMachine.Machine1>]
-public partial class BigMachine;
+public partial class BigMachine { }

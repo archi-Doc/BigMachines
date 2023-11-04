@@ -8,7 +8,7 @@ using BigMachines;
 namespace QuickStart;
 
 [BigMachineObject(Inclusive = true)]
-public partial class BigMachine;
+public partial class BigMachine { }
 
 [MachineObject] // Add a MachineObject attribute.
 public partial class FirstMachine : Machine<int> // Inherit Machine class. The type of an identifier is int.

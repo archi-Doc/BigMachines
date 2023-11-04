@@ -10,7 +10,7 @@ namespace Sandbox;
 
 [BigMachineObject(Inclusive = true)]
 [AddMachine<ParentClass.TinyMachine2<int>>()]
-public partial class TestBigMachine;
+public partial class TestBigMachine { }
 
 [MachineObject]
 public partial class CommandTestMachine : Machine<int>

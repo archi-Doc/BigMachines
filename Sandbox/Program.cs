@@ -9,7 +9,7 @@ using Tinyhand;
 namespace Sandbox;
 
 [BigMachineObject(Inclusive = true)]
-public partial class BigMachine;
+public partial class BigMachine { }
 
 class Program
 {
