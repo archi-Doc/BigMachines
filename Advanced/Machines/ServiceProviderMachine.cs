@@ -1,8 +1,5 @@
 ﻿// Copyright (c) All contributors. All rights reserved. Licensed under the MIT license.
 
-using System;
-using BigMachines;
-
 namespace Advanced;
 
 public class SomeService
@@ -11,24 +8,24 @@ public class SomeService
 }
 
 // Machine depends on SomeService.
-[MachineObject(0x4f8f7256)]
+[MachineObject(UseServiceProvider = true)]
 public partial class ServiceProviderMachine : Machine<int>
 {
-    public static void Test(BigMachine<int> bigMachine)
+    public static void Test(BigMachine bigMachine)
     {
-        bigMachine.CreateOrGet<ServiceProviderMachine.Interface>(0, "A"); // Create a machine and set a parameter.
+        bigMachine.ServiceProviderMachine.GetOrCreate(0, "A"); // Create a machine and set a parameter.
     }
 
-    public ServiceProviderMachine(BigMachine<int> bigMachine, SomeService service)
-        : base(bigMachine)
+    public ServiceProviderMachine(SomeService service)
+        : base()
     {
         this.Service = service;
         this.DefaultTimeout = TimeSpan.FromSeconds(1);
-        this.SetLifespan(TimeSpan.FromSeconds(3));
+        this.Lifespan = TimeSpan.FromSeconds(3);
     }
 
-    protected override void SetParameter(object? createParam)
-    {// Receives a parameter. Note that this method is NOT called during deserialization.
+    protected override void OnCreation(object? createParam)
+    {// Receives the parameter at the time of creation. Note that it is not called during deserialization.
         this.Text = (string?)createParam;
     }
 

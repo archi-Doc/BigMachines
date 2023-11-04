@@ -184,3 +184,4 @@ dotnet_diagnostic.CS1573.severity = silent
 dotnet_diagnostic.SA1649.severity = silent
 
 dotnet_diagnostic.SA1591.severity = suggestion
+dotnet_diagnostic.SA1124.severity = suggestion

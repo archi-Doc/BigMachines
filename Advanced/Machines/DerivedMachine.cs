@@ -1,75 +1,64 @@
 ﻿// Copyright (c) All contributors. All rights reserved. Licensed under the MIT license.
 
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-using BigMachines;
+namespace Advanced;
 
-namespace Advanced
+[MachineObject]
+public partial class DerivedMachine : IntermittentMachine
 {
-    [MachineObject(0xf761dd51)]
-    public partial class DerivedMachine : IntermittentMachine
+    public static void Test2(BigMachine bigMachine)
     {
-        public static void Test2(BigMachine<int> bigMachine)
-        {
-            var m = bigMachine.CreateOrGet<DerivedMachine.Interface>(0);
-        }
-
-        public DerivedMachine(BigMachine<int> bigMachine)
-            : base(bigMachine)
-        {
-            this.DefaultTimeout = TimeSpan.FromSeconds(1); // Default time interval for machine execution.
-            this.SetLifespan(TimeSpan.FromSeconds(5)); // The time until the machine automatically terminates.
-        }
-
-        // [StateMethod(0)]
-        protected new StateResult Initial(StateParameter parameter)
-        {
-            Console.WriteLine($"DerivedMachine: Initial - {this.Count++}");
-            if (this.Count > 2)
-            {
-                this.ChangeState(State.First);
-            }
-
-            return StateResult.Continue;
-        }
+        var machine = bigMachine.DerivedMachine.GetOrCreate(0);
     }
 
-    public class EmptyMachineBase : Machine<int>
+    public DerivedMachine()
     {
-        public EmptyMachineBase(BigMachine<int> bigMachine)
-            : base(bigMachine)
-        {
-        }
-
-        public int Count { get; set; }
-
-        public string Text { get; set; } = "EmptyMachine";
+        this.DefaultTimeout = TimeSpan.FromSeconds(1); // Default time interval for machine execution.
+        this.Lifespan = TimeSpan.FromSeconds(5); // The time until the machine automatically terminates.
     }
 
-    [MachineObject(0x609284ed)]
-    public partial class DerivedMachine2 : EmptyMachineBase
+    // [StateMethod(0)]
+    protected new StateResult Initial(StateParameter parameter)
     {
-        public static void Test(BigMachine<int> bigMachine)
+        Console.WriteLine($"DerivedMachine: Initial - {this.Count++}");
+        if (this.Count > 2)
         {
-            var m = bigMachine.CreateOrGet<DerivedMachine2.Interface>(0);
+            this.ChangeState(State.First);
         }
 
-        public DerivedMachine2(BigMachine<int> bigMachine)
-            : base(bigMachine)
-        {
-            this.DefaultTimeout = TimeSpan.FromSeconds(1); // Default time interval for machine execution.
-            this.SetLifespan(TimeSpan.FromSeconds(3)); // The time until the machine automatically terminates.
-        }
+        return StateResult.Continue;
+    }
+}
 
-        [StateMethod(0)]
-        protected StateResult Initial(StateParameter parameter)
-        {
-            Console.WriteLine($"{this.Text} - DerivedMachine2: Initial - {this.Count++}");
+public class EmptyMachineBase : Machine<int>
+{
+    public EmptyMachineBase()
+    {
+    }
 
-            return StateResult.Continue;
-        }
+    public int Count { get; set; }
+
+    public string Text { get; set; } = "EmptyMachine";
+}
+
+[MachineObject]
+public partial class DerivedMachine2 : EmptyMachineBase
+{
+    public static void Test(BigMachine bigMachine)
+    {
+        var m = bigMachine.DerivedMachine2.GetOrCreate(0);
+    }
+
+    public DerivedMachine2()
+    {
+        this.DefaultTimeout = TimeSpan.FromSeconds(1); // Default time interval for machine execution.
+        this.Lifespan = TimeSpan.FromSeconds(3); // The time until the machine automatically terminates.
+    }
+
+    [StateMethod(0)]
+    protected StateResult Initial(StateParameter parameter)
+    {
+        Console.WriteLine($"{this.Text} - DerivedMachine2: Initial - {this.Count++}");
+
+        return StateResult.Continue;
     }
 }

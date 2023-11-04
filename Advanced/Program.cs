@@ -1,15 +1,15 @@
 ﻿// Copyright (c) All contributors. All rights reserved. Licensed under the MIT license.
 
-using System;
-using System.IO;
-using System.Linq;
-using System.Threading.Tasks;
-using Arc.Threading;
-using BigMachines;
-using DryIoc;
-using Tinyhand;
+#pragma warning disable SA1210 // Using directives should be ordered alphabetically by namespace
 
-#pragma warning disable SA1201 // Elements should appear in the correct order
+global using System;
+global using System.Threading.Tasks;
+global using Arc.Threading;
+global using Arc.Unit;
+global using BigMachines;
+global using CrystalData;
+global using Tinyhand;
+using Microsoft.Extensions.DependencyInjection;
 
 namespace Advanced;
 
@@ -29,84 +29,57 @@ public class Program
             ThreadCore.Root.Terminate(); // Send a termination signal to the root.
         };
 
-        /*TaskScheduler.UnobservedTaskException += (sender, e) =>
-        {
-            Console.WriteLine(e.Exception);
-        };*/
-
-        await Test();
-        // await Test2();
-
-        ThreadCore.Root.TerminationEvent.Set(); // The termination process is complete (#1).
-    }
-
-    public static async Task Test()
-    {
-        var container = new Container(); // You can use DI container if you want.
-        container.RegisterDelegate<BigMachine<int>>(x => new BigMachine<int>(container), Reuse.Singleton);
-        container.Register<SomeService>(); // Register some service.
-        container.Register<ServiceProviderMachine>(Reuse.Transient); // Register machine.
-        // container.Register<TestMachine>(Reuse.Transient); BigMachine will use default constructor if not registered.
-        var bigMachine = container.Resolve<BigMachine<int>>(); // Create BigMachine.
-
-        // Load
-        try
-        {
-            using (var fs = new FileStream("app.data", FileMode.Open))
+        // Create a builder for BigMachine and CrystalData.
+        var builder = new CrystalControl.Builder()
+            .Configure(context =>
+            {// Register some services.
+                context.AddSingleton<SomeService>();
+                context.AddTransient<ServiceProviderMachine>();
+            })
+            .ConfigureCrystal(context =>
             {
-                var bs = new byte[fs.Length];
-                fs.Read(bs);
-                bigMachine.Deserialize(bs);
-            }
-        }
-        catch
-        {
-        }
+                context.SetJournal(new SimpleJournalConfiguration(new LocalDirectoryConfiguration("Data/Journal")));
+                context.AddCrystal<BigMachine>(new()
+                {
+                    FileConfiguration = new LocalFileConfiguration("Data/BigMachine.tinyhand"),
+                    SavePolicy = SavePolicy.Manual,
+                    SaveFormat = SaveFormat.Utf8,
+                    NumberOfFileHistories = 3,
+                });
+            });
 
-        bigMachine.Start(); // Start BigMachine.
+        var unit = builder.Build();
+        TinyhandSerializer.ServiceProvider = unit.Context.ServiceProvider; // Set ServiceProvider (required).
 
-        TerminatorMachine<int>.Start(bigMachine, 0); // This machine will stop the app thread if there is no working machine.
+        var crystalizer = unit.Context.ServiceProvider.GetRequiredService<Crystalizer>();
+        await crystalizer.PrepareAndLoadAll(false);
 
-        TestMachine.Test(bigMachine);
+        var bigMachine = unit.Context.ServiceProvider.GetRequiredService<BigMachine>();
+        bigMachine.Start(ThreadCore.Root); // Start BigMachine.
+
+        // bigMachine.TerminatorMachine.Get(); // This machine will stop the app thread if there is no working machine. -> Start by default
+
+        // TestMachine.Test(bigMachine);
         // await PassiveMachine.Test(bigMachine);
         // IntermittentMachine.Test(bigMachine);
+        SequentialMachine.Test(bigMachine);
         // ContinuousMachine.Test(bigMachine);
 
-        // Other test code.
         // DerivedMachine.Test2(bigMachine);
         // DerivedMachine2.Test(bigMachine);
-        // GenericMachine<int>.Test(bigMachine);
-        // LoopMachine.Test(bigMachine);
+        // GenericMachine<string>.Test(bigMachine, "gen");
+        // await RecursiveMachine.Test(bigMachine);
         // SingleMachine.Test(bigMachine);
         // ServiceProviderMachine.Test(bigMachine);
-        // QueuedMachine.Test(bigMachine);
+        // ExternalMachineTest.Test(bigMachine);
+
+        // var bin = TinyhandSerializer.Serialize(bigMachine);
+        // var bigMachine2 = TinyhandSerializer.Deserialize<BigMachine>(bin);
 
         await ThreadCore.Root.WaitForTerminationAsync(-1); // Wait for the termination infinitely.
 
-        // Save
-        var data = await bigMachine.SerializeAsync();
-        if (data != null)
-        {
-            using (var fs = new FileStream("app.data", FileMode.Create))
-            {
-                fs.Write(data);
-            }
-        }
-    }
+        await crystalizer.SaveAllAndTerminate();
 
-    public static async Task Test2()
-    {
-        var bigMachine = new BigMachine<IdentifierClass>();
-        bigMachine.Start();
-
-        bigMachine.CreateOrGet<IdentifierMachine.Interface>(new(1, "A"));
-        // bigMachine.TryCreate<GenericMachine<IdentifierClass>.Interface>(new(2, "B"));
-        TerminatorMachine<IdentifierClass>.Start(bigMachine, IdentifierClass.Default);
-
-        // var bigMachine = new BigMachine<IdentifierClass2>(ThreadCore.Root);
-        // bigMachine.TryCreate<IdentifierMachine2.Interface>(new(1, "A"));
-        // TerminatorMachine<IdentifierClass2>.Test(bigMachine, default!);
-
-        await ThreadCore.Root.WaitForTerminationAsync(-1); // Wait for the termination infinitely.
+        ThreadCore.Root.TerminationEvent.Set(); // The termination process is complete (#1).
     }
 }

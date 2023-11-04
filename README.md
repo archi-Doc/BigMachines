@@ -5,7 +5,7 @@
 
 - Running machines and sending commands to each machine is designed to be **lock-free**.
 
-- Full serialization features integrated with [Tinyhand](https://github.com/archi-Doc/Tinyhand).
+- Full serialization features integrated with [Tinyhand](https://github.com/archi-Doc/Tinyhand), [ValueLink](https://github.com/archi-Doc/ValueLink), [CrystalData](https://github.com/archi-Doc/CrystalData).
 
 - Simplifies complex and long-running tasks.
 
@@ -39,13 +39,13 @@
 
 ## Quick Start
 
-Install BigMachines using Package Manager Console.
+Install **BigMachines** using Package Manager Console.
 
 ```
 Install-Package BigMachines
 ```
 
-This is a small sample code to use BigMachines.
+This is a small sample code to use **BigMachines**.
 
 ```csharp
 using System;
@@ -55,42 +55,48 @@ using BigMachines;
 
 namespace QuickStart;
 
-[MachineObject(0)] // Annotate MachineObject and set Machine type id (unique number).
-public partial class TestMachine : Machine<int> // Inherit Machine<TIdentifier> class. The type of the identifier is int.
+// Create a BigMachine class that acts as the root for managing machines.
+// In particular, define an empty partial class, add a BigMachineObject attribute, and then add AddMachine attributes for the Machine you want to include.
+[BigMachineObject]
+[AddMachine<FirstMachine>]
+public partial class BigMachine { }
+
+[MachineObject] // Add a MachineObject attribute.
+public partial class FirstMachine : Machine<int> // Inherit Machine class. The type of an identifier is int.
 {
-    public TestMachine(BigMachine<int> bigMachine)
-        : base(bigMachine)
+    public FirstMachine()
     {
-        this.DefaultTimeout = TimeSpan.FromSeconds(1); // Default time interval for machine execution.
-        this.SetLifespan(TimeSpan.FromSeconds(5)); // The time until the machine automatically terminates.
+        this.DefaultTimeout = TimeSpan.FromSeconds(1); // The default time interval for machine execution.
+        this.Lifespan = TimeSpan.FromSeconds(5); // The time until the machine automatically terminates.
     }
 
     public int Count { get; set; }
 
-    [StateMethod(0)] // Annotate StateMethod attribute and set state method id (0 for default state).
-    protected StateResult Initial(StateParameter parameter) // The name of method becomes the state name.
-    {// This code is inside 'lock (this.Machine)' statement.
-        Console.WriteLine($"TestMachine {this.Identifier}: Initial");
-        this.ChangeState(TestMachine.State.One); // Change to state One.
+    [StateMethod(0)] // Add a StateMethod attribute and set the state method id 0 (default state).
+    protected StateResult Initial(StateParameter parameter)
+    {// This code is inside the machine's exclusive lock.
+        Console.WriteLine($"FirstMachine {this.Identifier}: Initial");
+        this.ChangeState(FirstMachine.State.One); // Change to state One.
         return StateResult.Continue; // Continue (StateResult.Terminate to terminate machine).
     }
 
-    [StateMethod(0x6015f7a7)] // State id can be a random number.
+    [StateMethod] // If a state method id is not specified, the hash of the method name is used.
     protected StateResult One(StateParameter parameter)
     {
-        Console.WriteLine($"TestMachine {this.Identifier}: One - {this.Count++}");
+        Console.WriteLine($"FirstMachine {this.Identifier}: One - {this.Count++}");
         return StateResult.Continue;
     }
 
-    [CommandMethod(1)] // Annotate CommandMethod attribute to a method which receives and processes commands.
-    protected void TestCommand(string message)
+    [CommandMethod] // Add a CommandMethod attribute to a method which receives and processes commands.
+    protected CommandResult TestCommand(string message)
     {
         Console.WriteLine($"Command received: {message}");
+        return CommandResult.Success;
     }
 
-    protected override void OnTerminated()
+    protected override void OnTermination()
     {
-        Console.WriteLine($"TestMachine {this.Identifier}: Terminated");
+        Console.WriteLine($"FirstMachine {this.Identifier}: Terminated");
         ThreadCore.Root.Terminate(); // Send a termination signal to the root.
     }
 }
@@ -99,28 +105,28 @@ public class Program
 {
     public static async Task Main(string[] args)
     {
-        var bigMachine = new BigMachine<int>(); // Create a BigMachine instance.
-        bigMachine.Start(); // Start a thread to invoke a machine.
+        var bigMachine = new BigMachine(); // Create a BigMachine instance.
+        bigMachine.Start(ThreadCore.Root); // Launch BigMachine to run machines and change the parent of the BigMachine thread to the application thread.
 
-        var testMachine = bigMachine.CreateOrGet<TestMachine.Interface>(42); // Machine is created via an interface class and the identifier, not the machine class itself.
-        testMachine.TryGetState(out var currentState); // Get the current state. You can operate machines using the interface class.
+        var testMachine = bigMachine.FirstMachine.GetOrCreate(42); // Machine is created via an interface class and the identifier, not the machine class itself.
+        testMachine.TryGetState(out var state); // Get the current state. You can operate machines using the interface class.
+        Console.WriteLine($"FirstMachine state: {state}");
 
-        testMachine = bigMachine.TryGet<TestMachine.Interface>(42); // Get the created machine.
-        testMachine?.RunAsync().Wait(); // Run the machine manually.
+        testMachine = bigMachine.FirstMachine.GetOrCreate(42); // Get the created machine.
+        testMachine.RunAsync().Wait(); // Run the machine manually.
         Console.WriteLine();
 
-        var testGroup = bigMachine.GetGroup<TestMachine.Interface>(); // Group is a collection of machines.
-        testMachine = testGroup.TryGet<TestMachine.Interface>(42); // Same as above
+        var testControl = bigMachine.FirstMachine; // Control is a collection of machines.
 
         Console.WriteLine("Enumerates identifiers.");
-        foreach (var x in testGroup.GetIdentifiers())
+        foreach (var x in testControl.GetIdentifiers())
         {
             Console.WriteLine($"Machine Id: {x}");
         }
 
         Console.WriteLine();
 
-        testMachine?.CommandAsync(TestMachine.Command.TestCommand, "test message").Wait(); // Send a command to the machine.
+        await testMachine.Command.TestCommand("Test message"); // Send a command to the machine.
         Console.WriteLine();
 
         await ThreadCore.Root.WaitForTerminationAsync(-1); // Wait for the termination infinitely.
@@ -132,36 +138,38 @@ public class Program
 
 ## Machine Types
 
-`BigMachines` supports several types of machine.
+**BigMachines** supports several types of machine.
 
 ### Passive Machine
 
 Passive machine can be run and the state can be changed by an external operation.
 
 ```csharp
-[MachineObject(0xffd829b4)]
+[MachineObject]
 public partial class PassiveMachine : Machine<int>
 {
-    public static async Task Test(BigMachine<int> bigMachine)
+    public static async Task Test(BigMachine bigMachine)
     {
-        var m = bigMachine.CreateOrGet<PassiveMachine.Interface>(0);
+        var machine = bigMachine.PassiveMachine.GetOrCreate(0);
 
-        await m.CommandAsync(Command.ReceiveString, "message 1"); // Send a command.
+        await machine.Command.ReceiveString("message 1"); // Send a command.
 
-        await m.RunAsync(); // Manually run the machine.
+        await machine.RunAsync(); // Manually run the machine.
 
-        await m.ChangeStateAsync(State.First); // Change the state from State.Initial to State.First
-        await m.RunAsync(); // Manually run the machine.
+        var result = machine.ChangeState(State.First); // Change the state from State.Initial to State.First
+        Console.WriteLine(result.ToString());
+        await machine.RunAsync(); // Manually run the machine.
 
-        await m.ChangeStateAsync(State.Second); // Change the state from State.First to State.Second (denied)
-        await m.RunAsync(); // Manually run the machine.
+        result = machine.ChangeState(State.Second); // Change the state from State.First to State.Second (denied)
+        Console.WriteLine(result.ToString());
+        await machine.RunAsync(); // Manually run the machine.
 
-        await m.ChangeStateAsync(State.Second); // Change the state from State.First to State.Second (approved)
-        await m.RunAsync(); // Manually run the machine.
+        result = machine.ChangeState(State.Second); // Change the state from State.First to State.Second (approved)
+        Console.WriteLine(result.ToString());
+        await machine.RunAsync(); // Manually run the machine.
     }
 
-    public PassiveMachine(BigMachine<int> bigMachine)
-        : base(bigMachine)
+    public PassiveMachine()
     {
     }
 
@@ -174,7 +182,7 @@ public partial class PassiveMachine : Machine<int>
         return StateResult.Continue;
     }
 
-    [StateMethod(1)]
+    [StateMethod]
     protected StateResult First(StateParameter parameter)
     {
         Console.WriteLine($"PassiveMachine: First - {this.Count++}");
@@ -186,7 +194,7 @@ public partial class PassiveMachine : Machine<int>
         return true;
     }
 
-    [StateMethod(2)]
+    [StateMethod]
     protected StateResult Second(StateParameter parameter)
     {
         Console.WriteLine($"PassiveMachine: Second - {this.Count++}");
@@ -197,17 +205,15 @@ public partial class PassiveMachine : Machine<int>
     {// State Name + "CanEnter": Determines if it is possible to change to the state.
         var result = this.Count > 2;
         var message = result ? "Approved" : "Denied";
-        Console.WriteLine($"PassiveMachine: {this.GetCurrentState().ToString()} -> {State.Second.ToString()}: {message}");
+        Console.WriteLine($"PassiveMachine: {this.GetState().ToString()} -> {State.Second.ToString()}: {message}");
         return result;
     }
 
-    [CommandMethod(0)]
-    protected void ReceiveString(CommandPost<int>.Command command)
+    [CommandMethod]
+    protected CommandResult ReceiveString(string message)
     {
-        if (command.Message is string message)
-        {
-            Console.WriteLine($"PassiveMachine command: {message}");
-        }
+        Console.WriteLine($"PassiveMachine command: {message}");
+        return CommandResult.Success;
     }
 }
 ```
@@ -219,21 +225,19 @@ public partial class PassiveMachine : Machine<int>
 Intermittent machine is a machine that runs at regular intervals.
 
 ```csharp
-[MachineObject(0x1b431670)]
+[MachineObject]
 public partial class IntermittentMachine : Machine<int>
 {
-    public static void Test(BigMachine<int> bigMachine)
+    public static void Test(BigMachine bigMachine)
     {
-        var m = bigMachine.CreateOrGet<IntermittentMachine.Interface>(0);
-
         // The machine will run at regular intervals (1 second).
+        var machine = bigMachine.IntermittentMachine.GetOrCreate(0);
     }
 
-    public IntermittentMachine(BigMachine<int> bigMachine)
-        : base(bigMachine)
+    public IntermittentMachine()
     {
         this.DefaultTimeout = TimeSpan.FromSeconds(1); // Default time interval for machine execution.
-        this.SetLifespan(TimeSpan.FromSeconds(5)); // The time until the machine automatically terminates.
+        this.Lifespan = TimeSpan.FromSeconds(5); // The time until the machine automatically terminates.
     }
 
     public int Count { get; set; }
@@ -254,7 +258,7 @@ public partial class IntermittentMachine : Machine<int>
     protected StateResult First(StateParameter parameter)
     {
         Console.WriteLine($"IntermittentMachine: First - {this.Count++}");
-        this.SetTimeout(TimeSpan.FromSeconds(0.5)); // Change the timeout of the machine.
+        this.TimeUntilRun = TimeSpan.FromSeconds(0.5); // Change the timeout of the machine.
         return StateResult.Continue;
     }
 }
@@ -268,39 +272,38 @@ Continuous machine is different from passive and intermittent machine (passive a
 
 It's designed for heavy and time-consuming tasks.
 
-Once a continuous machine is created, `BigMachine` will assign one thread for the machine and run the machine repeatedly until the machine returns `StateResult.Terminate`.
-
 ```csharp
-[MachineObject(0xb579a7d8, Continuous = true)] // Set the Continuous property to true.
-public partial class ContinuousMachine : Machine<int>
-{
-    public static void Test(BigMachine<int> bigMachine)
+[TinyhandObject]
+[MachineObject(Control = MachineControlKind.Sequential, NumberOfTasks = 1)]
+public partial class SequentialMachine : Machine<int>
+{// SequentialMachine executes one at a time, in the order of their creation.
+    public static void Test(BigMachine bigMachine)
     {
-        bigMachine.Continuous.SetMaxThreads(2); // Set the maximum number of threads used for continuous machines.
-        var m = bigMachine.CreateOrGet<ContinuousMachine.Interface>(0);
-
-        // The machine will run until the task is complete.
+        bigMachine.SequentialMachine.TryCreate(1);
+        bigMachine.SequentialMachine.TryCreate(2);
+        bigMachine.SequentialMachine.TryCreate(3);
     }
 
-    public ContinuousMachine(BigMachine<int> bigMachine)
-        : base(bigMachine)
+    public SequentialMachine()
     {
+        this.Lifespan = TimeSpan.FromSeconds(5);
+        this.DefaultTimeout = TimeSpan.FromSeconds(1);
     }
 
+    [Key(10)]
     public int Count { get; set; }
 
     [StateMethod(0)]
     protected async Task<StateResult> Initial(StateParameter parameter)
     {
-        Console.WriteLine($"ContinuousMachine: Initial - {this.Count++}");
-        if (this.Count > 10)
+        Console.WriteLine($"SequentialMachine machine[{this.Identifier}]: {this.Count++}");
+
+        await Task.Delay(500).ConfigureAwait(false); // Some heavy task
+
+        if (this.Count >= 3)
         {
-            Console.WriteLine($"ContinuousMachine: Done");
             return StateResult.Terminate;
         }
-
-        await Task.Delay(100); // Some heavy task
-        // await Task.Delay(100).WithoutLock(this); // You can also release the lock temporarily to improve the response (the machine state may change in the meantime).
 
         return StateResult.Continue;
     }
@@ -311,86 +314,46 @@ To improve response and share resource, heavy task should not be done at once, b
 
 
 
-## Identifier
+## Serialization
 
-`Identifier` is a key concept of `BigMachines`.
+Thanks to [Tinyhand](https://github.com/archi-Doc/CrystalData) and [CrystalData](https://github.com/archi-Doc/CrystalData), serialization and persistence of **BigMachine** is very easy.
 
-Each machine in `MachineGroup<TIdentifier>` has a unique identifier, and machines are identified and operated by identifiers.
-
-`Identifier` has several constraints.
-
-- Serializable with `Tinyhand ` (has `TinyhandObject` attribute).
-- Must be immutable.
-- Has proper `Equals()` implementation.
-- Has proper `GetHashCode()` implementation.
-
-
-
-This is a sample implementation of `Identifier`.
+Add the `TinyhandObject` attribute to the **Machine** class, and use the code below to serialize and deserialize.
 
 ```csharp
 [TinyhandObject]
-public partial class IdentifierClass : IEquatable<IdentifierClass>
-{
-    public static IdentifierClass Default { get; } = new();
+[MachineObject]
+public partial class TestMachine : Machine<int> {}
+```
 
-    public IdentifierClass()
-    {
-        this.Name = string.Empty;
-    }
-
-    public IdentifierClass(int id, string name)
-    {
-        this.Id = id;
-        this.Name = name;
-    }
-
-    [Key(0)]
-    public int Id { get; private set; }
-
-    [Key(1)]
-    public string Name { get; private set; }
-
-    public bool Equals(IdentifierClass? other)
-    {
-        if (other == null)
-        {
-            return false;
-        }
-
-        return this.Id == other.Id && this.Name == other.Name;
-    }
-
-    public override int GetHashCode() => HashCode.Combine(this.Id, this.Name);
-
-    public override string ToString() => $"Id: {this.Id} Name: {this.Name}";
-}
-
-// Alternative
-[TinyhandObject(ImplicitKeyAsName = true)]
-public partial record IdentifierClass2(int id, string name);
+```csharp
+var bin = TinyhandSerializer.Serialize(bigMachine);
+var bigMachine2 = TinyhandSerializer.Deserialize<BigMachine>(bin);
 ```
 
 
 
-## Machine Class
+If you want to save to a file, register it with **CrystalData** as shown in the following code.
 
-### Reserved keywords
+```csharp
+var builder = new CrystalControl.Builder()
+    .ConfigureCrystal(context =>
+    {
+        context.AddCrystal<BigMachine>(new()
+        {
+            FileConfiguration = new LocalFileConfiguration("Data/BigMachine.tinyhand"),
+            SavePolicy = SavePolicy.Manual,
+            SaveFormat = SaveFormat.Utf8,
+            NumberOfFileHistories = 3,
+        });
+    });
+```
 
-These keywords in `Machine` class are reserved for source generator.
 
-- `Interface`: Nested class for operating a machine.
-- `State`: enum type which represents the state of a machine.
-- `Command`: enum type which represents the command of a machine.
-- `CreateInterface()`: Creates an instance of machine interface.
-- `ChangeState()`: Changes the state of a machine.
-- `GetState()`: Gets the current state of a machine.
-- `InternalChangeState()`: Internally used to change the state.
-- `InternalRun()`:  Internally used to run machine and process each state.
-- `InternalCommand()`:  Internally used to process commands.
-- `RegisterBM()`: Registers the machine to `BigMachine`.
 
-`Internal` methods are used within the library and should not be used by the user.
+## Identifier
+
+`Identifier` is a key concept of `BigMachines`.
 
 
 
@@ -400,13 +363,8 @@ These keywords in `Machine` class are reserved for source generator.
 
 Since the machine is independent, you cannot pass parameters directly when creating an instance (and mainly for the deserialization process).
 
-Consider using a DI container (service provider) or `Machine<TIdentifier>.SetParameter(object? createParam)` method.
-
 ```csharp
-var container = new Container(); // DryIoc
-container.RegisterDelegate<BigMachine<int>>(x => new BigMachine<int>(container), Reuse.Singleton);
-container.Register<SomeService>(); // Register some service.
-container.Register<ServiceProviderMachine>(Reuse.Transient); // Register machine.
+
 ```
 
 ```csharp
@@ -416,24 +374,24 @@ public class SomeService
 }
 
 // Machine depends on SomeService.
-[MachineObject(0x4f8f7256)]
+[MachineObject(UseServiceProvider = true)]
 public partial class ServiceProviderMachine : Machine<int>
 {
-    public static void Test(BigMachine<int> bigMachine)
+    public static void Test(BigMachine bigMachine)
     {
-        bigMachine.CreateOrGet<ServiceProviderMachine.Interface>(0, "A"); // Create a machine and set a parameter.
+        bigMachine.ServiceProviderMachine.GetOrCreate(0, "A"); // Create a machine and set a parameter.
     }
 
-    public ServiceProviderMachine(BigMachine<int> bigMachine, SomeService service)
-        : base(bigMachine)
+    public ServiceProviderMachine(SomeService service)
+        : base()
     {
         this.Service = service;
         this.DefaultTimeout = TimeSpan.FromSeconds(1);
-        this.SetLifespan(TimeSpan.FromSeconds(3));
+        this.Lifespan = TimeSpan.FromSeconds(3);
     }
 
-    protected override void SetParameter(object? createParam)
-    {// Receives a parameter. Note that this method is NOT called during deserialization.
+    protected override void OnCreation(object? createParam)
+    {// Receives the parameter at the time of creation. Note that it is not called during deserialization.
         this.Text = (string?)createParam;
     }
 
@@ -452,121 +410,12 @@ public partial class ServiceProviderMachine : Machine<int>
 
 
 
-### Generic machine
-
-`BigMachine` and `Machine` are strongly related with `Identifier`.
-
-Normally, the type of the identifier is fixed.
-
-However you can create generic-identifier machine and machines can be used with multiple types of `BigMachine`.
-
-```csharp
-[MachineObject(0x928b319e)]
-public partial class GenericMachine<TIdentifier> : Machine<TIdentifier>
-where TIdentifier : notnull
-{
-    public static void Test(BigMachine<TIdentifier> bigMachine)
-    {
-        bigMachine.CreateOrGet<GenericMachine<TIdentifier>.Interface>(default!);
-    }
-
-    public GenericMachine(BigMachine<TIdentifier> bigMachine)
-        : base(bigMachine)
-    {
-        this.DefaultTimeout = TimeSpan.FromSeconds(1);
-        this.SetLifespan(TimeSpan.FromSeconds(5));
-    }
-
-    public int Count { get; set; }
-
-    [StateMethod(0)]
-    protected StateResult Initial(StateParameter parameter)
-    {
-        Console.WriteLine($"Generic ({this.Identifier.ToString()}) - {this.Count++}");
-        return StateResult.Continue;
-    }
-}
-```
-
-
-
-### Loop checker
+### Recursive calls checker
 
 Relationships between machines can become complicated, and may lead to circular command issuing.
 
 ```csharp
-[MachineObject(0xb7196ebc)]
-public partial class LoopMachine : Machine<int>
-{
-    public static void Test(BigMachine<int> bigMachine)
-    {
-        bigMachine.LoopCheckerMode = LoopCheckerMode.EnabledAndThrowException;
-        var loopMachine = bigMachine.CreateOrGet<LoopMachine.Interface>(0);
-        var loopMachine2 = bigMachine.CreateOrGet<LoopMachine.Interface>(2);
 
-        // Case 1: LoopMachine -> LoopMachine
-        loopMachine.CommandAsync(Command.RelayInt, 1);
-
-        // Case 2: LoopMachine -> TestMachine -> LoopMachine
-        // bigMachine.CreateOrGet<TestMachine.Interface>(3);
-        // loopMachine.CommandAsync(Command.RelayString, "loop");
-
-        // Case 3: LoopMachine -> LoopMachine2
-        // loopMachine.CommandAsync(Command.RelayInt2, 2);
-    }
-
-    public LoopMachine(BigMachine<int> bigMachine)
-        : base(bigMachine)
-    {
-    }
-
-    [CommandMethod(0)]
-    protected void RelayInt(CommandPost<int>.Command command)
-    {
-        if (command.Message is int n)
-        {// LoopMachine
-            Console.WriteLine($"RelayInt: {n}");
-            this.BigMachine.TryGet<Interface>(this.Identifier)?.CommandAsync(Command.RelayInt, n);
-        }
-    }
-
-    [CommandMethod(1)]
-    protected void RelayString(CommandPost<int>.Command command)
-    {
-        if (command.Message is string st)
-        {// LoopMachine -> TestMachine
-            Console.WriteLine($"RelayString: {st}");
-            this.BigMachine.TryGet<TestMachine.Interface>(3)?.CommandAsync(TestMachine.Command.RelayString, st);
-        }
-    }
-
-    [CommandMethod(2)]
-    protected void RelayInt2(CommandPost<int>.Command command)
-    {
-        if (command.Message is int n)
-        {// LoopMachine -> LoopMachine n
-            if (this.Identifier == 0)
-            {
-                Console.WriteLine($"RelayInt2: {n}");
-                this.BigMachine.TryGet<Interface>(n)?.CommandAsync(Command.RelayInt2, n);
-            }
-            else
-            {
-                n = 0;
-                Console.WriteLine($"RelayInt2: {n}");
-                this.BigMachine.TryGet<Interface>(n)?.CommandAsync(Command.RelayInt2, n);
-            }
-        }
-    }
-}
-```
-
-This code will cause `InvalidOperationException`.
-
-You can disable the loop checker if you want (not recommended).
-
-```csharp
-bigMachine.LoopCheckerMode = LoopCheckerMode.Disabled;
 ```
 
 
@@ -575,9 +424,9 @@ bigMachine.LoopCheckerMode = LoopCheckerMode.Disabled;
 
 Each machine is designed to run independently.
 
-So exceptions thrown in machines are handled by BigMachine's main thread (`BigMachine.Core`), not by the caller.
+So exceptions thrown in machines are handled by **BigMachine**'s main thread (`BigMachine.Core`), not by the caller.
 
-In detail, exceptions are registered to BigMachine using `BigMachine.ReportException()`, and handled by the following method in BigMachine's main thread.
+In detail, exceptions are registered to **BigMachine** using `BigMachine.ReportException()`, and handled by the following method in **BigMachine**'s main thread.
 
 ```cahrp
 private static void DefaultExceptionHandler(BigMachineException exception)

@@ -1,16 +1,12 @@
 ﻿// Copyright (c) All contributors. All rights reserved. Licensed under the MIT license.
 
 using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading;
 using System.Threading.Tasks;
 using BigMachines;
 
 namespace Advanced;
 
-[MachineObject(0xb579a7d8, Continuous = true)] // Set the Continuous property to true.
+/*[MachineObject(0xb579a7d8, Continuous = true)] // Set the Continuous property to true.
 public partial class ContinuousMachine : Machine<int>
 {
     public static void Test(BigMachine<int> bigMachine)
@@ -43,4 +39,4 @@ public partial class ContinuousMachine : Machine<int>
 
         return StateResult.Continue;
     }
-}
+}*/

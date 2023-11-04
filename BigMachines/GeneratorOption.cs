@@ -3,10 +3,9 @@
 using System;
 using Tinyhand;
 
-namespace XUnitTest
+namespace XUnitTest;
+
+[TinyhandGeneratorOption(AttachDebugger = false, GenerateToFile = false)]
+internal class GeneratorOption
 {
-    [TinyhandGeneratorOption(AttachDebugger = false, GenerateToFile = false)]
-    internal class GeneratorOption
-    {
-    }
 }

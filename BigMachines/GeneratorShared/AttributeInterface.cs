@@ -1,15 +1,85 @@
 ﻿// Copyright (c) All contributors. All rights reserved. Licensed under the MIT license.
 
 using System;
-using System.Threading;
-
-#pragma warning disable SA1602 // Enumeration items should be documented
+using BigMachines.Control;
+using Tinyhand;
 
 namespace BigMachines;
 
 /// <summary>
-/// Enables the state machine features for the target class.<br/>
-/// Class must be a partial type.
+/// Represents the type of MachineControl.
+/// </summary>
+public enum MachineControlKind
+{
+    /// <summary>
+    /// Assigns <see cref="SingleMachineControl{TMachine, TInterface}"/> if the machine is derived from <see cref="Machine"/>, or <see cref="UnorderedMachineControl{TIdentifier, TMachine, TInterface}"/> if the machine is derived from <see cref="Machine{TIdentifier}"/>.
+    /// </summary>
+    Default,
+
+    /// <summary>
+    /// Manages a single machine (<see cref="SingleMachineControl{TMachine, TInterface}"/>).
+    /// </summary>
+    Single,
+
+    /// <summary>
+    /// Manage multiple machines with identifiers (<see cref="UnorderedMachineControl{TIdentifier, TMachine, TInterface}"/>.
+    /// </summary>
+    Unordered,
+
+    /// <summary>
+    /// Manage multiple machines and run them sequentially (<see cref="SequentialMachineControl{TIdentifier, TMachine, TInterface}"/>.
+    /// </summary>
+    Sequential,
+}
+
+/// <summary>
+/// Add the attribute to the target class to create a big machine.<br/>
+/// The target class must be an empty partial class and must not have a default constructor.
+/// </summary>
+[AttributeUsage(AttributeTargets.Class, AllowMultiple = false, Inherited = true)]
+public sealed class BigMachineObjectAttribute : Attribute
+{
+    public BigMachineObjectAttribute()
+    {
+    }
+
+    /// <summary>
+    /// Gets or sets a value indicating whether or not to include all machines contained in this assembly [default is <see langword="false"/>].
+    /// </summary>
+    public bool Inclusive { get; set; } = false;
+
+    /// <summary>
+    /// Gets or sets a value indicating whether or not to enable the check function for recursive calls of state methods and command methods [default is <see langword="false"/>].
+    /// </summary>
+    public bool RecursiveDetection { get; set; } = false;
+}
+
+/// <summary>
+/// Add a machine to the BigMachine.
+/// </summary>
+/// <typeparam name="TMachine">The type of the machine.</typeparam>
+[AttributeUsage(AttributeTargets.Class, AllowMultiple = true, Inherited = false)]
+public sealed class AddMachineAttribute<TMachine> : Attribute
+where TMachine : Machine
+{
+    public AddMachineAttribute()
+    {
+    }
+
+    /// <summary>
+    /// Gets or sets the name to identify the machine.
+    /// </summary>
+    public string Name { get; set; } = string.Empty;
+
+    /// <summary>
+    /// Gets or sets a value indicating whether or not to make the machine volatile and exclude it during data persistence. [default is <see langword="false"/>].
+    /// </summary>
+    public bool Volatile { get; set; }
+}
+
+/// <summary>
+/// Add the attribute to the target class to create a machine.<br/>
+/// The class must be a partial class and inherit from either <see cref="Machine"/> or <see cref="Machine{TIdentifier}"/>.
 /// </summary>
 [AttributeUsage(AttributeTargets.Class, AllowMultiple = false, Inherited = true)]
 public sealed class MachineObjectAttribute : Attribute
@@ -17,22 +87,39 @@ public sealed class MachineObjectAttribute : Attribute
     /// <summary>
     /// Initializes a new instance of the <see cref="MachineObjectAttribute"/> class.
     /// </summary>
-    /// <param name="typeId">Machine Type id used for serialization.<br/>
-    /// Type id can be a random number, but it must be unique.</param>
-    public MachineObjectAttribute(uint typeId)
+    public MachineObjectAttribute()
     {
-        this.MachineTypeId = typeId;
     }
 
     /// <summary>
-    /// Gets a type id (unique identifier for serialization) of the machine.
+    /// Gets or sets a value indicating which <see cref="BigMachines.Control.MachineControl"/> is assigned to the machine.
     /// </summary>
-    public uint MachineTypeId { get; }
+    public MachineControlKind Control { get; set; }
 
     /// <summary>
-    /// Gets or sets a machine group of the machine (e.g. <see cref="MachineGroup{TIdentifier}"/>(default), <see cref="SingleGroup{TIdentifier}"/>).
+    /// Gets or sets a value indicating whether or not to use <seealso cref="IServiceProvider"/> to create an instance [default is <see langword="false"/>]. Set <see cref="TinyhandSerializer.ServiceProvider"/>.
     /// </summary>
-    public Type? Group { get; set; }
+    public bool UseServiceProvider { get; set; } = false;
+
+    /// <summary>
+    /// Gets or sets a value indicating whether or not to start the machine by default.<br/>
+    /// This feature is only active for a single machine. [default is <see langword="false"/>].
+    /// </summary>
+    public bool StartByDefault { get; set; } = false;
+
+    /// <summary>
+    /// Gets or sets the number of tasks assigned to execute machines.<br/>
+    /// This is only effective when the machine is managed by <see cref="SequentialMachineControl{TIdentifier, TMachine, TInterface}"/>.
+    /// </summary>
+    public int NumberOfTasks { get; set; } = 0;
+
+    /*
+    /// <summary>
+    /// Gets the identifier for the Machine.<br/>
+    /// You can set a random number, but it needs to be unique.<br/>
+    /// If you specify 0, the hash of the class name is used.
+    /// </summary>
+    public uint MachineId { get; }*/
 
     /// <summary>
     /// Gets or sets a value indicating whether or not the machine is continuous machine (runs continuously and uses one thread).
@@ -41,13 +128,14 @@ public sealed class MachineObjectAttribute : Attribute
 }
 
 #pragma warning disable SA1629
+
 /// <summary>
-/// Adds the target method to the state machine.<br/>
+/// Adds a state method to the machine.<br/>
 /// The format of the method is as follows: <br/><br/>
 /// <see langword="protected"/> <see cref="StateResult"/> ExampleState(<see cref="StateParameter"/> parameter)<br/>
-///  or<br/>
+///  => <see cref="StateResult.Continue"/>;<br/><br/>
 ///  <see langword="protected"/> <see langword="async"/> Task&lt;<see cref="StateResult"/>&gt; ExampleState(<see cref="StateParameter"/> parameter)<br/>
-///  => <see cref="StateResult.Continue"/>;
+///  => <see cref="StateResult.Terminate"/>;
 /// </summary>
 #pragma warning restore SA1629
 [AttributeUsage(AttributeTargets.Method, AllowMultiple = false, Inherited = true)]
@@ -56,34 +144,33 @@ public sealed class StateMethodAttribute : Attribute
     /// <summary>
     /// Initializes a new instance of the <see cref="StateMethodAttribute"/> class.
     /// </summary>
-    /// <param name="id">The identifier used for serialization.<br/>
-    /// 0: Default state method.<br/>
-    /// Id must be a unique number (can be a random number).</param>
-    public StateMethodAttribute(uint id)
+    /// <param name="stateId">The identifier for the state method.<br/>
+    /// State method with an id of 0 is the default (first to be executed) state method and is required to be present in every machine.<br/>
+    /// You can set a random number, but it needs to be unique.<br/>
+    /// If you specify <see cref="uint.MaxValue"/>, the hash of the method name is used.</param>
+    public StateMethodAttribute(uint stateId = uint.MaxValue)
     {
-        this.Id = id;
+        this.StateId = stateId;
     }
 
     /// <summary>
-    /// Gets an identifier used for serialization.<br/>
-    /// 0: Default state method.<br/>
-    /// Id must be a unique number (can be a random number).
+    /// Gets the identifier for the state method.<br/>
+    /// State method with an id of 0 is the default (first to be executed) state method and is required to be present in every machine.<br/>
+    /// You can set a random number, but it needs to be unique.<br/>
+    /// If you specify <see cref="uint.MaxValue"/>, the hash of the method name is used.
     /// </summary>
-    public uint Id { get; }
+    public uint StateId { get; }
 }
 
 #pragma warning disable SA1629
 /// <summary>
-/// Adds a command method to the machine.<br/><br/>
-/// The format of the method is as follows: <br/>
-/// <see langword="protected"/> <see langword="void"/> ExampleCommand()<br/>
-/// <see langword="protected"/> <see langword="void"/> ExampleCommand(TMessage message)<br/>
-/// <see langword="protected"/> TResponse ExampleCommand()<br/>
-/// <see langword="protected"/> TResponse ExampleCommand(TMessage message)<br/>
-/// <see langword="protected"/> <see langword="async"/> Task ExampleCommand()<br/>
-/// <see langword="protected"/> <see langword="async"/> Task ExampleCommand(TMessage message)<br/>
-/// <see langword="protected"/> <see langword="async"/> Task&lt;TResponse&gt; ExampleCommand()<br/>
-/// <see langword="protected"/> <see langword="async"/> Task&lt;TResponse&gt; ExampleCommand(TMessage message)<br/>
+/// Adds a command method to the machine.<br/>
+/// Command methods are executed asynchronously.<br/>
+/// The format of the method is as follows: <br/><br/>
+/// <see langword="protected"/> <see cref="CommandResult"/> ExampleCommand(any param)<br/>
+/// => <see cref="CommandResult.Success"/>;<br/><br/>
+/// <see langword="protected"/> <see cref="CommandResult{TResponse}"/> ExampleCommand(any param)<br/>
+/// => new(<see cref="CommandResult.Success"/>, response);
 /// </summary>
 #pragma warning restore SA1629
 [AttributeUsage(AttributeTargets.Method, AllowMultiple = false, Inherited = true)]
@@ -92,23 +179,28 @@ public sealed class CommandMethodAttribute : Attribute
     /// <summary>
     /// Initializes a new instance of the <see cref="CommandMethodAttribute"/> class.
     /// </summary>
-    /// <param name="id">The identifier used for serialization.<br/>
-    /// Id can be a random number, but it must be unique.</param>
-    public CommandMethodAttribute(uint id)
+    public CommandMethodAttribute()
     {
-        this.Id = id;
+        // this.CommandId = commandId;
     }
 
+    /*
     /// <summary>
-    /// Gets an identifier of the command.<br/>
-    /// Id must be a unique number (can be a random number).
+    /// Gets the identifier for the command method.<br/>
+    /// You can set a random number, but it needs to be unique.<br/>
+    /// If you specify <see cref="uint.MaxValue"/>, the hash of the method name is used.
     /// </summary>
-    public uint Id { get; }
+    public uint CommandId { get; }*/
 
     /// <summary>
     /// Gets or sets a value indicating whether the command method executes with locking the machine [the default is <see langword="true"/>].
     /// </summary>
     public bool WithLock { get; set; } = true;
+
+    /// <summary>
+    /// Gets or sets a value indicating whether or not to add an extension method for issuing commands to all machines [the default is <see langword="false"/>].
+    /// </summary>
+    public bool All { get; set; } = false;
 }
 
 /// <summary>
@@ -117,35 +209,107 @@ public sealed class CommandMethodAttribute : Attribute
 public enum StateResult
 {
     /// <summary>
-    /// Informs that the machine will continue to run.
+    /// The machine will continue to run.
     /// </summary>
     Continue,
 
     /// <summary>
-    /// Informs that the machine is going to be terminated.
+    /// The machine is going to be terminated.
     /// </summary>
     Terminate,
 }
 
 /// <summary>
-/// Represents the state of the machine.
+/// Represents the result of a command method.
 /// </summary>
-public enum MachineStatus
+public enum CommandResult
 {
     /// <summary>
-    /// Machine is running.
+    /// The command was successfully executed.
     /// </summary>
-    Running,
+    Success,
+
+    /// <summary>
+    /// The command execution failed.
+    /// </summary>
+    Failure,
+
+    /// <summary>
+    /// The command was not executed because the machine is terminated.
+    /// </summary>
+    Terminated,
+}
+
+public readonly struct CommandResult<TResponse>
+{
+    public CommandResult(CommandResult result, TResponse response)
+    {
+        this.Result = result;
+        this.Resnpose = response;
+    }
+
+    public CommandResult(TResponse response)
+    {
+        this.Result = CommandResult.Success;
+        this.Resnpose = response;
+    }
+
+    public readonly CommandResult Result;
+    public readonly TResponse Resnpose;
+}
+
+public readonly struct IdentifierAndCommandResult<TIdentifier>
+    where TIdentifier : notnull
+{
+    public IdentifierAndCommandResult(TIdentifier identifier, CommandResult result)
+    {
+        this.Identifier = identifier;
+        this.Result = result;
+    }
+
+    public readonly TIdentifier Identifier;
+    public readonly CommandResult Result;
+}
+
+public readonly struct IdentifierAndCommandResult<TIdentifier, TResponse>
+    where TIdentifier : notnull
+{
+    public IdentifierAndCommandResult(TIdentifier identifier, CommandResult<TResponse> result)
+    {
+        this.Identifier = identifier;
+        this.Result = result;
+    }
+
+    public IdentifierAndCommandResult(TIdentifier identifier, TResponse response)
+    {
+        this.Identifier = identifier;
+        this.Result = new(response);
+    }
+
+    public readonly TIdentifier Identifier;
+    public readonly CommandResult<TResponse> Result;
+}
+
+/// <summary>
+/// Represents the operational state of the machine.
+/// </summary>
+[Flags]
+public enum OperationalFlag
+{
+    /// <summary>
+    /// Machine is running (in state methods).
+    /// </summary>
+    Running = 1,
 
     /// <summary>
     /// Machine is paused.
     /// </summary>
-    Paused,
+    Paused = 2,
 
     /// <summary>
     /// Machine is terminated.
     /// </summary>
-    Terminated,
+    Terminated = 4,
 }
 
 /// <summary>
@@ -159,7 +323,7 @@ public enum RunType
     NotRunning,
 
     /// <summary>
-    /// Machine is run by <see cref="ManMachineInterface{TIdentifier}.RunAsync"/> method.
+    /// Machine is run by <see cref="Machine.ManMachineInterface.RunAsync"/> method.
     /// </summary>
     Manual,
 
@@ -169,7 +333,7 @@ public enum RunType
     Timer,
 
     /// <summary>
-    /// Machine is run by <see cref="BigMachineContinuous{TIdentifier}"/>.
+    /// Machine is run by. // tempcode.
     /// </summary>
     Continuous,
 }

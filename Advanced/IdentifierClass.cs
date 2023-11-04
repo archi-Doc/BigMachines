@@ -1,16 +1,12 @@
 ﻿// Copyright (c) All contributors. All rights reserved. Licensed under the MIT license.
 
 using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 using BigMachines;
 using Tinyhand;
 
 namespace Advanced;
 
-[TinyhandObject]
+/*[TinyhandObject]
 public partial class IdentifierClass : IEquatable<IdentifierClass>
 {
     public static IdentifierClass Default { get; } = new();
@@ -97,4 +93,4 @@ public partial class IdentifierMachine2 : Machine<IdentifierClass2>
 
         return StateResult.Continue;
     }
-}
+}*/
