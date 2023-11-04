@@ -968,8 +968,8 @@ ModuleInitializerClass_Added:
             var constructor = this.UseServiceProvider ? "null" : $"() => new {this.LocalName}()";
             var serializable = this.TinyhandAttribute is not null ? "true" : "false";
             var identifierType = this.IdentifierObject is not null ? $"typeof({this.IdentifierObject.FullName})" : "null";
-            var continuous = "false";
-            ssb.AppendLine($"MachineRegistry.Register(new({machineType}, {constructor}, {serializable}, {identifierType}, {continuous}));");
+            var numberOfTasks = this.ObjectAttribute.NumberOfTasks;
+            ssb.AppendLine($"MachineRegistry.Register(new({machineType}, {constructor}, {serializable}, {identifierType}, {numberOfTasks}));");
         }
     }
 

@@ -131,7 +131,7 @@ public sealed class MachineObjectAttributeMock : Attribute
 
     public bool StartByDefault { get; set; }
 
-    public bool Continuous { get; set; }
+    public int NumberOfTasks { get; set; } = 0;
 
     public static MachineObjectAttributeMock FromArray(object?[] constructorArguments, KeyValuePair<string, object?>[] namedArguments)
     {
@@ -162,10 +162,10 @@ public sealed class MachineObjectAttributeMock : Attribute
             attribute.StartByDefault = (bool)val;
         }
 
-        val = AttributeHelper.GetValue(-1, nameof(Continuous), constructorArguments, namedArguments);
+        val = AttributeHelper.GetValue(-1, nameof(NumberOfTasks), constructorArguments, namedArguments);
         if (val != null)
         {
-            attribute.Continuous = (bool)val;
+            attribute.NumberOfTasks = (int)val;
         }
 
         return attribute;

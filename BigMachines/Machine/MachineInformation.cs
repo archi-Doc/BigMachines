@@ -4,6 +4,6 @@ using System;
 
 namespace BigMachines;
 
-public record MachineInformation(Type MachineType, Func<Machine>? Constructor, bool Serializable, Type? IdentifierType, bool Continuous)
-{// Type ControlType
+public record MachineInformation(Type MachineType, Func<Machine>? Constructor, bool Serializable, Type? IdentifierType, int NumberOfTasks)
+{
 }

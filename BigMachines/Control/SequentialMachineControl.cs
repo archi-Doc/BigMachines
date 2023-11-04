@@ -2,6 +2,8 @@
 
 using System;
 using System.Linq;
+using System.Runtime.CompilerServices;
+using Arc.Threading;
 using Tinyhand;
 using Tinyhand.IO;
 using ValueLink;
@@ -28,7 +30,12 @@ public sealed partial class SequentialMachineControl<TIdentifier, TMachine, TInt
         : base()
     {
         this.MachineInformation = MachineRegistry.Get<TMachine>();
-        this.core = new(this);
+        this.cores = new SequentialCore[this.MachineInformation.NumberOfTasks];
+        for (var i = 0; i < this.MachineInformation.NumberOfTasks; i++)
+        {
+            this.cores[i] = new(this);
+        }
+
         this.items = new();
     }
 
@@ -73,7 +80,7 @@ public sealed partial class SequentialMachineControl<TIdentifier, TMachine, TInt
 
     public override MachineInformation MachineInformation { get; }
 
-    private SequentialCore core;
+    private SequentialCore[] cores;
     private Item.GoshujinClass items;
 
     #region Abstract
@@ -83,7 +90,11 @@ public sealed partial class SequentialMachineControl<TIdentifier, TMachine, TInt
 
     public void Start()
     {
-        this.core.Start(((IBigMachine)this.BigMachine).Core.GetParent());
+        var parent = ((IBigMachine)this.BigMachine).Core.GetParent();
+        foreach (var x in this.cores)
+        {
+            x.Start(parent);
+        }
     }
 
     public Machine.ManMachineInterface? GetFirst()
@@ -139,16 +150,19 @@ public sealed partial class SequentialMachineControl<TIdentifier, TMachine, TInt
                 result = true;
             }
 
-            if (this.items.SequentialChain.TryPeek(out var first))
-            {
-                var next = first.Machine;
-                if (next.InternalLifespan > 0 &&
-                    next.OperationalState == 0 &&
-                    next.InternalTimeUntilRun == 0)
-                {// Stand-by
-                    next.RunAndForget(DateTime.UtcNow);
+            /*if (this.MachineInformation.NumberOfTasks <= 0)
+            {// No dedicated tasks
+                if (this.items.SequentialChain.TryPeek(out var first))
+                {
+                    var next = first.Machine;
+                    if (next.InternalLifespan > 0 &&
+                        next.OperationalState == 0 &&
+                        next.InternalTimeUntilRun == 0)
+                    {// Stand-by
+                        next.RunAndForget(DateTime.UtcNow);
+                    }
                 }
-            }
+            }*/
         }
 
         return result;
@@ -158,21 +172,26 @@ public sealed partial class SequentialMachineControl<TIdentifier, TMachine, TInt
     {
         lock (this.items.SyncObject)
         {
-            foreach (var x in this.items)
-            {
-                x.Machine.ProcessLifespan(now, elapsed);
+            if (this.MachineInformation.NumberOfTasks > 0)
+            {// Have dedicated tasks
+                foreach (var x in this.items)
+                {
+                    x.Machine.ProcessLifespan(now, elapsed);
+                }
             }
-
-            /*if (!this.items.SequentialChain.TryPeek(out var first))
+            else
             {
-                return;
-            }
+                if (!this.items.SequentialChain.TryPeek(out var first))
+                {
+                    return;
+                }
 
-            var machine = first.Machine;
-            if (machine.OperationalState == 0)
-            {// Stand-by
-                machine.Process(now, elapsed);
-            }*/
+                var machine = first.Machine;
+                if (machine.OperationalState == 0)
+                {// Stand-by
+                    machine.Process(now, elapsed);
+                }
+            }
         }
     }
 
@@ -210,7 +229,7 @@ public sealed partial class SequentialMachineControl<TIdentifier, TMachine, TInt
                 machine.PrepareAndCreate(this, createParam);
                 item = new(identifier, machine);
                 item.Goshujin = this.items;
-                this.core.Pulse();
+                this.PulseCore();
             }
 
             return (TInterface)item.Machine.InterfaceInstance;
@@ -228,7 +247,7 @@ public sealed partial class SequentialMachineControl<TIdentifier, TMachine, TInt
                 machine.PrepareAndCreate(this, createParam);
                 item = new(identifier, machine);
                 item.Goshujin = this.items;
-                this.core.Pulse();
+                this.PulseCore();
             }
 
             return (TInterface)item.Machine.InterfaceInstance;
@@ -236,6 +255,23 @@ public sealed partial class SequentialMachineControl<TIdentifier, TMachine, TInt
     }
 
     #endregion
+
+    private void StartCore(ThreadCoreBase? parent)
+    {
+        foreach (var x in this.cores)
+        {
+            x.Start(parent);
+        }
+    }
+
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    private void PulseCore()
+    {
+        foreach (var x in this.cores)
+        {
+            x.Pulse();
+        }
+    }
 
     private TMachine? GetMachineToProcess()
     {

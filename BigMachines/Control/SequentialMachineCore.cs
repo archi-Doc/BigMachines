@@ -21,16 +21,24 @@ public sealed partial class SequentialMachineControl<TIdentifier, TMachine, TInt
             this.control = control;
         }
 
-        public void Start(ThreadCoreBase? parent)
+        public bool Start(ThreadCoreBase? parent)
         {
+            if (this.started)
+            {
+                return false;
+            }
+
             this.ChangeParent(parent);
             this.Start();
+            this.started = true;
+            return true;
         }
 
         public void Pulse() => this.updateEvent.Pulse();
 
         private readonly SequentialMachineControl<TIdentifier, TMachine, TInterface> control;
         private readonly AsyncPulseEvent updateEvent = new();
+        private bool started;
 
         private static async Task Process(object? parameter)
         {

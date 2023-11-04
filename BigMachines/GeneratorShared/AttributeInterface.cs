@@ -107,6 +107,12 @@ public sealed class MachineObjectAttribute : Attribute
     /// </summary>
     public bool StartByDefault { get; set; } = false;
 
+    /// <summary>
+    /// Gets or sets the number of tasks assigned to execute machines.<br/>
+    /// This is only effective when the machine is managed by <see cref="SequentialMachineControl{TIdentifier, TMachine, TInterface}"/>.
+    /// </summary>
+    public int NumberOfTasks { get; set; } = 0;
+
     /*
     /// <summary>
     /// Gets the identifier for the Machine.<br/>

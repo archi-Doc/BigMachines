@@ -272,10 +272,42 @@ Continuous machine is different from passive and intermittent machine (passive a
 
 It's designed for heavy and time-consuming tasks.
 
-Once a continuous machine is created, `BigMachine` will assign one thread for the machine and run the machine repeatedly until the machine returns `StateResult.Terminate`.
-
 ```csharp
+[TinyhandObject]
+[MachineObject(Control = MachineControlKind.Sequential, NumberOfTasks = 1)]
+public partial class SequentialMachine : Machine<int>
+{// SequentialMachine executes one at a time, in the order of their creation.
+    public static void Test(BigMachine bigMachine)
+    {
+        bigMachine.SequentialMachine.TryCreate(1);
+        bigMachine.SequentialMachine.TryCreate(2);
+        bigMachine.SequentialMachine.TryCreate(3);
+    }
 
+    public SequentialMachine()
+    {
+        this.Lifespan = TimeSpan.FromSeconds(5);
+        this.DefaultTimeout = TimeSpan.FromSeconds(1);
+    }
+
+    [Key(10)]
+    public int Count { get; set; }
+
+    [StateMethod(0)]
+    protected async Task<StateResult> Initial(StateParameter parameter)
+    {
+        Console.WriteLine($"SequentialMachine machine[{this.Identifier}]: {this.Count++}");
+
+        await Task.Delay(500).ConfigureAwait(false); // Some heavy task
+
+        if (this.Count >= 3)
+        {
+            return StateResult.Terminate;
+        }
+
+        return StateResult.Continue;
+    }
+}
 ```
 
 To improve response and share resource, heavy task should not be done at once, but divided into several smaller tasks.
@@ -331,13 +363,8 @@ var builder = new CrystalControl.Builder()
 
 Since the machine is independent, you cannot pass parameters directly when creating an instance (and mainly for the deserialization process).
 
-Consider using a DI container (service provider) or `Machine<TIdentifier>.SetParameter(object? createParam)` method.
-
 ```csharp
-var container = new Container(); // DryIoc
-container.RegisterDelegate<BigMachine<int>>(x => new BigMachine<int>(container), Reuse.Singleton);
-container.Register<SomeService>(); // Register some service.
-container.Register<ServiceProviderMachine>(Reuse.Transient); // Register machine.
+
 ```
 
 ```csharp
@@ -347,24 +374,24 @@ public class SomeService
 }
 
 // Machine depends on SomeService.
-[MachineObject(0x4f8f7256)]
+[MachineObject(UseServiceProvider = true)]
 public partial class ServiceProviderMachine : Machine<int>
 {
-    public static void Test(BigMachine<int> bigMachine)
+    public static void Test(BigMachine bigMachine)
     {
-        bigMachine.CreateOrGet<ServiceProviderMachine.Interface>(0, "A"); // Create a machine and set a parameter.
+        bigMachine.ServiceProviderMachine.GetOrCreate(0, "A"); // Create a machine and set a parameter.
     }
 
-    public ServiceProviderMachine(BigMachine<int> bigMachine, SomeService service)
-        : base(bigMachine)
+    public ServiceProviderMachine(SomeService service)
+        : base()
     {
         this.Service = service;
         this.DefaultTimeout = TimeSpan.FromSeconds(1);
-        this.SetLifespan(TimeSpan.FromSeconds(3));
+        this.Lifespan = TimeSpan.FromSeconds(3);
     }
 
-    protected override void SetParameter(object? createParam)
-    {// Receives a parameter. Note that this method is NOT called during deserialization.
+    protected override void OnCreation(object? createParam)
+    {// Receives the parameter at the time of creation. Note that it is not called during deserialization.
         this.Text = (string?)createParam;
     }
 
