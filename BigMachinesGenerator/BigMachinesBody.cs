@@ -249,12 +249,12 @@ public class BigMachinesBody : VisceralBody<BigMachinesObject>
         var defaultFullName = $"{BigMachinesBody.BigMachineNamespace}.{BigMachinesBody.DefaultBigMachineObject}";
 
         var array = this.FullNameToObject.Values.Where(x => x.ObjectFlag.HasFlag(BigMachinesObjectFlag.BigMachineObject)).ToArray();
-        if (!array.Any(x => x.FullName == defaultFullName))
+        /*if (!array.Any(x => x.FullName == defaultFullName))
         {// Add the default BigMachine
             bigMachine = new BigMachine(this, default);
             bigMachine.Prepare();
             this.BigMachines.Add(bigMachine);
-        }
+        }*/
 
         foreach (var x in array)
         {

@@ -49,17 +49,17 @@ public sealed class BigMachineObjectAttributeMock : Attribute
     public static readonly string StandardName = SimpleName + "Attribute";
     public static readonly string FullName = BigMachinesBody.BigMachineNamespace + "." + StandardName;
 
-    public bool Comprehensive { get; set; }
+    public bool Inclusive { get; set; }
 
     public static BigMachineObjectAttributeMock FromArray(object?[] constructorArguments, KeyValuePair<string, object?>[] namedArguments)
     {
         var attribute = new BigMachineObjectAttributeMock();
         object? val;
 
-        val = AttributeHelper.GetValue(-1, nameof(Comprehensive), constructorArguments, namedArguments);
+        val = AttributeHelper.GetValue(-1, nameof(Inclusive), constructorArguments, namedArguments);
         if (val != null)
         {
-            attribute.Comprehensive = (bool)val;
+            attribute.Inclusive = (bool)val;
         }
 
         return attribute;

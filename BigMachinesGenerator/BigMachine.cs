@@ -13,12 +13,12 @@ namespace BigMachines.Generator;
 
 internal class BigMachine : IEquatable<BigMachine>
 {
-    public BigMachine(BigMachinesBody body, BigMachinesObject? obj)
+    public BigMachine(BigMachinesBody body, BigMachinesObject obj)
     {
         this.Body = body;
         this.Object = obj;
-        this.Namespace = this.Object is null ? BigMachinesBody.BigMachineNamespace : this.Object.Namespace;
-        this.SimpleName = this.Object is null ? BigMachinesBody.DefaultBigMachineObject : this.Object.SimpleName;
+        this.Namespace = this.Object.Namespace; // this.Object is null ? BigMachinesBody.BigMachineNamespace : this.Object.Namespace;
+        this.SimpleName = this.Object.SimpleName; // this.Object is null ? BigMachinesBody.DefaultBigMachineObject : this.Object.SimpleName;
     }
 
     internal class Machine
@@ -91,7 +91,7 @@ internal class BigMachine : IEquatable<BigMachine>
 
     public BigMachinesBody Body { get; }
 
-    public BigMachinesObject? Object { get; }
+    public BigMachinesObject Object { get; }
 
     public BigMachineObjectAttributeMock? Attribute { get; private set; }
 
@@ -99,7 +99,7 @@ internal class BigMachine : IEquatable<BigMachine>
 
     public string SimpleName { get; }
 
-    public bool Comprehensive { get; set; }
+    public bool Inclusive { get; set; }
 
     public Dictionary<BigMachinesObject, AddMachineAttributeMock?> AddedMachines { get; } = new();
 
@@ -127,17 +127,17 @@ internal class BigMachine : IEquatable<BigMachine>
 
         if (this.Object is null)
         {
-            this.Comprehensive = true;
+            this.Inclusive = true;
         }
         else
         {
-            this.Comprehensive = this.Attribute?.Comprehensive == true;
+            this.Inclusive = this.Attribute?.Inclusive == true;
         }
 
         var start = AddMachineAttributeMock.FullName + "<";
 
-        if (this.Comprehensive)
-        {// Comprehensive big machine
+        if (this.Inclusive)
+        {// Inclusive big machine
             var array = this.Body.FullNameToObject.Values.Where(x => x.ObjectFlag.HasFlag(BigMachinesObjectFlag.MachineObject)).ToArray();
             foreach (var x in array)
             {
@@ -154,24 +154,21 @@ internal class BigMachine : IEquatable<BigMachine>
                     // var machineName = objectAttribute.FullName.Substring(start.Length, objectAttribute.FullName.Length - start.Length - 1);
 
                     BigMachinesObject? obj = default;
+                    MachineObjectAttributeMock? atr = default;
                     var args = objectAttribute.AttributeData?.AttributeClass?.TypeArguments;
                     if (args.HasValue && args.Value.Length > 0 && args.Value[0] is INamedTypeSymbol machineType)
                     {// AddMachineAttribute<machineType>
-                        this.Body.TryGet(machineType, out obj);
-                        if (obj is null && machineType.IsGenericType)
+                        obj = this.Body.Add(machineType);
+                        if (obj is null)
                         {
-                            if (this.Body.TryGet(machineType.ConstructedFrom, out var obj2))
-                            {
-                                if (obj2 is not null && obj2.ObjectAttribute is not null)
-                                {
-                                    obj = this.Body.Add(machineType);
-                                    if (obj is not null)
-                                    {
-                                        obj.ObjectAttribute = obj2.ObjectAttribute;
-                                        obj.IdentifierObject = obj2.IdentifierObject;
-                                    }
-                                }
-                            }
+                            continue;
+                        }
+
+                        obj.Configure();
+                        atr = obj.TryGetObjectAttribute();
+                        if (obj.ObjectAttribute is null)
+                        {
+                            obj.ObjectAttribute = atr;
                         }
                     }
 

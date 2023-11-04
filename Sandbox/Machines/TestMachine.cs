@@ -8,7 +8,7 @@ using Tinyhand;
 
 namespace Sandbox;
 
-[BigMachineObject(Comprehensive = true)]
+[BigMachineObject(Inclusive = true)]
 [AddMachine<ParentClass.TinyMachine2<int>>()]
 public partial class TestBigMachine;
 

@@ -8,6 +8,9 @@ using Tinyhand;
 
 namespace Sandbox;
 
+[BigMachineObject(Inclusive = true)]
+public partial class BigMachine;
+
 class Program
 {
     static async Task Main(string[] args)

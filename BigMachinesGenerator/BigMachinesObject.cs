@@ -213,6 +213,74 @@ public class BigMachinesObject : VisceralObjectBase<BigMachinesObject>
             }
         }
 
+        // Machine<TIdentifier>
+        var machineObject = this.BaseObject;
+        var derivedMachine = false;
+        while (machineObject != null)
+        {
+            if (machineObject.OriginalDefinition?.FullName == $"{BigMachinesBody.BigMachineNamespace}.Machine<TIdentifier>")
+            {
+                break;
+            }
+            else if (machineObject.OriginalDefinition?.FullName == $"{BigMachinesBody.BigMachineNamespace}.Machine")
+            {
+                break;
+            }
+            else if (machineObject.ObjectAttribute != null)
+            {
+                derivedMachine = true;
+            }
+
+            machineObject = machineObject.BaseObject;
+        }
+
+        if (machineObject is not null)
+        {
+            this.MachineObject = machineObject;
+            this.StateName = this.FullName + "." + BigMachinesBody.StateIdentifier;
+            this.CommandName = this.FullName + "." + BigMachinesBody.CommandIdentifier;
+
+            if (machineObject.Generics_Arguments.Length == 1)
+            {
+                this.IdentifierObject = machineObject.Generics_Arguments[0];
+            }
+        }
+
+        if (derivedMachine)
+        {
+            this.NewIfDerived = "new ";
+            this.OverrideOrNew = "new";
+        }
+        else
+        {
+            this.OverrideOrNew = "override";
+        }
+
+        // MachineControl
+        if (this.ObjectAttribute.Control == MachineControlKind.Single)
+        {// Single
+        }
+        else if (this.ObjectAttribute.Control == MachineControlKind.Unordered ||
+            this.ObjectAttribute.Control == MachineControlKind.Sequential)
+        {// Multi
+            if (this.IdentifierObject is null)
+            {// Change to the single control.
+                this.ObjectAttribute.Control = MachineControlKind.Single;
+                this.Body.AddDiagnostic(BigMachinesBody.Warning_MachineWithoutIdentifier, this.Location);
+            }
+        }
+        else
+        {// Default
+            if (this.IdentifierObject is null)
+            {
+                this.ObjectAttribute.Control = MachineControlKind.Single;
+            }
+            else
+            {
+                this.ObjectAttribute.Control = MachineControlKind.Unordered;
+            }
+        }
+
         // Machine id
         /*if (this.ObjectAttribute.MachineId == 0)
         {
@@ -339,62 +407,10 @@ public class BigMachinesObject : VisceralObjectBase<BigMachinesObject>
             this.Body.Machines.Add(id, this);
         }*/
 
-        // Machine<TIdentifier>
-        var machineObject = this.BaseObject;
-        var derivedMachine = false;
-        while (machineObject != null)
-        {
-            if (machineObject.OriginalDefinition?.FullName == $"{BigMachinesBody.BigMachineNamespace}.Machine<TIdentifier>")
-            {
-                break;
-            }
-            else if (machineObject.OriginalDefinition?.FullName == $"{BigMachinesBody.BigMachineNamespace}.Machine")
-            {
-                break;
-            }
-            else if (machineObject.ObjectAttribute != null)
-            {
-                derivedMachine = true;
-            }
-
-            machineObject = machineObject.BaseObject;
-        }
-
-        if (derivedMachine)
-        {
-            this.NewIfDerived = "new ";
-            this.OverrideOrNew = "new";
-        }
-        else
-        {
-            this.OverrideOrNew = "override";
-        }
-
-        if (machineObject == null)
+        if (this.MachineObject == null)
         {
             this.Body.ReportDiagnostic(BigMachinesBody.Error_NotDerived, this.Location);
             return;
-        }
-        else
-        {
-            this.MachineObject = machineObject;
-            this.StateName = this.FullName + "." + BigMachinesBody.StateIdentifier;
-            this.CommandName = this.FullName + "." + BigMachinesBody.CommandIdentifier;
-
-            if (machineObject.Generics_Arguments.Length == 1)
-            {
-                this.IdentifierObject = machineObject.Generics_Arguments[0];
-            }
-
-            /*if (this.Generics_Kind == VisceralGenericsKind.OpenGeneric)
-            {
-                if (machineObject.Generics_Kind == VisceralGenericsKind.OpenGeneric &&
-                    this.Generics_Arguments.Length == 1 &&
-                    this.Generics_Arguments[0].FullName == machineObject.Generics_Arguments[0].FullName)
-                {// Class<TIdentifier> : Machine<TIdentifier>
-                    this.ObjectFlag |= BigMachinesObjectFlag.IsSimpleGenericMachine;
-                }
-            }*/
         }
 
         if (this.IdentifierObject != null && this.IdentifierObject.Kind != VisceralObjectKind.TypeParameter)
@@ -405,35 +421,6 @@ public class BigMachinesObject : VisceralObjectBase<BigMachinesObject>
                 {
                     this.Body.AddDiagnostic(BigMachinesBody.Error_IdentifierIsNotSerializable, this.IdentifierObject.Location, this.IdentifierObject.FullName);
                 }
-            }
-        }
-
-        // MachineControl
-        if (this.ObjectAttribute.Control == MachineControlKind.Single)
-        {// Single
-            /*if (this.IdentifierObject is not null)
-            {// Change to the unordered control.
-                this.ObjectAttribute.Control = MachineControlKind.Unordered;
-            }*/
-        }
-        else if (this.ObjectAttribute.Control == MachineControlKind.Unordered ||
-            this.ObjectAttribute.Control == MachineControlKind.Sequential)
-        {// Multi
-            if (this.IdentifierObject is null)
-            {// Change to the single control.
-                this.ObjectAttribute.Control = MachineControlKind.Single;
-                this.Body.AddDiagnostic(BigMachinesBody.Warning_MachineWithoutIdentifier, this.Location);
-            }
-        }
-        else
-        {// Default
-            if (this.IdentifierObject is null)
-            {
-                this.ObjectAttribute.Control = MachineControlKind.Single;
-            }
-            else
-            {
-                this.ObjectAttribute.Control = MachineControlKind.Unordered;
             }
         }
 
@@ -978,4 +965,27 @@ ModuleInitializerClass_Added:
 
     internal bool HasExplicitDefaultConstructor()
         => this.GetMembers(VisceralTarget.Method).Any(a => a.Method_IsConstructor && a.Method_Parameters.Length == 0 && a.ContainingObject == this && a.symbol?.IsImplicitlyDeclared == false);
+
+    internal MachineObjectAttributeMock? TryGetObjectAttribute()
+    {
+        var attribute = this.ObjectAttribute;
+        if (attribute is not null)
+        {
+            return attribute;
+        }
+
+        if (this.Generics_IsGeneric && this.symbol is INamedTypeSymbol nts)
+        {
+            var cf = this.Body.Add(nts.ConstructedFrom);
+            if (cf is null)
+            {
+                return default;
+            }
+
+            cf.Configure();
+            return cf.ObjectAttribute;
+        }
+
+        return default;
+    }
 }

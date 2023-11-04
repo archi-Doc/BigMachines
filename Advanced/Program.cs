@@ -67,10 +67,11 @@ public class Program
 
         // DerivedMachine.Test2(bigMachine);
         // DerivedMachine2.Test(bigMachine);
-        GenericMachine<string>.Test(bigMachine, "gen");
+        // GenericMachine<string>.Test(bigMachine, "gen");
         // await RecursiveMachine.Test(bigMachine);
         // SingleMachine.Test(bigMachine);
         // ServiceProviderMachine.Test(bigMachine);
+        ExternalMachineTest.Test(bigMachine);
 
         await ThreadCore.Root.WaitForTerminationAsync(-1); // Wait for the termination infinitely.
 

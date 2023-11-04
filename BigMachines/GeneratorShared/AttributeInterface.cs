@@ -46,7 +46,7 @@ public sealed class BigMachineObjectAttribute : Attribute
     /// <summary>
     /// Gets or sets a value indicating whether or not to include all machines contained in this assembly [default is <see langword="false"/>].
     /// </summary>
-    public bool Comprehensive { get; set; } = false;
+    public bool Inclusive { get; set; } = false;
 }
 
 /// <summary>

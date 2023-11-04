@@ -24,4 +24,8 @@
     <ProjectReference Include="..\ExternalMachine\ExternalMachine.csproj" />
   </ItemGroup>
 
+  <ItemGroup>
+    <Compile Remove="Generated\*" />
+  </ItemGroup>
+  
 </Project>
