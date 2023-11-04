@@ -747,7 +747,7 @@ ModuleInitializerClass_Added:
             ssb.AppendLine($"public {this.OverrideOrNew} Interface InterfaceInstance => (Interface)(this.interfaceInstance ??= new Interface(this));");
         }*/
 
-        //ssb.AppendLine($"public {this.OverrideOrNew} Interface InterfaceInstance => (Interface)(this.interfaceInstance ??= this.CreateInterface());");
+        // ssb.AppendLine($"public {this.OverrideOrNew} Interface InterfaceInstance => (Interface)(this.interfaceInstance ??= this.CreateInterface());");
 
         /*ssb.AppendLine("public override ManMachineInterface InterfaceInstance");
         ssb.AppendLine("{");
