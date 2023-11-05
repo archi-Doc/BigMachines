@@ -257,6 +257,11 @@ public abstract partial class Machine
     public BigMachineBase BigMachine => this.Control.BigMachine;
 
     /// <summary>
+    /// Gets <see cref="System.Threading.CancellationToken"/> of the <see cref="BigMachineBase"/>.
+    /// </summary>
+    public CancellationToken CancellationToken => this.Control.BigMachine.CancellationToken;
+
+    /// <summary>
     /// Gets an instance of <see cref="MachineControl"/>.
     /// </summary>
     public virtual MachineControl Control => default!;

@@ -46,6 +46,11 @@ public abstract partial class BigMachineBase : IBigMachine
 
     BigMachineCore IBigMachine.Core => this.core;
 
+    /// <summary>
+    /// Gets <see cref="System.Threading.CancellationToken"/> of the <see cref="BigMachineBase"/>.
+    /// </summary>
+    public CancellationToken CancellationToken => this.core.CancellationToken;
+
     DateTime IBigMachine.LastRun => this.lastRun;
 
     // RecursiveDetectionMode IBigMachine.RecursiveDetectionMode { get; set; }
