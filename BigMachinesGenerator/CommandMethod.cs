@@ -158,7 +158,7 @@ public class CommandMethod
                 ssb.AppendLine("var locked = 0;");
                 ssb.AppendLine("try {");
                 ssb.IncrementIndent();
-                ssb.AppendLine($"locked = ((IBigMachine)this.machine.BigMachine).CheckRecursive(this.machine.machineSerial, ((ulong)this.machine.machineSerial << 32) | {(uint)FarmHash.Hash64(this.Method.FullName)});");
+                ssb.AppendLine($"locked = ((IBigMachine)this.machine.BigMachine).CheckRecursive(this.machine.__machineSerial__, ((ulong)this.machine.__machineSerial__ << 32) | {(uint)FarmHash.Hash64(this.Method.FullName)});");
                 if (this.WithLock)
                 {
                     ssb.AppendLine("if (locked > 0) await this.machine.Semaphore.EnterAsync().ConfigureAwait(false);");
@@ -177,11 +177,11 @@ public class CommandMethod
 
             if (this.ResponseObject is null)
             {
-                ssb.AppendLine("if (this.machine.operationalState == OperationalFlag.Terminated) return CommandResult.Terminated;");
+                ssb.AppendLine("if (this.machine.__operationalState__ == OperationalFlag.Terminated) return CommandResult.Terminated;");
             }
             else
             {
-                ssb.AppendLine("if (this.machine.operationalState == OperationalFlag.Terminated) return new(CommandResult.Terminated, default);");
+                ssb.AppendLine("if (this.machine.__operationalState__ == OperationalFlag.Terminated) return new(CommandResult.Terminated, default);");
             }
 
             if (this.ReturnTask)

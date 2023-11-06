@@ -26,10 +26,10 @@ public class BigMachinesBody : VisceralBody<BigMachinesObject>
     public const string StateIdentifier = "State";
     public const string InterfaceIdentifier = "Interface";
     public const string CreateInterfaceIdentifier = "CreateInterface";
-    public const string InternalRunIdentifier = "InternalRun";
+    public const string InternalRunIdentifier = "__InternalRun__";
     public const string ChangeState = "ChangeState";
     public const string GetCurrentState = "GetCurrentState";
-    public const string InternalChangeState = "InternalChangeState";
+    public const string InternalChangeState = "__InternalChangeState__";
     public const string InternalCommand = "InternalCommand";
     public const string IntInitState = "IntInitState";
     public const string RegisterBM = "RegisterBM";

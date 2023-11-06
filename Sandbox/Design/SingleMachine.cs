@@ -31,10 +31,10 @@ internal partial class SingleMachine : Machine
     {
         get
         {
-            if (this.interfaceInstance is not Interface obj)
+            if (this.__interfaceInstance__ is not Interface obj)
             {
                 obj = new(this);
-                this.interfaceInstance = obj;
+                this.__interfaceInstance__ = obj;
             }
 
             return obj;
@@ -65,7 +65,7 @@ internal partial class SingleMachine : Machine
                 await this.machine.Semaphore.EnterAsync().ConfigureAwait(false);
                 try
                 {
-                    if (this.machine.operationalState == OperationalFlag.Terminated)
+                    if (this.machine.__operationalState__ == OperationalFlag.Terminated)
                     {
                         return CommandResult.Terminated;
                     }
