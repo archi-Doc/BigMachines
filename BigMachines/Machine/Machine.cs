@@ -11,6 +11,7 @@ using Tinyhand.IO;
 
 #pragma warning disable SA1202
 #pragma warning disable SA1401 // Fields should be private
+#pragma warning disable SA1300 // Element should begin with upper-case letter
 #pragma warning disable SA1309 // Field names should not begin with underscore
 
 namespace BigMachines;
@@ -430,7 +431,7 @@ RerunLoop:
 
         try
         {
-            result = await this.InternalRun(new(runType)).ConfigureAwait(false);
+            result = await this.__InternalRun__(new(runType)).ConfigureAwait(false);
         }
         catch (Exception ex)
         {
@@ -476,7 +477,7 @@ RerunLoop:
     /// </summary>
     /// <param name="parameter">StateParameter.</param>
     /// <returns>StateResult.</returns>
-    protected virtual Task<StateResult> InternalRun(StateParameter parameter)
+    protected virtual Task<StateResult> __InternalRun__(StateParameter parameter)
     {// Called: Machine.RunMachine()
         return Task.FromResult(StateResult.Terminate);
     }
@@ -487,7 +488,7 @@ RerunLoop:
     /// <param name="state">The next state.</param>
     /// <param name="rerun">The machine wll re-run if <paramref name="rerun"/> is <see langword="true"/>, and the machine state is changed.</param>
     /// <returns><see langword="true"/>: State changed. <see langword="false"/>: Not changed (same state or denied). </returns>
-    protected virtual ChangeStateResult InternalChangeState(int state, bool rerun)
+    protected virtual ChangeStateResult __InternalChangeState__(int state, bool rerun)
         => ChangeStateResult.Terminated;
 
     /// <summary>

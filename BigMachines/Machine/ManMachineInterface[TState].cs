@@ -54,7 +54,7 @@ public partial class Machine
                 }
                 else
                 {
-                    result = this.Machine.InternalChangeState(i, false);
+                    result = this.Machine.__InternalChangeState__(i, false);
                 }
             }
 
