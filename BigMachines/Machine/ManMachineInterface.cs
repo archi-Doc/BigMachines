@@ -76,28 +76,22 @@ public partial class Machine
         }
 
         /// <summary>
-        /// Indicates whether the machine is running (in state methods).
+        /// Gets a value indicating whether the machine is running (in state methods).
         /// </summary>
         /// <returns><see langword="true"/>: The machine is running (in state methods).</returns>
-        public bool IsRunning()
-            => this.Machine.__operationalState__.HasFlag(OperationalFlag.Running) &&
-            !this.Machine.__operationalState__.HasFlag(OperationalFlag.Terminated);
+        public bool IsRunning => this.IsRunning;
 
         /// <summary>
-        /// Indicates whether the machine is active (in state methods or waiting to execute).
+        /// Gets a value indicating whether the machine is active (in state methods or waiting to execute).
         /// </summary>
         /// <returns><see langword="true"/>: The machine is active (in state methods or waiting to execute).</returns>
-        public bool IsActive()
-            => !this.Machine.__operationalState__.HasFlag(OperationalFlag.Terminated) &&
-            (this.Machine.__operationalState__.HasFlag(OperationalFlag.Running) ||
-            (this.Machine.DefaultTimeout is TimeSpan ts && ts > TimeSpan.Zero));
+        public bool IsActive => this.Machine.IsActive;
 
         /// <summary>
-        /// Indicates whether the machine is terminated.
+        /// Gets a value indicating whether the machine is terminated.
         /// </summary>
         /// <returns><see langword="true"/>: The machine is terminated.</returns>
-        public bool IsTerminated()
-            => this.Machine.__operationalState__.HasFlag(OperationalFlag.Terminated);
+        public bool IsTerminated => this.Machine.IsTerminated;
 
         public TimeSpan GetTimeUntilRun()
             => this.Machine.TimeUntilRun;

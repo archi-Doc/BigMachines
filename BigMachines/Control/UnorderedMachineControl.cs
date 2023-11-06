@@ -81,6 +81,22 @@ public sealed partial class UnorderedMachineControl<TIdentifier, TMachine, TInte
         }
     }
 
+    public override bool CheckActiveMachine()
+    {
+        lock (this.items.SyncObject)
+        {
+            foreach (var x in this.items)
+            {
+                if (x.Machine.IsActive)
+                {
+                    return true;
+                }
+            }
+        }
+
+        return false;
+    }
+
     public override TInterface[] GetArray()
     {
         lock (this.items.SyncObject)

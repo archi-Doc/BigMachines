@@ -5,6 +5,7 @@ using System.Collections.Concurrent;
 using System.Threading;
 using Arc.Threading;
 using BigMachines.Control;
+using FastExpressionCompiler;
 
 #pragma warning disable SA1202
 
@@ -62,6 +63,27 @@ public abstract partial class BigMachineBase : IBigMachine
     private ConcurrentQueue<BigMachineException> exceptionQueue = new();
 
     #endregion
+
+    bool IBigMachine.CheckActiveMachine(Type? machineTypeToBeExcluded)
+    {
+        foreach (var x in this.GetArray())
+        {
+            if (x.CheckActiveMachine())
+            {
+                if (x.MachineInformation.MachineType != machineTypeToBeExcluded)
+                {
+                    return true;
+                }
+            }
+        }
+
+        if (((IBigMachine)this).GetExceptionCount() > 0)
+        {// Remaining exceptions.
+            return true;
+        }
+
+        return false;
+    }
 
     int IBigMachine.CheckRecursive(uint machineSerial, ulong id)
     {

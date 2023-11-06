@@ -29,7 +29,11 @@ public interface IBigMachine
     /// </summary>
     public DateTime LastRun { get; }
 
-    // public MachineControl[] GetControls();
+    /// <summary>
+    /// Check if there are any machines currently active.
+    /// </summary>
+    /// <returns><see langword="true"/>; Active machines are present.</returns>
+    public bool CheckActiveMachine(Type? machineTypeToBeExcluded = null);
 
     /// <summary>
     /// Gets the number of exceptions queued.

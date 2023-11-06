@@ -110,6 +110,22 @@ public sealed partial class SequentialMachineControl<TIdentifier, TMachine, TInt
         }
     }
 
+    public override bool CheckActiveMachine()
+    {
+        lock (this.items.SyncObject)
+        {
+            foreach (var x in this.items)
+            {
+                if (x.Machine.IsActive)
+                {
+                    return true;
+                }
+            }
+        }
+
+        return false;
+    }
+
     public override TIdentifier[] GetIdentifiers()
     {
         lock (this.items.SyncObject)

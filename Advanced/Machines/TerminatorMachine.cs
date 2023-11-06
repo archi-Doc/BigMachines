@@ -13,9 +13,11 @@ public partial class TerminatorMachine : Machine
     [StateMethod(0)]
     protected StateResult Initial(StateParameter parameter)
     {
-        /*if (this.BigMachine.Continuous.GetInfo(true).Length > 0)
+        /*if (!((IBigMachine)this.BigMachine).CheckActiveMachine(typeof(TerminatorMachine)))
         {
-            return StateResult.Continue;
+            Console.WriteLine("Terminate2 (no machine)");
+            ThreadCore.Root.Terminate(); // Terminate the application thread.
+            return StateResult.Terminate;
         }*/
 
         foreach (var x in this.BigMachine.GetArray())
@@ -24,7 +26,7 @@ public partial class TerminatorMachine : Machine
             {
                 foreach (var y in x.GetArray())
                 {
-                    if (y.IsActive() == true)
+                    if (y.IsActive == true)
                     {
                         return StateResult.Continue;
                     }
