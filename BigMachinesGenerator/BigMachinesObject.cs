@@ -730,24 +730,24 @@ ModuleInitializerClass_Added:
 
         if (controlType is not null)
         {
-            ssb.AppendLine($"public {this.OverrideOrNew} {controlType} Control => ({controlType})this.control;");
+            ssb.AppendLine($"public {this.OverrideOrNew} {controlType} MachineControl => ({controlType})this.__machineControl__;");
         }
 
-        ssb.AppendLine($"public override ManMachineInterface InterfaceInstance => (Interface)(this.interfaceInstance ??= new Interface(this));");
+        ssb.AppendLine($"public override ManMachineInterface InterfaceInstance => (Interface)(this.__interfaceInstance__ ??= new Interface(this));");
 
         // ssb.AppendLine($"public override ManMachineInterface CreateInterface() => new Interface(this);");
 
         /*if (this.FullName == "Advanced.DerivedMachine")
         {
-            ssb.AppendLine($"public override Advanced.IntermittentMachine.Interface InterfaceInstance => (Interface)(this.interfaceInstance ??= new Advanced.DerivedMachine.Interface(this));");
-            // ssb.AppendLine($"public new Interface InterfaceInstance => (Interface)(this.interfaceInstance ??= new Advanced.DerivedMachine.Interface(this));");
+            ssb.AppendLine($"public override Advanced.IntermittentMachine.Interface InterfaceInstance => (Interface)(this.__interfaceInstance__ ??= new Advanced.DerivedMachine.Interface(this));");
+            // ssb.AppendLine($"public new Interface InterfaceInstance => (Interface)(this.__interfaceInstance__ ??= new Advanced.DerivedMachine.Interface(this));");
         }
         else
         {
-            ssb.AppendLine($"public {this.OverrideOrNew} Interface InterfaceInstance => (Interface)(this.interfaceInstance ??= new Interface(this));");
+            ssb.AppendLine($"public {this.OverrideOrNew} Interface InterfaceInstance => (Interface)(this.__interfaceInstance__ ??= new Interface(this));");
         }*/
 
-        // ssb.AppendLine($"public {this.OverrideOrNew} Interface InterfaceInstance => (Interface)(this.interfaceInstance ??= this.CreateInterface());");
+        // ssb.AppendLine($"public {this.OverrideOrNew} Interface InterfaceInstance => (Interface)(this.__interfaceInstance__ ??= this.CreateInterface());");
 
         /*ssb.AppendLine("public override ManMachineInterface InterfaceInstance");
         ssb.AppendLine("{");
@@ -757,12 +757,12 @@ ModuleInitializerClass_Added:
         ssb.AppendLine("{");
         ssb.IncrementIndent();
 
-        ssb.AppendLine("if (this.interfaceInstance is not Interface obj)");
+        ssb.AppendLine("if (this.__interfaceInstance__ is not Interface obj)");
         ssb.AppendLine("{");
         ssb.IncrementIndent();
 
         ssb.AppendLine("obj = new(this);");
-        ssb.AppendLine("this.interfaceInstance = obj;");
+        ssb.AppendLine("this.__interfaceInstance__ = obj;");
 
         ssb.DecrementIndent();
         ssb.AppendLine("}");
@@ -845,7 +845,7 @@ ModuleInitializerClass_Added:
 
         using (var scope = ssb.ScopeBrace($"protected override Task<StateResult> {BigMachinesBody.InternalRunIdentifier}(StateParameter parameter)"))
         {
-            ssb.AppendLine($"var state = Unsafe.As<int, {this.StateName}>(ref this.internalMachineState);");
+            ssb.AppendLine($"var state = Unsafe.As<int, {this.StateName}>(ref this.__machineState__);");
             ssb.AppendLine("return state switch");
             ssb.AppendLine("{");
             ssb.IncrementIndent();
@@ -881,13 +881,13 @@ ModuleInitializerClass_Added:
 
         using (var scope = ssb.ScopeBrace($"protected override ChangeStateResult {BigMachinesBody.InternalChangeState}(int state, bool rerun)"))
         {
-            using (var scopeElse = ssb.ScopeBrace("if (this.internalMachineState == state)"))
+            using (var scopeElse = ssb.ScopeBrace("if (this.__machineState__ == state)"))
             {
                 ssb.AppendLine("return ChangeStateResult.Success;");
             }
 
             ssb.AppendLine();
-            ssb.AppendLine($"var current = Unsafe.As<int, {this.StateName}>(ref this.internalMachineState);");
+            ssb.AppendLine($"var current = Unsafe.As<int, {this.StateName}>(ref this.__machineState__);");
             ssb.AppendLine("bool canExit = current switch");
             ssb.AppendLine("{");
             ssb.IncrementIndent();
@@ -940,7 +940,7 @@ ModuleInitializerClass_Added:
                 ssb.AppendLine($"this.MachineState = state;");
                 using (var scope3 = ssb.ScopeBrace("if (rerun)"))
                 {
-                    ssb.AppendLine($"this.requestRerun = true;");
+                    ssb.AppendLine($"this.__requestRerun__ = true;");
                 }
 
                 ssb.AppendLine();
@@ -950,7 +950,7 @@ ModuleInitializerClass_Added:
 
         ssb.AppendLine();
         ssb.AppendLine($"protected ChangeStateResult ChangeState({this.StateName} state, bool rerun = false) => this.{BigMachinesBody.InternalChangeState}(Unsafe.As<{this.StateName}, int>(ref state), rerun);");
-        ssb.AppendLine($"protected {this.NewIfDerived}{this.StateName} GetState() => Unsafe.As<int, {this.StateName}>(ref this.internalMachineState);");
+        ssb.AppendLine($"protected {this.NewIfDerived}{this.StateName} GetState() => Unsafe.As<int, {this.StateName}>(ref this.__machineState__);");
         ssb.AppendLine();
     }
 

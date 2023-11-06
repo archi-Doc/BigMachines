@@ -27,19 +27,19 @@ public partial class Machine
         /// </summary>
         /// <returns>The operational state of the machine.</returns>
         public OperationalFlag GetOperationalState()
-            => this.Machine.operationalState;
+            => this.Machine.__operationalState__;
 
         public bool TerminateMachine()
         {
             using (this.Machine.Semaphore.Lock())
             {
-                if (this.Machine.operationalState.HasFlag(OperationalFlag.Terminated))
+                if (this.Machine.__operationalState__.HasFlag(OperationalFlag.Terminated))
                 {
                     return false;
                 }
 
                 this.Machine.OnTermination();
-                this.Machine.operationalState |= OperationalFlag.Terminated;
+                this.Machine.__operationalState__ |= OperationalFlag.Terminated;
             }
 
             return this.Machine.RemoveFromControl();
@@ -49,12 +49,12 @@ public partial class Machine
         {
             using (this.Machine.Semaphore.Lock())
             {
-                if (this.Machine.operationalState == OperationalFlag.Terminated)
+                if (this.Machine.__operationalState__ == OperationalFlag.Terminated)
                 {
                     return false;
                 }
 
-                this.Machine.operationalState |= OperationalFlag.Paused;
+                this.Machine.__operationalState__ |= OperationalFlag.Paused;
             }
 
             return true;
@@ -64,12 +64,12 @@ public partial class Machine
         {
             using (this.Machine.Semaphore.Lock())
             {
-                if (this.Machine.operationalState == OperationalFlag.Terminated)
+                if (this.Machine.__operationalState__ == OperationalFlag.Terminated)
                 {
                     return false;
                 }
 
-                this.Machine.operationalState &= ~OperationalFlag.Paused;
+                this.Machine.__operationalState__ &= ~OperationalFlag.Paused;
             }
 
             return true;
@@ -80,16 +80,16 @@ public partial class Machine
         /// </summary>
         /// <returns><see langword="true"/>: The machine is running (in state methods).</returns>
         public bool IsRunning()
-            => this.Machine.operationalState.HasFlag(OperationalFlag.Running) &&
-            !this.Machine.operationalState.HasFlag(OperationalFlag.Terminated);
+            => this.Machine.__operationalState__.HasFlag(OperationalFlag.Running) &&
+            !this.Machine.__operationalState__.HasFlag(OperationalFlag.Terminated);
 
         /// <summary>
         /// Indicates whether the machine is active (in state methods or waiting to execute).
         /// </summary>
         /// <returns><see langword="true"/>: The machine is active (in state methods or waiting to execute).</returns>
         public bool IsActive()
-            => !this.Machine.operationalState.HasFlag(OperationalFlag.Terminated) &&
-            (this.Machine.operationalState.HasFlag(OperationalFlag.Running) ||
+            => !this.Machine.__operationalState__.HasFlag(OperationalFlag.Terminated) &&
+            (this.Machine.__operationalState__.HasFlag(OperationalFlag.Running) ||
             (this.Machine.DefaultTimeout is TimeSpan ts && ts > TimeSpan.Zero));
 
         /// <summary>
@@ -97,7 +97,7 @@ public partial class Machine
         /// </summary>
         /// <returns><see langword="true"/>: The machine is terminated.</returns>
         public bool IsTerminated()
-            => this.Machine.operationalState.HasFlag(OperationalFlag.Terminated);
+            => this.Machine.__operationalState__.HasFlag(OperationalFlag.Terminated);
 
         public TimeSpan GetTimeUntilRun()
             => this.Machine.TimeUntilRun;
@@ -189,7 +189,7 @@ public partial class Machine
             {
                 if (await this.Machine.RunMachine(RunType.Manual, DateTime.UtcNow).ConfigureAwait(false) == StateResult.Terminate)
                 {
-                    this.Machine.operationalState |= OperationalFlag.Terminated;
+                    this.Machine.__operationalState__ |= OperationalFlag.Terminated;
                     this.Machine.OnTermination();
                 }
             }
@@ -197,7 +197,7 @@ public partial class Machine
             {
                 this.Machine.Semaphore.Exit();
 
-                if (this.Machine.operationalState.HasFlag(OperationalFlag.Terminated))
+                if (this.Machine.__operationalState__.HasFlag(OperationalFlag.Terminated))
                 {
                     this.Machine.RemoveFromControl();
                 }

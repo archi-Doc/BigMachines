@@ -63,17 +63,17 @@ internal partial class TestMachine : Machine<int>
     {
         get
         {
-            if (this.interfaceInstance is not Interface obj)
+            if (this.__interfaceInstance__ is not Interface obj)
             {
                 obj = new(this);
-                this.interfaceInstance = obj;
+                this.__interfaceInstance__ = obj;
             }
 
             return obj;
         }
     }*/
 
-    public override UnorderedMachineControl<int, TestMachine, Interface> Control => (UnorderedMachineControl<int, TestMachine, Interface>)this.control;
+    public override UnorderedMachineControl<int, TestMachine, Interface> MachineControl => (UnorderedMachineControl<int, TestMachine, Interface>)this.__machineControl__;
 
     public class Interface : ManMachineInterface<int, State>
     {// int: this.IdentifierObject!.FullName, State
@@ -100,7 +100,7 @@ internal partial class TestMachine : Machine<int>
                 await this.machine.Semaphore.EnterAsync().ConfigureAwait(false);
                 try
                 {
-                    if (this.machine.operationalState == OperationalFlag.Terminated)
+                    if (this.machine.__operationalState__ == OperationalFlag.Terminated)
                     {
                         return CommandResult.Terminated;
                     }
@@ -118,7 +118,7 @@ internal partial class TestMachine : Machine<int>
                 await this.machine.Semaphore.EnterAsync().ConfigureAwait(false);
                 try
                 {
-                    if (this.machine.operationalState == OperationalFlag.Terminated)
+                    if (this.machine.__operationalState__ == OperationalFlag.Terminated)
                     {
                         return new CommandResult<int>(CommandResult.Terminated, default);
                     }
@@ -133,7 +133,7 @@ internal partial class TestMachine : Machine<int>
 
             public async Task<CommandResult> Command3()
             {
-                if (this.machine.operationalState == OperationalFlag.Terminated)
+                if (this.machine.__operationalState__ == OperationalFlag.Terminated)
                 {
                     return CommandResult.Terminated;
                 }
