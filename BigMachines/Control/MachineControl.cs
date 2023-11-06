@@ -33,6 +33,12 @@ public abstract class MachineControl
 
     public abstract Machine.ManMachineInterface[] GetArray();
 
+    /// <summary>
+    /// Check if there are any machines currently active.
+    /// </summary>
+    /// <returns><see langword="true"/>; Active machines are present.</returns>
+    public abstract bool CheckActiveMachine();
+
     internal abstract Machine[] GetMachines();
 
     internal abstract bool RemoveMachine(Machine machine);

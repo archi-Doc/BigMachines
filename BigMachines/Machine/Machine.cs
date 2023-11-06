@@ -272,9 +272,16 @@ public abstract partial class Machine
 
     internal OperationalFlag OperationalState => this.__operationalState__;
 
-    internal long InternalTimeUntilRun => this.__timeUntilRun__;
+    internal bool IsActive =>
+        !this.__operationalState__.HasFlag(OperationalFlag.Terminated) &&
+        (this.__operationalState__.HasFlag(OperationalFlag.Running) || (this.DefaultTimeout is TimeSpan ts && ts > TimeSpan.Zero));
 
-    internal long InternalLifespan => this.__lifespan__;
+    internal bool IsRunning =>
+        this.__operationalState__.HasFlag(OperationalFlag.Running) &&
+        !this.__operationalState__.HasFlag(OperationalFlag.Terminated);
+
+    internal bool IsTerminated
+            => this.__operationalState__.HasFlag(OperationalFlag.Terminated);
 
     protected readonly SemaphoreLock Semaphore = new();
 

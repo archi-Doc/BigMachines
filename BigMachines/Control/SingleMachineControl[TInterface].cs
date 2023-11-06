@@ -54,6 +54,16 @@ public partial class SingleMachineControl<TMachine, TInterface> : MachineControl
     public override int Count
         => this.machine is null ? 0 : 1;
 
+    public override bool CheckActiveMachine()
+    {
+        if (this.machine?.IsActive == true)
+        {
+            return true;
+        }
+
+        return false;
+    }
+
     public override Machine.ManMachineInterface[] GetArray()
     {
         if (this.machine?.InterfaceInstance is { } obj)
