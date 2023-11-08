@@ -21,6 +21,8 @@ public abstract partial class BigMachineBase : IBigMachine
         this.core = new(this);
     }
 
+    public ManualMachineControl ManualControl { get; } = new();
+
     public abstract MachineControl[] GetArray();
 
     #region Core

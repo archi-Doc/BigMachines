@@ -136,18 +136,6 @@ public sealed partial class UnorderedMachineControl<TIdentifier, TMachine, TInte
 
     internal override void Process(DateTime now, TimeSpan elapsed)
     {
-        /*if (this.MachineInformation.Continuous)
-        {// Omit continuous machines
-            return;
-        }
-        else if (x is ISequentialMachineControl sequential)
-        {
-            if (sequential.GetFirst() is { } obj)
-            {
-                obj.Machine.Process(now, elapsed);
-            }
-        }*/
-
         lock (this.items.SyncObject)
         {
             foreach (var x in this.items)

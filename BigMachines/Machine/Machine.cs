@@ -44,10 +44,7 @@ public abstract partial class Machine
             this.__timeUntilRun__ = 0;
         }
 
-        /*if (information.Continuous)
-        {// tempcode
-            // this.Continuous.AddMachine(machine);
-        }*/
+        this.OnPreparation();
     }
 
     internal void PrepareAndCreate(MachineControl control, object? createParam)
@@ -191,7 +188,7 @@ public abstract partial class Machine
     /// When it reaches 0, the machine will terminate.
     /// </summary>
     [Key(5)]
-    private long __lifespan__ = long.MaxValue; // TimeSpan.Ticks (for interlocked)
+    protected long __lifespan__ = long.MaxValue; // TimeSpan.Ticks (for interlocked)
 
     [IgnoreMember]
     protected TimeSpan Lifespan
@@ -466,10 +463,6 @@ RerunLoop:
     private bool RemoveFromControl()
     {
         var result = this.MachineControl?.RemoveMachine(this) == true;
-        /*if (this.Info.Continuous)
-        {
-            this.BigMachine.Continuous.RemoveMachine(this);
-        }*/
 
         if (this is IDisposable disposable)
         {
@@ -498,9 +491,13 @@ RerunLoop:
     protected virtual ChangeStateResult __InternalChangeState__(int state, bool rerun)
         => ChangeStateResult.Terminated;
 
+    protected virtual void OnPreparation()
+    {
+    }
+
     /// <summary>
     /// Called when the machine is created.<br/>
-    ///  This code is inside a semaphore lock.
+    /// <see cref="OnCreation(object?)"/> -> <see cref="OnTermination"/>.
     /// </summary>
     /// <param name="createParam">The parameters used when creating a machine.</param>
     protected virtual void OnCreation(object? createParam)

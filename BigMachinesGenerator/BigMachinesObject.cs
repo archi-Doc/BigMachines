@@ -962,8 +962,7 @@ ModuleInitializerClass_Added:
         }
 
         using (var scope = ssb.ScopeBrace($"public static {this.NewIfDerived}void RegisterBM()"))
-        {// public record MachineInformation(Type MachineType, Func<Machine>? Constructor, bool Serializable, Type? IdentifierType, bool Continuous)
-            // var machineId = $"{this.ObjectAttribute.MachineId.ToString()}u";
+        {// MachineInformation
             var machineType = $"typeof({this.FullName})";
             var constructor = this.UseServiceProvider ? "null" : $"() => new {this.LocalName}()";
             var serializable = this.TinyhandAttribute is not null ? "true" : "false";

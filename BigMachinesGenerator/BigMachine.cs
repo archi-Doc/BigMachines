@@ -290,7 +290,7 @@ internal class BigMachine : IEquatable<BigMachine>
         using (var scopeMethod = ssb.ScopeBrace($"public {this.SimpleName}()"))
         {
             var sb = new StringBuilder();
-            sb.Append("this.controls = new MachineControl[] { ");
+            sb.Append("this.controls = new MachineControl[] { this.ManualControl, ");
 
             foreach (var x in this.Machines.Values)
             {

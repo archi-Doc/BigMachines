@@ -112,19 +112,6 @@ public sealed class MachineObjectAttribute : Attribute
     /// This is only effective when the machine is managed by <see cref="SequentialMachineControl{TIdentifier, TMachine, TInterface}"/>.
     /// </summary>
     public int NumberOfTasks { get; set; } = 0;
-
-    /*
-    /// <summary>
-    /// Gets the identifier for the Machine.<br/>
-    /// You can set a random number, but it needs to be unique.<br/>
-    /// If you specify 0, the hash of the class name is used.
-    /// </summary>
-    public uint MachineId { get; }*/
-
-    /// <summary>
-    /// Gets or sets a value indicating whether or not the machine is continuous machine (runs continuously and uses one thread).
-    /// </summary>
-    public bool Continuous { get; set; }
 }
 
 #pragma warning disable SA1629
