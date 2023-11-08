@@ -147,7 +147,7 @@ public sealed partial class ManualMachineControl : MachineControl // , ITinyhand
                     return default;
                 }
 
-                machine.PrepareAndCreate(this, createParam);
+                machine.PrepareCreateStart(this, createParam);
                 this.typeToMachine.TryAdd(typeof(TMachine), machine);
             }
 
@@ -163,7 +163,7 @@ public sealed partial class ManualMachineControl : MachineControl // , ITinyhand
             if (!this.typeToMachine.TryGetValue(typeof(TMachine), out var machine))
             {
                 machine = MachineRegistry.CreateMachine<TMachine>();
-                machine.PrepareAndCreate(this, createParam);
+                machine.PrepareCreateStart(this, createParam);
                 this.typeToMachine.TryAdd(typeof(TMachine), machine);
             }
 

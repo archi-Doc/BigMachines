@@ -30,7 +30,7 @@ public abstract partial class Machine
         this.__machineSerial__ = Interlocked.Increment(ref serialNumber);
     }
 
-    internal void Prepare(MachineControl control)
+    private void Prepare(MachineControl control)
     {// Deserialize
         this.__machineControl__ = control;
         if (this is IStructualObject obj &&
@@ -43,14 +43,19 @@ public abstract partial class Machine
         {
             this.__timeUntilRun__ = 0;
         }
-
-        this.OnPreparation();
     }
 
-    internal void PrepareAndCreate(MachineControl control, object? createParam)
+    internal void PrepareStart(MachineControl control)
+    {// Deserialize
+        this.Prepare(control);
+        this.OnStart();
+    }
+
+    internal void PrepareCreateStart(MachineControl control, object? createParam)
     {// Create machine
         this.Prepare(control);
-        this.OnCreation(createParam);
+        this.OnCreate(createParam);
+        this.OnStart();
     }
 
     #region Keys
@@ -368,7 +373,7 @@ public abstract partial class Machine
                 if (this.TryRun(now) == StateResult.Terminate)
                 {
                     this.__operationalState__ |= OperationalFlag.Terminated;
-                    this.OnTermination();
+                    this.OnTerminate();
                 }
             }
             finally
@@ -491,24 +496,31 @@ RerunLoop:
     protected virtual ChangeStateResult __InternalChangeState__(int state, bool rerun)
         => ChangeStateResult.Terminated;
 
-    protected virtual void OnPreparation()
+    /// <summary>
+    /// Called when the machine is newly created.<br/>
+    /// Note that it is not called after deserialization.<br/>
+    /// <see cref="OnCreate(object?)"/> -> <see cref="OnStart()"/> -> <see cref="OnTerminate"/>.
+    /// </summary>
+    /// <param name="createParam">The parameters used when creating a machine.</param>
+    protected virtual void OnCreate(object? createParam)
     {
     }
 
     /// <summary>
-    /// Called when the machine is created.<br/>
-    /// <see cref="OnCreation(object?)"/> -> <see cref="OnTermination"/>.
+    /// Called when the machine is ready to start<br/>
+    /// Note that it is called before the actual state method.<br/>
+    /// <see cref="OnCreate(object?)"/> -> <see cref="OnStart()"/> -> <see cref="OnTerminate"/>.
     /// </summary>
-    /// <param name="createParam">The parameters used when creating a machine.</param>
-    protected virtual void OnCreation(object? createParam)
+    protected virtual void OnStart()
     {
     }
 
     /// <summary>
     /// Called when the machine is terminating.<br/>
-    ///  This code is inside a semaphore lock.
+    ///  This code is inside a semaphore lock.<br/>
+    ///  <see cref="OnCreate(object?)"/> -> <see cref="OnStart()"/> -> <see cref="OnTerminate"/>.
     /// </summary>
-    protected virtual void OnTermination()
+    protected virtual void OnTerminate()
     {
     }
 

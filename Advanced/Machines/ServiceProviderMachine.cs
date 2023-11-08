@@ -24,7 +24,7 @@ public partial class ServiceProviderMachine : Machine<int>
         this.Lifespan = TimeSpan.FromSeconds(3);
     }
 
-    protected override void OnCreation(object? createParam)
+    protected override void OnCreate(object? createParam)
     {// Receives the parameter at the time of creation. Note that it is not called during deserialization.
         this.Text = (string?)createParam;
     }

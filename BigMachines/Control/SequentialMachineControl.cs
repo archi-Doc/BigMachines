@@ -242,7 +242,7 @@ public sealed partial class SequentialMachineControl<TIdentifier, TMachine, TInt
             {
                 var machine = MachineRegistry.CreateMachine<TMachine>(this.MachineInformation);
                 machine.Identifier = identifier;
-                machine.PrepareAndCreate(this, createParam);
+                machine.PrepareCreateStart(this, createParam);
                 item = new(identifier, machine);
                 item.Goshujin = this.items;
                 this.PulseCore();
@@ -260,7 +260,7 @@ public sealed partial class SequentialMachineControl<TIdentifier, TMachine, TInt
             {
                 var machine = MachineRegistry.CreateMachine<TMachine>(this.MachineInformation);
                 machine.Identifier = identifier;
-                machine.PrepareAndCreate(this, createParam);
+                machine.PrepareCreateStart(this, createParam);
                 item = new(identifier, machine);
                 item.Goshujin = this.items;
                 this.PulseCore();
@@ -335,7 +335,7 @@ public sealed partial class SequentialMachineControl<TIdentifier, TMachine, TInt
         value.items = TinyhandSerializer.DeserializeObject<Item.GoshujinClass>(ref reader, options) ?? new();
         foreach (var x in value.items)
         {
-            x.Machine.Prepare(value);
+            x.Machine.PrepareStart(value);
         }
     }
 

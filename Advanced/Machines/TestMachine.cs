@@ -101,7 +101,7 @@ public partial class TestMachine : Machine<int> // Inherit Machine<TIdentifier> 
         return CommandResult.Success;
     }
 
-    protected override void OnTermination()
+    protected override void OnTerminate()
     {
         Console.WriteLine($"TestMachine {this.Identifier}: Terminated");
 

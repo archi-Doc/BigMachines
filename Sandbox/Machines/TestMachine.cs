@@ -101,7 +101,7 @@ public partial class ParentClass
         protected CommandResult<int> Command1(int x)
             => new(CommandResult.Success, x + 2);
 
-        protected override void OnTermination()
+        protected override void OnTerminate()
         {
             Console.WriteLine($"Tiny machine: Terminated");
             ThreadCore.Root.Terminate();

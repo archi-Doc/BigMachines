@@ -62,7 +62,7 @@ public class Program
         // TestMachine.Test(bigMachine);
         // await PassiveMachine.Test(bigMachine);
         // IntermittentMachine.Test(bigMachine);
-        // SequentialMachine.Test(bigMachine);
+        SequentialMachine.Test(bigMachine);
         // ContinuousMachine.Test(bigMachine);
 
         // DerivedMachine.Test2(bigMachine);
@@ -72,7 +72,7 @@ public class Program
         // SingleMachine.Test(bigMachine);
         // ServiceProviderMachine.Test(bigMachine);
         // ExternalMachineTest.Test(bigMachine);
-        ParentMachine.Test(bigMachine);
+        // ParentMachine.Test(bigMachine);
 
         // var bin = TinyhandSerializer.Serialize(bigMachine);
         // var bigMachine2 = TinyhandSerializer.Deserialize<BigMachine>(bin);

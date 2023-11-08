@@ -38,7 +38,7 @@ public partial class Machine
                     return false;
                 }
 
-                this.Machine.OnTermination();
+                this.Machine.OnTerminate();
                 this.Machine.__operationalState__ |= OperationalFlag.Terminated;
             }
 
@@ -184,7 +184,7 @@ public partial class Machine
                 if (await this.Machine.RunMachine(RunType.Manual, DateTime.UtcNow).ConfigureAwait(false) == StateResult.Terminate)
                 {
                     this.Machine.__operationalState__ |= OperationalFlag.Terminated;
-                    this.Machine.OnTermination();
+                    this.Machine.OnTerminate();
                 }
             }
             finally

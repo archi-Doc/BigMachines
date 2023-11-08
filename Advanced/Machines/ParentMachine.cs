@@ -65,7 +65,7 @@ public partial class ParentMachine : Machine
         this.DefaultTimeout = TimeSpan.FromSeconds(1);
     }
 
-    protected override void OnPreparation()
+    protected override void OnStart()
     {
         var machine = this.BigMachine.ManualControl.GetOrCreate<ChildMachine>();
         var machine2 = this.BigMachine.ManualControl.GetOrCreate<NestedMachine>();

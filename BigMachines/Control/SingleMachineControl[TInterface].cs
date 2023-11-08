@@ -40,7 +40,7 @@ public partial class SingleMachineControl<TMachine, TInterface> : MachineControl
             if (this.machine is not { } obj)
             {
                 obj = MachineRegistry.CreateMachine<TMachine>(this.MachineInformation);
-                obj.Prepare(this);
+                obj.PrepareStart(this);
                 this.machine = obj;
             }
 
@@ -124,7 +124,7 @@ public partial class SingleMachineControl<TMachine, TInterface> : MachineControl
     {
         value ??= new();
         value.machine = TinyhandSerializer.Deserialize<TMachine>(ref reader, options);
-        value.machine?.Prepare(value);
+        value.machine?.PrepareStart(value);
 
         /*value ??= new();
         if (value.BigMachine is not null &&

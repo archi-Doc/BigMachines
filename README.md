@@ -359,6 +359,44 @@ var builder = new CrystalControl.Builder()
 
 ## Other
 
+### Virtual methods
+
+These are virtual functions of `Machine` class.
+
+You can override and use them when necessary.
+
+```csharp
+/// <summary>
+/// Called when the machine is newly created.<br/>
+/// Note that it is not called after deserialization.<br/>
+/// <see cref="OnCreate(object?)"/> -> <see cref="OnStart()"/> -> <see cref="OnTerminate"/>.
+/// </summary>
+/// <param name="createParam">The parameters used when creating a machine.</param>
+protected virtual void OnCreate(object? createParam)
+{
+}
+
+/// <summary>
+/// Called when the machine is ready to start<br/>
+/// Note that it is called before the actual state method.<br/>
+/// <see cref="OnCreate(object?)"/> -> <see cref="OnStart()"/> -> <see cref="OnTerminate"/>.
+/// </summary>
+protected virtual void OnStart()
+{
+}
+
+/// <summary>
+/// Called when the machine is terminating.<br/>
+///  This code is inside a semaphore lock.<br/>
+///  <see cref="OnCreate(object?)"/> -> <see cref="OnStart()"/> -> <see cref="OnTerminate"/>.
+/// </summary>
+protected virtual void OnTerminate()
+{
+}
+```
+
+
+
 ### Service provider
 
 Since the machine is independent, you cannot pass parameters directly when creating an instance (and mainly for the deserialization process).

@@ -30,7 +30,7 @@ public partial class GenericMachine<TData> : Machine<int>
         return StateResult.Continue;
     }
 
-    protected override void OnCreation(object? createParam)
+    protected override void OnCreate(object? createParam)
     {
         this.Data = (TData)createParam!;
     }
@@ -63,7 +63,7 @@ public partial class GenericMachine2<TData> : Machine<TData>
         return StateResult.Continue;
     }
 
-    protected override void OnCreation(object? createParam)
+    protected override void OnCreate(object? createParam)
     {
         this.Data = (TData)createParam!;
     }
