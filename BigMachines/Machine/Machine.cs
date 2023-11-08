@@ -253,17 +253,17 @@ public abstract partial class Machine
     /// <summary>
     /// Gets an instance of <see cref="BigMachineBase"/>.
     /// </summary>
-    public BigMachineBase BigMachine => this.MachineControl.BigMachine;
+    public BigMachineBase BigMachine => ((MachineControl)this.__machineControl__).BigMachine;
 
     /// <summary>
     /// Gets <see cref="System.Threading.CancellationToken"/> of the <see cref="BigMachineBase"/>.
     /// </summary>
-    public CancellationToken CancellationToken => this.MachineControl.BigMachine.CancellationToken;
+    public CancellationToken CancellationToken => this.BigMachine.CancellationToken;
 
     /// <summary>
     /// Gets an instance of <see cref="Control.MachineControl"/>.
     /// </summary>
-    public virtual MachineControl MachineControl => default!;
+    public virtual MachineControl? MachineControl => default!;
 
     public virtual ManMachineInterface InterfaceInstance => default!;
 
@@ -462,7 +462,7 @@ RerunLoop:
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     private bool RemoveFromControl()
     {
-        var result = this.MachineControl?.RemoveMachine(this) == true;
+        var result = (this.__machineControl__ as MachineControl)?.RemoveMachine(this) == true;
 
         if (this is IDisposable disposable)
         {

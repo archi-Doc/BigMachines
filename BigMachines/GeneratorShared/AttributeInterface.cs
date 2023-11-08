@@ -112,6 +112,12 @@ public sealed class MachineObjectAttribute : Attribute
     /// This is only effective when the machine is managed by <see cref="SequentialMachineControl{TIdentifier, TMachine, TInterface}"/>.
     /// </summary>
     public int NumberOfTasks { get; set; } = 0;
+
+    /// <summary>
+    /// Gets or sets a value indicating whether the machine is private [default is <see langword="false"/>].<br/>
+    /// Private machines are not automatically registered with BigMachine.
+    /// </summary>
+    public bool Private { get; set; } = false;
 }
 
 #pragma warning disable SA1629

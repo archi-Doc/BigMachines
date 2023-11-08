@@ -401,6 +401,12 @@ public class BigMachinesObject : VisceralObjectBase<BigMachinesObject>
             }
         }
 
+        /*if (this.ContainingObject is not null &&
+            this.ObjectAttribute is not null)
+        {
+            this.ObjectAttribute.Private = true;
+        }*/
+
         /*var id = this.ObjectAttribute!.MachineId;
         if (this.Body.Machines.ContainsKey(id))
         {
@@ -622,7 +628,8 @@ ModuleInitializerClass_Added:
 
                 if (x.Generics_Kind != VisceralGenericsKind.OpenGeneric)
                 {// Register fixed types.
-                    ssb.AppendLine($"{x.FullName}.RegisterBM();"); // {x.ObjectAttribute.MachineId}
+                    // ssb.AppendLine($"{x.FullName}.RegisterBM();"); // {x.ObjectAttribute.MachineId}
+                    x.Generate_RegisterBM(ssb, info, false);
                 }
             }
 
@@ -678,7 +685,10 @@ ModuleInitializerClass_Added:
         this.Generate_Interface(ssb, info);
         this.Generate_InternalRun(ssb, info);
         this.Generate_ChangeStateInternal(ssb, info);
-        this.Generate_RegisterBM(ssb, info);
+        if (this.Generics_Kind == VisceralGenericsKind.OpenGeneric)
+        {
+            this.Generate_RegisterBM(ssb, info, true);
+        }
 
         return;
     }
@@ -730,7 +740,9 @@ ModuleInitializerClass_Added:
 
         if (controlType is not null)
         {
-            ssb.AppendLine($"public {this.OverrideOrNew} {controlType} MachineControl => ({controlType})this.__machineControl__;");
+            // ssb.AppendLine($"public override MachineControl MachineControl => ({controlType})this.__machineControl__;");
+            // ssb.AppendLine($"public {this.OverrideOrNew} {controlType} MachineControl => ({controlType})this.__machineControl__;");
+            ssb.AppendLine($"public {this.OverrideOrNew} {controlType}? MachineControl => this.__machineControl__ as {controlType};");
         }
 
         ssb.AppendLine($"public override ManMachineInterface InterfaceInstance => (Interface)(this.__interfaceInstance__ ??= new Interface(this));");
@@ -954,22 +966,24 @@ ModuleInitializerClass_Added:
         ssb.AppendLine();
     }
 
-    internal void Generate_RegisterBM(ScopingStringBuilder ssb, GeneratorInformation info)
+    internal void Generate_RegisterBM(ScopingStringBuilder ssb, GeneratorInformation info, bool method)
     {
         if (this.MachineObject == null || this.ObjectAttribute == null)
         {
             return;
         }
 
-        using (var scope = ssb.ScopeBrace($"public static {this.NewIfDerived}void RegisterBM()"))
-        {// MachineInformation
-            var machineType = $"typeof({this.FullName})";
-            var constructor = this.UseServiceProvider ? "null" : $"() => new {this.LocalName}()";
-            var serializable = this.TinyhandAttribute is not null ? "true" : "false";
-            var identifierType = this.IdentifierObject is not null ? $"typeof({this.IdentifierObject.FullName})" : "null";
-            var numberOfTasks = this.ObjectAttribute.NumberOfTasks;
-            ssb.AppendLine($"MachineRegistry.Register(new({machineType}, {constructor}, {serializable}, {identifierType}, {numberOfTasks}));");
-        }
+        ScopingStringBuilder.IScope? scope = method ? ssb.ScopeBrace($"public static {this.NewIfDerived}void RegisterBM()") : null;
+
+        // MachineInformation
+        var machineType = $"typeof({this.FullName})";
+        var constructor = this.UseServiceProvider ? "null" : $"() => new {this.FullName}()";
+        var serializable = this.TinyhandAttribute is not null ? "true" : "false";
+        var identifierType = this.IdentifierObject is not null ? $"typeof({this.IdentifierObject.FullName})" : "null";
+        var numberOfTasks = this.ObjectAttribute.NumberOfTasks;
+        ssb.AppendLine($"MachineRegistry.Register(new({machineType}, {constructor}, {serializable}, {identifierType}, {numberOfTasks}));");
+
+        scope?.Dispose();
     }
 
     internal string[] Method_ParameterNames()

@@ -125,6 +125,10 @@ public class BigMachinesBody : VisceralBody<BigMachinesObject>
         id: "BMG020", title: "Excpliti default constructor", messageFormat: "Default constructor cannot be explicitly defined, since it's created by the source generator",
         category: "BigMachinesGenerator", DiagnosticSeverity.Error, isEnabledByDefault: true);
 
+    public static readonly DiagnosticDescriptor Warning_InternalMachine = new DiagnosticDescriptor(
+        id: "BMG021", title: "Excpliti default constructor", messageFormat: "Default constructor cannot be explicitly defined, since it's created by the source generator",
+        category: "BigMachinesGenerator", DiagnosticSeverity.Warning, isEnabledByDefault: true);
+
     public BigMachinesBody(GeneratorExecutionContext context)
         : base(context)
     {

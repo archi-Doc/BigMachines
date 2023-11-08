@@ -1,8 +1,12 @@
 ﻿// Copyright (c) All contributors. All rights reserved. Licensed under the MIT license.
 
+using System.Runtime.CompilerServices;
 using BigMachines.Control;
 using Tinyhand;
 using Tinyhand.IO;
+
+#pragma warning disable SA1309 // Field names should not begin with underscore
+#pragma warning disable SA1401
 
 namespace BigMachines;
 
@@ -17,17 +21,28 @@ public abstract partial class Machine<TIdentifier> : Machine
 {
     public Machine()
     {
-        this.Identifier = default!;
+        this.__identifier__ = default!;
     }
 
     /// <summary>
     /// Gets an instance of <see cref="MultiMachineControl{TIdentifier}"/>.
     /// </summary>
-    public override MultiMachineControl<TIdentifier> MachineControl { get; } = default!;
+    public override MultiMachineControl<TIdentifier>? MachineControl { get; } = default!;
 
     /// <summary>
-    /// Gets or sets the identifier.
+    /// Gets the identifier.
     /// </summary>
     [Key(0, IgnoreKeyReservation = true)]
-    public TIdentifier Identifier { get; internal protected set; }
+    protected TIdentifier __identifier__;
+
+    [IgnoreMember]
+    protected internal TIdentifier Identifier
+    {
+        get => this.__identifier__;
+        internal set => this.__identifier__ = value;
+    }
+
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    internal void SetIdentifier(TIdentifier identifier)
+        => this.__identifier__ = identifier;
 }
