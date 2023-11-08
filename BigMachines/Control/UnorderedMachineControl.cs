@@ -136,18 +136,6 @@ public sealed partial class UnorderedMachineControl<TIdentifier, TMachine, TInte
 
     internal override void Process(DateTime now, TimeSpan elapsed)
     {
-        /*if (this.MachineInformation.Continuous)
-        {// Omit continuous machines
-            return;
-        }
-        else if (x is ISequentialMachineControl sequential)
-        {
-            if (sequential.GetFirst() is { } obj)
-            {
-                obj.Machine.Process(now, elapsed);
-            }
-        }*/
-
         lock (this.items.SyncObject)
         {
             foreach (var x in this.items)
@@ -188,7 +176,7 @@ public sealed partial class UnorderedMachineControl<TIdentifier, TMachine, TInte
             {
                 var machine = MachineRegistry.CreateMachine<TMachine>(this.MachineInformation);
                 machine.Identifier = identifier;
-                machine.PrepareAndCreate(this, createParam);
+                machine.PrepareCreateStart(this, createParam);
                 item = new(identifier, machine);
                 item.Goshujin = this.items;
             }
@@ -205,7 +193,7 @@ public sealed partial class UnorderedMachineControl<TIdentifier, TMachine, TInte
             {
                 var machine = MachineRegistry.CreateMachine<TMachine>(this.MachineInformation);
                 machine.Identifier = identifier;
-                machine.PrepareAndCreate(this, createParam);
+                machine.PrepareCreateStart(this, createParam);
                 item = new(identifier, machine);
                 item.Goshujin = this.items;
             }
@@ -240,7 +228,7 @@ public sealed partial class UnorderedMachineControl<TIdentifier, TMachine, TInte
         value.items = TinyhandSerializer.DeserializeObject<Item.GoshujinClass>(ref reader, options) ?? new();
         foreach (var x in value.items)
         {
-            x.Machine.Prepare(value);
+            x.Machine.PrepareStart(value);
         }
     }
 

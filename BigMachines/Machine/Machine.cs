@@ -30,7 +30,7 @@ public abstract partial class Machine
         this.__machineSerial__ = Interlocked.Increment(ref serialNumber);
     }
 
-    internal void Prepare(MachineControl control)
+    private void Prepare(MachineControl control)
     {// Deserialize
         this.__machineControl__ = control;
         if (this is IStructualObject obj &&
@@ -43,17 +43,19 @@ public abstract partial class Machine
         {
             this.__timeUntilRun__ = 0;
         }
-
-        /*if (information.Continuous)
-        {// tempcode
-            // this.Continuous.AddMachine(machine);
-        }*/
     }
 
-    internal void PrepareAndCreate(MachineControl control, object? createParam)
+    internal void PrepareStart(MachineControl control)
+    {// Deserialize
+        this.Prepare(control);
+        this.OnStart();
+    }
+
+    internal void PrepareCreateStart(MachineControl control, object? createParam)
     {// Create machine
         this.Prepare(control);
-        this.OnCreation(createParam);
+        this.OnCreate(createParam);
+        this.OnStart();
     }
 
     #region Keys
@@ -191,7 +193,7 @@ public abstract partial class Machine
     /// When it reaches 0, the machine will terminate.
     /// </summary>
     [Key(5)]
-    private long __lifespan__ = long.MaxValue; // TimeSpan.Ticks (for interlocked)
+    protected long __lifespan__ = long.MaxValue; // TimeSpan.Ticks (for interlocked)
 
     [IgnoreMember]
     protected TimeSpan Lifespan
@@ -256,17 +258,17 @@ public abstract partial class Machine
     /// <summary>
     /// Gets an instance of <see cref="BigMachineBase"/>.
     /// </summary>
-    public BigMachineBase BigMachine => this.MachineControl.BigMachine;
+    public BigMachineBase BigMachine => ((MachineControl)this.__machineControl__).BigMachine;
 
     /// <summary>
     /// Gets <see cref="System.Threading.CancellationToken"/> of the <see cref="BigMachineBase"/>.
     /// </summary>
-    public CancellationToken CancellationToken => this.MachineControl.BigMachine.CancellationToken;
+    public CancellationToken CancellationToken => this.BigMachine.CancellationToken;
 
     /// <summary>
     /// Gets an instance of <see cref="Control.MachineControl"/>.
     /// </summary>
-    public virtual MachineControl MachineControl => default!;
+    public virtual MachineControl? MachineControl => default!;
 
     public virtual ManMachineInterface InterfaceInstance => default!;
 
@@ -371,7 +373,7 @@ public abstract partial class Machine
                 if (this.TryRun(now) == StateResult.Terminate)
                 {
                     this.__operationalState__ |= OperationalFlag.Terminated;
-                    this.OnTermination();
+                    this.OnTerminate();
                 }
             }
             finally
@@ -465,11 +467,7 @@ RerunLoop:
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     private bool RemoveFromControl()
     {
-        var result = this.MachineControl?.RemoveMachine(this) == true;
-        /*if (this.Info.Continuous)
-        {
-            this.BigMachine.Continuous.RemoveMachine(this);
-        }*/
+        var result = (this.__machineControl__ as MachineControl)?.RemoveMachine(this) == true;
 
         if (this is IDisposable disposable)
         {
@@ -499,19 +497,30 @@ RerunLoop:
         => ChangeStateResult.Terminated;
 
     /// <summary>
-    /// Called when the machine is created.<br/>
-    ///  This code is inside a semaphore lock.
+    /// Called when the machine is newly created.<br/>
+    /// Note that it is not called after deserialization.<br/>
+    /// <see cref="OnCreate(object?)"/> -> <see cref="OnStart()"/> -> <see cref="OnTerminate"/>.
     /// </summary>
     /// <param name="createParam">The parameters used when creating a machine.</param>
-    protected virtual void OnCreation(object? createParam)
+    protected virtual void OnCreate(object? createParam)
+    {
+    }
+
+    /// <summary>
+    /// Called when the machine is ready to start<br/>
+    /// Note that it is called before the actual state method.<br/>
+    /// <see cref="OnCreate(object?)"/> -> <see cref="OnStart()"/> -> <see cref="OnTerminate"/>.
+    /// </summary>
+    protected virtual void OnStart()
     {
     }
 
     /// <summary>
     /// Called when the machine is terminating.<br/>
-    ///  This code is inside a semaphore lock.
+    ///  This code is inside a semaphore lock.<br/>
+    ///  <see cref="OnCreate(object?)"/> -> <see cref="OnStart()"/> -> <see cref="OnTerminate"/>.
     /// </summary>
-    protected virtual void OnTermination()
+    protected virtual void OnTerminate()
     {
     }
 

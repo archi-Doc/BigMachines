@@ -51,9 +51,6 @@ public partial class BigMachineBase
                     elapsed = default;
                 }
 
-                // tempcode
-                // bigMachine.Continuous.Process();
-
                 foreach (var x in controls)
                 {
                     x.Process(now, elapsed);

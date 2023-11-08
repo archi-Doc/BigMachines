@@ -113,18 +113,11 @@ public sealed class MachineObjectAttribute : Attribute
     /// </summary>
     public int NumberOfTasks { get; set; } = 0;
 
-    /*
     /// <summary>
-    /// Gets the identifier for the Machine.<br/>
-    /// You can set a random number, but it needs to be unique.<br/>
-    /// If you specify 0, the hash of the class name is used.
+    /// Gets or sets a value indicating whether the machine is private [default is <see langword="false"/>].<br/>
+    /// Private machines are not automatically registered with BigMachine.
     /// </summary>
-    public uint MachineId { get; }*/
-
-    /// <summary>
-    /// Gets or sets a value indicating whether or not the machine is continuous machine (runs continuously and uses one thread).
-    /// </summary>
-    public bool Continuous { get; set; }
+    public bool Private { get; set; } = false;
 }
 
 #pragma warning disable SA1629

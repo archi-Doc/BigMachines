@@ -40,6 +40,13 @@ public static class MachineRegistry
         return typeToInformation.TryGetValue(typeof(TMachine), out information);
     }
 
+    public static TMachine CreateMachine<TMachine>()
+        where TMachine : Machine
+    {
+        var information = Get<TMachine>();
+        return CreateMachine<TMachine>(information);
+    }
+
     public static TMachine CreateMachine<TMachine>(MachineInformation information)
         where TMachine : Machine
     {

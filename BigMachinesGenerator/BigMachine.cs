@@ -138,7 +138,7 @@ internal class BigMachine : IEquatable<BigMachine>
 
         if (this.Inclusive)
         {// Inclusive big machine
-            var array = this.Body.FullNameToObject.Values.Where(x => x.ObjectFlag.HasFlag(BigMachinesObjectFlag.MachineObject)).ToArray();
+            var array = this.Body.FullNameToObject.Values.Where(x => x.ObjectFlag.HasFlag(BigMachinesObjectFlag.MachineObject) && x.ObjectAttribute?.Private == false).ToArray();
             foreach (var x in array)
             {
                 this.AddedMachines[x] = null;
@@ -290,7 +290,7 @@ internal class BigMachine : IEquatable<BigMachine>
         using (var scopeMethod = ssb.ScopeBrace($"public {this.SimpleName}()"))
         {
             var sb = new StringBuilder();
-            sb.Append("this.controls = new MachineControl[] { ");
+            sb.Append("this.controls = new MachineControl[] { this.ManualControl, ");
 
             foreach (var x in this.Machines.Values)
             {
@@ -318,7 +318,7 @@ internal class BigMachine : IEquatable<BigMachine>
         foreach (var x in this.Machines.Values)
         {
             ssb.AppendLine($"private {x.ControlType} _{x.Name};");
-            ssb.AppendLine($"public {x.ControlType} {x.Name} => this._{x.Name};");
+            ssb.AppendLine($"{x.MachineObject.AccessibilityName} {x.ControlType} {x.Name} => this._{x.Name};");
         }
     }
 

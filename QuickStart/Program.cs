@@ -46,7 +46,7 @@ public partial class FirstMachine : Machine<int> // Inherit Machine class. The t
         return CommandResult.Success;
     }
 
-    protected override void OnTermination()
+    protected override void OnTerminate()
     {
         Console.WriteLine($"FirstMachine {this.Identifier}: Terminated");
         ThreadCore.Root.Terminate(); // Send a termination signal to the root.
