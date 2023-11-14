@@ -8,4 +8,4 @@ namespace Advanced;
 [AddMachine<GenericMachine<string>>] // Add the generic machine manually as its type needs to be specified.
 [AddMachine<ExternalMachine.Machine1>] // You can also reference external machines.
 [AddMachine<ChildMachine>]
-public partial class BigMachine { }
+public partial class BigMachine;

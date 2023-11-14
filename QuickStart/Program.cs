@@ -11,7 +11,7 @@ namespace QuickStart;
 // In particular, define an empty partial class, add a BigMachineObject attribute, and then add AddMachine attributes for the Machine you want to include.
 [BigMachineObject]
 [AddMachine<FirstMachine>]
-public partial class BigMachine { }
+public partial class BigMachine;
 
 [MachineObject] // Add a MachineObject attribute.
 public partial class FirstMachine : Machine<int> // Inherit Machine class. The type of an identifier is int.
