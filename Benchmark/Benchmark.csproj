@@ -2,14 +2,14 @@
 
   <PropertyGroup>
     <OutputType>Exe</OutputType>
-    <TargetFramework>net7.0</TargetFramework>
+    <TargetFramework>net8.0</TargetFramework>
     <GenerateDocumentationFile>true</GenerateDocumentationFile>
   </PropertyGroup>
 
   <ItemGroup>
-    <PackageReference Include="Arc.Collections" Version="1.7.1" />
+    <PackageReference Include="Arc.Collections" Version="1.8.0" />
     <PackageReference Include="BenchmarkDotNet" Version="0.13.10" />
-    <PackageReference Include="Tinyhand" Version="0.69.1" />
+    <PackageReference Include="Tinyhand" Version="0.70.0" />
   </ItemGroup>
 
   <ItemGroup>
