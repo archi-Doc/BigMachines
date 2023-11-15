@@ -32,6 +32,7 @@ public interface IBigMachine
     /// <summary>
     /// Check if there are any machines currently active.
     /// </summary>
+    /// <param name="machineTypeToBeExcluded">The type of the machine to be excluded.</param>
     /// <returns><see langword="true"/>; Active machines are present.</returns>
     public bool CheckActiveMachine(Type? machineTypeToBeExcluded = null);
 
