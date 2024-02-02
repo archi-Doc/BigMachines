@@ -60,7 +60,7 @@ public sealed class BigMachineObjectAttribute : Attribute
 /// <typeparam name="TMachine">The type of the machine.</typeparam>
 [AttributeUsage(AttributeTargets.Class, AllowMultiple = true, Inherited = false)]
 public sealed class AddMachineAttribute<TMachine> : Attribute
-where TMachine : Machine
+    where TMachine : Machine
 {
     public AddMachineAttribute()
     {
