@@ -2624,7 +2624,7 @@ public abstract class VisceralObjectBase<T> : IComparable<T>
                     var builder = ImmutableArray.CreateBuilder<string>();
                     foreach (var x in ms.Parameters)
                     {
-                        builder.Add(this.Body.SymbolToFullName(x.Type));
+                        builder.Add(this.Body.SymbolToFullName(x.Type, true));
                     }
 
                     this.methodParameters = builder.ToImmutable();
