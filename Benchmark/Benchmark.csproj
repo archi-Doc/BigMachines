@@ -7,9 +7,9 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <PackageReference Include="Arc.Collections" Version="1.13.2" />
+    <PackageReference Include="Arc.Collections" Version="1.14.1" />
     <PackageReference Include="BenchmarkDotNet" Version="0.13.12" />
-    <PackageReference Include="Tinyhand" Version="0.71.1" />
+    <PackageReference Include="Tinyhand" Version="0.71.2" />
   </ItemGroup>
 
   <ItemGroup>
