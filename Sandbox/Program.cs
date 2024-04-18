@@ -56,7 +56,7 @@ class Program
 
         var tinyControl = bigMachine.TinyMachine;
         var machine = tinyControl.Get();
-        var result = await bigMachine.TinyMachine.Get().Command.Command1(10);
+        // var result = await bigMachine.TinyMachine.Get().Command.Command1(10);
 
         await ThreadCore.Root.WaitForTerminationAsync(-1); // Wait for the termination infinitely.
 

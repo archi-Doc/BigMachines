@@ -88,6 +88,7 @@ public partial class ParentClass
         [StateMethod(0)]
         public StateResult Initial(StateParameter parameter)
         {
+            Console.WriteLine(this.TimeUntilRun.ToString());
             Console.WriteLine($"Tiny machine: {this.count++}");
             if (this.count > 4)
             {
