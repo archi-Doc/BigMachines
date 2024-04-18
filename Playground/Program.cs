@@ -4,6 +4,7 @@ using Arc.Threading;
 using Arc.Unit;
 using BigMachines;
 using Microsoft.Extensions.DependencyInjection;
+using Playground;
 using Tinyhand;
 
 namespace Sandbox;
@@ -30,41 +31,23 @@ class Program
         var builder2 = new UnitBuilder();
         builder2.Configure(context =>
         {
-            context.AddSingleton<BigMachines.SingleMachine>();
-            context.AddSingleton<BigMachines.TestMachine>();
+            context.AddSingleton<TinyMachine>();
         });
 
         var unit2 = builder2.Build();
         TinyhandSerializer.ServiceProvider = unit2.Context.ServiceProvider;
 
-        // MachineRegistry.Register(new(0, typeof(BigMachines.SingleMachine), typeof(SingleMachineControl<,>)) { Serializable = true, });
-        // MachineRegistry.Register(new(1, typeof(BigMachines.TestMachine), typeof(UnorderedMachineControl<,,>)) { Constructor = () => new BigMachines.TestMachine(), IdentifierType = typeof(int), Serializable = true, });
-
-        /*var testBigMachine = new TestBigMachine();
-        var m = testBigMachine.TestMachines.GetOrCreate(1);
-        m = testBigMachine.TestMachines.GetOrCreate(1);
-        m.PauseMachine();
-        m.UnpauseMachine();
-        var m2 = testBigMachine.SingleMachine.Get();
-        var bin = TinyhandSerializer.Serialize(testBigMachine);
-        var testBigMachine2 = TinyhandSerializer.Deserialize<TestBigMachine>(bin);*/
-
-        Console.WriteLine("BigMachines Sandbox");
+        Console.WriteLine("BigMachines Playground");
 
         var bigMachine = new BigMachine();
         bigMachine.Start(ThreadCore.Root);
 
         var tinyControl = bigMachine.TinyMachine;
         var machine = tinyControl.Get();
-        var result = await bigMachine.TinyMachine.Get().Command.Command1(10);
 
         await ThreadCore.Root.WaitForTerminationAsync(-1); // Wait for the termination infinitely.
 
         ThreadCore.Root.TerminationEvent.Set(); // The termination process is complete (#1).
         Console.WriteLine("Terminated.");
     }
-
-    /*public static void Test1(BigMachine<int> bigMachine)
-    {
-    }*/
 }
