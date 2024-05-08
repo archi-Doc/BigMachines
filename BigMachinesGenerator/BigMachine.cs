@@ -275,7 +275,7 @@ internal class BigMachine : IEquatable<BigMachine>
         {
             foreach (var x in this.Machines.Values.Where(a => a.MachineObject.ObjectAttribute?.StartByDefault == true && a.MachineObject.ObjectAttribute.Control == MachineControlKind.Single))
             {
-                ssb.AppendLine($"this.{x.Name}.Get();");
+                ssb.AppendLine($"this.{x.Name}.GetOrCreate();");
             }
 
             foreach (var x in this.Machines.Values.Where(a => a.MachineObject.ObjectAttribute?.Control == MachineControlKind.Sequential))

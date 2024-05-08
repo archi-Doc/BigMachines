@@ -57,7 +57,7 @@ public partial class ParentMachine : Machine
 
     public static void Test(BigMachine bigMachine)
     {
-        bigMachine.ParentMachine.Get(); // Only one machine is created.
+        bigMachine.ParentMachine.GetOrCreate(); // Only one machine is created.
     }
 
     public ParentMachine()
