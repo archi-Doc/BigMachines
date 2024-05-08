@@ -43,7 +43,7 @@ class Program
         bigMachine.Start(ThreadCore.Root);
 
         var tinyControl = bigMachine.TinyMachine;
-        var machine = tinyControl.Get();
+        var machine = tinyControl.GetOrCreate();
 
         await ThreadCore.Root.WaitForTerminationAsync(-1); // Wait for the termination infinitely.
 

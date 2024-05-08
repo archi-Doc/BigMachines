@@ -7,7 +7,7 @@ public partial class SingleMachine : Machine
 {// A machine without an identifier is derived from the Machine class.
     public static void Test(BigMachine bigMachine)
     {
-        bigMachine.SingleMachine.Get(); // Only one machine is created.
+        bigMachine.SingleMachine.GetOrCreate(); // Only one machine is created.
     }
 
     public SingleMachine()

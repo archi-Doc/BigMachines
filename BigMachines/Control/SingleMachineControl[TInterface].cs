@@ -33,7 +33,7 @@ public partial class SingleMachineControl<TMachine, TInterface> : MachineControl
 
     private TMachine? machine;
 
-    private TMachine Machine
+    /*private TMachine Machine
     {
         get
         {
@@ -46,10 +46,13 @@ public partial class SingleMachineControl<TMachine, TInterface> : MachineControl
 
             return obj;
         }
-    }
+    }*/
 
-    public TInterface Get()
-        => (TInterface)this.Machine.InterfaceInstance;
+    public TInterface GetOrCreate(object? createParam = null)
+        => (TInterface)this.GetOrCreateMachine(createParam).InterfaceInstance;
+
+    public TInterface GetOrCreate()
+        => (TInterface)this.GetOrCreateMachine().InterfaceInstance;
 
     public override int Count
         => this.machine is null ? 0 : 1;
@@ -106,9 +109,33 @@ public partial class SingleMachineControl<TMachine, TInterface> : MachineControl
         this.machine?.Process(now, elapsed);
     }
 
+    private TMachine GetOrCreateMachine(object? createParam)
+    {
+        if (this.machine is null)
+        {
+            var machine = MachineRegistry.CreateMachine<TMachine>(this.MachineInformation);
+            machine.PrepareCreateStart(this, createParam);
+            this.machine = machine;
+        }
+
+        return this.machine;
+    }
+
+    private TMachine GetOrCreateMachine()
+    {
+        if (this.machine is null)
+        {
+            var machine = MachineRegistry.CreateMachine<TMachine>(this.MachineInformation);
+            machine.PrepareStart(this);
+            this.machine = machine;
+        }
+
+        return this.machine;
+    }
+
     static void ITinyhandSerialize<SingleMachineControl<TMachine, TInterface>>.Serialize(ref TinyhandWriter writer, scoped ref SingleMachineControl<TMachine, TInterface>? value, TinyhandSerializerOptions options)
     {
-        TinyhandSerializer.Serialize(ref writer, value?.Machine, options);
+        TinyhandSerializer.Serialize(ref writer, value?.GetOrCreateMachine().InterfaceInstance, options);
 
         /*if (value?.machine is ITinyhandSerialize obj)
         {
@@ -141,7 +168,7 @@ public partial class SingleMachineControl<TMachine, TInterface> : MachineControl
 
     bool ITinyhandCustomJournal.ReadCustomRecord(ref TinyhandReader reader)
     {
-        if (this.Machine is IStructualObject obj)
+        if (this.GetOrCreateMachine() is IStructualObject obj)
         {
             return obj.ReadRecord(ref reader);
         }

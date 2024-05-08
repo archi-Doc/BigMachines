@@ -6,6 +6,6 @@ public static class ExternalMachineTest
 {
     public static void Test(BigMachine bigMachine)
     {
-        bigMachine.Machine1.Get(); // Only one machine is created.
+        bigMachine.Machine1.GetOrCreate(); // Only one machine is created.
     }
 }
