@@ -88,7 +88,7 @@ public abstract partial class Machine
                 writer.Write(1);
                 writer.Write_Value();
                 writer.Write(value);
-                root.AddJournal(writer);
+                root.AddJournal(ref writer);
             }
 
             this.__machineState__ = value;
@@ -119,7 +119,7 @@ public abstract partial class Machine
                 writer.Write(2);
                 writer.Write_Value();
                 writer.Write(value.Ticks);
-                root.AddJournal(writer);
+                root.AddJournal(ref writer);
             }
 
             this.__timeUntilRun__ = value.Ticks;
@@ -150,7 +150,7 @@ public abstract partial class Machine
                 writer.Write(3);
                 writer.Write_Value();
                 writer.Write(value);
-                root.AddJournal(writer);
+                root.AddJournal(ref writer);
             }
 
             this.__lastRunTime__ = value;
@@ -181,7 +181,7 @@ public abstract partial class Machine
                 writer.Write(4);
                 writer.Write_Value();
                 writer.Write(value);
-                root.AddJournal(writer);
+                root.AddJournal(ref writer);
             }
 
             this.__nextRunTime__ = value;
@@ -213,7 +213,7 @@ public abstract partial class Machine
                 writer.Write(5);
                 writer.Write_Value();
                 writer.Write(value.Ticks);
-                root.AddJournal(writer);
+                root.AddJournal(ref writer);
             }
 
             this.__lifespan__ = value.Ticks;
@@ -244,7 +244,7 @@ public abstract partial class Machine
                 writer.Write(6);
                 writer.Write_Value();
                 writer.Write(value);
-                root.AddJournal(writer);
+                root.AddJournal(ref writer);
             }
 
             this.__terminationTime__ = value;
