@@ -16,6 +16,28 @@ namespace Arc.Visceral;
 
 public static class VisceralHelper
 {
+    public static object? GetValue(int constructorIndex, string? name, object?[] constructorArguments, KeyValuePair<string, object?>[] namedArguments)
+    {
+        if (constructorIndex >= 0 && constructorIndex < constructorArguments.Length)
+        {// Constructor Argument.
+            return constructorArguments[constructorIndex];
+        }
+        else if (name != null)
+        {// Named Argument.
+            var pair = namedArguments.FirstOrDefault(x => x.Key == name);
+            if (pair.Equals(default(KeyValuePair<string, object?>)))
+            {
+                return null;
+            }
+
+            return pair.Value;
+        }
+        else
+        {
+            return null;
+        }
+    }
+
     public static IEnumerable<TSource> MinBy<TSource, TValue>(this IEnumerable<TSource> source, Func<TSource, TValue> selector)
     {
         return SelectBy(source, selector, (a, b) => Comparer<TValue>.Default.Compare(a, b) < 0);
