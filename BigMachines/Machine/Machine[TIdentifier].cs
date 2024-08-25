@@ -15,7 +15,7 @@ namespace BigMachines;
 /// <see cref="Machine{TIdentifier}"/> = <see cref="Machine"/>+<typeparamref name="TIdentifier"/>.
 /// </summary>
 /// <typeparam name="TIdentifier">The type of an identifier.</typeparam>
-[TinyhandObject(ReservedKeys = Machine.ReservedKeyNumber)]
+[TinyhandObject(ReservedKeyCount = Machine.ReservedKeyCount)]
 public abstract partial class Machine<TIdentifier> : Machine
     where TIdentifier : notnull
 {

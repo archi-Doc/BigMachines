@@ -19,10 +19,10 @@ namespace BigMachines;
 /// <summary>
 /// Represents an abstract class that serves as the base for the actual machine class.
 /// </summary>
-[TinyhandObject(ReservedKeys = ReservedKeyNumber)]
+[TinyhandObject(ReservedKeyCount = ReservedKeyCount)]
 public abstract partial class Machine
 {
-    internal const int ReservedKeyNumber = 9;
+    internal const int ReservedKeyCount = 9;
     private static uint serialNumber;
 
     public Machine()
