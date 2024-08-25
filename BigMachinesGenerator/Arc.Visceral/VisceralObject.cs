@@ -1301,6 +1301,70 @@ public abstract class VisceralObjectBase<T> : IComparable<T>
         }
     }
 
+    private ImmutableArray<T> interfaceObjects;
+
+    public ImmutableArray<T> InterfaceObjects
+    {
+        get
+        {
+            if (this.interfaceObjects.IsDefault)
+            {
+                if (this.IsSystem)
+                {
+                    this.interfaceObjects = ImmutableArray<T>.Empty;
+                }
+                else
+                if (this.symbol is ITypeSymbol typeSymbol)
+                {
+                    var builder = ImmutableArray.CreateBuilder<T>();
+                    if (typeSymbol.BaseType is INamedTypeSymbol baseType &&
+                        baseType.TypeKind == TypeKind.Error &&
+                        baseType.ToString() == "INotifyPropertyChanged")
+                    {
+                        if (this.Body.Add(baseType) is { } obj)
+                        {
+                            builder.Add(obj);
+                        }
+                    }
+
+                    foreach (var x in typeSymbol.Interfaces)
+                    {
+                        if (this.Body.Add(x) is { } obj)
+                        {
+                            builder.Add(obj);
+                        }
+                    }
+
+                    this.interfaceObjects = builder.ToImmutable();
+                }
+                else if (this.type != null)
+                {
+                    var builder = ImmutableArray.CreateBuilder<T>();
+                    foreach (var x in this.type.GetInterfaces())
+                    {
+                        if (this.Body.Add(x) is { } obj)
+                        {
+                            builder.Add(obj);
+                        }
+                    }
+
+                    this.interfaceObjects = builder.ToImmutable();
+                }
+                else
+                {
+                    this.interfaceObjects = ImmutableArray<T>.Empty;
+                }
+            }
+
+            return this.interfaceObjects;
+        }
+
+        protected set
+        {
+            this.interfaceObjects = value;
+        }
+    }
+
     private ImmutableArray<T> allInterfaceObjects;
 
     public ImmutableArray<T> AllInterfaceObjects

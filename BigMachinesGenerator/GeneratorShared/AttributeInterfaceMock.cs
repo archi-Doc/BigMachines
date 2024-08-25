@@ -3,6 +3,7 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using Arc.Visceral;
 using Microsoft.CodeAnalysis;
 
 #pragma warning disable SA1602
@@ -15,31 +16,6 @@ public enum MachineControlKind
     Single,
     Unordered,
     Sequential,
-}
-
-public static class AttributeHelper
-{
-    public static object? GetValue(int constructorIndex, string? name, object?[] constructorArguments, KeyValuePair<string, object?>[] namedArguments)
-    {
-        if (constructorIndex >= 0 && constructorIndex < constructorArguments.Length)
-        {// Constructor Argument.
-            return constructorArguments[constructorIndex];
-        }
-        else if (name != null)
-        {// Named Argument.
-            var pair = namedArguments.FirstOrDefault(x => x.Key == name);
-            if (pair.Equals(default(KeyValuePair<string, object?>)))
-            {
-                return null;
-            }
-
-            return pair.Value;
-        }
-        else
-        {
-            return null;
-        }
-    }
 }
 
 [AttributeUsage(AttributeTargets.Class, AllowMultiple = false, Inherited = true)]
@@ -58,13 +34,13 @@ public sealed class BigMachineObjectAttributeMock : Attribute
         var attribute = new BigMachineObjectAttributeMock();
         object? val;
 
-        val = AttributeHelper.GetValue(-1, nameof(Inclusive), constructorArguments, namedArguments);
+        val = VisceralHelper.GetValue(-1, nameof(Inclusive), constructorArguments, namedArguments);
         if (val != null)
         {
             attribute.Inclusive = (bool)val;
         }
 
-        val = AttributeHelper.GetValue(-1, nameof(RecursiveDetection), constructorArguments, namedArguments);
+        val = VisceralHelper.GetValue(-1, nameof(RecursiveDetection), constructorArguments, namedArguments);
         if (val != null)
         {
             attribute.RecursiveDetection = (bool)val;
@@ -96,13 +72,13 @@ public sealed class AddMachineAttributeMock : Attribute
         var attribute = new AddMachineAttributeMock();
         object? val;
 
-        val = AttributeHelper.GetValue(-1, nameof(Volatile), constructorArguments, namedArguments);
+        val = VisceralHelper.GetValue(-1, nameof(Volatile), constructorArguments, namedArguments);
         if (val != null)
         {
             attribute.Volatile = (bool)val;
         }
 
-        val = AttributeHelper.GetValue(-1, nameof(Name), constructorArguments, namedArguments);
+        val = VisceralHelper.GetValue(-1, nameof(Name), constructorArguments, namedArguments);
         if (val != null)
         {
             attribute.Name = (string)val;
@@ -140,37 +116,37 @@ public sealed class MachineObjectAttributeMock : Attribute
         var attribute = new MachineObjectAttributeMock();
         object? val;
 
-        /*val = AttributeHelper.GetValue(0, nameof(MachineId), constructorArguments, namedArguments);
+        /*val = VisceralHelper.GetValue(0, nameof(MachineId), constructorArguments, namedArguments);
         if (val != null)
         {
             attribute.MachineId = (uint)val;
         }*/
 
-        val = AttributeHelper.GetValue(-1, nameof(Control), constructorArguments, namedArguments);
+        val = VisceralHelper.GetValue(-1, nameof(Control), constructorArguments, namedArguments);
         if (val != null)
         {
             attribute.Control = (MachineControlKind)val;
         }
 
-        val = AttributeHelper.GetValue(-1, nameof(UseServiceProvider), constructorArguments, namedArguments);
+        val = VisceralHelper.GetValue(-1, nameof(UseServiceProvider), constructorArguments, namedArguments);
         if (val != null)
         {
             attribute.UseServiceProvider = (bool)val;
         }
 
-        val = AttributeHelper.GetValue(-1, nameof(StartByDefault), constructorArguments, namedArguments);
+        val = VisceralHelper.GetValue(-1, nameof(StartByDefault), constructorArguments, namedArguments);
         if (val != null)
         {
             attribute.StartByDefault = (bool)val;
         }
 
-        val = AttributeHelper.GetValue(-1, nameof(NumberOfTasks), constructorArguments, namedArguments);
+        val = VisceralHelper.GetValue(-1, nameof(NumberOfTasks), constructorArguments, namedArguments);
         if (val != null)
         {
             attribute.NumberOfTasks = (int)val;
         }
 
-        val = AttributeHelper.GetValue(-1, nameof(Private), constructorArguments, namedArguments);
+        val = VisceralHelper.GetValue(-1, nameof(Private), constructorArguments, namedArguments);
         if (val != null)
         {
             attribute.Private = (bool)val;
@@ -198,7 +174,7 @@ public sealed class StateMethodAttributeMock : Attribute
         var attribute = new StateMethodAttributeMock();
         object? val;
 
-        val = AttributeHelper.GetValue(0, nameof(StateId), constructorArguments, namedArguments);
+        val = VisceralHelper.GetValue(0, nameof(StateId), constructorArguments, namedArguments);
         if (val != null)
         {
             attribute.StateId = (uint)val;
@@ -230,19 +206,19 @@ public sealed class CommandMethodAttributeMock : Attribute
         var attribute = new CommandMethodAttributeMock();
         object? val;
 
-        /*val = AttributeHelper.GetValue(0, nameof(CommandId), constructorArguments, namedArguments);
+        /*val = VisceralHelper.GetValue(0, nameof(CommandId), constructorArguments, namedArguments);
         if (val != null)
         {
             attribute.CommandId = (uint)val;
         }*/
 
-        val = AttributeHelper.GetValue(-1, nameof(WithLock), constructorArguments, namedArguments);
+        val = VisceralHelper.GetValue(-1, nameof(WithLock), constructorArguments, namedArguments);
         if (val != null)
         {
             attribute.WithLock = (bool)val;
         }
 
-        val = AttributeHelper.GetValue(-1, nameof(All), constructorArguments, namedArguments);
+        val = VisceralHelper.GetValue(-1, nameof(All), constructorArguments, namedArguments);
         if (val != null)
         {
             attribute.All = (bool)val;
@@ -276,25 +252,25 @@ public sealed class BigMachinesGeneratorOptionAttributeMock : Attribute
         var attribute = new BigMachinesGeneratorOptionAttributeMock();
         object? val;
 
-        val = AttributeHelper.GetValue(-1, nameof(AttachDebugger), constructorArguments, namedArguments);
+        val = VisceralHelper.GetValue(-1, nameof(AttachDebugger), constructorArguments, namedArguments);
         if (val != null)
         {
             attribute.AttachDebugger = (bool)val;
         }
 
-        val = AttributeHelper.GetValue(-1, nameof(GenerateToFile), constructorArguments, namedArguments);
+        val = VisceralHelper.GetValue(-1, nameof(GenerateToFile), constructorArguments, namedArguments);
         if (val != null)
         {
             attribute.GenerateToFile = (bool)val;
         }
 
-        val = AttributeHelper.GetValue(-1, nameof(CustomNamespace), constructorArguments, namedArguments);
+        val = VisceralHelper.GetValue(-1, nameof(CustomNamespace), constructorArguments, namedArguments);
         if (val != null)
         {
             attribute.CustomNamespace = (string)val;
         }
 
-        val = AttributeHelper.GetValue(-1, nameof(UseModuleInitializer), constructorArguments, namedArguments);
+        val = VisceralHelper.GetValue(-1, nameof(UseModuleInitializer), constructorArguments, namedArguments);
         if (val != null)
         {
             attribute.UseModuleInitializer = (bool)val;
