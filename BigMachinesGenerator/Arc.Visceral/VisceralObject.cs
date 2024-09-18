@@ -1020,7 +1020,7 @@ public abstract class VisceralObjectBase<T> : IComparable<T>
             {
                 if (this.symbol != null)
                 {
-                    this.@namespace = this.symbol.ContainingNamespace.ToDisplayString();
+                    this.@namespace = this.symbol.ContainingNamespace.IsGlobalNamespace ? string.Empty : this.symbol.ContainingNamespace.ToDisplayString();
                 }
                 else if (this.type != null)
                 {
