@@ -75,7 +75,7 @@ public sealed partial class UnorderedMachineControl<TIdentifier, TMachine, TInte
 
     public override TIdentifier[] GetIdentifiers()
     {
-        lock (this.items.SyncObject)
+        using (this.items.LockObject.EnterScope())
         {
             return this.items.Select(x => x.Identifier).ToArray();
         }
@@ -83,7 +83,7 @@ public sealed partial class UnorderedMachineControl<TIdentifier, TMachine, TInte
 
     public override bool CheckActiveMachine()
     {
-        lock (this.items.SyncObject)
+        using (this.items.LockObject.EnterScope())
         {
             foreach (var x in this.items)
             {
@@ -99,7 +99,7 @@ public sealed partial class UnorderedMachineControl<TIdentifier, TMachine, TInte
 
     public override TInterface[] GetArray()
     {
-        lock (this.items.SyncObject)
+        using (this.items.LockObject.EnterScope())
         {
             return this.items.Select(x => (TInterface)x.Machine.InterfaceInstance).ToArray();
         }
@@ -107,7 +107,7 @@ public sealed partial class UnorderedMachineControl<TIdentifier, TMachine, TInte
 
     internal override TMachine[] GetMachines()
     {
-        lock (this.items.SyncObject)
+        using (this.items.LockObject.EnterScope())
         {
             return this.items.Select(x => x.Machine).ToArray();
         }
@@ -120,7 +120,7 @@ public sealed partial class UnorderedMachineControl<TIdentifier, TMachine, TInte
             return false;
         }
 
-        lock (this.items.SyncObject)
+        using (this.items.LockObject.EnterScope())
         {
             if (this.items.IdentifierChain.TryGetValue(m.Identifier, out var item))
             {
@@ -136,7 +136,7 @@ public sealed partial class UnorderedMachineControl<TIdentifier, TMachine, TInte
 
     internal override void Process(DateTime now, TimeSpan elapsed)
     {
-        lock (this.items.SyncObject)
+        using (this.items.LockObject.EnterScope())
         {
             foreach (var x in this.items)
             {
@@ -151,7 +151,7 @@ public sealed partial class UnorderedMachineControl<TIdentifier, TMachine, TInte
 
     public TInterface? TryGet(TIdentifier identifier)
     {
-        lock (this.items.SyncObject)
+        using (this.items.LockObject.EnterScope())
         {
             if (this.items.IdentifierChain.TryGetValue(identifier, out var item))
             {
@@ -166,7 +166,7 @@ public sealed partial class UnorderedMachineControl<TIdentifier, TMachine, TInte
 
     public TInterface? TryCreate(TIdentifier identifier, object? createParam = null)
     {
-        lock (this.items.SyncObject)
+        using (this.items.LockObject.EnterScope())
         {
             if (this.items.IdentifierChain.TryGetValue(identifier, out var item))
             {
@@ -187,7 +187,7 @@ public sealed partial class UnorderedMachineControl<TIdentifier, TMachine, TInte
 
     public TInterface GetOrCreate(TIdentifier identifier, object? createParam = null)
     {
-        lock (this.items.SyncObject)
+        using (this.items.LockObject.EnterScope())
         {
             if (!this.items.IdentifierChain.TryGetValue(identifier, out var item))
             {

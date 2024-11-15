@@ -3,6 +3,7 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Threading;
 using Tinyhand;
 using Tinyhand.IO;
 using ValueLink;
@@ -50,7 +51,7 @@ public sealed partial class ManualMachineControl : MachineControl // , ITinyhand
 
     public override MachineInformation MachineInformation => MachineInformation.Default;
 
-    private object syncObject = new();
+    private Lock lockObject = new();
     private Dictionary<Type, Machine> typeToMachine = new();
     // private Item.GoshujinClass items = new();
 
@@ -61,7 +62,7 @@ public sealed partial class ManualMachineControl : MachineControl // , ITinyhand
 
     public override bool CheckActiveMachine()
     {
-        lock (this.syncObject)
+        using (this.lockObject.EnterScope())
         {
             foreach (var x in this.typeToMachine.Values)
             {
@@ -77,7 +78,7 @@ public sealed partial class ManualMachineControl : MachineControl // , ITinyhand
 
     public override Machine.ManMachineInterface[] GetArray()
     {
-        lock (this.syncObject)
+        using (this.lockObject.EnterScope())
         {
             return this.typeToMachine.Values.Select(x => x.InterfaceInstance).ToArray();
         }
@@ -85,7 +86,7 @@ public sealed partial class ManualMachineControl : MachineControl // , ITinyhand
 
     internal override Machine[] GetMachines()
     {
-        lock (this.syncObject)
+        using (this.lockObject.EnterScope())
         {
             return this.typeToMachine.Values.ToArray();
         }
@@ -93,7 +94,7 @@ public sealed partial class ManualMachineControl : MachineControl // , ITinyhand
 
     internal override bool RemoveMachine(Machine machine)
     {
-        lock (this.syncObject)
+        using (this.lockObject.EnterScope())
         {
             return this.typeToMachine.Remove(machine.GetType());
         }
@@ -101,7 +102,7 @@ public sealed partial class ManualMachineControl : MachineControl // , ITinyhand
 
     internal override void Process(DateTime now, TimeSpan elapsed)
     {
-        lock (this.syncObject)
+        using (this.lockObject.EnterScope())
         {
             foreach (var x in this.typeToMachine.Values)
             {
@@ -117,7 +118,7 @@ public sealed partial class ManualMachineControl : MachineControl // , ITinyhand
     public Machine.ManMachineInterface? TryGet<TMachine>()
         where TMachine : Machine
     {
-        lock (this.syncObject)
+        using (this.lockObject.EnterScope())
         {
             if (this.typeToMachine.TryGetValue(typeof(TMachine), out var item))
             {
@@ -133,7 +134,7 @@ public sealed partial class ManualMachineControl : MachineControl // , ITinyhand
     public Machine.ManMachineInterface? TryCreate<TMachine>(object? createParam = null)
         where TMachine : Machine
     {
-        lock (this.syncObject)
+        using (this.lockObject.EnterScope())
         {
             if (this.typeToMachine.TryGetValue(typeof(TMachine), out var machine))
             {
@@ -158,7 +159,7 @@ public sealed partial class ManualMachineControl : MachineControl // , ITinyhand
     public Machine.ManMachineInterface GetOrCreate<TMachine>(object? createParam = null)
         where TMachine : Machine
     {
-        lock (this.syncObject)
+        using (this.lockObject.EnterScope())
         {
             if (!this.typeToMachine.TryGetValue(typeof(TMachine), out var machine))
             {
