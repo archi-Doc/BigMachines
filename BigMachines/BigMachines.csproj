@@ -24,9 +24,9 @@
   </ItemGroup>
 
   <ItemGroup>
-    <PackageReference Include="Arc.Unit" Version="0.17.0" />
+    <PackageReference Include="Arc.Unit" Version="0.17.1" />
     <PackageReference Include="Arc.Visceral" Version="0.1.0" GeneratePathProperty="true" PrivateAssets="all" />
-    <PackageReference Include="Arc.Collections" Version="1.18.0" />
+    <PackageReference Include="Arc.Collections" Version="1.19.1" />
     <PackageReference Include="Arc.Threading" Version="0.30.2" />
     <PackageReference Include="Tinyhand" Version="0.84.2" />
     <PackageReference Include="ValueLink" Version="0.65.1" />
