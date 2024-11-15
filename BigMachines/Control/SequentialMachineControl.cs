@@ -99,7 +99,7 @@ public sealed partial class SequentialMachineControl<TIdentifier, TMachine, TInt
 
     public Machine.ManMachineInterface? GetFirst()
     {
-        lock (this.items.SyncObject)
+        using (this.items.LockObject.EnterScope())
         {
             if (this.items.SequentialChain.TryPeek(out var item))
             {
@@ -112,7 +112,7 @@ public sealed partial class SequentialMachineControl<TIdentifier, TMachine, TInt
 
     public override bool CheckActiveMachine()
     {
-        lock (this.items.SyncObject)
+        using (this.items.LockObject.EnterScope())
         {
             foreach (var x in this.items)
             {
@@ -128,7 +128,7 @@ public sealed partial class SequentialMachineControl<TIdentifier, TMachine, TInt
 
     public override TIdentifier[] GetIdentifiers()
     {
-        lock (this.items.SyncObject)
+        using (this.items.LockObject.EnterScope())
         {
             return this.items.Select(x => x.Identifier).ToArray();
         }
@@ -136,7 +136,7 @@ public sealed partial class SequentialMachineControl<TIdentifier, TMachine, TInt
 
     public override TInterface[] GetArray()
     {
-        lock (this.items.SyncObject)
+        using (this.items.LockObject.EnterScope())
         {
             return this.items.Select(x => (TInterface)x.Machine.InterfaceInstance).ToArray();
         }
@@ -144,7 +144,7 @@ public sealed partial class SequentialMachineControl<TIdentifier, TMachine, TInt
 
     internal override TMachine[] GetMachines()
     {
-        lock (this.items.SyncObject)
+        using (this.items.LockObject.EnterScope())
         {
             return this.items.Select(x => x.Machine).ToArray();
         }
@@ -158,7 +158,7 @@ public sealed partial class SequentialMachineControl<TIdentifier, TMachine, TInt
         }
 
         var result = false;
-        lock (this.items.SyncObject)
+        using (this.items.LockObject.EnterScope())
         {
             if (this.items.IdentifierChain.TryGetValue(m.Identifier, out var item))
             {
@@ -186,7 +186,7 @@ public sealed partial class SequentialMachineControl<TIdentifier, TMachine, TInt
 
     internal override void Process(DateTime now, TimeSpan elapsed)
     {
-        lock (this.items.SyncObject)
+        using (this.items.LockObject.EnterScope())
         {
             if (this.MachineInformation.NumberOfTasks > 0)
             {// Have dedicated tasks
@@ -217,7 +217,7 @@ public sealed partial class SequentialMachineControl<TIdentifier, TMachine, TInt
 
     public TInterface? TryGet(TIdentifier identifier)
     {
-        lock (this.items.SyncObject)
+        using (this.items.LockObject.EnterScope())
         {
             if (this.items.IdentifierChain.TryGetValue(identifier, out var item))
             {
@@ -232,7 +232,7 @@ public sealed partial class SequentialMachineControl<TIdentifier, TMachine, TInt
 
     public TInterface? TryCreate(TIdentifier identifier, object? createParam = null)
     {
-        lock (this.items.SyncObject)
+        using (this.items.LockObject.EnterScope())
         {
             if (this.items.IdentifierChain.TryGetValue(identifier, out var item))
             {
@@ -254,7 +254,7 @@ public sealed partial class SequentialMachineControl<TIdentifier, TMachine, TInt
 
     public TInterface GetOrCreate(TIdentifier identifier, object? createParam = null)
     {
-        lock (this.items.SyncObject)
+        using (this.items.LockObject.EnterScope())
         {
             if (!this.items.IdentifierChain.TryGetValue(identifier, out var item))
             {
@@ -291,7 +291,7 @@ public sealed partial class SequentialMachineControl<TIdentifier, TMachine, TInt
 
     private TMachine? GetMachineToProcess()
     {
-        lock (this.items.SyncObject)
+        using (this.items.LockObject.EnterScope())
         {
             if (!this.items.SequentialChain.TryPeek(out var item))
             {
