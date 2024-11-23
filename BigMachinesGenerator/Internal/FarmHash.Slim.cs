@@ -7,18 +7,12 @@ using System.Runtime.InteropServices;
 #pragma warning disable SA1307 // Accessible fields should begin with upper-case letter
 #pragma warning disable SA1310 // Field names should not contain underscore
 
-namespace Tinyhand;
+namespace BigMachines.Generator;
 
-/// <summary>
-/// FarmHash 64bit Class.
-/// </summary>
-internal class FarmHash : IHash
+internal class FarmHash
 {
-    // Magic numbers for 32-bit hashing.  Copied from Murmur3.
     private const uint C1 = 0xcc9e2d51;
     private const uint C2 = 0x1b873593;
-
-    // Some primes between 2^63 and 2^64 for various uses.
     private const ulong K0 = 0xc3a5c85c97cb3127UL;
     private const ulong K1 = 0xb492b66fbe98f273UL;
     private const ulong K2 = 0x9ae16a3b2f90404fUL;
@@ -28,59 +22,12 @@ internal class FarmHash : IHash
 
     private InternalState state;
 
-    /// <summary>
-    /// Initializes a new instance of the <see cref="FarmHash"/> class.
-    /// </summary>
     public FarmHash()
     {
         this.state.buffer = new byte[BufferSize];
         this.state.bufferPosition = -1; // force initialize.
         this.HashInitialize();
     }
-
-    /// <inheritdoc/>
-    public string HashName => "FarmHash";
-
-    /// <inheritdoc/>
-    public uint HashBits => 64;
-
-    /// <inheritdoc/>
-    public bool IsCryptographic => false;
-
-    /// <summary>
-    /// Static function: Calculates a 32bit hash from the given data.
-    /// </summary>
-    /// <param name="input">The read-only span that contains input data.</param>
-    /// <returns>A 32bit hash.</returns>
-    [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public static unsafe uint Hash32(ReadOnlySpan<byte> input)
-    {
-        if (input.Length <= 4)
-        {
-            return Hash32Len0to4(input);
-        }
-
-        fixed (byte* p = input)
-        {
-            return Hash32(p, (uint)input.Length);
-        }
-    }
-
-    /// <summary>
-    /// Static function: Calculates a 32bit hash from the given string.
-    /// </summary>
-    /// <param name="input">The read-only span that contains input data.</param>
-    /// <returns>A 32bit hash.</returns>
-    [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public static unsafe ulong Hash32(ReadOnlySpan<char> input) => Hash32(MemoryMarshal.Cast<char, byte>(input));
-
-    /// <summary>
-    /// Static function: Calculates a 32bit hash from the given string.
-    /// </summary>
-    /// <param name="str">The string containing the characters to calculates.</param>
-    /// <returns>A 32bit hash.</returns>
-    [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public static unsafe uint Hash32(string str) => Hash32(MemoryMarshal.Cast<char, byte>(str.AsSpan()));
 
     /// <summary>
     /// Static function: Calculates a 64bit hash from the given data.
@@ -112,13 +59,6 @@ internal class FarmHash : IHash
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static unsafe ulong Hash64(string str) => Hash64(MemoryMarshal.Cast<char, byte>(str.AsSpan()));
 
-    /// <inheritdoc/>
-    public byte[] GetHash(ReadOnlySpan<byte> input) => BitConverter.GetBytes(Hash64(input));
-
-    /// <inheritdoc/>
-    public byte[] GetHash(byte[] input, int inputOffset, int inputCount) => BitConverter.GetBytes(Hash64(input.AsSpan(inputOffset, inputCount)));
-
-    /// <inheritdoc/>
     public void HashInitialize()
     {
         if (this.state.bufferPosition == 0)
@@ -144,7 +84,6 @@ internal class FarmHash : IHash
         }
     }
 
-    /// <inheritdoc/>
     public unsafe void HashUpdate(ReadOnlySpan<byte> input)
     {
         var bytesRemaining = input.Length;
@@ -184,42 +123,6 @@ internal class FarmHash : IHash
         }
     }
 
-    /// <inheritdoc/>
-    public void HashUpdate(byte[] input, int inputOffset, int inputCount) => this.HashUpdate(input.AsSpan(inputOffset, inputCount));
-
-    /// <inheritdoc/>
-    public unsafe byte[] HashFinal()
-    {
-        ulong hash;
-
-        if (this.state.bufferFlag == 0)
-        {
-            hash = Hash64(this.state.buffer.AsSpan(0, this.state.bufferPosition));
-        }
-        else
-        {
-            fixed (byte* buf = this.state.buffer)
-            {
-                byte* s = buf;
-                byte* end = s + ((this.state.bufferPosition - 1) / 64 * 64);
-                byte* last64 = end + ((this.state.bufferPosition - 1) & 63) - 63;
-                do
-                {
-                    this.HashRound(s);
-                    s += 64;
-                }
-                while (s != end);
-
-                hash = this.HashRemainig(last64);
-            }
-        }
-
-        this.state.bufferPosition = -1; // force initialize.
-        this.HashInitialize();
-
-        return BitConverter.GetBytes(hash);
-    }
-
     private static unsafe uint Fetch32(byte* p) => *(uint*)p;
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -233,7 +136,6 @@ internal class FarmHash : IHash
         x = temp;
     }
 
-    // A 32-bit to 32-bit integer hash copied from Murmur3.
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     private static uint Fmix(uint h)
     {

@@ -7,7 +7,6 @@ using System.Linq;
 using System.Text;
 using Arc.Visceral;
 using Microsoft.CodeAnalysis;
-using Tinyhand;
 
 namespace BigMachines.Generator;
 
