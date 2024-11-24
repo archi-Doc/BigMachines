@@ -257,6 +257,9 @@ internal class BigMachine : IEquatable<BigMachine>
 
             this.GenerateSerialize(ssb, info);
             this.GenerateDeserialize(ssb, info);
+            var identifier = this.Object.GetTypeIdentifierString();
+            ssb.AppendLine($"static ulong ITinyhandSerialize<{this.SimpleName}>.GetTypeIdentifier() => {identifier};"); // GetTypeIdentifierCode
+            // ssb.AppendLine($"ulong ITinyhandSerialize.GetTypeIdentifier() => {identifier};"); // GetTypeIdentifierCode
             ssb.AppendLine($"static void ITinyhandReconstruct<{this.SimpleName}>.Reconstruct([NotNull] scoped ref {this.SimpleName}? value, TinyhandSerializerOptions options) => value ??= new();");
             ssb.AppendLine($"static {this.SimpleName}? ITinyhandClone<{this.SimpleName}>.Clone(scoped ref {this.SimpleName}? v, TinyhandSerializerOptions options) => v == null ? null : TinyhandSerializer.Deserialize<{this.SimpleName}>(TinyhandSerializer.Serialize(v));");
             ssb.AppendLine();
