@@ -5,7 +5,6 @@ using System.Collections.Concurrent;
 using System.Threading;
 using Arc.Threading;
 using BigMachines.Control;
-using FastExpressionCompiler;
 
 #pragma warning disable SA1202
 
