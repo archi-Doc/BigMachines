@@ -12,7 +12,7 @@ using ValueLink;
 namespace BigMachines.Control;
 
 [TinyhandObject(Structual = true)]
-public sealed partial class UnorderedMachineControl<TIdentifier, TMachine, TInterface> : MultiMachineControl<TIdentifier, TInterface>, ITinyhandSerialize<UnorderedMachineControl<TIdentifier, TMachine, TInterface>>, ITinyhandCustomJournal
+public sealed partial class UnorderedMachineControl<TIdentifier, TMachine, TInterface> : MultiMachineControl<TIdentifier, TInterface>, ITinyhandSerializable<UnorderedMachineControl<TIdentifier, TMachine, TInterface>>, ITinyhandCustomJournal
     where TIdentifier : notnull
     where TMachine : Machine<TIdentifier>
     where TInterface : Machine.ManMachineInterface
@@ -206,7 +206,7 @@ public sealed partial class UnorderedMachineControl<TIdentifier, TMachine, TInte
 
     #region Tinyhand
 
-    static void ITinyhandSerialize<UnorderedMachineControl<TIdentifier, TMachine, TInterface>>.Serialize(ref TinyhandWriter writer, scoped ref UnorderedMachineControl<TIdentifier, TMachine, TInterface>? value, TinyhandSerializerOptions options)
+    static void ITinyhandSerializable<UnorderedMachineControl<TIdentifier, TMachine, TInterface>>.Serialize(ref TinyhandWriter writer, scoped ref UnorderedMachineControl<TIdentifier, TMachine, TInterface>? value, TinyhandSerializerOptions options)
     {
         if (value is null)
         {
@@ -217,7 +217,7 @@ public sealed partial class UnorderedMachineControl<TIdentifier, TMachine, TInte
         TinyhandSerializer.SerializeObject(ref writer, value.items, options);
     }
 
-    static void ITinyhandSerialize<UnorderedMachineControl<TIdentifier, TMachine, TInterface>>.Deserialize(ref TinyhandReader reader, scoped ref UnorderedMachineControl<TIdentifier, TMachine, TInterface>? value, TinyhandSerializerOptions options)
+    static void ITinyhandSerializable<UnorderedMachineControl<TIdentifier, TMachine, TInterface>>.Deserialize(ref TinyhandReader reader, scoped ref UnorderedMachineControl<TIdentifier, TMachine, TInterface>? value, TinyhandSerializerOptions options)
     {
         if (reader.TryReadNil())
         {
