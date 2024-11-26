@@ -73,7 +73,18 @@ public class VisceralAttribute : IComparable<VisceralAttribute>
         this.ConstructorArguments = new object?[attributeData.ConstructorArguments.Length];
         foreach (var x in attributeData.ConstructorArguments)
         {
-            this.ConstructorArguments[n++] = x.Value;
+            if (x.Kind == TypedConstantKind.Array)
+            {
+                // this.ConstructorArguments[n++] = ValueToString(x);
+                if (x.Values.Length > 0)
+                {
+                    this.ConstructorArguments[n++] = x.Values[0];
+                }
+            }
+            else
+            {
+                this.ConstructorArguments[n++] = x.Value;
+            }
         }
 
         n = 0;
@@ -88,47 +99,47 @@ public class VisceralAttribute : IComparable<VisceralAttribute>
             {
                 var str = ValueToString(x.Value);
                 this.NamedArguments[n++] = new KeyValuePair<string, object?>(x.Key, str);
-
-                string ValueToString(TypedConstant value)
-                {
-                    if (value.Kind != TypedConstantKind.Array)
-                    {
-                        return value.ToCSharpString();
-                    }
-
-                    var sb = new StringBuilder("new ");
-                    if (value.Type == null)
-                    {
-                        sb.Append("object[]");
-                    }
-                    else
-                    {
-                        sb.Append(value.Type.ToDisplayString());
-                    }
-
-                    sb.Append(" { ");
-
-                    foreach (var y in value.Values)
-                    {
-                        if (y.Kind != TypedConstantKind.Array)
-                        {
-                            sb.Append(y.ToCSharpString());
-                        }
-                        else
-                        {
-                            sb.Append(ValueToString(y));
-                        }
-
-                        sb.Append(", ");
-                    }
-
-                    sb.Append("}");
-                    return sb.ToString();
-                }
             }
         }
 
         this.attributeData = attributeData;
+
+        string ValueToString(TypedConstant value)
+        {
+            if (value.Kind != TypedConstantKind.Array)
+            {
+                return value.ToCSharpString();
+            }
+
+            var sb = new StringBuilder("new ");
+            if (value.Type == null)
+            {
+                sb.Append("object[]");
+            }
+            else
+            {
+                sb.Append(value.Type.ToDisplayString());
+            }
+
+            sb.Append(" { ");
+
+            foreach (var y in value.Values)
+            {
+                if (y.Kind != TypedConstantKind.Array)
+                {
+                    sb.Append(y.ToCSharpString());
+                }
+                else
+                {
+                    sb.Append(ValueToString(y));
+                }
+
+                sb.Append(", ");
+            }
+
+            sb.Append("}");
+            return sb.ToString();
+        }
     }
 
     public VisceralAttribute(string fullName, CustomAttributeData attributeData)
