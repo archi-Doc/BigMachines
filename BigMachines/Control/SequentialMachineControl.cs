@@ -21,7 +21,7 @@ public interface ISequentialMachineControl
 }
 
 [TinyhandObject(Structual = true)]
-public sealed partial class SequentialMachineControl<TIdentifier, TMachine, TInterface> : MultiMachineControl<TIdentifier, TInterface>, ISequentialMachineControl, ITinyhandSerialize<SequentialMachineControl<TIdentifier, TMachine, TInterface>>, ITinyhandCustomJournal
+public sealed partial class SequentialMachineControl<TIdentifier, TMachine, TInterface> : MultiMachineControl<TIdentifier, TInterface>, ISequentialMachineControl, ITinyhandSerializable<SequentialMachineControl<TIdentifier, TMachine, TInterface>>, ITinyhandCustomJournal
     where TIdentifier : notnull
     where TMachine : Machine<TIdentifier>
     where TInterface : Machine.ManMachineInterface
@@ -313,7 +313,7 @@ public sealed partial class SequentialMachineControl<TIdentifier, TMachine, TInt
 
     #region Tinyhand
 
-    static void ITinyhandSerialize<SequentialMachineControl<TIdentifier, TMachine, TInterface>>.Serialize(ref TinyhandWriter writer, scoped ref SequentialMachineControl<TIdentifier, TMachine, TInterface>? value, TinyhandSerializerOptions options)
+    static void ITinyhandSerializable<SequentialMachineControl<TIdentifier, TMachine, TInterface>>.Serialize(ref TinyhandWriter writer, scoped ref SequentialMachineControl<TIdentifier, TMachine, TInterface>? value, TinyhandSerializerOptions options)
     {
         if (value is null)
         {
@@ -324,7 +324,7 @@ public sealed partial class SequentialMachineControl<TIdentifier, TMachine, TInt
         TinyhandSerializer.SerializeObject(ref writer, value.items, options);
     }
 
-    static void ITinyhandSerialize<SequentialMachineControl<TIdentifier, TMachine, TInterface>>.Deserialize(ref TinyhandReader reader, scoped ref SequentialMachineControl<TIdentifier, TMachine, TInterface>? value, TinyhandSerializerOptions options)
+    static void ITinyhandSerializable<SequentialMachineControl<TIdentifier, TMachine, TInterface>>.Deserialize(ref TinyhandReader reader, scoped ref SequentialMachineControl<TIdentifier, TMachine, TInterface>? value, TinyhandSerializerOptions options)
     {
         if (reader.TryReadNil())
         {

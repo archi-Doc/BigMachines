@@ -15,7 +15,7 @@ namespace BigMachines.Control;
 /// <typeparam name="TMachine">The type of a machine.</typeparam>
 /// <typeparam name="TInterface">The type of an interface.</typeparam>
 [TinyhandObject(Structual = true)]
-public partial class SingleMachineControl<TMachine, TInterface> : MachineControl, ITinyhandSerialize<SingleMachineControl<TMachine, TInterface>>, ITinyhandCustomJournal
+public partial class SingleMachineControl<TMachine, TInterface> : MachineControl, ITinyhandSerializable<SingleMachineControl<TMachine, TInterface>>, ITinyhandCustomJournal
     where TMachine : Machine
     where TInterface : Machine.ManMachineInterface
 {
@@ -133,11 +133,11 @@ public partial class SingleMachineControl<TMachine, TInterface> : MachineControl
         return this.machine;
     }
 
-    static void ITinyhandSerialize<SingleMachineControl<TMachine, TInterface>>.Serialize(ref TinyhandWriter writer, scoped ref SingleMachineControl<TMachine, TInterface>? value, TinyhandSerializerOptions options)
+    static void ITinyhandSerializable<SingleMachineControl<TMachine, TInterface>>.Serialize(ref TinyhandWriter writer, scoped ref SingleMachineControl<TMachine, TInterface>? value, TinyhandSerializerOptions options)
     {
         TinyhandSerializer.Serialize(ref writer, value?.GetOrCreateMachine().InterfaceInstance, options);
 
-        /*if (value?.machine is ITinyhandSerialize obj)
+        /*if (value?.machine is ITinyhandSerializable obj)
         {
             obj.Serialize(ref writer, options);
         }
@@ -147,7 +147,7 @@ public partial class SingleMachineControl<TMachine, TInterface> : MachineControl
         }*/
     }
 
-    static void ITinyhandSerialize<SingleMachineControl<TMachine, TInterface>>.Deserialize(ref TinyhandReader reader, scoped ref SingleMachineControl<TMachine, TInterface>? value, TinyhandSerializerOptions options)
+    static void ITinyhandSerializable<SingleMachineControl<TMachine, TInterface>>.Deserialize(ref TinyhandReader reader, scoped ref SingleMachineControl<TMachine, TInterface>? value, TinyhandSerializerOptions options)
     {
         value ??= new();
         value.machine = TinyhandSerializer.Deserialize<TMachine>(ref reader, options);
@@ -158,7 +158,7 @@ public partial class SingleMachineControl<TMachine, TInterface> : MachineControl
             value.MachineInformation is not null)
         {
             var machine = value.BigMachine.CreateMachine(value.MachineInformation);
-            if (machine is ITinyhandSerialize obj)
+            if (machine is ITinyhandSerializable obj)
             {
                 obj.Deserialize(ref reader, options);
                 value.machine = machine;

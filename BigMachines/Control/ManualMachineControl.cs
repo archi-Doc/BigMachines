@@ -14,7 +14,7 @@ using ValueLink;
 namespace BigMachines.Control;
 
 [TinyhandObject]
-public sealed partial class ManualMachineControl : MachineControl // , ITinyhandSerialize<ManualMachineControl>
+public sealed partial class ManualMachineControl : MachineControl // , ITinyhandSerializable<ManualMachineControl>
 {
     public ManualMachineControl()
         : base()
@@ -176,7 +176,7 @@ public sealed partial class ManualMachineControl : MachineControl // , ITinyhand
 
     #region Tinyhand
 
-    /*static void ITinyhandSerialize<ManualMachineControl>.Serialize(ref TinyhandWriter writer, scoped ref ManualMachineControl? value, TinyhandSerializerOptions options)
+    /*static void ITinyhandSerializable<ManualMachineControl>.Serialize(ref TinyhandWriter writer, scoped ref ManualMachineControl? value, TinyhandSerializerOptions options)
     {
         if (value is null)
         {
@@ -187,7 +187,7 @@ public sealed partial class ManualMachineControl : MachineControl // , ITinyhand
         TinyhandSerializer.SerializeObject(ref writer, value.items, options);
     }
 
-    static void ITinyhandSerialize<ManualMachineControl>.Deserialize(ref TinyhandReader reader, scoped ref ManualMachineControl? value, TinyhandSerializerOptions options)
+    static void ITinyhandSerializable<ManualMachineControl>.Deserialize(ref TinyhandReader reader, scoped ref ManualMachineControl? value, TinyhandSerializerOptions options)
     {
         if (reader.TryReadNil())
         {

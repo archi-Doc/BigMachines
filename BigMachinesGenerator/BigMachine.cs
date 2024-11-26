@@ -247,7 +247,7 @@ internal class BigMachine : IEquatable<BigMachine>
     public void Generate(ScopingStringBuilder ssb, GeneratorInformation info)
     {
         ssb.AppendLine("[TinyhandObject]");
-        using (var scopeClass = ssb.ScopeBrace($"public partial class {this.SimpleName} : BigMachineBase, ITinyhandSerialize<{this.SimpleName}>, ITinyhandReconstruct<{this.SimpleName}>, ITinyhandClone<{this.SimpleName}>, IStructualObject"))
+        using (var scopeClass = ssb.ScopeBrace($"public partial class {this.SimpleName} : BigMachineBase, ITinyhandSerializable<{this.SimpleName}>, ITinyhandReconstructable<{this.SimpleName}>, ITinyhandCloneable<{this.SimpleName}>, IStructualObject"))
         {
             this.GenerateMembers(ssb, info);
             ssb.AppendLine();
@@ -257,8 +257,8 @@ internal class BigMachine : IEquatable<BigMachine>
 
             this.GenerateSerialize(ssb, info);
             this.GenerateDeserialize(ssb, info);
-            ssb.AppendLine($"static void ITinyhandReconstruct<{this.SimpleName}>.Reconstruct([NotNull] scoped ref {this.SimpleName}? value, TinyhandSerializerOptions options) => value ??= new();");
-            ssb.AppendLine($"static {this.SimpleName}? ITinyhandClone<{this.SimpleName}>.Clone(scoped ref {this.SimpleName}? v, TinyhandSerializerOptions options) => v == null ? null : TinyhandSerializer.Deserialize<{this.SimpleName}>(TinyhandSerializer.Serialize(v));");
+            ssb.AppendLine($"static void ITinyhandReconstructable<{this.SimpleName}>.Reconstruct([NotNull] scoped ref {this.SimpleName}? value, TinyhandSerializerOptions options) => value ??= new();");
+            ssb.AppendLine($"static {this.SimpleName}? ITinyhandCloneable<{this.SimpleName}>.Clone(scoped ref {this.SimpleName}? v, TinyhandSerializerOptions options) => v == null ? null : TinyhandSerializer.Deserialize<{this.SimpleName}>(TinyhandSerializer.Serialize(v));");
             ssb.AppendLine();
 
             this.GenerateStructual(ssb, info);
@@ -323,7 +323,7 @@ internal class BigMachine : IEquatable<BigMachine>
 
     public void GenerateSerialize(ScopingStringBuilder ssb, GeneratorInformation info)
     {
-        using (var scopeMethod = ssb.ScopeBrace($"static void ITinyhandSerialize<{this.SimpleName}>.Serialize(ref TinyhandWriter writer, scoped ref {this.SimpleName}? value, TinyhandSerializerOptions options)"))
+        using (var scopeMethod = ssb.ScopeBrace($"static void ITinyhandSerializable<{this.SimpleName}>.Serialize(ref TinyhandWriter writer, scoped ref {this.SimpleName}? value, TinyhandSerializerOptions options)"))
         {
             ssb.AppendLine("if (value == null) { writer.WriteNil(); return; }");
             ssb.AppendLine("var count = value.controls.Count(x => x.MachineInformation.Serializable);");
@@ -343,7 +343,7 @@ internal class BigMachine : IEquatable<BigMachine>
 
     public void GenerateDeserialize(ScopingStringBuilder ssb, GeneratorInformation info)
     {
-        using (var scopeMethod = ssb.ScopeBrace($"static void ITinyhandSerialize<{this.SimpleName}>.Deserialize(ref TinyhandReader reader, scoped ref {this.SimpleName}? value, TinyhandSerializerOptions options)"))
+        using (var scopeMethod = ssb.ScopeBrace($"static void ITinyhandSerializable<{this.SimpleName}>.Deserialize(ref TinyhandReader reader, scoped ref {this.SimpleName}? value, TinyhandSerializerOptions options)"))
         {
             ssb.AppendLine("if (reader.TryReadNil()) return;");
             ssb.AppendLine("value ??= new();");
