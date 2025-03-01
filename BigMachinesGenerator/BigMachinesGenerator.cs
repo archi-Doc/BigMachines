@@ -165,7 +165,7 @@ public class BigMachinesGeneratorV2 : IIncrementalGenerator, IGeneratorInformati
     }
 }
 
-// [Generator]
+/* [Generator]
 public class BigMachinesGenerator : ISourceGenerator, IGeneratorInformation
 {
     public bool AttachDebugger { get; private set; } = false;
@@ -243,17 +243,6 @@ public class BigMachinesGenerator : ISourceGenerator, IGeneratorInformation
                     this.ProcessSymbol(s);
                 }
             }
-
-            // IN: close generic (member, expression)
-            /*foreach (var ts in receiver.Generics.ItemDictionary.Values.Where(a => a.GenericsKind == VisceralGenericsKind.ClosedGeneric).Select(a => a.TypeSymbol))
-            {
-                if (ts != null)
-                {
-                    this.ProcessSymbol(ts);
-                }
-            }
-
-            this.SalvageCloseGeneric(receiver.Generics);*/
 
             context.CancellationToken.ThrowIfCancellationRequested();
             this.body.Prepare();
@@ -342,11 +331,6 @@ public class BigMachinesGenerator : ISourceGenerator, IGeneratorInformation
                     this.CandidateSet.Add(typeSyntax);
                 }
             }
-
-            /*else if (syntaxNode is GenericNameSyntax genericSyntax)
-            {// Generics
-                this.Generics.Add(genericSyntax);
-            }*/
         }
 
         /// <summary>
@@ -380,4 +364,4 @@ public class BigMachinesGenerator : ISourceGenerator, IGeneratorInformation
             return false;
         }
     }
-}
+}*/
