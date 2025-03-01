@@ -24,7 +24,7 @@
   </ItemGroup>
 
   <ItemGroup>
-    <PackageReference Include="Arc.Unit" Version="0.18.2" />
+    <PackageReference Include="Arc.Unit" Version="0.19.0" />
     <PackageReference Include="Arc.Collections" Version="1.22.1" />
     <PackageReference Include="Arc.Threading" Version="0.30.2" />
     <PackageReference Include="Tinyhand" Version="0.97.0" />
