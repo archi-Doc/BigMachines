@@ -45,7 +45,7 @@ public sealed partial class SequentialMachineControl<TIdentifier, TMachine, TInt
         if (this.MachineInformation.Serializable &&
             this.BigMachine is IStructualObject obj)
         {
-            ((IStructualObject)this.items).SetParent(obj);
+            ((IStructualObject)this.items).SetupStructure(obj);
         }
     }
 

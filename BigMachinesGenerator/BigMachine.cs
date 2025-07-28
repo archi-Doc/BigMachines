@@ -300,7 +300,7 @@ internal class BigMachine : IEquatable<BigMachine>
 
                 ssb.AppendLine($"this._{x.Name} = new();");
                 ssb.AppendLine($"this.{x.Name}.Prepare(this);");
-                ssb.AppendLine($"((IStructualObject)this.{x.Name}).SetParent(this, {x.Key.ToString()});");
+                ssb.AppendLine($"((IStructualObject)this.{x.Name}).SetupStructure(this, {x.Key.ToString()});");
 
                 sb.Append($"this.{x.Name}, ");
             }
@@ -402,12 +402,12 @@ internal class BigMachine : IEquatable<BigMachine>
         }
 
         /*ssb.AppendLine();
-        using (var scopeMethod = ssb.ScopeBrace("void IStructualObject.SetParent(IStructualObject? parent, int key)"))
+        using (var scopeMethod = ssb.ScopeBrace("void IStructualObject.SetupStructure(IStructualObject? parent, int key)"))
         {
-            ssb.AppendLine("((IStructualObject)this).SetParentActual(parent, key);");
+            ssb.AppendLine("((IStructualObject)this).SetParentAndKey(parent, key);");
             foreach (var x in this.Machines.Values)
             {
-                ssb.AppendLine($"((IStructualObject)this.{x.Name})?.SetParent(this, {x.Key.ToString()});");
+                ssb.AppendLine($"((IStructualObject)this.{x.Name})?.SetupStructure(this, {x.Key.ToString()});");
             }
         }*/
     }
