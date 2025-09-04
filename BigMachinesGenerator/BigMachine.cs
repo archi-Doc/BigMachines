@@ -377,7 +377,7 @@ internal class BigMachine : IEquatable<BigMachine>
 
         using (var scopeMethod = ssb.ScopeBrace("bool IStructualObject.ReadRecord(ref TinyhandReader reader)"))
         {
-            ssb.AppendLine("if (!reader.TryRead(out JournalRecord record)) return false;");
+            ssb.AppendLine("if (!reader.TryReadJournalRecord(out JournalRecord record)) return false;");
 
             var trie = new VisceralTrieInt<Machine>(null);
             foreach (var x in this.Machines.Values)

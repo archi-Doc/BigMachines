@@ -31,7 +31,7 @@ public partial class Machine
 
         public bool TerminateMachine()
         {
-            using (this.Machine.Semaphore.Lock())
+            using (this.Machine.Semaphore.EnterScope())
             {
                 if (this.Machine.__operationalState__.HasFlag(OperationalFlag.Terminated))
                 {
@@ -47,7 +47,7 @@ public partial class Machine
 
         public bool PauseMachine()
         {
-            using (this.Machine.Semaphore.Lock())
+            using (this.Machine.Semaphore.EnterScope())
             {
                 if (this.Machine.__operationalState__ == OperationalFlag.Terminated)
                 {
@@ -62,7 +62,7 @@ public partial class Machine
 
         public bool UnpauseMachine()
         {
-            using (this.Machine.Semaphore.Lock())
+            using (this.Machine.Semaphore.EnterScope())
             {
                 if (this.Machine.__operationalState__ == OperationalFlag.Terminated)
                 {

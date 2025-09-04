@@ -46,7 +46,7 @@ public partial class Machine
             var result = ChangeStateResult.Terminated;
             var i = Unsafe.As<TState, int>(ref state);
 
-            using (this.Machine.Semaphore.Lock())
+            using (this.Machine.Semaphore.EnterScope())
             {
                 if (this.Machine.__operationalState__ == OperationalFlag.Terminated)
                 {// Terminated
