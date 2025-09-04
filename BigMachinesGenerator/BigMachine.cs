@@ -300,7 +300,7 @@ internal class BigMachine : IEquatable<BigMachine>
 
                 ssb.AppendLine($"this._{x.Name} = new();");
                 ssb.AppendLine($"this.{x.Name}.Prepare(this);");
-                ssb.AppendLine($"((IStructualObject)this.{x.Name}).SetParent(this, {x.Key.ToString()});");
+                ssb.AppendLine($"((IStructualObject)this.{x.Name}).SetupStructure(this, {x.Key.ToString()});");
 
                 sb.Append($"this.{x.Name}, ");
             }
@@ -377,7 +377,7 @@ internal class BigMachine : IEquatable<BigMachine>
 
         using (var scopeMethod = ssb.ScopeBrace("bool IStructualObject.ReadRecord(ref TinyhandReader reader)"))
         {
-            ssb.AppendLine("if (!reader.TryRead(out JournalRecord record)) return false;");
+            ssb.AppendLine("if (!reader.TryReadJournalRecord(out JournalRecord record)) return false;");
 
             var trie = new VisceralTrieInt<Machine>(null);
             foreach (var x in this.Machines.Values)
@@ -402,12 +402,12 @@ internal class BigMachine : IEquatable<BigMachine>
         }
 
         /*ssb.AppendLine();
-        using (var scopeMethod = ssb.ScopeBrace("void IStructualObject.SetParent(IStructualObject? parent, int key)"))
+        using (var scopeMethod = ssb.ScopeBrace("void IStructualObject.SetupStructure(IStructualObject? parent, int key)"))
         {
             ssb.AppendLine("((IStructualObject)this).SetParentActual(parent, key);");
             foreach (var x in this.Machines.Values)
             {
-                ssb.AppendLine($"((IStructualObject)this.{x.Name})?.SetParent(this, {x.Key.ToString()});");
+                ssb.AppendLine($"((IStructualObject)this.{x.Name})?.SetupStructure(this, {x.Key.ToString()});");
             }
         }*/
     }

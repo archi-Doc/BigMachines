@@ -79,7 +79,7 @@ public class Program
 
         await ThreadCore.Root.WaitForTerminationAsync(-1); // Wait for the termination infinitely.
 
-        await crystalizer.SaveAllAndTerminate();
+        await crystalizer.StoreAndRip();
 
         ThreadCore.Root.TerminationEvent.Set(); // The termination process is complete (#1).
     }

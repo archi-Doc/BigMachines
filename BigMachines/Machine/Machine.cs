@@ -36,7 +36,7 @@ public abstract partial class Machine
         if (this is IStructualObject obj &&
             this.MachineControl is IStructualObject parent)
         {
-            obj.SetParent(parent);
+            obj.SetupStructure(parent);
         }
 
         if (this.DefaultTimeout != TimeSpan.Zero && this.__timeUntilRun__ == long.MaxValue)

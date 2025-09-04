@@ -30,7 +30,7 @@ public sealed partial class UnorderedMachineControl<TIdentifier, TMachine, TInte
         if (this.MachineInformation.Serializable &&
             this.BigMachine is IStructualObject obj)
         {
-            ((IStructualObject)this.items).SetParent(obj);
+            ((IStructualObject)this.items).SetupStructure(obj);
         }
     }
 
