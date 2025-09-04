@@ -404,7 +404,7 @@ internal class BigMachine : IEquatable<BigMachine>
         /*ssb.AppendLine();
         using (var scopeMethod = ssb.ScopeBrace("void IStructualObject.SetupStructure(IStructualObject? parent, int key)"))
         {
-            ssb.AppendLine("((IStructualObject)this).SetParentActual(parent, key);");
+            ssb.AppendLine("((IStructualObject)this).SetParentAndKey(parent, key);");
             foreach (var x in this.Machines.Values)
             {
                 ssb.AppendLine($"((IStructualObject)this.{x.Name})?.SetupStructure(this, {x.Key.ToString()});");
