@@ -158,7 +158,7 @@ public sealed partial class SequentialMachineControl<TIdentifier, TMachine, TInt
         }
 
         var result = false;
-        using (this.items.LockObject.EnterScope())
+        using (this.items.LockObject.EnterScope())//
         {
             if (this.items.IdentifierChain.TryGetValue(m.Identifier, out var item))
             {

@@ -15,7 +15,7 @@ public partial class SequentialMachine : Machine<int>
 
     public SequentialMachine()
     {
-        this.Lifespan = TimeSpan.FromSeconds(5);
+        this.Lifespan = TimeSpan.FromSeconds(1005);
         this.DefaultTimeout = TimeSpan.FromSeconds(1);
     }
 
@@ -31,7 +31,7 @@ public partial class SequentialMachine : Machine<int>
 
         if (this.Count >= 3)
         {
-            return StateResult.Terminate;
+            //return StateResult.Terminate;
         }
 
         return StateResult.Continue;
