@@ -375,7 +375,7 @@ internal class BigMachine : IEquatable<BigMachine>
         ssb.AppendLine("IStructualObject? IStructualObject.StructualParent { get; set; }");
         ssb.AppendLine("int IStructualObject.StructualKey { get; set; }");
 
-        using (var scopeMethod = ssb.ScopeBrace("bool IStructualObject.ReadRecord(ref TinyhandReader reader)"))
+        using (var scopeMethod = ssb.ScopeBrace("bool IStructualObject.ProcessJournalRecord(ref TinyhandReader reader)"))
         {
             ssb.AppendLine("if (!reader.TryReadJournalRecord(out JournalRecord record)) return false;");
 
@@ -389,7 +389,7 @@ internal class BigMachine : IEquatable<BigMachine>
                 ssb,
                 (ctx, obj, node) =>
                 {
-                    ssb.AppendLine($"return ((IStructualObject)this.{node.Member.Name}).ReadRecord(ref reader);");
+                    ssb.AppendLine($"return ((IStructualObject)this.{node.Member.Name}).ProcessJournalRecord(ref reader);");
                 });
 
             using (var scopeKey = ssb.ScopeBrace("if (record == JournalRecord.Key)"))

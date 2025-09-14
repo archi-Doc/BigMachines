@@ -236,7 +236,7 @@ public sealed partial class UnorderedMachineControl<TIdentifier, TMachine, TInte
     {
         if (this.items is IStructualObject obj)
         {
-            return obj.ReadRecord(ref reader);
+            return obj.ProcessJournalRecord(ref reader);
         }
 
         return false;

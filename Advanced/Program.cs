@@ -42,7 +42,6 @@ public class Program
                 context.AddCrystal<BigMachine>(new()
                 {
                     FileConfiguration = new LocalFileConfiguration("Data/BigMachine.tinyhand"),
-                    SavePolicy = SavePolicy.Manual,
                     SaveFormat = SaveFormat.Utf8,
                     NumberOfFileHistories = 3,
                 });
@@ -52,17 +51,17 @@ public class Program
         TinyhandSerializer.ServiceProvider = unit.Context.ServiceProvider; // Set ServiceProvider (required).
 
         var crystalizer = unit.Context.ServiceProvider.GetRequiredService<Crystalizer>();
-        await crystalizer.PrepareAndLoadAll(false);
+        await crystalizer.PrepareAndLoad(false);
 
         var bigMachine = unit.Context.ServiceProvider.GetRequiredService<BigMachine>();
         bigMachine.Start(ThreadCore.Root); // Start BigMachine.
 
         // bigMachine.TerminatorMachine.Get(); // This machine will stop the app thread if there is no working machine. -> Start by default
 
-        // TestMachine.Test(bigMachine);
+        TestMachine.Test(bigMachine);
         // await PassiveMachine.Test(bigMachine);
         // IntermittentMachine.Test(bigMachine);
-        SequentialMachine.Test(bigMachine);
+        // SequentialMachine.Test(bigMachine);
         // ContinuousMachine.Test(bigMachine);
 
         // DerivedMachine.Test2(bigMachine);

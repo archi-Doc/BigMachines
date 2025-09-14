@@ -343,7 +343,7 @@ public sealed partial class SequentialMachineControl<TIdentifier, TMachine, TInt
     {
         if (this.items is IStructualObject obj)
         {
-            return obj.ReadRecord(ref reader);
+            return obj.ProcessJournalRecord(ref reader);
         }
 
         return false;

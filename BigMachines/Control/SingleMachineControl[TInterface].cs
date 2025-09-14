@@ -170,7 +170,7 @@ public partial class SingleMachineControl<TMachine, TInterface> : MachineControl
     {
         if (this.GetOrCreateMachine() is IStructualObject obj)
         {
-            return obj.ReadRecord(ref reader);
+            return obj.ProcessJournalRecord(ref reader);
         }
 
         return false;
