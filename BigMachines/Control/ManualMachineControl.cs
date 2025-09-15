@@ -60,7 +60,7 @@ public sealed partial class ManualMachineControl : MachineControl // , ITinyhand
     public override int Count
         => this.typeToMachine.Count;
 
-    public override bool CheckActiveMachine()
+    public override bool ContainsActiveMachine()
     {
         using (this.lockObject.EnterScope())
         {
@@ -100,13 +100,13 @@ public sealed partial class ManualMachineControl : MachineControl // , ITinyhand
         }
     }
 
-    internal override void Process(DateTime now, TimeSpan elapsed)
+    internal override void Process(MachineRunner runner)
     {
         using (this.lockObject.EnterScope())
         {
             foreach (var x in this.typeToMachine.Values)
             {
-                x.Process(now, elapsed);
+                runner.Add(x);
             }
         }
     }

@@ -37,11 +37,11 @@ public abstract class MachineControl
     /// Check if there are any machines currently active.
     /// </summary>
     /// <returns><see langword="true"/>; Active machines are present.</returns>
-    public abstract bool CheckActiveMachine();
+    public abstract bool ContainsActiveMachine();
 
     internal abstract Machine[] GetMachines();
 
     internal abstract bool RemoveMachine(Machine machine);
 
-    internal abstract void Process(DateTime now, TimeSpan elapsed);
+    internal abstract void Process(MachineRunner runner);
 }

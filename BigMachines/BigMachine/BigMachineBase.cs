@@ -69,7 +69,7 @@ public abstract partial class BigMachineBase : IBigMachine
     {
         foreach (var x in this.GetArray())
         {
-            if (x.CheckActiveMachine())
+            if (x.ContainsActiveMachine())
             {
                 if (x.MachineInformation.MachineType != machineTypeToBeExcluded)
                 {

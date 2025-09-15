@@ -81,7 +81,7 @@ public sealed partial class UnorderedMachineControl<TIdentifier, TMachine, TInte
         }
     }
 
-    public override bool CheckActiveMachine()
+    public override bool ContainsActiveMachine()
     {
         using (this.items.LockObject.EnterScope())
         {
@@ -134,13 +134,13 @@ public sealed partial class UnorderedMachineControl<TIdentifier, TMachine, TInte
         }
     }
 
-    internal override void Process(DateTime now, TimeSpan elapsed)
+    internal override void Process(MachineRunner runner)
     {
         using (this.items.LockObject.EnterScope())
         {
             foreach (var x in this.items)
             {
-                x.Machine.Process(now, elapsed);
+                runner.Add(x.Machine);
             }
         }
     }
@@ -236,7 +236,7 @@ public sealed partial class UnorderedMachineControl<TIdentifier, TMachine, TInte
     {
         if (this.items is IStructualObject obj)
         {
-            return obj.ReadRecord(ref reader);
+            return obj.ProcessJournalRecord(ref reader);
         }
 
         return false;

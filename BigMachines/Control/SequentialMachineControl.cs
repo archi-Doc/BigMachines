@@ -110,7 +110,7 @@ public sealed partial class SequentialMachineControl<TIdentifier, TMachine, TInt
         }
     }
 
-    public override bool CheckActiveMachine()
+    public override bool ContainsActiveMachine()
     {
         using (this.items.LockObject.EnterScope())
         {
@@ -184,7 +184,7 @@ public sealed partial class SequentialMachineControl<TIdentifier, TMachine, TInt
         return result;
     }
 
-    internal override void Process(DateTime now, TimeSpan elapsed)
+    internal override void Process(MachineRunner runner)
     {
         using (this.items.LockObject.EnterScope())
         {
@@ -192,7 +192,7 @@ public sealed partial class SequentialMachineControl<TIdentifier, TMachine, TInt
             {// Have dedicated tasks
                 foreach (var x in this.items)
                 {
-                    x.Machine.ProcessLifespan(now, elapsed);
+                    runner.Add(x.Machine);
                 }
             }
             else
@@ -205,7 +205,7 @@ public sealed partial class SequentialMachineControl<TIdentifier, TMachine, TInt
                 var machine = first.Machine;
                 if (machine.OperationalState == 0)
                 {// Stand-by
-                    machine.Process(now, elapsed);
+                    runner.Add(machine);
                 }
             }
         }
@@ -343,7 +343,7 @@ public sealed partial class SequentialMachineControl<TIdentifier, TMachine, TInt
     {
         if (this.items is IStructualObject obj)
         {
-            return obj.ReadRecord(ref reader);
+            return obj.ProcessJournalRecord(ref reader);
         }
 
         return false;

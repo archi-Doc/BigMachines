@@ -15,7 +15,7 @@ public partial class SequentialMachine : Machine<int>
 
     public SequentialMachine()
     {
-        this.Lifespan = TimeSpan.FromSeconds(5);
+        this.Lifespan = TimeSpan.FromSeconds(10);
         this.DefaultTimeout = TimeSpan.FromSeconds(1);
     }
 

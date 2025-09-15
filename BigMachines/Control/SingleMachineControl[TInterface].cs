@@ -57,7 +57,7 @@ public partial class SingleMachineControl<TMachine, TInterface> : MachineControl
     public override int Count
         => this.machine is null ? 0 : 1;
 
-    public override bool CheckActiveMachine()
+    public override bool ContainsActiveMachine()
     {
         if (this.machine?.IsActive == true)
         {
@@ -104,9 +104,12 @@ public partial class SingleMachineControl<TMachine, TInterface> : MachineControl
         }
     }
 
-    internal override void Process(DateTime now, TimeSpan elapsed)
+    internal override void Process(MachineRunner runner)
     {
-        this.machine?.Process(now, elapsed);
+        if (this.machine is { } machine)
+        {
+            runner.Add(machine);
+        }
     }
 
     private TMachine GetOrCreateMachine(object? createParam)
@@ -170,7 +173,7 @@ public partial class SingleMachineControl<TMachine, TInterface> : MachineControl
     {
         if (this.GetOrCreateMachine() is IStructualObject obj)
         {
-            return obj.ReadRecord(ref reader);
+            return obj.ProcessJournalRecord(ref reader);
         }
 
         return false;
