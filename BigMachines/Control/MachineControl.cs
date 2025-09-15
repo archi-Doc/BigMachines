@@ -43,5 +43,5 @@ public abstract class MachineControl
 
     internal abstract bool RemoveMachine(Machine machine);
 
-    internal abstract void Process(DateTime now, TimeSpan elapsed);
+    internal abstract void Process(DateTime utcNow, TimeSpan elapsed);
 }

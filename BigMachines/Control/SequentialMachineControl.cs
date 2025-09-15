@@ -184,7 +184,7 @@ public sealed partial class SequentialMachineControl<TIdentifier, TMachine, TInt
         return result;
     }
 
-    internal override void Process(DateTime now, TimeSpan elapsed)
+    internal override void Process(DateTime utcNow, TimeSpan elapsed)
     {
         using (this.items.LockObject.EnterScope())
         {
@@ -192,7 +192,7 @@ public sealed partial class SequentialMachineControl<TIdentifier, TMachine, TInt
             {// Have dedicated tasks
                 foreach (var x in this.items)
                 {
-                    x.Machine.ProcessLifespan(now, elapsed);
+                    x.Machine.ProcessLifespan(utcNow, elapsed);
                 }
             }
             else
@@ -205,7 +205,7 @@ public sealed partial class SequentialMachineControl<TIdentifier, TMachine, TInt
                 var machine = first.Machine;
                 if (machine.OperationalState == 0)
                 {// Stand-by
-                    machine.Process(now, elapsed);
+                    machine.Process(utcNow, elapsed);
                 }
             }
         }

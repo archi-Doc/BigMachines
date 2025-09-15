@@ -39,13 +39,13 @@ public partial class BigMachineBase
                     bigMachine.exceptionHandler(exception);
                 }
 
-                var now = DateTime.UtcNow;
+                var utcNow = DateTime.UtcNow;
                 if (bigMachine.lastRun == default)
                 {
-                    bigMachine.lastRun = now;
+                    bigMachine.lastRun = utcNow;
                 }
 
-                var elapsed = now - bigMachine.lastRun;
+                var elapsed = utcNow - bigMachine.lastRun;
                 if (elapsed.Ticks < 0)
                 {
                     elapsed = default;
@@ -53,10 +53,10 @@ public partial class BigMachineBase
 
                 foreach (var x in controls)
                 {
-                    x.Process(now, elapsed);
+                    x.Process(utcNow, elapsed);
                 }
 
-                bigMachine.lastRun = now;
+                bigMachine.lastRun = utcNow;
             }
 
             return;

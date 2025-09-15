@@ -104,9 +104,9 @@ public partial class SingleMachineControl<TMachine, TInterface> : MachineControl
         }
     }
 
-    internal override void Process(DateTime now, TimeSpan elapsed)
+    internal override void Process(DateTime utcNow, TimeSpan elapsed)
     {
-        this.machine?.Process(now, elapsed);
+        this.machine?.Process(utcNow, elapsed);
     }
 
     private TMachine GetOrCreateMachine(object? createParam)
