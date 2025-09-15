@@ -3,7 +3,6 @@
 using System;
 using System.Threading.Tasks;
 using Arc.Threading;
-using BigMachines.Control;
 
 namespace BigMachines;
 
@@ -26,6 +25,7 @@ public partial class BigMachineBase
             var core = (BigMachineCore)parameter!;
             var bigMachine = core.bigMachine;
             var controls = core.bigMachine.GetArray();
+            var runner = new MachineRunner();
 
             while (!core.IsTerminated)
             {
@@ -51,10 +51,13 @@ public partial class BigMachineBase
                     elapsed = default;
                 }
 
+                runner.Prepare(utcNow, elapsed);
                 foreach (var x in controls)
                 {
-                    x.Process(utcNow, elapsed);
+                    x.Process(runner);
                 }
+
+                runner.RunAndClear();
 
                 bigMachine.lastRun = utcNow;
             }

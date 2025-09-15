@@ -100,13 +100,13 @@ public sealed partial class ManualMachineControl : MachineControl // , ITinyhand
         }
     }
 
-    internal override void Process(DateTime utcNow, TimeSpan elapsed)
+    internal override void Process(MachineRunner runner)
     {
         using (this.lockObject.EnterScope())
         {
             foreach (var x in this.typeToMachine.Values)
             {
-                x.Process(utcNow, elapsed);
+                runner.Add(x);
             }
         }
     }

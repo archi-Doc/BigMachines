@@ -134,13 +134,13 @@ public sealed partial class UnorderedMachineControl<TIdentifier, TMachine, TInte
         }
     }
 
-    internal override void Process(DateTime utcNow, TimeSpan elapsed)
-    {//
+    internal override void Process(MachineRunner runner)
+    {
         using (this.items.LockObject.EnterScope())
         {
             foreach (var x in this.items)
             {
-                x.Machine.Process(utcNow, elapsed);
+                runner.Add(x.Machine);
             }
         }
     }
