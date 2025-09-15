@@ -110,7 +110,7 @@ public sealed partial class SequentialMachineControl<TIdentifier, TMachine, TInt
         }
     }
 
-    public override bool CheckActiveMachine()
+    public override bool ContainsActiveMachine()
     {
         using (this.items.LockObject.EnterScope())
         {
@@ -158,7 +158,7 @@ public sealed partial class SequentialMachineControl<TIdentifier, TMachine, TInt
         }
 
         var result = false;
-        using (this.items.LockObject.EnterScope())//
+        using (this.items.LockObject.EnterScope())
         {
             if (this.items.IdentifierChain.TryGetValue(m.Identifier, out var item))
             {
@@ -187,7 +187,7 @@ public sealed partial class SequentialMachineControl<TIdentifier, TMachine, TInt
     internal override void Process(DateTime utcNow, TimeSpan elapsed)
     {
         using (this.items.LockObject.EnterScope())
-        {
+        {//
             if (this.MachineInformation.NumberOfTasks > 0)
             {// Have dedicated tasks
                 foreach (var x in this.items)

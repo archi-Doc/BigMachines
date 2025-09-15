@@ -81,7 +81,7 @@ public sealed partial class UnorderedMachineControl<TIdentifier, TMachine, TInte
         }
     }
 
-    public override bool CheckActiveMachine()
+    public override bool ContainsActiveMachine()
     {
         using (this.items.LockObject.EnterScope())
         {
@@ -135,7 +135,7 @@ public sealed partial class UnorderedMachineControl<TIdentifier, TMachine, TInte
     }
 
     internal override void Process(DateTime utcNow, TimeSpan elapsed)
-    {
+    {//
         using (this.items.LockObject.EnterScope())
         {
             foreach (var x in this.items)

@@ -60,7 +60,7 @@ public sealed partial class ManualMachineControl : MachineControl // , ITinyhand
     public override int Count
         => this.typeToMachine.Count;
 
-    public override bool CheckActiveMachine()
+    public override bool ContainsActiveMachine()
     {
         using (this.lockObject.EnterScope())
         {

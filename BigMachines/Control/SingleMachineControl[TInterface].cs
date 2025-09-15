@@ -57,7 +57,7 @@ public partial class SingleMachineControl<TMachine, TInterface> : MachineControl
     public override int Count
         => this.machine is null ? 0 : 1;
 
-    public override bool CheckActiveMachine()
+    public override bool ContainsActiveMachine()
     {
         if (this.machine?.IsActive == true)
         {
