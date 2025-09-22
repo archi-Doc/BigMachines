@@ -30,7 +30,7 @@ public class Program
         };
 
         // Create a builder for BigMachine and CrystalData.
-        var builder = new CrystalControl.Builder()
+        var builder = new CrystalUnit.Builder()
             .Configure(context =>
             {// Register some services.
                 context.AddSingleton<SomeService>();
@@ -47,13 +47,13 @@ public class Program
                 });
             });
 
-        var unit = builder.Build();
-        TinyhandSerializer.ServiceProvider = unit.Context.ServiceProvider; // Set ServiceProvider (required).
+        var product = builder.Build();
+        TinyhandSerializer.ServiceProvider = product.Context.ServiceProvider; // Set ServiceProvider (required).
 
-        var crystalizer = unit.Context.ServiceProvider.GetRequiredService<Crystalizer>();
-        await crystalizer.PrepareAndLoad(false);
+        var crystalControl = product.Context.ServiceProvider.GetRequiredService<CrystalControl>();
+        await crystalControl.PrepareAndLoad(false);
 
-        var bigMachine = unit.Context.ServiceProvider.GetRequiredService<BigMachine>();
+        var bigMachine = product.Context.ServiceProvider.GetRequiredService<BigMachine>();
         bigMachine.Start(ThreadCore.Root); // Start BigMachine.
 
         // bigMachine.TerminatorMachine.Get(); // This machine will stop the app thread if there is no working machine. -> Start by default
@@ -78,7 +78,7 @@ public class Program
 
         await ThreadCore.Root.WaitForTerminationAsync(-1); // Wait for the termination infinitely.
 
-        await crystalizer.StoreAndRip();
+        await crystalControl.StoreAndRip();
 
         ThreadCore.Root.TerminationEvent.Set(); // The termination process is complete (#1).
     }

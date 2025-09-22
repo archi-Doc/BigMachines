@@ -402,10 +402,6 @@ protected virtual void OnTerminate()
 Since the machine is independent, you cannot pass parameters directly when creating an instance (and mainly for the deserialization process).
 
 ```csharp
-
-```
-
-```csharp
 public class SomeService
 {
     public void Print(string? text) => Console.WriteLine($"Some service : {text}");
@@ -462,9 +458,9 @@ Relationships between machines can become complicated, and may lead to circular 
 
 Each machine is designed to run independently.
 
-So exceptions thrown in machines are handled by **BigMachine**'s main thread (`BigMachine.Core`), not by the caller.
+So exceptions thrown in machines are handled by **BigMachines**' main thread (`BigMachine.Core`), not by the caller.
 
-In detail, exceptions are registered to **BigMachine** using `BigMachine.ReportException()`, and handled by the following method in **BigMachine**'s main thread.
+In detail, exceptions are registered to **BigMachines** using `BigMachine.ReportException()`, and handled by the following method in **BigMachines**' main thread.
 
 ```cahrp
 private static void DefaultExceptionHandler(BigMachineException exception)
