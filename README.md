@@ -336,7 +336,7 @@ var bigMachine2 = TinyhandSerializer.Deserialize<BigMachine>(bin);
 If you want to save to a file, register it with **CrystalData** as shown in the following code.
 
 ```csharp
-var builder = new CrystalControl.Builder()
+var builder = new CrystalUnit.Builder()
     .ConfigureCrystal(context =>
     {
         context.AddCrystal<BigMachine>(new()
