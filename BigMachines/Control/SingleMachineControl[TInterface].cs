@@ -14,7 +14,7 @@ namespace BigMachines.Control;
 /// </summary>
 /// <typeparam name="TMachine">The type of a machine.</typeparam>
 /// <typeparam name="TInterface">The type of an interface.</typeparam>
-[TinyhandObject(Structual = true)]
+[TinyhandObject(Structural = true)]
 public partial class SingleMachineControl<TMachine, TInterface> : MachineControl, ITinyhandSerializable<SingleMachineControl<TMachine, TInterface>>, ITinyhandCustomJournal
     where TMachine : Machine
     where TInterface : Machine.ManMachineInterface
@@ -171,7 +171,7 @@ public partial class SingleMachineControl<TMachine, TInterface> : MachineControl
 
     bool ITinyhandCustomJournal.ReadCustomRecord(ref TinyhandReader reader)
     {
-        if (this.GetOrCreateMachine() is IStructualObject obj)
+        if (this.GetOrCreateMachine() is IStructuralObject obj)
         {
             return obj.ProcessJournalRecord(ref reader);
         }

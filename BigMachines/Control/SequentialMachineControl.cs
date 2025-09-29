@@ -20,7 +20,7 @@ public interface ISequentialMachineControl
     Machine.ManMachineInterface? GetFirst();
 }
 
-[TinyhandObject(Structual = true)]
+[TinyhandObject(Structural = true)]
 public sealed partial class SequentialMachineControl<TIdentifier, TMachine, TInterface> : MultiMachineControl<TIdentifier, TInterface>, ISequentialMachineControl, ITinyhandSerializable<SequentialMachineControl<TIdentifier, TMachine, TInterface>>, ITinyhandCustomJournal
     where TIdentifier : notnull
     where TMachine : Machine<TIdentifier>
@@ -43,13 +43,13 @@ public sealed partial class SequentialMachineControl<TIdentifier, TMachine, TInt
     {
         this.BigMachine = bigMachine;
         if (this.MachineInformation.Serializable &&
-            this.BigMachine is IStructualObject obj)
+            this.BigMachine is IStructuralObject obj)
         {
-            ((IStructualObject)this.items).SetupStructure(obj);
+            ((IStructuralObject)this.items).SetupStructure(obj);
         }
     }
 
-    [TinyhandObject(Structual = true)]
+    [TinyhandObject(Structural = true)]
     [ValueLinkObject(Isolation = IsolationLevel.Serializable)]
     private partial class Item
     {
@@ -341,7 +341,7 @@ public sealed partial class SequentialMachineControl<TIdentifier, TMachine, TInt
 
     bool ITinyhandCustomJournal.ReadCustomRecord(ref TinyhandReader reader)
     {
-        if (this.items is IStructualObject obj)
+        if (this.items is IStructuralObject obj)
         {
             return obj.ProcessJournalRecord(ref reader);
         }

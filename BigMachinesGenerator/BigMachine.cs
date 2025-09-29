@@ -247,7 +247,7 @@ internal class BigMachine : IEquatable<BigMachine>
     public void Generate(ScopingStringBuilder ssb, GeneratorInformation info)
     {
         ssb.AppendLine("[TinyhandObject]");
-        using (var scopeClass = ssb.ScopeBrace($"public partial class {this.SimpleName} : BigMachineBase, ITinyhandSerializable<{this.SimpleName}>, ITinyhandReconstructable<{this.SimpleName}>, ITinyhandCloneable<{this.SimpleName}>, IStructualObject"))
+        using (var scopeClass = ssb.ScopeBrace($"public partial class {this.SimpleName} : BigMachineBase, ITinyhandSerializable<{this.SimpleName}>, ITinyhandReconstructable<{this.SimpleName}>, ITinyhandCloneable<{this.SimpleName}>, IStructuralObject"))
         {
             this.GenerateMembers(ssb, info);
             ssb.AppendLine();
@@ -261,7 +261,7 @@ internal class BigMachine : IEquatable<BigMachine>
             ssb.AppendLine($"static {this.SimpleName}? ITinyhandCloneable<{this.SimpleName}>.Clone(scoped ref {this.SimpleName}? v, TinyhandSerializerOptions options) => v == null ? null : TinyhandSerializer.Deserialize<{this.SimpleName}>(TinyhandSerializer.Serialize(v));");
             ssb.AppendLine();
 
-            this.GenerateStructual(ssb, info);
+            this.GenerateStructural(ssb, info);
             ssb.AppendLine();
 
             this.GenerateStartByDefault(ssb, info);
@@ -300,7 +300,7 @@ internal class BigMachine : IEquatable<BigMachine>
 
                 ssb.AppendLine($"this._{x.Name} = new();");
                 ssb.AppendLine($"this.{x.Name}.Prepare(this);");
-                ssb.AppendLine($"((IStructualObject)this.{x.Name}).SetupStructure(this, {x.Key.ToString()});");
+                ssb.AppendLine($"((IStructuralObject)this.{x.Name}).SetupStructure(this, {x.Key.ToString()});");
 
                 sb.Append($"this.{x.Name}, ");
             }
@@ -369,13 +369,13 @@ internal class BigMachine : IEquatable<BigMachine>
         }
     }
 
-    public void GenerateStructual(ScopingStringBuilder ssb, GeneratorInformation info)
+    public void GenerateStructural(ScopingStringBuilder ssb, GeneratorInformation info)
     {
-        ssb.AppendLine("IStructualRoot? IStructualObject.StructualRoot { get; set; }");
-        ssb.AppendLine("IStructualObject? IStructualObject.StructualParent { get; set; }");
-        ssb.AppendLine("int IStructualObject.StructualKey { get; set; }");
+        ssb.AppendLine("IStructuralRoot? IStructuralObject.StructuralRoot { get; set; }");
+        ssb.AppendLine("IStructuralObject? IStructuralObject.StructuralParent { get; set; }");
+        ssb.AppendLine("int IStructuralObject.StructuralKey { get; set; }");
 
-        using (var scopeMethod = ssb.ScopeBrace("bool IStructualObject.ProcessJournalRecord(ref TinyhandReader reader)"))
+        using (var scopeMethod = ssb.ScopeBrace("bool IStructuralObject.ProcessJournalRecord(ref TinyhandReader reader)"))
         {
             ssb.AppendLine("if (!reader.TryReadJournalRecord(out JournalRecord record)) return false;");
 
@@ -389,7 +389,7 @@ internal class BigMachine : IEquatable<BigMachine>
                 ssb,
                 (ctx, obj, node) =>
                 {
-                    ssb.AppendLine($"return ((IStructualObject)this.{node.Member.Name}).ProcessJournalRecord(ref reader);");
+                    ssb.AppendLine($"return ((IStructuralObject)this.{node.Member.Name}).ProcessJournalRecord(ref reader);");
                 });
 
             using (var scopeKey = ssb.ScopeBrace("if (record == JournalRecord.Key)"))
@@ -402,12 +402,12 @@ internal class BigMachine : IEquatable<BigMachine>
         }
 
         /*ssb.AppendLine();
-        using (var scopeMethod = ssb.ScopeBrace("void IStructualObject.SetupStructure(IStructualObject? parent, int key)"))
+        using (var scopeMethod = ssb.ScopeBrace("void IStructuralObject.SetupStructure(IStructuralObject? parent, int key)"))
         {
-            ssb.AppendLine("((IStructualObject)this).SetParentAndKey(parent, key);");
+            ssb.AppendLine("((IStructuralObject)this).SetParentAndKey(parent, key);");
             foreach (var x in this.Machines.Values)
             {
-                ssb.AppendLine($"((IStructualObject)this.{x.Name})?.SetupStructure(this, {x.Key.ToString()});");
+                ssb.AppendLine($"((IStructuralObject)this.{x.Name})?.SetupStructure(this, {x.Key.ToString()});");
             }
         }*/
     }
