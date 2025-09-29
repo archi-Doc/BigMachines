@@ -8,8 +8,8 @@
 
   <ItemGroup>
     <PackageReference Include="Arc.Collections" Version="1.26.0" />
-    <PackageReference Include="BenchmarkDotNet" Version="0.15.3" />
-    <PackageReference Include="Tinyhand" Version="0.125.5" />
+    <PackageReference Include="BenchmarkDotNet" Version="0.15.4" />
+    <PackageReference Include="Tinyhand" Version="0.128.0" />
   </ItemGroup>
 
   <ItemGroup>
