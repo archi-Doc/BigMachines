@@ -34,7 +34,7 @@ public enum BigMachinesObjectFlag
 
     CanCreateInstance = 1 << 12, // Can create an instance
     HasRegisterBM = 1 << 13, // RegisterBM() declared
-    StructualEnabled = 1 << 14, // Tinyhand structual
+    StructuralEnabled = 1 << 14, // Tinyhand structural
 }
 
 public class BigMachinesObject : VisceralObjectBase<BigMachinesObject>
@@ -172,9 +172,9 @@ public class BigMachinesObject : VisceralObjectBase<BigMachinesObject>
                 }
 
                 this.ObjectFlag |= BigMachinesObjectFlag.TinyhandObject;
-                if (this.TinyhandAttribute?.Structual == true)
+                if (this.TinyhandAttribute?.Structural == true)
                 {
-                    this.ObjectFlag |= BigMachinesObjectFlag.StructualEnabled;
+                    this.ObjectFlag |= BigMachinesObjectFlag.StructuralEnabled;
                 }
             }
         }

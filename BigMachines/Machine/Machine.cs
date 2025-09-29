@@ -33,8 +33,8 @@ public abstract partial class Machine
     private void Prepare(MachineControl control)
     {// Deserialize
         this.__machineControl__ = control;
-        if (this is IStructualObject obj &&
-            this.MachineControl is IStructualObject parent)
+        if (this is IStructuralObject obj &&
+            this.MachineControl is IStructuralObject parent)
         {
             obj.SetupStructure(parent);
         }
@@ -81,8 +81,8 @@ public abstract partial class Machine
                 return;
             }
 
-            if (this is IStructualObject structualObject &&
-                structualObject.TryGetJournalWriter(out var root, out var writer, true))
+            if (this is IStructuralObject structuralObject &&
+                structuralObject.TryGetJournalWriter(out var root, out var writer, true))
             {
                 writer.Write_Key();
                 writer.Write(1);
@@ -112,8 +112,8 @@ public abstract partial class Machine
                 return;
             }
 
-            if (this is IStructualObject structualObject &&
-                structualObject.TryGetJournalWriter(out var root, out var writer, true))
+            if (this is IStructuralObject structuralObject &&
+                structuralObject.TryGetJournalWriter(out var root, out var writer, true))
             {
                 writer.Write_Key();
                 writer.Write(2);
@@ -143,8 +143,8 @@ public abstract partial class Machine
                 return;
             }
 
-            if (this is IStructualObject structualObject &&
-                structualObject.TryGetJournalWriter(out var root, out var writer, true))
+            if (this is IStructuralObject structuralObject &&
+                structuralObject.TryGetJournalWriter(out var root, out var writer, true))
             {
                 writer.Write_Key();
                 writer.Write(3);
@@ -174,8 +174,8 @@ public abstract partial class Machine
                 return;
             }
 
-            if (this is IStructualObject structualObject &&
-                structualObject.TryGetJournalWriter(out var root, out var writer, true))
+            if (this is IStructuralObject structuralObject &&
+                structuralObject.TryGetJournalWriter(out var root, out var writer, true))
             {
                 writer.Write_Key();
                 writer.Write(4);
@@ -206,8 +206,8 @@ public abstract partial class Machine
                 return;
             }
 
-            if (this is IStructualObject structualObject &&
-                structualObject.TryGetJournalWriter(out var root, out var writer, true))
+            if (this is IStructuralObject structuralObject &&
+                structuralObject.TryGetJournalWriter(out var root, out var writer, true))
             {
                 writer.Write_Key();
                 writer.Write(5);
@@ -237,8 +237,8 @@ public abstract partial class Machine
                 return;
             }
 
-            if (this is IStructualObject structualObject &&
-                structualObject.TryGetJournalWriter(out var root, out var writer, true))
+            if (this is IStructuralObject structuralObject &&
+                structuralObject.TryGetJournalWriter(out var root, out var writer, true))
             {
                 writer.Write_Key();
                 writer.Write(6);

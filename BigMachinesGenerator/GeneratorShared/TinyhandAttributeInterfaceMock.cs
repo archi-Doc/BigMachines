@@ -69,7 +69,7 @@ public sealed class TinyhandObjectAttributeMock
 
     public bool UseResolver { get; set; } = false;
 
-    public bool Structual { get; set; } = false;
+    public bool Structural { get; set; } = false;
 
     public TinyhandObjectAttributeMock()
     {
@@ -152,10 +152,10 @@ public sealed class TinyhandObjectAttributeMock
             attribute.UseResolver = (bool)val;
         }
 
-        val = AttributeHelper.GetValue(-1, nameof(Structual), constructorArguments, namedArguments);
+        val = AttributeHelper.GetValue(-1, nameof(Structural), constructorArguments, namedArguments);
         if (val != null)
         {
-            attribute.Structual = (bool)val;
+            attribute.Structural = (bool)val;
         }
 
         return attribute;
