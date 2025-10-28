@@ -1,6 +1,8 @@
 ﻿// Copyright (c) All contributors. All rights reserved. Licensed under the MIT license.
 
 using System;
+using System.Threading;
+using Arc.Threading;
 using Tinyhand;
 using Tinyhand.IO;
 
@@ -31,6 +33,7 @@ public partial class SingleMachineControl<TMachine, TInterface> : MachineControl
 
     public override MachineInformation MachineInformation { get; }
 
+    private readonly Lock lockObject = new();
     private TMachine? machine;
 
     /*private TMachine Machine
@@ -53,6 +56,12 @@ public partial class SingleMachineControl<TMachine, TInterface> : MachineControl
 
     public TInterface GetOrCreate()
         => (TInterface)this.GetOrCreateMachine().InterfaceInstance;
+
+    public TInterface CreateAlways(object? createParam = null)
+        => (TInterface)this.CreateAlwaysMachine(createParam).InterfaceInstance;
+
+    public TInterface CreateAlways()
+        => (TInterface)this.CreateAlwaysMachine().InterfaceInstance;
 
     public override int Count
         => this.machine is null ? 0 : 1;
@@ -93,14 +102,17 @@ public partial class SingleMachineControl<TMachine, TInterface> : MachineControl
 
     internal override bool RemoveMachine(Machine machine)
     {
-        if (this.machine == machine)
+        using (this.lockObject.EnterScope())
         {
-            this.machine = null;
-            return true;
-        }
-        else
-        {
-            return false;
+            if (this.machine == machine)
+            {
+                this.machine = null;
+                return true;
+            }
+            else
+            {
+                return false;
+            }
         }
     }
 
@@ -114,26 +126,82 @@ public partial class SingleMachineControl<TMachine, TInterface> : MachineControl
 
     private TMachine GetOrCreateMachine(object? createParam)
     {
-        if (this.machine is null)
+        using (this.lockObject.EnterScope())
         {
-            var machine = MachineRegistry.CreateMachine<TMachine>(this.MachineInformation);
-            machine.PrepareCreateStart(this, createParam);
-            this.machine = machine;
-        }
+            if (this.machine is null)
+            {
+                var machine = MachineRegistry.CreateMachine<TMachine>(this.MachineInformation);
+                machine.PrepareCreateStart(this, createParam);
+                this.machine = machine;
+            }
 
-        return this.machine;
+            return this.machine;
+        }
     }
 
     private TMachine GetOrCreateMachine()
     {
-        if (this.machine is null)
+        using (this.lockObject.EnterScope())
         {
+            if (this.machine is null)
+            {
+                var machine = MachineRegistry.CreateMachine<TMachine>(this.MachineInformation);
+                machine.PrepareStart(this);
+                this.machine = machine;
+            }
+
+            return this.machine;
+        }
+    }
+
+    private TMachine CreateAlwaysMachine(object? createParam)
+    {
+        Machine.ManMachineInterface? interfaceInstance = default;
+
+Loop:
+        if (interfaceInstance is not null)
+        {
+            interfaceInstance.TerminateMachine();
+        }
+
+        using (this.lockObject.EnterScope())
+        {
+            interfaceInstance = this.machine?.InterfaceInstance;
+            if (interfaceInstance is not null)
+            {
+                goto Loop;
+            }
+
+            var machine = MachineRegistry.CreateMachine<TMachine>(this.MachineInformation);
+            machine.PrepareCreateStart(this, createParam);
+            this.machine = machine;
+            return this.machine;
+        }
+    }
+
+    private TMachine CreateAlwaysMachine()
+    {
+        Machine.ManMachineInterface? interfaceInstance = default;
+
+Loop:
+        if (interfaceInstance is not null)
+        {
+            interfaceInstance.TerminateMachine();
+        }
+
+        using (this.lockObject.EnterScope())
+        {
+            interfaceInstance = this.machine?.InterfaceInstance;
+            if (interfaceInstance is not null)
+            {
+                goto Loop;
+            }
+
             var machine = MachineRegistry.CreateMachine<TMachine>(this.MachineInformation);
             machine.PrepareStart(this);
             this.machine = machine;
+            return this.machine;
         }
-
-        return this.machine;
     }
 
     static void ITinyhandSerializable<SingleMachineControl<TMachine, TInterface>>.Serialize(ref TinyhandWriter writer, scoped ref SingleMachineControl<TMachine, TInterface>? value, TinyhandSerializerOptions options)
