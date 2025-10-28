@@ -9,6 +9,7 @@ public partial class SingleMachine : Machine
     {
         bigMachine.SingleMachine.GetOrCreate("test"); // Only one machine is created.
         bigMachine.SingleMachine.CreateAlways("test2"); // Terminate the previous machine and create a new one.
+        bigMachine.SingleMachine.CreateAlways("test3"); // Terminate the previous machine and create a new one.
     }
 
     public SingleMachine()
