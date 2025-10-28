@@ -33,6 +33,7 @@ public abstract partial class Machine
     private void Prepare(MachineControl control)
     {// Deserialize
         this.__machineControl__ = control;
+        this.__operationalState__ = default; // Initialize the state in case the Machine instance is reused.
         if (this is IStructuralObject obj &&
             this.MachineControl is IStructuralObject parent)
         {
