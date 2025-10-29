@@ -1,6 +1,7 @@
 ﻿// Copyright (c) All contributors. All rights reserved. Licensed under the MIT license.
 
 using System;
+using System.Diagnostics.CodeAnalysis;
 using System.Threading;
 using Arc.Threading;
 using Tinyhand;
@@ -44,11 +45,19 @@ public partial class SingleMachineControl<TMachine, TInterface> : MachineControl
     public override MachineInformation MachineInformation { get; }
 
     /// <summary>
-    /// Gets the machine interface if it exists.
+    /// Attempts to retrieve the machine interface if a machine exists.
     /// </summary>
-    /// <returns>The machine interface of type <typeparamref name="TInterface"/>, or <see langword="null"/> if no machine exists.</returns>
-    public TInterface? Get()
-        => (TInterface?)this.machine?.InterfaceInstance;
+    /// <param name="machineInterface">
+    /// When this method returns, contains the machine interface of type <typeparamref name="TInterface"/> if a machine exists; otherwise, <see langword="null"/>.
+    /// </param>
+    /// <returns>
+    /// <see langword="true"/> if a machine exists and the interface was successfully retrieved; otherwise, <see langword="false"/>.
+    /// </returns>
+    public bool TryGet([MaybeNullWhen(false)] out TInterface machineInterface)
+    {
+        machineInterface = this.machine?.InterfaceInstance as TInterface;
+        return this.machine is not null;
+    }
 
     /// <summary>
     /// Gets an existing machine interface or creates a new machine with the specified creation parameters.
