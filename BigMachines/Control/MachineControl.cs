@@ -34,14 +34,29 @@ public abstract class MachineControl
     public abstract Machine.ManMachineInterface[] GetArray();
 
     /// <summary>
-    /// Check if there are any machines currently active.
+    /// Determines whether this control contains any active machines.
     /// </summary>
-    /// <returns><see langword="true"/>; Active machines are present.</returns>
+    /// <returns>
+    /// <see langword="true"/> if at least one active machine is present; otherwise, <see langword="false"/>.
+    /// </returns>
     public abstract bool ContainsActiveMachine();
 
+    /// <summary>
+    /// Retrieves all machines currently managed by this control.
+    /// </summary>
+    /// <returns>An array of <see cref="Machine"/> instances managed by this control.</returns>
     internal abstract Machine[] GetMachines();
 
+    /// <summary>
+    /// Removes the specified machine from this control.
+    /// </summary>
+    /// <param name="machine">The <see cref="Machine"/> instance to remove.</param>
+    /// <returns><see langword="true"/> if the machine was successfully removed; otherwise, <see langword="false"/>.</returns>
     internal abstract bool RemoveMachine(Machine machine);
 
+    /// <summary>
+    /// Processes all machines managed by this control using the specified runner.
+    /// </summary>
+    /// <param name="runner">The <see cref="MachineRunner"/> instance used to execute machine processing.</param>
     internal abstract void Process(MachineRunner runner);
 }
