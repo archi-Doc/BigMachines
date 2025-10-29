@@ -51,6 +51,9 @@ public partial class SingleMachineControl<TMachine, TInterface> : MachineControl
         }
     }*/
 
+    public TInterface? Get()
+        => (TInterface?)this.machine?.InterfaceInstance;
+
     public TInterface GetOrCreate(object? createParam = null)
         => (TInterface)this.GetOrCreateMachine(createParam).InterfaceInstance;
 
