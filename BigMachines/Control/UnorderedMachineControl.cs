@@ -152,6 +152,12 @@ public sealed partial class UnorderedMachineControl<TIdentifier, TMachine, TInte
 
     #region Main
 
+    /// <summary>
+    /// Attempts to retrieve a machine interface by its identifier.
+    /// </summary>
+    /// <param name="identifier">The identifier of the machine to retrieve.</param>
+    /// <param name="machineInterface">When this method returns, contains the machine interface associated with the specified identifier, if found; otherwise, the default value.</param>
+    /// <returns><see langword="true"/> if the machine was found; otherwise, <see langword="false"/>.</returns>
     public bool TryGet(TIdentifier identifier, [MaybeNullWhen(false)] out TInterface machineInterface)
     {
         using (this.items.LockObject.EnterScope())
@@ -169,6 +175,12 @@ public sealed partial class UnorderedMachineControl<TIdentifier, TMachine, TInte
         }
     }
 
+    /// <summary>
+    /// Gets an existing machine or creates a new one if it doesn't exist, using the specified creation parameter.
+    /// </summary>
+    /// <param name="identifier">The identifier of the machine.</param>
+    /// <param name="createParam">The parameter to pass to the machine's creation process if a new machine is created.</param>
+    /// <returns>The machine interface for the existing or newly created machine.</returns>
     public TInterface GetOrCreate(TIdentifier identifier, object? createParam)
     {
         using (this.items.LockObject.EnterScope())
@@ -189,6 +201,11 @@ public sealed partial class UnorderedMachineControl<TIdentifier, TMachine, TInte
         }
     }
 
+    /// <summary>
+    /// Gets an existing machine or creates a new one if it doesn't exist.
+    /// </summary>
+    /// <param name="identifier">The identifier of the machine.</param>
+    /// <returns>The machine interface for the existing or newly created machine.</returns>
     public TInterface GetOrCreate(TIdentifier identifier)
     {
         using (this.items.LockObject.EnterScope())
@@ -209,6 +226,12 @@ public sealed partial class UnorderedMachineControl<TIdentifier, TMachine, TInte
         }
     }
 
+    /// <summary>
+    /// Creates a new machine with the specified identifier, terminating any existing machine with the same identifier first, using the specified creation parameter.
+    /// </summary>
+    /// <param name="identifier">The identifier of the machine.</param>
+    /// <param name="createParam">The parameter to pass to the machine's creation process.</param>
+    /// <returns>The machine interface for the newly created machine.</returns>
     public TInterface CreateAlways(TIdentifier identifier, object? createParam)
     {
         Machine.ManMachineInterface? machineInterface = default;
@@ -236,6 +259,11 @@ Loop:
         }
     }
 
+    /// <summary>
+    /// Creates a new machine with the specified identifier, terminating any existing machine with the same identifier first.
+    /// </summary>
+    /// <param name="identifier">The identifier of the machine.</param>
+    /// <returns>The machine interface for the newly created machine.</returns>
     public TInterface CreateAlways(TIdentifier identifier)
     {
         Machine.ManMachineInterface? interfaceInstance = default;
