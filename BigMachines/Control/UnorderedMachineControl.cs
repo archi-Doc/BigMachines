@@ -17,6 +17,14 @@ public sealed partial class UnorderedMachineControl<TIdentifier, TMachine, TInte
     where TMachine : Machine<TIdentifier>
     where TInterface : Machine.ManMachineInterface
 {
+    #region FieldAndProperty
+
+    public override MachineInformation MachineInformation { get; }
+
+    private Item.GoshujinClass items;
+
+    #endregion
+
     public UnorderedMachineControl()
         : base()
     {
@@ -61,12 +69,6 @@ public sealed partial class UnorderedMachineControl<TIdentifier, TMachine, TInte
 
 #pragma warning restore SA1401 // Fields should be private
     }
-
-    public override MachineInformation MachineInformation { get; }
-
-    private Item.GoshujinClass items;
-
-    // public TCommandAll CommandAll { get; private set; } = default!;
 
     #region Abstract
 
@@ -179,9 +181,8 @@ public sealed partial class UnorderedMachineControl<TIdentifier, TMachine, TInte
                 machine.PrepareCreateStart(this, createParam);
                 item = new(identifier, machine);
                 item.Goshujin = this.items;
+                return (TInterface)item.Machine.InterfaceInstance;
             }
-
-            return (TInterface)item.Machine.InterfaceInstance;
         }
     }
 
@@ -189,16 +190,19 @@ public sealed partial class UnorderedMachineControl<TIdentifier, TMachine, TInte
     {
         using (this.items.LockObject.EnterScope())
         {
-            if (!this.items.IdentifierChain.TryGetValue(identifier, out var item))
+            if (this.items.IdentifierChain.TryGetValue(identifier, out var item))
+            {
+                return (TInterface)item.Machine.InterfaceInstance;
+            }
+            else
             {
                 var machine = MachineRegistry.CreateMachine<TMachine>(this.MachineInformation);
                 machine.Identifier = identifier;
                 machine.PrepareCreateStart(this, createParam);
                 item = new(identifier, machine);
                 item.Goshujin = this.items;
+                return (TInterface)item.Machine.InterfaceInstance;
             }
-
-            return (TInterface)item.Machine.InterfaceInstance;
         }
     }
 
