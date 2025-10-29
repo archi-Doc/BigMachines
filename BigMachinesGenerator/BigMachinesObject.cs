@@ -423,7 +423,9 @@ public class BigMachinesObject : VisceralObjectBase<BigMachinesObject>
             return;
         }
 
-        if (this.IdentifierObject != null && this.IdentifierObject.Kind != VisceralObjectKind.TypeParameter)
+        if (this.IdentifierObject != null &&
+            this.IdentifierObject.Kind != VisceralObjectKind.TypeParameter &&
+            this.IdentifierObject.Kind != VisceralObjectKind.Enum)
         {
             if (this.IdentifierObject.Location.IsInSource)
             {
