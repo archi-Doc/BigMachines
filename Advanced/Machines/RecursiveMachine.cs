@@ -33,7 +33,7 @@ public partial class RecursiveMachine : Machine<int>
     {// LoopMachine: Lock(Machine) -> Lock(Control)
         Console.WriteLine($"RelayInt: {n}");
         CommandResult result;
-        if (((BigMachine)this.BigMachine).RecursiveMachine.TryGet(this.Identifier) is { } machine)
+        if (((BigMachine)this.BigMachine).RecursiveMachine.TryGet(this.Identifier, out var machine))
         {
             result = machine.Command.RelayInt(n).Result;
         }

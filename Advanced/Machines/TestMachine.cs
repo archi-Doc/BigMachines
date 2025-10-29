@@ -9,7 +9,8 @@ public partial class TestMachine : Machine<int> // Inherit Machine<TIdentifier> 
     public static void Test(BigMachine bigMachine)
     {
         bigMachine.TestMachine.GetOrCreate(3);
-        var testMachine = bigMachine.TestMachine.TryGet(3); // Get the created machine.
+        bigMachine.TestMachine.TryGet(3, out var testMachine); // Get the created machine.
+        // bigMachine.TestMachine.CreateAlways(3);
 
         var testMachine2 = bigMachine.TestMachine.GetOrCreate(10);
         // testMachine2.GetOperationalState(OperationalFlag.Paused);

@@ -1,6 +1,7 @@
 ﻿// Copyright (c) All contributors. All rights reserved. Licensed under the MIT license.
 
 using System;
+using System.Diagnostics.CodeAnalysis;
 using System.Linq;
 using Tinyhand;
 using Tinyhand.IO;
@@ -151,42 +152,24 @@ public sealed partial class UnorderedMachineControl<TIdentifier, TMachine, TInte
 
     #region Main
 
-    public TInterface? TryGet(TIdentifier identifier)
+    public bool TryGet(TIdentifier identifier, [MaybeNullWhen(false)] out TInterface machineInterface)
     {
         using (this.items.LockObject.EnterScope())
         {
             if (this.items.IdentifierChain.TryGetValue(identifier, out var item))
             {
-                return (TInterface)item.Machine.InterfaceInstance;
+                machineInterface = (TInterface)item.Machine.InterfaceInstance;
+                return true;
             }
             else
             {
-                return default;
+                machineInterface = default;
+                return false;
             }
         }
     }
 
-    public TInterface? TryCreate(TIdentifier identifier, object? createParam = null)
-    {
-        using (this.items.LockObject.EnterScope())
-        {
-            if (this.items.IdentifierChain.TryGetValue(identifier, out var item))
-            {
-                return default;
-            }
-            else
-            {
-                var machine = MachineRegistry.CreateMachine<TMachine>(this.MachineInformation);
-                machine.Identifier = identifier;
-                machine.PrepareCreateStart(this, createParam);
-                item = new(identifier, machine);
-                item.Goshujin = this.items;
-                return (TInterface)item.Machine.InterfaceInstance;
-            }
-        }
-    }
-
-    public TInterface GetOrCreate(TIdentifier identifier, object? createParam = null)
+    public TInterface GetOrCreate(TIdentifier identifier, object? createParam)
     {
         using (this.items.LockObject.EnterScope())
         {
@@ -203,6 +186,80 @@ public sealed partial class UnorderedMachineControl<TIdentifier, TMachine, TInte
                 item.Goshujin = this.items;
                 return (TInterface)item.Machine.InterfaceInstance;
             }
+        }
+    }
+
+    public TInterface GetOrCreate(TIdentifier identifier)
+    {
+        using (this.items.LockObject.EnterScope())
+        {
+            if (this.items.IdentifierChain.TryGetValue(identifier, out var item))
+            {
+                return (TInterface)item.Machine.InterfaceInstance;
+            }
+            else
+            {
+                var machine = MachineRegistry.CreateMachine<TMachine>(this.MachineInformation);
+                machine.Identifier = identifier;
+                machine.PrepareStart(this);
+                item = new(identifier, machine);
+                item.Goshujin = this.items;
+                return (TInterface)item.Machine.InterfaceInstance;
+            }
+        }
+    }
+
+    public TInterface CreateAlways(TIdentifier identifier, object? createParam)
+    {
+        Machine.ManMachineInterface? machineInterface = default;
+
+Loop:
+        if (machineInterface is not null)
+        {
+            machineInterface.TerminateMachine();
+        }
+
+        using (this.items.LockObject.EnterScope())
+        {
+            if (this.items.IdentifierChain.TryGetValue(identifier, out var item))
+            {
+                machineInterface = (TInterface)item.Machine.InterfaceInstance;
+                goto Loop;
+            }
+
+            var machine = MachineRegistry.CreateMachine<TMachine>(this.MachineInformation);
+            machine.Identifier = identifier;
+            machine.PrepareCreateStart(this, createParam);
+            item = new(identifier, machine);
+            item.Goshujin = this.items;
+            return (TInterface)item.Machine.InterfaceInstance;
+        }
+    }
+
+    public TInterface CreateAlways(TIdentifier identifier)
+    {
+        Machine.ManMachineInterface? interfaceInstance = default;
+
+Loop:
+        if (interfaceInstance is not null)
+        {
+            interfaceInstance.TerminateMachine();
+        }
+
+        using (this.items.LockObject.EnterScope())
+        {
+            if (this.items.IdentifierChain.TryGetValue(identifier, out var item))
+            {
+                interfaceInstance = (TInterface)item.Machine.InterfaceInstance;
+                goto Loop;
+            }
+
+            var machine = MachineRegistry.CreateMachine<TMachine>(this.MachineInformation);
+            machine.Identifier = identifier;
+            machine.PrepareStart(this);
+            item = new(identifier, machine);
+            item.Goshujin = this.items;
+            return (TInterface)item.Machine.InterfaceInstance;
         }
     }
 

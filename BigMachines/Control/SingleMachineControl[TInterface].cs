@@ -179,18 +179,18 @@ public partial class SingleMachineControl<TMachine, TInterface> : MachineControl
 
     private TMachine CreateAlwaysMachine(object? createParam)
     {
-        Machine.ManMachineInterface? interfaceInstance = default;
+        Machine.ManMachineInterface? machineInterface = default;
 
 Loop:
-        if (interfaceInstance is not null)
+        if (machineInterface is not null)
         {
-            interfaceInstance.TerminateMachine();
+            machineInterface.TerminateMachine();
         }
 
         using (this.lockObject.EnterScope())
         {
-            interfaceInstance = this.machine?.InterfaceInstance;
-            if (interfaceInstance is not null)
+            machineInterface = this.machine?.InterfaceInstance;
+            if (machineInterface is not null)
             {
                 goto Loop;
             }
@@ -204,18 +204,18 @@ Loop:
 
     private TMachine CreateAlwaysMachine()
     {
-        Machine.ManMachineInterface? interfaceInstance = default;
+        Machine.ManMachineInterface? machineInterface = default;
 
 Loop:
-        if (interfaceInstance is not null)
+        if (machineInterface is not null)
         {
-            interfaceInstance.TerminateMachine();
+            machineInterface.TerminateMachine();
         }
 
         using (this.lockObject.EnterScope())
         {
-            interfaceInstance = this.machine?.InterfaceInstance;
-            if (interfaceInstance is not null)
+            machineInterface = this.machine?.InterfaceInstance;
+            if (machineInterface is not null)
             {
                 goto Loop;
             }
