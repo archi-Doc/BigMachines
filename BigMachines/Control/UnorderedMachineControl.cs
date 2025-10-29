@@ -1,6 +1,7 @@
 ﻿// Copyright (c) All contributors. All rights reserved. Licensed under the MIT license.
 
 using System;
+using System.Diagnostics.CodeAnalysis;
 using System.Linq;
 using Tinyhand;
 using Tinyhand.IO;
@@ -17,6 +18,14 @@ public sealed partial class UnorderedMachineControl<TIdentifier, TMachine, TInte
     where TMachine : Machine<TIdentifier>
     where TInterface : Machine.ManMachineInterface
 {
+    #region FieldAndProperty
+
+    public override MachineInformation MachineInformation { get; }
+
+    private Item.GoshujinClass items;
+
+    #endregion
+
     public UnorderedMachineControl()
         : base()
     {
@@ -61,12 +70,6 @@ public sealed partial class UnorderedMachineControl<TIdentifier, TMachine, TInte
 
 #pragma warning restore SA1401 // Fields should be private
     }
-
-    public override MachineInformation MachineInformation { get; }
-
-    private Item.GoshujinClass items;
-
-    // public TCommandAll CommandAll { get; private set; } = default!;
 
     #region Abstract
 
@@ -149,7 +152,36 @@ public sealed partial class UnorderedMachineControl<TIdentifier, TMachine, TInte
 
     #region Main
 
-    public TInterface? TryGet(TIdentifier identifier)
+    /// <summary>
+    /// Attempts to retrieve a machine interface by its identifier.
+    /// </summary>
+    /// <param name="identifier">The identifier of the machine to retrieve.</param>
+    /// <param name="machineInterface">When this method returns, contains the machine interface associated with the specified identifier, if found; otherwise, the default value.</param>
+    /// <returns><see langword="true"/> if the machine was found; otherwise, <see langword="false"/>.</returns>
+    public bool TryGet(TIdentifier identifier, [MaybeNullWhen(false)] out TInterface machineInterface)
+    {
+        using (this.items.LockObject.EnterScope())
+        {
+            if (this.items.IdentifierChain.TryGetValue(identifier, out var item))
+            {
+                machineInterface = (TInterface)item.Machine.InterfaceInstance;
+                return true;
+            }
+            else
+            {
+                machineInterface = default;
+                return false;
+            }
+        }
+    }
+
+    /// <summary>
+    /// Gets an existing machine or creates a new one if it doesn't exist, using the specified creation parameter.
+    /// </summary>
+    /// <param name="identifier">The identifier of the machine.</param>
+    /// <param name="createParam">The parameter to pass to the machine's creation process if a new machine is created.</param>
+    /// <returns>The machine interface for the existing or newly created machine.</returns>
+    public TInterface GetOrCreate(TIdentifier identifier, object? createParam)
     {
         using (this.items.LockObject.EnterScope())
         {
@@ -159,45 +191,102 @@ public sealed partial class UnorderedMachineControl<TIdentifier, TMachine, TInte
             }
             else
             {
-                return default;
+                var machine = MachineRegistry.CreateMachine<TMachine>(this.MachineInformation);
+                machine.Identifier = identifier;
+                machine.PrepareCreateStart(this, createParam);
+                item = new(identifier, machine);
+                item.Goshujin = this.items;
+                return (TInterface)item.Machine.InterfaceInstance;
             }
         }
     }
 
-    public TInterface? TryCreate(TIdentifier identifier, object? createParam = null)
+    /// <summary>
+    /// Gets an existing machine or creates a new one if it doesn't exist.
+    /// </summary>
+    /// <param name="identifier">The identifier of the machine.</param>
+    /// <returns>The machine interface for the existing or newly created machine.</returns>
+    public TInterface GetOrCreate(TIdentifier identifier)
     {
         using (this.items.LockObject.EnterScope())
         {
             if (this.items.IdentifierChain.TryGetValue(identifier, out var item))
             {
-                return default;
+                return (TInterface)item.Machine.InterfaceInstance;
             }
             else
             {
                 var machine = MachineRegistry.CreateMachine<TMachine>(this.MachineInformation);
                 machine.Identifier = identifier;
-                machine.PrepareCreateStart(this, createParam);
+                machine.PrepareStart(this);
                 item = new(identifier, machine);
                 item.Goshujin = this.items;
+                return (TInterface)item.Machine.InterfaceInstance;
+            }
+        }
+    }
+
+    /// <summary>
+    /// Creates a new machine with the specified identifier, terminating any existing machine with the same identifier first, using the specified creation parameter.
+    /// </summary>
+    /// <param name="identifier">The identifier of the machine.</param>
+    /// <param name="createParam">The parameter to pass to the machine's creation process.</param>
+    /// <returns>The machine interface for the newly created machine.</returns>
+    public TInterface CreateAlways(TIdentifier identifier, object? createParam)
+    {
+        Machine.ManMachineInterface? machineInterface = default;
+
+Loop:
+        if (machineInterface is not null)
+        {
+            machineInterface.TerminateMachine();
+        }
+
+        using (this.items.LockObject.EnterScope())
+        {
+            if (this.items.IdentifierChain.TryGetValue(identifier, out var item))
+            {
+                machineInterface = (TInterface)item.Machine.InterfaceInstance;
+                goto Loop;
             }
 
+            var machine = MachineRegistry.CreateMachine<TMachine>(this.MachineInformation);
+            machine.Identifier = identifier;
+            machine.PrepareCreateStart(this, createParam);
+            item = new(identifier, machine);
+            item.Goshujin = this.items;
             return (TInterface)item.Machine.InterfaceInstance;
         }
     }
 
-    public TInterface GetOrCreate(TIdentifier identifier, object? createParam = null)
+    /// <summary>
+    /// Creates a new machine with the specified identifier, terminating any existing machine with the same identifier first.
+    /// </summary>
+    /// <param name="identifier">The identifier of the machine.</param>
+    /// <returns>The machine interface for the newly created machine.</returns>
+    public TInterface CreateAlways(TIdentifier identifier)
     {
+        Machine.ManMachineInterface? interfaceInstance = default;
+
+Loop:
+        if (interfaceInstance is not null)
+        {
+            interfaceInstance.TerminateMachine();
+        }
+
         using (this.items.LockObject.EnterScope())
         {
-            if (!this.items.IdentifierChain.TryGetValue(identifier, out var item))
+            if (this.items.IdentifierChain.TryGetValue(identifier, out var item))
             {
-                var machine = MachineRegistry.CreateMachine<TMachine>(this.MachineInformation);
-                machine.Identifier = identifier;
-                machine.PrepareCreateStart(this, createParam);
-                item = new(identifier, machine);
-                item.Goshujin = this.items;
+                interfaceInstance = (TInterface)item.Machine.InterfaceInstance;
+                goto Loop;
             }
 
+            var machine = MachineRegistry.CreateMachine<TMachine>(this.MachineInformation);
+            machine.Identifier = identifier;
+            machine.PrepareStart(this);
+            item = new(identifier, machine);
+            item.Goshujin = this.items;
             return (TInterface)item.Machine.InterfaceInstance;
         }
     }

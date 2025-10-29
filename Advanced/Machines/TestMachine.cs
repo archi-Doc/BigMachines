@@ -2,16 +2,26 @@
 
 namespace Advanced;
 
+#pragma warning disable SA1602 // Enumeration items should be documented
+
+public enum TestMachineKind : byte
+{
+    Alpha,
+    Beta,
+    Gamma,
+}
+
 [TinyhandObject] // Annotate TinyhandObject attribute to enable serialization (and set UseServiceProvider to true to skip default constructor check).
 [MachineObject] // Annotate MachineObject and set Machine type id (unique number).
-public partial class TestMachine : Machine<int> // Inherit Machine<TIdentifier> class.
+public partial class TestMachine : Machine<TestMachineKind> // Inherit Machine<TIdentifier> class.
 {
     public static void Test(BigMachine bigMachine)
     {
-        bigMachine.TestMachine.GetOrCreate(3);
-        var testMachine = bigMachine.TestMachine.TryGet(3); // Get the created machine.
+        bigMachine.TestMachine.GetOrCreate(TestMachineKind.Alpha);
+        bigMachine.TestMachine.TryGet(TestMachineKind.Alpha, out var testMachine); // Get the created machine.
+        // bigMachine.TestMachine.CreateAlways(3);
 
-        var testMachine2 = bigMachine.TestMachine.GetOrCreate(10);
+        var testMachine2 = bigMachine.TestMachine.GetOrCreate(TestMachineKind.Beta);
         // testMachine2.GetOperationalState(OperationalFlag.Paused);
 
         // bigMachine.TestMachine

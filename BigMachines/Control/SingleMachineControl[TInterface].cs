@@ -1,6 +1,7 @@
 ﻿// Copyright (c) All contributors. All rights reserved. Licensed under the MIT license.
 
 using System;
+using System.Diagnostics.CodeAnalysis;
 using System.Threading;
 using Arc.Threading;
 using Tinyhand;
@@ -21,6 +22,16 @@ public partial class SingleMachineControl<TMachine, TInterface> : MachineControl
     where TMachine : Machine
     where TInterface : Machine.ManMachineInterface
 {
+    #region FieldAndProperty
+
+    private readonly Lock lockObject = new();
+    private TMachine? machine;
+
+    public override int Count
+        => this.machine is null ? 0 : 1;
+
+    #endregion
+
     public SingleMachineControl()
     {
         this.MachineInformation = MachineRegistry.Get<TMachine>();
@@ -33,41 +44,50 @@ public partial class SingleMachineControl<TMachine, TInterface> : MachineControl
 
     public override MachineInformation MachineInformation { get; }
 
-    private readonly Lock lockObject = new();
-    private TMachine? machine;
-
-    /*private TMachine Machine
+    /// <summary>
+    /// Attempts to retrieve the machine interface if a machine exists.
+    /// </summary>
+    /// <param name="machineInterface">
+    /// When this method returns, contains the machine interface of type <typeparamref name="TInterface"/> if a machine exists; otherwise, <see langword="null"/>.
+    /// </param>
+    /// <returns>
+    /// <see langword="true"/> if a machine exists and the interface was successfully retrieved; otherwise, <see langword="false"/>.
+    /// </returns>
+    public bool TryGet([MaybeNullWhen(false)] out TInterface machineInterface)
     {
-        get
-        {
-            if (this.machine is not { } obj)
-            {
-                obj = MachineRegistry.CreateMachine<TMachine>(this.MachineInformation);
-                obj.PrepareStart(this);
-                this.machine = obj;
-            }
+        machineInterface = this.machine?.InterfaceInstance as TInterface;
+        return this.machine is not null;
+    }
 
-            return obj;
-        }
-    }*/
-
-    public TInterface? Get()
-        => (TInterface?)this.machine?.InterfaceInstance;
-
+    /// <summary>
+    /// Gets an existing machine interface or creates a new machine with the specified creation parameters.
+    /// </summary>
+    /// <param name="createParam">The parameters to pass to <see cref="Machine.OnCreate(object?)"/> when creating a new machine.</param>
+    /// <returns>The machine interface of type <typeparamref name="TInterface"/>.</returns>
     public TInterface GetOrCreate(object? createParam = null)
         => (TInterface)this.GetOrCreateMachine(createParam).InterfaceInstance;
 
+    /// <summary>
+    /// Gets an existing machine interface or creates a new machine without creation parameters.
+    /// </summary>
+    /// <returns>The machine interface of type <typeparamref name="TInterface"/>.</returns>
     public TInterface GetOrCreate()
         => (TInterface)this.GetOrCreateMachine().InterfaceInstance;
 
+    /// <summary>
+    /// Terminates any existing machine and creates a new machine with the specified creation parameters.
+    /// </summary>
+    /// <param name="createParam">The parameters to pass to <see cref="Machine.OnCreate(object?)"/> when creating the new machine.</param>
+    /// <returns>The machine interface of type <typeparamref name="TInterface"/> for the newly created machine.</returns>
     public TInterface CreateAlways(object? createParam = null)
         => (TInterface)this.CreateAlwaysMachine(createParam).InterfaceInstance;
 
+    /// <summary>
+    /// Terminates any existing machine and creates a new machine without creation parameters.
+    /// </summary>
+    /// <returns>The machine interface of type <typeparamref name="TInterface"/> for the newly created machine.</returns>
     public TInterface CreateAlways()
         => (TInterface)this.CreateAlwaysMachine().InterfaceInstance;
-
-    public override int Count
-        => this.machine is null ? 0 : 1;
 
     public override bool ContainsActiveMachine()
     {
@@ -159,18 +179,18 @@ public partial class SingleMachineControl<TMachine, TInterface> : MachineControl
 
     private TMachine CreateAlwaysMachine(object? createParam)
     {
-        Machine.ManMachineInterface? interfaceInstance = default;
+        Machine.ManMachineInterface? machineInterface = default;
 
 Loop:
-        if (interfaceInstance is not null)
+        if (machineInterface is not null)
         {
-            interfaceInstance.TerminateMachine();
+            machineInterface.TerminateMachine();
         }
 
         using (this.lockObject.EnterScope())
         {
-            interfaceInstance = this.machine?.InterfaceInstance;
-            if (interfaceInstance is not null)
+            machineInterface = this.machine?.InterfaceInstance;
+            if (machineInterface is not null)
             {
                 goto Loop;
             }
@@ -184,18 +204,18 @@ Loop:
 
     private TMachine CreateAlwaysMachine()
     {
-        Machine.ManMachineInterface? interfaceInstance = default;
+        Machine.ManMachineInterface? machineInterface = default;
 
 Loop:
-        if (interfaceInstance is not null)
+        if (machineInterface is not null)
         {
-            interfaceInstance.TerminateMachine();
+            machineInterface.TerminateMachine();
         }
 
         using (this.lockObject.EnterScope())
         {
-            interfaceInstance = this.machine?.InterfaceInstance;
-            if (interfaceInstance is not null)
+            machineInterface = this.machine?.InterfaceInstance;
+            if (machineInterface is not null)
             {
                 goto Loop;
             }
