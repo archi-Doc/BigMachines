@@ -21,6 +21,16 @@ public partial class SingleMachineControl<TMachine, TInterface> : MachineControl
     where TMachine : Machine
     where TInterface : Machine.ManMachineInterface
 {
+    #region FieldAndProperty
+
+    private readonly Lock lockObject = new();
+    private TMachine? machine;
+
+    public override int Count
+        => this.machine is null ? 0 : 1;
+
+    #endregion
+
     public SingleMachineControl()
     {
         this.MachineInformation = MachineRegistry.Get<TMachine>();
@@ -33,41 +43,42 @@ public partial class SingleMachineControl<TMachine, TInterface> : MachineControl
 
     public override MachineInformation MachineInformation { get; }
 
-    private readonly Lock lockObject = new();
-    private TMachine? machine;
-
-    /*private TMachine Machine
-    {
-        get
-        {
-            if (this.machine is not { } obj)
-            {
-                obj = MachineRegistry.CreateMachine<TMachine>(this.MachineInformation);
-                obj.PrepareStart(this);
-                this.machine = obj;
-            }
-
-            return obj;
-        }
-    }*/
-
+    /// <summary>
+    /// Gets the machine interface if it exists.
+    /// </summary>
+    /// <returns>The machine interface of type <typeparamref name="TInterface"/>, or <see langword="null"/> if no machine exists.</returns>
     public TInterface? Get()
         => (TInterface?)this.machine?.InterfaceInstance;
 
+    /// <summary>
+    /// Gets an existing machine interface or creates a new machine with the specified creation parameters.
+    /// </summary>
+    /// <param name="createParam">The parameters to pass to <see cref="Machine.OnCreate(object?)"/> when creating a new machine.</param>
+    /// <returns>The machine interface of type <typeparamref name="TInterface"/>.</returns>
     public TInterface GetOrCreate(object? createParam = null)
         => (TInterface)this.GetOrCreateMachine(createParam).InterfaceInstance;
 
+    /// <summary>
+    /// Gets an existing machine interface or creates a new machine without creation parameters.
+    /// </summary>
+    /// <returns>The machine interface of type <typeparamref name="TInterface"/>.</returns>
     public TInterface GetOrCreate()
         => (TInterface)this.GetOrCreateMachine().InterfaceInstance;
 
+    /// <summary>
+    /// Terminates any existing machine and creates a new machine with the specified creation parameters.
+    /// </summary>
+    /// <param name="createParam">The parameters to pass to <see cref="Machine.OnCreate(object?)"/> when creating the new machine.</param>
+    /// <returns>The machine interface of type <typeparamref name="TInterface"/> for the newly created machine.</returns>
     public TInterface CreateAlways(object? createParam = null)
         => (TInterface)this.CreateAlwaysMachine(createParam).InterfaceInstance;
 
+    /// <summary>
+    /// Terminates any existing machine and creates a new machine without creation parameters.
+    /// </summary>
+    /// <returns>The machine interface of type <typeparamref name="TInterface"/> for the newly created machine.</returns>
     public TInterface CreateAlways()
         => (TInterface)this.CreateAlwaysMachine().InterfaceInstance;
-
-    public override int Count
-        => this.machine is null ? 0 : 1;
 
     public override bool ContainsActiveMachine()
     {
