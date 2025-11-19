@@ -1,0 +1,12 @@
+<Solution>
+  <Folder Name="/Solution Items/">
+    <File Path=".editorconfig" />
+  </Folder>
+  <Project Path="Advanced/Advanced.csproj" />
+  <Project Path="Benchmark/Benchmark.csproj" />
+  <Project Path="BigMachines/BigMachines.csproj" />
+  <Project Path="BigMachinesGenerator/BigMachinesGenerator.csproj" />
+  <Project Path="ExternalMachine/ExternalMachine.csproj" />
+  <Project Path="Playground/Playground.csproj" />
+  <Project Path="QuickStart/QuickStart.csproj" />
+</Solution>

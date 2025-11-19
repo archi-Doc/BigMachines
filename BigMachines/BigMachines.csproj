@@ -24,11 +24,11 @@
   </ItemGroup>
 
   <ItemGroup>
-    <PackageReference Include="Arc.Unit" Version="0.26.0" />
-    <PackageReference Include="Arc.Collections" Version="1.28.0" />
+    <PackageReference Include="Arc.Unit" Version="0.27.0" />
+    <PackageReference Include="Arc.Collections" Version="1.28.1" />
     <PackageReference Include="Arc.Threading" Version="0.36.0" />
-    <PackageReference Include="Tinyhand" Version="0.132.0" />
-    <PackageReference Include="ValueLink" Version="0.105.0" />
+    <PackageReference Include="Tinyhand" Version="0.132.1" />
+    <PackageReference Include="ValueLink" Version="0.105.1" />
     <PackageReference Include="StyleCop.Analyzers" Version="1.2.0-beta.556">
       <PrivateAssets>all</PrivateAssets>
       <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
