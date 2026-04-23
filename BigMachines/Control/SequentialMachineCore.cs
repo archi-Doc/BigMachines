@@ -52,7 +52,14 @@ public sealed partial class SequentialMachineControl<TIdentifier, TMachine, TInt
                     break;
                 }*/
 
-                await core.updateEvent.WaitAsync(TimeSpan.FromMilliseconds(TimeIntervalInMilliseconds), core.CancellationToken).ConfigureAwait(false);
+                try
+                {
+                    await core.updateEvent.WaitAsync(TimeSpan.FromMilliseconds(TimeIntervalInMilliseconds), core.CancellationToken).ConfigureAwait(false);
+                }
+                catch
+                {
+                }
+
                 if (core.IsTerminated)
                 {
                     break;

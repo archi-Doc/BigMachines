@@ -76,7 +76,7 @@ public class Program
         // var bin = TinyhandSerializer.Serialize(bigMachine);
         // var bigMachine2 = TinyhandSerializer.Deserialize<BigMachine>(bin);
 
-        await ThreadCore.Root.WaitForTerminationAsync(-1); // Wait for the termination infinitely.
+        await ThreadCore.Root.WaitForTermination(); // Wait for the termination infinitely.
 
         await crystalControl.StoreAndRip();
 
