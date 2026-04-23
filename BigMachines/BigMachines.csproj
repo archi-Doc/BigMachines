@@ -26,7 +26,7 @@
   <ItemGroup>
     <PackageReference Include="Arc.Unit" Version="0.38.0" />
     <PackageReference Include="Arc.Collections" Version="1.33.0" />
-    <PackageReference Include="Arc.Threading" Version="0.43.3" />
+    <PackageReference Include="Arc.Threading" Version="0.44.0" />
     <PackageReference Include="Tinyhand" Version="0.136.2" />
     <PackageReference Include="ValueLink" Version="0.115.1" />
     <PackageReference Include="StyleCop.Analyzers" Version="1.2.0-beta.556">
