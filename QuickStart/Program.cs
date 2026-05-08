@@ -49,7 +49,7 @@ public partial class FirstMachine : Machine<int> // Inherit Machine class. The t
     protected override void OnTerminate()
     {
         Console.WriteLine($"FirstMachine {this.Identifier}: Terminated");
-        this.BigMachine.Root.RequestTermination(); // Send a termination signal to the root.
+        this.BigMachine.ExecutionGroup.RequestTermination(); // Send a termination signal to the execution group.
     }
 }
 

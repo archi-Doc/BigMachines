@@ -40,7 +40,7 @@ public partial class TerminatorMachine : Machine
         }
 
         Console.WriteLine("Terminate (no machine)");
-        this.BigMachine.Root.RequestTermination(); // Terminate the application thread.
+        this.BigMachine.ExecutionGroup.RequestTermination(); // Terminate the application thread.
         return StateResult.Terminate;
     }
 }

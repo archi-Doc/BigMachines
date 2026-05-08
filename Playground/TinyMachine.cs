@@ -34,6 +34,6 @@ internal partial class TinyMachine : Machine
     protected override void OnTerminate()
     {
         Console.WriteLine($"Tiny machine: Terminated");
-        this.BigMachine.Root.RequestTermination();
+        this.BigMachine.ExecutionGroup.RequestTermination();
     }
 }

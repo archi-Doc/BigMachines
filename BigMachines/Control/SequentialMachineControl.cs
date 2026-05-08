@@ -41,7 +41,7 @@ public sealed partial class SequentialMachineControl<TIdentifier, TMachine, TInt
         this.cores = new SequentialCore[this.MachineInformation.NumberOfTasks];
         for (var i = 0; i < this.MachineInformation.NumberOfTasks; i++)
         {
-            this.cores[i] = new(this.BigMachine.Group, this);
+            this.cores[i] = new(this.BigMachine.ExecutionGroup, this);
         }
 
         if (this.MachineInformation.Serializable &&

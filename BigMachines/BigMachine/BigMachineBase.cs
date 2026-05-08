@@ -19,9 +19,9 @@ public abstract partial class BigMachineBase : IBigMachine
 
     public BigMachineBase(ExecutionRoot root)
     {
-        this.Root = root;
-        this.Group = new(root, false, GroupName);
-        this.core = new(this.Group, this);
+        this.root = root;
+        this.ExecutionGroup = new(root, false, GroupName);
+        this.core = new(this.ExecutionGroup, this);
     }
 
     public ManualMachineControl ManualControl { get; } = new();
@@ -40,9 +40,7 @@ public abstract partial class BigMachineBase : IBigMachine
 
     #region FieldAndProperty
 
-    public ExecutionRoot Root { get; }
-
-    public ExecutionGroup Group { get; }
+    public ExecutionGroup ExecutionGroup { get; }
 
     BigMachineCore IBigMachine.Core => this.core;
 
@@ -55,7 +53,8 @@ public abstract partial class BigMachineBase : IBigMachine
 
     // RecursiveDetectionMode IBigMachine.RecursiveDetectionMode { get; set; }
 
-    private BigMachineCore core;
+    private readonly ExecutionRoot root;
+    private readonly BigMachineCore core;
     private DateTime lastRun;
     private ExceptionHandlerDelegate exceptionHandler = DefaultExceptionHandler;
     private ConcurrentQueue<BigMachineException> exceptionQueue = new();
