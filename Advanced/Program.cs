@@ -80,6 +80,8 @@ public class Program
         // var bin = TinyhandSerializer.Serialize(bigMachine);
         // var bigMachine2 = TinyhandSerializer.Deserialize<BigMachine>(bin);
 
+        await bigMachine.Group.WaitForTermination();
+
         await crystalControl.StoreAndRip();
         await root.WaitForTermination(TerminationOptions.IncludeIndependent); // Wait for the termination infinitely.
     }

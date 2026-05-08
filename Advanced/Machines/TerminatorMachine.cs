@@ -2,7 +2,7 @@
 
 namespace Advanced;
 
-[MachineObject(StartByDefault = true, UseServiceProvider = true)]
+[MachineObject(StartByDefault = true)]
 public partial class TerminatorMachine : Machine
 {
     public TerminatorMachine()

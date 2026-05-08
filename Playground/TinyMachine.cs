@@ -4,7 +4,7 @@ using BigMachines;
 
 namespace Playground;
 
-[MachineObject(UseServiceProvider = true)]
+[MachineObject()]
 internal partial class TinyMachine : Machine
 {
     private int count;
