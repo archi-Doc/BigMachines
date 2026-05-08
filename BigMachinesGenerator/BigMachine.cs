@@ -257,7 +257,7 @@ internal class BigMachine : IEquatable<BigMachine>
 
             this.GenerateSerialize(ssb, info);
             this.GenerateDeserialize(ssb, info);
-            ssb.AppendLine($"static void ITinyhandReconstructable<{this.SimpleName}>.Reconstruct([NotNull] scoped ref {this.SimpleName}? value, TinyhandSerializerOptions options) => value ??= new();");
+            ssb.AppendLine($"static void ITinyhandReconstructable<{this.SimpleName}>.Reconstruct([NotNull] scoped ref {this.SimpleName}? value, TinyhandSerializerOptions options) => value ??= new(TinyhandSerializer.ServiceProvider.GetRequiredService<Arc.Threading.ExecutionRoot>());");
             ssb.AppendLine($"static {this.SimpleName}? ITinyhandCloneable<{this.SimpleName}>.Clone(scoped ref {this.SimpleName}? v, TinyhandSerializerOptions options) => v == null ? null : TinyhandSerializer.Deserialize<{this.SimpleName}>(TinyhandSerializer.Serialize(v));");
             ssb.AppendLine();
 
@@ -298,7 +298,15 @@ internal class BigMachine : IEquatable<BigMachine>
                     ssb.AppendLine($"{x.FullName}.RegisterBM();");
                 }
 
-                ssb.AppendLine($"this._{x.Name} = new();");
+                if (x.Control == MachineControlKind.Sequential)
+                {
+                    ssb.AppendLine($"this._{x.Name} = new(root);");
+                }
+                else
+                {
+                    ssb.AppendLine($"this._{x.Name} = new();");
+                }
+
                 ssb.AppendLine($"this.{x.Name}.Prepare(this);");
                 ssb.AppendLine($"((IStructuralObject)this.{x.Name}).SetupStructure(this, {x.Key.ToString()});");
 
@@ -346,7 +354,7 @@ internal class BigMachine : IEquatable<BigMachine>
         using (var scopeMethod = ssb.ScopeBrace($"static void ITinyhandSerializable<{this.SimpleName}>.Deserialize(ref TinyhandReader reader, scoped ref {this.SimpleName}? value, TinyhandSerializerOptions options)"))
         {
             ssb.AppendLine("if (reader.TryReadNil()) return;");
-            ssb.AppendLine("value ??= new();");
+            ssb.AppendLine("value ??= new(TinyhandSerializer.ServiceProvider.GetRequiredService<Arc.Threading.ExecutionRoot>());");
             ssb.AppendLine("var count = reader.ReadMapHeader2();");
 
             var trie = new VisceralTrieInt<Machine>(null);

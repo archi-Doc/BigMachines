@@ -6,7 +6,7 @@ namespace Advanced;
 public partial class TerminatorMachine : Machine
 {
     public TerminatorMachine()
-    {//
+    {
         this.DefaultTimeout = TimeSpan.FromSeconds(1);
     }
 
