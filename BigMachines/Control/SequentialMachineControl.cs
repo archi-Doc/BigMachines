@@ -4,6 +4,7 @@ using System;
 using System.Linq;
 using System.Runtime.CompilerServices;
 using Arc.Threading;
+using Microsoft.Extensions.DependencyInjection;
 using Tinyhand;
 using Tinyhand.IO;
 using ValueLink;
@@ -330,7 +331,8 @@ public sealed partial class SequentialMachineControl<TIdentifier, TMachine, TInt
             return;
         }
 
-        value ??= new((ExecutionRoot)default!);//
+        var root = TinyhandSerializer.ServiceProvider.GetRequiredService<ExecutionRoot>();
+        value ??= new(root);
         value.items = TinyhandSerializer.DeserializeObject<Item.GoshujinClass>(ref reader, options) ?? new();
         foreach (var x in value.items)
         {

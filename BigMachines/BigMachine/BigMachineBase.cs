@@ -15,9 +15,12 @@ namespace BigMachines;
 /// </summary>
 public abstract partial class BigMachineBase : IBigMachine
 {
+    public const string GroupName = "BigMachine";
+
     public BigMachineBase(ExecutionRoot root)
     {
-        this.core = new(root, this);
+        this.Root = root;
+        this.core = new(this.Root, this);
     }
 
     public ManualMachineControl ManualControl { get; } = new();
@@ -35,6 +38,8 @@ public abstract partial class BigMachineBase : IBigMachine
     #endregion
 
     #region FieldAndProperty
+
+    public ExecutionRoot Root { get; }
 
     BigMachineCore IBigMachine.Core => this.core;
 

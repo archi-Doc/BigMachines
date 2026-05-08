@@ -49,7 +49,7 @@ public partial class FirstMachine : Machine<int> // Inherit Machine class. The t
     protected override void OnTerminate()
     {
         Console.WriteLine($"FirstMachine {this.Identifier}: Terminated");
-        ThreadCore.Root.Terminate(); // Send a termination signal to the root.
+        this.BigMachine.Root.RequestTermination(); // Send a termination signal to the root.
     }
 }
 
@@ -58,7 +58,7 @@ public class Program
     public static async Task Main(string[] args)
     {
         var root = new ExecutionRoot();
-        var bigMachine = new BigMachine(); // Create a BigMachine instance.
+        var bigMachine = new BigMachine(root); // Create a BigMachine instance.
         bigMachine.Start(); // Launch BigMachine to run machines and change the parent of the BigMachine thread to the application thread.
 
         var testMachine = bigMachine.FirstMachine.GetOrCreate(42); // Machine is created via an interface class and the identifier, not the machine class itself.

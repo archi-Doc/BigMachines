@@ -11,12 +11,12 @@ public sealed partial class SequentialMachineControl<TIdentifier, TMachine, TInt
     where TMachine : Machine<TIdentifier>
     where TInterface : Machine.ManMachineInterface
 {
-    private class SequentialCore : TaskCore
+    private class SequentialCore : TaskCore<SequentialCore>
     {
         public const double TimeIntervalInMilliseconds = 2_000;
 
         public SequentialCore(ExecutionRoot root, SequentialMachineControl<TIdentifier, TMachine, TInterface> control)
-            : base(root.IndependentGroup, Process, ExecutionCoreOptions.DelayedStart)
+            : base(root.UnitGroup(BigMachineBase.GroupName), Process, ExecutionCoreOptions.DelayedStart)
         {
             this.control = control;
         }
@@ -31,12 +31,10 @@ public sealed partial class SequentialMachineControl<TIdentifier, TMachine, TInt
         private readonly SequentialMachineControl<TIdentifier, TMachine, TInterface> control;
         private readonly AsyncPulseEvent updateEvent = new();
 
-        private static async Task Process(object? parameter)
+        private static async Task Process(SequentialCore core)
         {
-            var core = (SequentialCore)parameter!;
             var control = core.control;
-
-            while (!core.IsTerminated)
+            while (core.CanContinue)
             {
                 /*if (await core.Delay(core.TimeIntervalInMilliseconds) == false)
                 {// Terminated
@@ -48,7 +46,7 @@ public sealed partial class SequentialMachineControl<TIdentifier, TMachine, TInt
                     break;
                 }
 
-                while (!core.IsTerminated)
+                while (core.CanContinue)
                 {
                     var machine = control.GetMachineToProcess();
                     if (machine is null)

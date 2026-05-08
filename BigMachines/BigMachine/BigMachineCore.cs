@@ -13,7 +13,7 @@ public partial class BigMachineBase
         public int TimeIntervalInMilliseconds { get; set; } = 500; // 500 ms
 
         public BigMachineCore(ExecutionRoot root, BigMachineBase bigMachine)
-            : base(root.IndependentGroup, Process, ExecutionCoreOptions.DelayedStart)
+            : base(root.UnitGroup(GroupName), Process, ExecutionCoreOptions.DelayedStart)
         {
             this.bigMachine = bigMachine;
         }
