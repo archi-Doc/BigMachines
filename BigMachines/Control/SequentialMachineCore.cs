@@ -15,8 +15,8 @@ public sealed partial class SequentialMachineControl<TIdentifier, TMachine, TInt
     {
         public const double TimeIntervalInMilliseconds = 2_000;
 
-        public SequentialCore(ExecutionRoot root, SequentialMachineControl<TIdentifier, TMachine, TInterface> control)
-            : base(root.UnitGroup(BigMachineBase.GroupName), Process, ExecutionCoreOptions.DelayedStart)
+        public SequentialCore(ExecutionGroup group, SequentialMachineControl<TIdentifier, TMachine, TInterface> control)
+            : base(group, Process, ExecutionCoreOptions.DelayedStart)
         {
             this.control = control;
         }

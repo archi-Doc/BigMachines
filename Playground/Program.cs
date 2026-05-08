@@ -49,7 +49,7 @@ class Program
         var tinyControl = bigMachine.TinyMachine;
         var machine = tinyControl.GetOrCreate();
 
-        await root.WaitForTermination(); // Wait for the termination infinitely.
+        await root.WaitForTermination(TerminationOptions.IncludeIndependent); // Wait for the termination infinitely.
 
         Console.WriteLine("Terminated.");
     }

@@ -27,22 +27,23 @@ public sealed partial class SequentialMachineControl<TIdentifier, TMachine, TInt
     where TMachine : Machine<TIdentifier>
     where TInterface : Machine.ManMachineInterface
 {
-    public SequentialMachineControl(ExecutionRoot root)
+    public SequentialMachineControl()
         : base()
     {
         this.MachineInformation = MachineRegistry.Get<TMachine>();
-        this.cores = new SequentialCore[this.MachineInformation.NumberOfTasks];
-        for (var i = 0; i < this.MachineInformation.NumberOfTasks; i++)
-        {
-            this.cores[i] = new(root, this);
-        }
-
+        this.cores = [];
         this.items = new();
     }
 
     public void Prepare(BigMachineBase bigMachine)
     {
         this.BigMachine = bigMachine;
+        this.cores = new SequentialCore[this.MachineInformation.NumberOfTasks];
+        for (var i = 0; i < this.MachineInformation.NumberOfTasks; i++)
+        {
+            this.cores[i] = new(this.BigMachine.Group, this);
+        }
+
         if (this.MachineInformation.Serializable &&
             this.BigMachine is IStructuralObject obj)
         {
@@ -332,7 +333,7 @@ public sealed partial class SequentialMachineControl<TIdentifier, TMachine, TInt
         }
 
         var root = TinyhandSerializer.ServiceProvider.GetRequiredService<ExecutionRoot>();
-        value ??= new(root);
+        value ??= new();
         value.items = TinyhandSerializer.DeserializeObject<Item.GoshujinClass>(ref reader, options) ?? new();
         foreach (var x in value.items)
         {

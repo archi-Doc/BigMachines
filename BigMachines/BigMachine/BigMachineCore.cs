@@ -8,25 +8,23 @@ namespace BigMachines;
 
 public partial class BigMachineBase
 {
-    public class BigMachineCore : TaskCore
+    public class BigMachineCore : TaskCore<BigMachineCore>
     {
         public int TimeIntervalInMilliseconds { get; set; } = 500; // 500 ms
 
-        public BigMachineCore(ExecutionRoot root, BigMachineBase bigMachine)
-            : base(root.UnitGroup(GroupName), Process, ExecutionCoreOptions.DelayedStart)
+        public BigMachineCore(ExecutionGroup group, BigMachineBase bigMachine)
+            : base(group, Process, ExecutionCoreOptions.DelayedStart)
         {
             this.bigMachine = bigMachine;
         }
 
         private readonly BigMachineBase bigMachine;
 
-        private static async Task Process(object? parameter)
+        private static async Task Process(BigMachineCore core)
         {
-            var core = (BigMachineCore)parameter!;
             var bigMachine = core.bigMachine;
             var controls = core.bigMachine.GetArray();
             var runner = new MachineRunner();
-
             while (!core.IsTerminated)
             {
                 if (await core.Delay(core.TimeIntervalInMilliseconds) == false)

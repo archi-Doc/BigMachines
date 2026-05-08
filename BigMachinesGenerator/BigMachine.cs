@@ -298,15 +298,7 @@ internal class BigMachine : IEquatable<BigMachine>
                     ssb.AppendLine($"{x.FullName}.RegisterBM();");
                 }
 
-                if (x.Control == MachineControlKind.Sequential)
-                {
-                    ssb.AppendLine($"this._{x.Name} = new(root);");
-                }
-                else
-                {
-                    ssb.AppendLine($"this._{x.Name} = new();");
-                }
-
+                ssb.AppendLine($"this._{x.Name} = new();");
                 ssb.AppendLine($"this.{x.Name}.Prepare(this);");
                 ssb.AppendLine($"((IStructuralObject)this.{x.Name}).SetupStructure(this, {x.Key.ToString()});");
 

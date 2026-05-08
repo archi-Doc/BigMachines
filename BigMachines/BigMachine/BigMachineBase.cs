@@ -20,7 +20,8 @@ public abstract partial class BigMachineBase : IBigMachine
     public BigMachineBase(ExecutionRoot root)
     {
         this.Root = root;
-        this.core = new(this.Root, this);
+        this.Group = new(root.IndependentGroup, true, GroupName);
+        this.core = new(this.Group, this);
     }
 
     public ManualMachineControl ManualControl { get; } = new();
@@ -40,6 +41,8 @@ public abstract partial class BigMachineBase : IBigMachine
     #region FieldAndProperty
 
     public ExecutionRoot Root { get; }
+
+    public ExecutionGroup Group { get; }
 
     BigMachineCore IBigMachine.Core => this.core;
 
