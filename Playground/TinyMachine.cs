@@ -4,12 +4,16 @@ using BigMachines;
 
 namespace Playground;
 
-[MachineObject]
+[MachineObject(UseServiceProvider = true)]
 internal partial class TinyMachine : Machine
 {
-    public TinyMachine()
+    private readonly ExecutionRoot root;
+    private int count;
+
+    public TinyMachine(ExecutionRoot root)
         : base()
-    {
+    {//
+        this.root = root;
         this.DefaultTimeout = TimeSpan.FromSeconds(1);
     }
 
@@ -32,8 +36,6 @@ internal partial class TinyMachine : Machine
     protected override void OnTerminate()
     {
         Console.WriteLine($"Tiny machine: Terminated");
-        ThreadCore.Root.Terminate();
+        this.root.RequestTermination();
     }
-
-    private int count;
 }

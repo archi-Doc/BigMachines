@@ -2,11 +2,15 @@
 
 namespace Advanced;
 
-[MachineObject(StartByDefault = true)]
+[MachineObject(StartByDefault = true, UseServiceProvider = true)]
 public partial class TerminatorMachine : Machine
 {
-    public TerminatorMachine()
-    {
+    private readonly ExecutionRoot root;
+
+    public TerminatorMachine(ExecutionRoot root)
+    {//
+        this.root = root;
+
         this.DefaultTimeout = TimeSpan.FromSeconds(1);
     }
 
@@ -40,7 +44,7 @@ public partial class TerminatorMachine : Machine
         }
 
         Console.WriteLine("Terminate (no machine)");
-        ThreadCore.Root.Terminate(); // Terminate the application thread.
+        this.root.RequestTermination(); // Terminate the application thread.
         return StateResult.Terminate;
     }
 }
