@@ -286,7 +286,7 @@ internal class BigMachine : IEquatable<BigMachine>
 
     public void GenerateConstructor(ScopingStringBuilder ssb, GeneratorInformation info)
     {
-        using (var scopeMethod = ssb.ScopeBrace($"public {this.SimpleName}()"))
+        using (var scopeMethod = ssb.ScopeBrace($"public {this.SimpleName}(Arc.Threading.ExecutionRoot root) : base(root)"))
         {
             var sb = new StringBuilder();
             sb.Append("this.controls = new MachineControl[] { this.ManualControl, ");

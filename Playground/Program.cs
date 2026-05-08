@@ -43,7 +43,7 @@ class Program
 
         Console.WriteLine("BigMachines Playground");
 
-        var bigMachine = new BigMachine();
+        var bigMachine = new BigMachine(root);
         bigMachine.Start();
 
         var tinyControl = bigMachine.TinyMachine;
