@@ -20,7 +20,7 @@ public abstract partial class BigMachineBase : IBigMachine
     public BigMachineBase(ExecutionRoot root)
     {
         this.Root = root;
-        this.Group = new(root.IndependentGroup, true, GroupName);
+        this.Group = new(root, false, GroupName);
         this.core = new(this.Group, this);
     }
 
