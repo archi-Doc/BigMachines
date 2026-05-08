@@ -15,30 +15,21 @@ public sealed partial class SequentialMachineControl<TIdentifier, TMachine, TInt
     {
         public const double TimeIntervalInMilliseconds = 2_000;
 
-        public SequentialCore(SequentialMachineControl<TIdentifier, TMachine, TInterface> control)
-            : base(null, Process, false)
+        public SequentialCore(ExecutionRoot root, SequentialMachineControl<TIdentifier, TMachine, TInterface> control)
+            : base(root.IndependentGroup, Process, ExecutionCoreOptions.DelayedStart)
         {
             this.control = control;
         }
 
-        public bool Start(ThreadCoreBase? parent)
+        public void Start()
         {
-            if (this.started)
-            {
-                return false;
-            }
-
-            this.ChangeParent(parent);
-            this.Start();
-            this.started = true;
-            return true;
+            this.SendSignal(ExecutionSignal.Start);
         }
 
         public void Pulse() => this.updateEvent.Pulse();
 
         private readonly SequentialMachineControl<TIdentifier, TMachine, TInterface> control;
         private readonly AsyncPulseEvent updateEvent = new();
-        private bool started;
 
         private static async Task Process(object? parameter)
         {

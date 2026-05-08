@@ -26,14 +26,14 @@ public sealed partial class SequentialMachineControl<TIdentifier, TMachine, TInt
     where TMachine : Machine<TIdentifier>
     where TInterface : Machine.ManMachineInterface
 {
-    public SequentialMachineControl()
+    public SequentialMachineControl(ExecutionRoot root)
         : base()
     {
         this.MachineInformation = MachineRegistry.Get<TMachine>();
         this.cores = new SequentialCore[this.MachineInformation.NumberOfTasks];
         for (var i = 0; i < this.MachineInformation.NumberOfTasks; i++)
         {
-            this.cores[i] = new(this);
+            this.cores[i] = new(root, this);
         }
 
         this.items = new();
@@ -90,10 +90,9 @@ public sealed partial class SequentialMachineControl<TIdentifier, TMachine, TInt
 
     public void Start()
     {
-        var parent = ((IBigMachine)this.BigMachine).Core.GetParent();
         foreach (var x in this.cores)
         {
-            x.Start(parent);
+            x.Start();
         }
     }
 
@@ -272,11 +271,11 @@ public sealed partial class SequentialMachineControl<TIdentifier, TMachine, TInt
 
     #endregion
 
-    private void StartCore(ThreadCoreBase? parent)
+    private void StartCore()
     {
         foreach (var x in this.cores)
         {
-            x.Start(parent);
+            x.Start();
         }
     }
 
@@ -331,7 +330,7 @@ public sealed partial class SequentialMachineControl<TIdentifier, TMachine, TInt
             return;
         }
 
-        value ??= new();
+        value ??= new((ExecutionRoot)default!);//
         value.items = TinyhandSerializer.DeserializeObject<Item.GoshujinClass>(ref reader, options) ?? new();
         foreach (var x in value.items)
         {
