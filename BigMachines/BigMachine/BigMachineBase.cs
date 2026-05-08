@@ -15,9 +15,9 @@ namespace BigMachines;
 /// </summary>
 public abstract partial class BigMachineBase : IBigMachine
 {
-    public BigMachineBase()
+    public BigMachineBase(ExecutionRoot root)
     {
-        this.core = new(this);
+        this.core = new(root, this);
     }
 
     public ManualMachineControl ManualControl { get; } = new();
@@ -26,20 +26,10 @@ public abstract partial class BigMachineBase : IBigMachine
 
     #region Core
 
-    public bool Start(ThreadCoreBase? parent)
+    public void Start()
     {
-        if (this.started)
-        {
-            return false;
-        }
-
-        this.started = true;
-        var core = ((IBigMachine)this).Core;
-        core.ChangeParent(parent);
-        core.Start();
+        this.core.SendSignal(ExecutionSignal.Start);
         this.StartBigMachine();
-
-        return true;
     }
 
     #endregion
@@ -57,7 +47,6 @@ public abstract partial class BigMachineBase : IBigMachine
 
     // RecursiveDetectionMode IBigMachine.RecursiveDetectionMode { get; set; }
 
-    private bool started;
     private BigMachineCore core;
     private DateTime lastRun;
     private ExceptionHandlerDelegate exceptionHandler = DefaultExceptionHandler;
