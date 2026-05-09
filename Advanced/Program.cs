@@ -66,7 +66,6 @@ public class Program
         // await PassiveMachine.Test(bigMachine);
         // IntermittentMachine.Test(bigMachine);
         // SequentialMachine.Test(bigMachine);
-        // ContinuousMachine.Test(bigMachine);
 
         // DerivedMachine.Test2(bigMachine);
         // DerivedMachine2.Test(bigMachine);
