@@ -281,6 +281,7 @@ public class BigMachinesBody : VisceralBody<BigMachinesObject>
         ssb.AddUsing("System.Threading.Tasks");
         ssb.AddUsing(BigMachineNamespace);
         ssb.AddUsing(BigMachineNamespace + ".Control");
+        ssb.AddUsing("Microsoft.Extensions.DependencyInjection");
         if (tinyhand)
         {
             ssb.AddUsing("Tinyhand");

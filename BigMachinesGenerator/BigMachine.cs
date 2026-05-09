@@ -257,7 +257,7 @@ internal class BigMachine : IEquatable<BigMachine>
 
             this.GenerateSerialize(ssb, info);
             this.GenerateDeserialize(ssb, info);
-            ssb.AppendLine($"static void ITinyhandReconstructable<{this.SimpleName}>.Reconstruct([NotNull] scoped ref {this.SimpleName}? value, TinyhandSerializerOptions options) => value ??= new();");
+            ssb.AppendLine($"static void ITinyhandReconstructable<{this.SimpleName}>.Reconstruct([NotNull] scoped ref {this.SimpleName}? value, TinyhandSerializerOptions options) => value ??= new(TinyhandSerializer.ServiceProvider.GetRequiredService<Arc.Threading.ExecutionRoot>());");
             ssb.AppendLine($"static {this.SimpleName}? ITinyhandCloneable<{this.SimpleName}>.Clone(scoped ref {this.SimpleName}? v, TinyhandSerializerOptions options) => v == null ? null : TinyhandSerializer.Deserialize<{this.SimpleName}>(TinyhandSerializer.Serialize(v));");
             ssb.AppendLine();
 
@@ -286,7 +286,7 @@ internal class BigMachine : IEquatable<BigMachine>
 
     public void GenerateConstructor(ScopingStringBuilder ssb, GeneratorInformation info)
     {
-        using (var scopeMethod = ssb.ScopeBrace($"public {this.SimpleName}()"))
+        using (var scopeMethod = ssb.ScopeBrace($"public {this.SimpleName}(Arc.Threading.ExecutionRoot root) : base(root)"))
         {
             var sb = new StringBuilder();
             sb.Append("this.controls = new MachineControl[] { this.ManualControl, ");
@@ -346,7 +346,7 @@ internal class BigMachine : IEquatable<BigMachine>
         using (var scopeMethod = ssb.ScopeBrace($"static void ITinyhandSerializable<{this.SimpleName}>.Deserialize(ref TinyhandReader reader, scoped ref {this.SimpleName}? value, TinyhandSerializerOptions options)"))
         {
             ssb.AppendLine("if (reader.TryReadNil()) return;");
-            ssb.AppendLine("value ??= new();");
+            ssb.AppendLine("value ??= new(TinyhandSerializer.ServiceProvider.GetRequiredService<Arc.Threading.ExecutionRoot>());");
             ssb.AppendLine("var count = reader.ReadMapHeader2();");
 
             var trie = new VisceralTrieInt<Machine>(null);

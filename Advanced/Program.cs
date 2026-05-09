@@ -9,24 +9,27 @@ global using Arc.Unit;
 global using BigMachines;
 global using CrystalData;
 global using Tinyhand;
+using Arc;
 using Microsoft.Extensions.DependencyInjection;
 
 namespace Advanced;
 
 public class Program
 {
+    private static ExecutionRoot? root;
+
     public static async Task Main(string[] args)
     {
-        AppDomain.CurrentDomain.ProcessExit += async (s, e) =>
-        {// Console window is closing or process terminated.
-            ThreadCore.Root.Terminate(); // Send a termination signal to the root.
-            ThreadCore.Root.TerminationEvent.WaitOne(2000); // Wait until the termination process is complete (#1).
-        };
+        AppCloseHandler.Set(() =>
+        {// Closing the console window or terminating the process.
+            root?.RequestTermination(); // Send a termination signal to the root.
+            root?.WaitForTermination(TimeSpan.FromSeconds(2)).Wait();
+        });
 
         Console.CancelKeyPress += (s, e) =>
-        {// Ctrl+C pressed
+        {// Ctrl+C pressed.
             e.Cancel = true;
-            ThreadCore.Root.Terminate(); // Send a termination signal to the root.
+            root?.RequestTermination(); // Send a termination signal to the root.
         };
 
         // Create a builder for BigMachine and CrystalData.
@@ -47,14 +50,15 @@ public class Program
                 });
             });
 
-        var product = builder.Build();
-        TinyhandSerializer.ServiceProvider = product.Context.ServiceProvider; // Set ServiceProvider (required).
+        var unit = builder.Build();
+        root = unit.Context.Root;
+        TinyhandSerializer.ServiceProvider = unit.Context.ServiceProvider; // Set ServiceProvider (required).
 
-        var crystalControl = product.Context.ServiceProvider.GetRequiredService<CrystalControl>();
-        await crystalControl.PrepareAndLoad(false);
+        var crystalControl = unit.Context.ServiceProvider.GetRequiredService<CrystalControl>();
+        await crystalControl.PrepareAndLoad(false);//
 
-        var bigMachine = product.Context.ServiceProvider.GetRequiredService<BigMachine>();
-        bigMachine.Start(ThreadCore.Root); // Start BigMachine.
+        var bigMachine = unit.Context.ServiceProvider.GetRequiredService<BigMachine>();
+        bigMachine.Start(); // Start BigMachine.
 
         // bigMachine.TerminatorMachine.Get(); // This machine will stop the app thread if there is no working machine. -> Start by default
 
@@ -62,7 +66,6 @@ public class Program
         // await PassiveMachine.Test(bigMachine);
         // IntermittentMachine.Test(bigMachine);
         // SequentialMachine.Test(bigMachine);
-        // ContinuousMachine.Test(bigMachine);
 
         // DerivedMachine.Test2(bigMachine);
         // DerivedMachine2.Test(bigMachine);
@@ -76,10 +79,9 @@ public class Program
         // var bin = TinyhandSerializer.Serialize(bigMachine);
         // var bigMachine2 = TinyhandSerializer.Deserialize<BigMachine>(bin);
 
-        await ThreadCore.Root.WaitForTermination(); // Wait for the termination infinitely.
+        await bigMachine.ExecutionGroup.WaitForTermination();
 
         await crystalControl.StoreAndRip();
-
-        ThreadCore.Root.TerminationEvent.Set(); // The termination process is complete (#1).
+        await root.WaitForTermination(TerminationOptions.IncludeIndependent); // Wait for the termination infinitely.
     }
 }

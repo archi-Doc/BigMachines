@@ -4,6 +4,7 @@ using System;
 using System.Linq;
 using System.Runtime.CompilerServices;
 using Arc.Threading;
+using Microsoft.Extensions.DependencyInjection;
 using Tinyhand;
 using Tinyhand.IO;
 using ValueLink;
@@ -30,18 +31,19 @@ public sealed partial class SequentialMachineControl<TIdentifier, TMachine, TInt
         : base()
     {
         this.MachineInformation = MachineRegistry.Get<TMachine>();
-        this.cores = new SequentialCore[this.MachineInformation.NumberOfTasks];
-        for (var i = 0; i < this.MachineInformation.NumberOfTasks; i++)
-        {
-            this.cores[i] = new(this);
-        }
-
+        this.cores = [];
         this.items = new();
     }
 
     public void Prepare(BigMachineBase bigMachine)
     {
         this.BigMachine = bigMachine;
+        this.cores = new SequentialCore[this.MachineInformation.NumberOfTasks];
+        for (var i = 0; i < this.MachineInformation.NumberOfTasks; i++)
+        {
+            this.cores[i] = new(this.BigMachine.ExecutionGroup, this);
+        }
+
         if (this.MachineInformation.Serializable &&
             this.BigMachine is IStructuralObject obj)
         {
@@ -90,10 +92,9 @@ public sealed partial class SequentialMachineControl<TIdentifier, TMachine, TInt
 
     public void Start()
     {
-        var parent = ((IBigMachine)this.BigMachine).Core.GetParent();
         foreach (var x in this.cores)
         {
-            x.Start(parent);
+            x.Start();
         }
     }
 
@@ -272,11 +273,11 @@ public sealed partial class SequentialMachineControl<TIdentifier, TMachine, TInt
 
     #endregion
 
-    private void StartCore(ThreadCoreBase? parent)
+    private void StartCore()
     {
         foreach (var x in this.cores)
         {
-            x.Start(parent);
+            x.Start();
         }
     }
 
@@ -331,6 +332,7 @@ public sealed partial class SequentialMachineControl<TIdentifier, TMachine, TInt
             return;
         }
 
+        var root = TinyhandSerializer.ServiceProvider.GetRequiredService<ExecutionRoot>();
         value ??= new();
         value.items = TinyhandSerializer.DeserializeObject<Item.GoshujinClass>(ref reader, options) ?? new();
         foreach (var x in value.items)

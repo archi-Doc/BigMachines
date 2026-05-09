@@ -4,9 +4,11 @@ using BigMachines;
 
 namespace Playground;
 
-[MachineObject]
+[MachineObject()]
 internal partial class TinyMachine : Machine
 {
+    private int count;
+
     public TinyMachine()
         : base()
     {
@@ -32,8 +34,6 @@ internal partial class TinyMachine : Machine
     protected override void OnTerminate()
     {
         Console.WriteLine($"Tiny machine: Terminated");
-        ThreadCore.Root.Terminate();
+        this.BigMachine.ExecutionGroup.RequestTermination();
     }
-
-    private int count;
 }

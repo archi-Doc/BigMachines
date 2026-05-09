@@ -11,41 +11,30 @@ public sealed partial class SequentialMachineControl<TIdentifier, TMachine, TInt
     where TMachine : Machine<TIdentifier>
     where TInterface : Machine.ManMachineInterface
 {
-    private class SequentialCore : TaskCore
+    private class SequentialCore : TaskCore<SequentialCore>
     {
         public const double TimeIntervalInMilliseconds = 2_000;
 
-        public SequentialCore(SequentialMachineControl<TIdentifier, TMachine, TInterface> control)
-            : base(null, Process, false)
+        public SequentialCore(ExecutionGroup group, SequentialMachineControl<TIdentifier, TMachine, TInterface> control)
+            : base(group, Process, ExecutionCoreOptions.DelayedStart)
         {
             this.control = control;
         }
 
-        public bool Start(ThreadCoreBase? parent)
+        public void Start()
         {
-            if (this.started)
-            {
-                return false;
-            }
-
-            this.ChangeParent(parent);
-            this.Start();
-            this.started = true;
-            return true;
+            this.SendSignal(ExecutionSignal.Start);
         }
 
         public void Pulse() => this.updateEvent.Pulse();
 
         private readonly SequentialMachineControl<TIdentifier, TMachine, TInterface> control;
         private readonly AsyncPulseEvent updateEvent = new();
-        private bool started;
 
-        private static async Task Process(object? parameter)
+        private static async Task Process(SequentialCore core)
         {
-            var core = (SequentialCore)parameter!;
             var control = core.control;
-
-            while (!core.IsTerminated)
+            while (core.CanContinue)
             {
                 /*if (await core.Delay(core.TimeIntervalInMilliseconds) == false)
                 {// Terminated
@@ -57,7 +46,7 @@ public sealed partial class SequentialMachineControl<TIdentifier, TMachine, TInt
                     break;
                 }
 
-                while (!core.IsTerminated)
+                while (core.CanContinue)
                 {
                     var machine = control.GetMachineToProcess();
                     if (machine is null)

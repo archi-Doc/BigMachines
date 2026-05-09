@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Threading.Tasks;
+using Arc;
 using Arc.Threading;
 using Arc.Unit;
 using BigMachines;
@@ -14,18 +15,20 @@ public partial class BigMachine { }
 
 class Program
 {
+    private static ExecutionRoot? root;
+
     static async Task Main(string[] args)
     {
-        AppDomain.CurrentDomain.ProcessExit += async (s, e) =>
-        {// Console window closing or process terminated.
-            ThreadCore.Root.Terminate(); // Send a termination signal to the root.
-            ThreadCore.Root.TerminationEvent.WaitOne(2000); // Wait until the termination process is complete (#1).
-        };
+        AppCloseHandler.Set(() =>
+        {// Closing the console window or terminating the process.
+            root?.RequestTermination(); // Send a termination signal to the root.
+            root?.WaitForTermination(TimeSpan.FromSeconds(2)).Wait();
+        });
 
         Console.CancelKeyPress += (s, e) =>
-        {// Ctrl+C pressed
+        {// Ctrl+C pressed.
             e.Cancel = true;
-            ThreadCore.Root.Terminate(); // Send a termination signal to the root.
+            root?.RequestTermination(); // Send a termination signal to the root.
         };
 
         var builder2 = new UnitBuilder();
@@ -34,20 +37,20 @@ class Program
             context.AddSingleton<TinyMachine>();
         });
 
-        var unit2 = builder2.Build();
-        TinyhandSerializer.ServiceProvider = unit2.Context.ServiceProvider;
+        var unit = builder2.Build();
+        root = unit.Context.Root;
+        TinyhandSerializer.ServiceProvider = unit.Context.ServiceProvider;
 
         Console.WriteLine("BigMachines Playground");
 
-        var bigMachine = new BigMachine();
-        bigMachine.Start(ThreadCore.Root);
+        var bigMachine = new BigMachine(root);
+        bigMachine.Start();
 
         var tinyControl = bigMachine.TinyMachine;
         var machine = tinyControl.GetOrCreate();
 
-        await ThreadCore.Root.WaitForTermination(); // Wait for the termination infinitely.
+        await root.WaitForTermination(TerminationOptions.IncludeIndependent); // Wait for the termination infinitely.
 
-        ThreadCore.Root.TerminationEvent.Set(); // The termination process is complete (#1).
         Console.WriteLine("Terminated.");
     }
 }

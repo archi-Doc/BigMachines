@@ -15,12 +15,7 @@ public interface IBigMachine
     /// </summary>
     public BigMachineBase.BigMachineCore Core { get; }
 
-    /// <summary>
-    /// Initiate BigMachine to process active machines.
-    /// </summary>
-    /// <param name="parent">Specify the parent for the BigMachine's processing tasks. If <see langword="null"/> is specified, it becomes an independent task.</param>
-    /// <returns><see langword="true"/>: Success; otherwise <see langword="false"/>.</returns>
-    public bool Start(ThreadCoreBase? parent);
+    public void Start();
 
     public int CheckRecursive(uint machineSerial, ulong id);
 
