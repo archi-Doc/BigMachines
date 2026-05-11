@@ -18,7 +18,7 @@ namespace BigMachines.Control;
 /// <typeparam name="TMachine">The type of a machine.</typeparam>
 /// <typeparam name="TInterface">The type of an interface.</typeparam>
 [TinyhandObject(Structural = true)]
-public partial class SingleMachineControl<TMachine, TInterface> : MachineControl, ITinyhandSerializable<SingleMachineControl<TMachine, TInterface>>, ITinyhandCustomJournal
+public partial class SingleMachineControl<TMachine, TInterface> : MachineControl, ITinyhandSerializable<SingleMachineControl<TMachine, TInterface>>, ITinyhandCustomJournal, ITinyhandSingleLayoutSerializable
     where TMachine : Machine
     where TInterface : Machine.ManMachineInterface
 {

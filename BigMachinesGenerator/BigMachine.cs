@@ -247,7 +247,7 @@ internal class BigMachine : IEquatable<BigMachine>
     public void Generate(ScopingStringBuilder ssb, GeneratorInformation info)
     {
         ssb.AppendLine("[TinyhandObject]");
-        using (var scopeClass = ssb.ScopeBrace($"public partial class {this.SimpleName} : BigMachineBase, ITinyhandSerializable<{this.SimpleName}>, ITinyhandReconstructable<{this.SimpleName}>, ITinyhandCloneable<{this.SimpleName}>, IStructuralObject"))
+        using (var scopeClass = ssb.ScopeBrace($"public partial class {this.SimpleName} : BigMachineBase, ITinyhandSerializable<{this.SimpleName}>, ITinyhandReconstructable<{this.SimpleName}>, ITinyhandCloneable<{this.SimpleName}>, IStructuralObject, ITinyhandSingleLayoutSerializable"))
         {
             this.GenerateMembers(ssb, info);
             ssb.AppendLine();
