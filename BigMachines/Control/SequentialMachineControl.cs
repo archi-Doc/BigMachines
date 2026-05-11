@@ -22,7 +22,7 @@ public interface ISequentialMachineControl
 }
 
 [TinyhandObject(Structural = true)]
-public sealed partial class SequentialMachineControl<TIdentifier, TMachine, TInterface> : MultiMachineControl<TIdentifier, TInterface>, ISequentialMachineControl, ITinyhandSerializable<SequentialMachineControl<TIdentifier, TMachine, TInterface>>, ITinyhandCustomJournal
+public sealed partial class SequentialMachineControl<TIdentifier, TMachine, TInterface> : MultiMachineControl<TIdentifier, TInterface>, ISequentialMachineControl, ITinyhandSerializable<SequentialMachineControl<TIdentifier, TMachine, TInterface>>, ITinyhandCustomJournal, ITinyhandSingleLayoutSerializable
     where TIdentifier : notnull
     where TMachine : Machine<TIdentifier>
     where TInterface : Machine.ManMachineInterface

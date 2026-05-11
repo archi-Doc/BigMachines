@@ -55,7 +55,7 @@ public class Program
         TinyhandSerializer.ServiceProvider = unit.Context.ServiceProvider; // Set ServiceProvider (required).
 
         var crystalControl = unit.Context.ServiceProvider.GetRequiredService<CrystalControl>();
-        await crystalControl.PrepareAndLoad(false);//
+        await crystalControl.PrepareAndLoad(false);
 
         var bigMachine = unit.Context.ServiceProvider.GetRequiredService<BigMachine>();
         bigMachine.Start(); // Start BigMachine.
