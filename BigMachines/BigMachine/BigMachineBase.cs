@@ -17,27 +17,6 @@ public abstract partial class BigMachineBase : IBigMachine
 {
     public const string GroupName = "BigMachine";
 
-    public BigMachineBase(ExecutionRoot root)
-    {
-        this.root = root;
-        this.ExecutionGroup = new(root, false, GroupName);
-        this.core = new(this.ExecutionGroup, this);
-    }
-
-    public ManualMachineControl ManualControl { get; } = new();
-
-    public abstract MachineControl[] GetArray();
-
-    #region Core
-
-    public void Start()
-    {
-        this.core.SendSignal(ExecutionSignal.Start);
-        this.StartBigMachine();
-    }
-
-    #endregion
-
     #region FieldAndProperty
 
     public ExecutionGroup ExecutionGroup { get; }
@@ -60,6 +39,23 @@ public abstract partial class BigMachineBase : IBigMachine
     private ConcurrentQueue<BigMachineException> exceptionQueue = new();
 
     #endregion
+
+    public BigMachineBase(ExecutionRoot root)
+    {
+        this.root = root;
+        this.ExecutionGroup = new(root, false, GroupName);
+        this.core = new(this.ExecutionGroup, this);
+    }
+
+    public ManualMachineControl ManualControl { get; } = new();
+
+    public abstract MachineControl[] GetArray();
+
+    public void Start()
+    {
+        this.core.SendSignal(ExecutionSignal.Start);
+        this.StartBigMachine();
+    }
 
     bool IBigMachine.CheckActiveMachine(Type? machineTypeToBeExcluded)
     {
