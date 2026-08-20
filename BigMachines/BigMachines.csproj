@@ -28,7 +28,7 @@
     <PackageReference Include="Arc.Collections" Version="1.41.1" />
     <PackageReference Include="Arc.Threading" Version="0.50.0" />
     <PackageReference Include="Tinyhand" Version="0.143.0" />
-    <PackageReference Include="ValueLink" Version="0.116.1" />
+    <PackageReference Include="ValueLink" Version="0.117.0" />
     <PackageReference Include="StyleCop.Analyzers" Version="1.2.0-beta.556">
       <PrivateAssets>all</PrivateAssets>
       <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
