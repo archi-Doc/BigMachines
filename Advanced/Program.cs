@@ -51,7 +51,7 @@ public class Program
             });
 
         var unit = builder.Build();
-        root = unit.Context.Root;
+        root = unit.Context.ExecutionRoot;
         TinyhandSerializer.ServiceProvider = unit.Context.ServiceProvider; // Set ServiceProvider (required).
 
         var crystalControl = unit.Context.ServiceProvider.GetRequiredService<CrystalControl>();
