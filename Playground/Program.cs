@@ -38,7 +38,7 @@ class Program
         });
 
         var unit = builder2.Build();
-        root = unit.Context.Root;
+        root = unit.Context.ExecutionRoot;
         TinyhandSerializer.ServiceProvider = unit.Context.ServiceProvider;
 
         Console.WriteLine("BigMachines Playground");
