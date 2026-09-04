@@ -362,7 +362,7 @@ public class BigMachinesBody : VisceralBody<BigMachinesObject>
                     // BigMachine formatter
                     foreach (var x in this.BigMachines)
                     {
-                        ssb.AppendLine($"Tinyhand.Resolvers.GeneratedResolver.Instance.SetFormatter(new Tinyhand.Formatters.TinyhandObjectFormatter<{x.Object.FullName}>());");
+                        ssb.AppendLine($"Tinyhand.Resolvers.GeneratedResolver.RegisterObject<{x.Object.FullName}>();");
                     }
 
                     foreach (var x in info.ModuleInitializerClass)

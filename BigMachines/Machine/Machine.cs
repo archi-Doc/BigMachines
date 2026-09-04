@@ -19,7 +19,8 @@ namespace BigMachines;
 /// <summary>
 /// Represents an abstract class that serves as the base for the actual machine class.
 /// </summary>
-[TinyhandObject(ReservedKeyCount = ReservedKeyCount)]
+// TinyhandObject must be applied to each serializable concrete machine. Applying it here
+// makes Tinyhand's NativeAOT registration treat every derived machine as serializable.
 public abstract partial class Machine
 {
     internal const int ReservedKeyCount = 9;
