@@ -249,6 +249,11 @@ public readonly struct CommandResult<TResponse>
 
     public readonly CommandResult Result;
     public readonly TResponse Resnpose;
+
+    /// <summary>
+    /// Gets the response returned by the command.
+    /// </summary>
+    public TResponse Response => this.Resnpose;
 }
 
 public readonly struct IdentifierAndCommandResult<TIdentifier>

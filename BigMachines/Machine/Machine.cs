@@ -322,8 +322,6 @@ public abstract partial class Machine
 
     internal void Process(DateTime now, TimeSpan elapsed)
     {
-        var canRun = true;
-
         Interlocked.Add(ref this.__lifespan__, -elapsed.Ticks);
         if (this.__operationalState__ == 0)
         {// Stand-by
@@ -334,7 +332,8 @@ public abstract partial class Machine
         {// Terminate
             this.InterfaceInstance.TerminateMachine();
         }
-        else if (canRun && (this.__timeUntilRun__ <= 0 || this.__nextRunTime__ >= now) && !this.__operationalState__.HasFlag(OperationalFlag.Running))
+        else if (this.__operationalState__ == 0 &&
+            (this.__timeUntilRun__ <= 0 || (this.__nextRunTime__ != default && this.__nextRunTime__ <= now)))
         {// Screening
             this.RunAndForget(now);
         }
@@ -347,7 +346,7 @@ public abstract partial class Machine
         {// Terminate
             this.InterfaceInstance.TerminateMachine();
         }
-        else if (!this.__operationalState__.HasFlag(OperationalFlag.Running))
+        else if (this.__operationalState__ == 0)
         {// Screening
             return this.RunAndForget(now);
         }
@@ -367,12 +366,12 @@ public abstract partial class Machine
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     internal Task RunAndForget(DateTime now)
     {
-        return Task.Run(() =>
+        return Task.Run(async () =>
         {
             this.Semaphore.Enter();
             try
             {
-                if (this.TryRun(now) == StateResult.Terminate)
+                if (await this.TryRun(now).ConfigureAwait(false) == StateResult.Terminate)
                 {
                     this.__operationalState__ |= OperationalFlag.Terminated;
                     this.OnTerminate();
@@ -390,7 +389,7 @@ public abstract partial class Machine
         });
     }
 
-    private StateResult TryRun(DateTime now)
+    private async Task<StateResult> TryRun(DateTime now)
     {// Locked
         var runFlag = false;
         if (this.__timeUntilRun__ <= 0)
@@ -407,7 +406,7 @@ public abstract partial class Machine
             runFlag = true;
         }
 
-        if (this.__nextRunTime__ >= now)
+        if (this.__nextRunTime__ != default && this.__nextRunTime__ <= now)
         {
             this.__nextRunTime__ = default;
             runFlag = true;
@@ -418,7 +417,7 @@ public abstract partial class Machine
             return StateResult.Continue;
         }
 
-        return this.RunMachine(RunType.Timer, now).Result;
+        return await this.RunMachine(RunType.Timer, now).ConfigureAwait(false);
     }
 
     /// <summary>
@@ -430,8 +429,8 @@ public abstract partial class Machine
     /// <returns>true: The machine is terminated.</returns>
     private async Task<StateResult> RunMachine(RunType runType, DateTime now)
     {// Called: Machine.DistributeCommand(), BigMachine.MainLoop()
-        if (this.__operationalState__.HasFlag(OperationalFlag.Running))
-        {// Machine is running
+        if ((this.__operationalState__ & (OperationalFlag.Running | OperationalFlag.Paused | OperationalFlag.Terminated)) != 0)
+        {// Machine cannot run
             return StateResult.Continue;
         }
 

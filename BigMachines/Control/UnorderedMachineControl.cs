@@ -43,6 +43,12 @@ public sealed partial class UnorderedMachineControl<TIdentifier, TMachine, TInte
         }
     }
 
+    /// <summary>
+    /// Registers the formatter for the closed generic item type.
+    /// </summary>
+    public static void RegisterTinyhandFormatter()
+        => Tinyhand.Resolvers.GeneratedResolver.RegisterObject<Item>();
+
     [TinyhandObject(Structural = true)]
     [ValueLinkObject(Isolation = IsolationLevel.Serializable)]
     private partial class Item

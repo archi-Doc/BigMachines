@@ -365,6 +365,17 @@ public class BigMachinesBody : VisceralBody<BigMachinesObject>
                         ssb.AppendLine($"Tinyhand.Resolvers.GeneratedResolver.RegisterObject<{x.Object.FullName}>();");
                     }
 
+                    var registeredControlTypes = new HashSet<string>();
+                    foreach (var x in this.BigMachines.SelectMany(x => x.Machines.Values))
+                    {
+                        if (x.MachineObject.TinyhandAttribute is not null &&
+                            (x.Control == MachineControlKind.Unordered || x.Control == MachineControlKind.Sequential) &&
+                            registeredControlTypes.Add(x.ControlType))
+                        {
+                            ssb.AppendLine($"{x.ControlType}.RegisterTinyhandFormatter();");
+                        }
+                    }
+
                     foreach (var x in info.ModuleInitializerClass)
                     {
                         ssb.Append(x, true);

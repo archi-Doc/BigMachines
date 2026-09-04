@@ -32,17 +32,15 @@ public abstract partial class BigMachineBase : IBigMachine
 
     // RecursiveDetectionMode IBigMachine.RecursiveDetectionMode { get; set; }
 
-    private readonly ExecutionRoot root;
     private readonly BigMachineCore core;
+    private readonly ConcurrentQueue<BigMachineException> exceptionQueue = new();
     private DateTime lastRun;
     private ExceptionHandlerDelegate exceptionHandler = DefaultExceptionHandler;
-    private ConcurrentQueue<BigMachineException> exceptionQueue = new();
 
     #endregion
 
     public BigMachineBase(ExecutionRoot root)
     {
-        this.root = root;
         this.ExecutionGroup = new(root, false, GroupName);
         this.core = new(this.ExecutionGroup, this);
     }
@@ -131,7 +129,7 @@ public abstract partial class BigMachineBase : IBigMachine
     {
         while (this.exceptionQueue.TryDequeue(out var exception))
         {
-            this.exceptionHandler(exception);
+            Volatile.Read(ref this.exceptionHandler)(exception);
         }
     }
 

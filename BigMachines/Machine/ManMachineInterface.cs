@@ -49,7 +49,7 @@ public partial class Machine
         {
             using (this.Machine.Semaphore.EnterScope())
             {
-                if (this.Machine.__operationalState__ == OperationalFlag.Terminated)
+                if (this.Machine.__operationalState__.HasFlag(OperationalFlag.Terminated))
                 {
                     return false;
                 }
@@ -64,12 +64,13 @@ public partial class Machine
         {
             using (this.Machine.Semaphore.EnterScope())
             {
-                if (this.Machine.__operationalState__ == OperationalFlag.Terminated)
+                if (this.Machine.__operationalState__.HasFlag(OperationalFlag.Terminated))
                 {
                     return false;
                 }
 
                 this.Machine.__operationalState__ &= ~OperationalFlag.Paused;
+                this.Machine.MachineControl?.OnMachineUnpaused();
             }
 
             return true;
@@ -79,7 +80,7 @@ public partial class Machine
         /// Gets a value indicating whether the machine is running (in state methods).
         /// </summary>
         /// <returns><see langword="true"/>: The machine is running (in state methods).</returns>
-        public bool IsRunning => this.IsRunning;
+        public bool IsRunning => this.Machine.IsRunning;
 
         /// <summary>
         /// Gets a value indicating whether the machine is active (in state methods or waiting to execute).

@@ -59,4 +59,8 @@ public abstract class MachineControl
     /// </summary>
     /// <param name="runner">The <see cref="MachineRunner"/> instance used to execute machine processing.</param>
     internal abstract void Process(MachineRunner runner);
+
+    internal virtual void OnMachineUnpaused()
+    {
+    }
 }

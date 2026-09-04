@@ -5,6 +5,7 @@
   <Project Path="Advanced/Advanced.csproj" />
   <Project Path="Benchmark/Benchmark.csproj" />
   <Project Path="BigMachines/BigMachines.csproj" />
+  <Project Path="BigMachines.Tests/BigMachines.Tests.csproj" />
   <Project Path="BigMachinesGenerator/BigMachinesGenerator.csproj" />
   <Project Path="ExternalMachine/ExternalMachine.csproj" />
   <Project Path="Playground/Playground.csproj" />

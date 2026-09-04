@@ -13,8 +13,6 @@ public sealed partial class SequentialMachineControl<TIdentifier, TMachine, TInt
 {
     private class SequentialCore : TaskCore<SequentialCore>
     {
-        public const double TimeIntervalInMilliseconds = 2_000;
-
         public SequentialCore(ExecutionGroup group, SequentialMachineControl<TIdentifier, TMachine, TInterface> control)
             : base(group, Process, ExecutionCoreOptions.DelayedStart)
         {
@@ -41,7 +39,7 @@ public sealed partial class SequentialMachineControl<TIdentifier, TMachine, TInt
                     break;
                 }*/
 
-                if (await core.updateEvent.WaitAsync(TimeSpan.FromMilliseconds(TimeIntervalInMilliseconds), core.CancellationToken).ConfigureAwait(false) != true)
+                if (!await core.updateEvent.WaitAsync(core.CancellationToken).ConfigureAwait(false))
                 {
                     break;
                 }

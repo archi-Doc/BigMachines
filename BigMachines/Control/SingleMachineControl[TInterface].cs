@@ -56,7 +56,7 @@ public partial class SingleMachineControl<TMachine, TInterface> : MachineControl
     public bool TryGet([MaybeNullWhen(false)] out TInterface machineInterface)
     {
         machineInterface = this.machine?.InterfaceInstance as TInterface;
-        return this.machine is not null;
+        return machineInterface is not null;
     }
 
     /// <summary>
@@ -229,7 +229,7 @@ Loop:
 
     static void ITinyhandSerializable<SingleMachineControl<TMachine, TInterface>>.Serialize(ref TinyhandWriter writer, scoped ref SingleMachineControl<TMachine, TInterface>? value, TinyhandSerializerOptions options)
     {
-        TinyhandSerializer.Serialize(ref writer, value?.GetOrCreateMachine().InterfaceInstance, options);
+        TinyhandSerializer.Serialize(ref writer, value?.machine, options);
 
         /*if (value?.machine is ITinyhandSerializable obj)
         {

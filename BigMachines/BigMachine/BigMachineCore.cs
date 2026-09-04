@@ -1,6 +1,7 @@
 ﻿// Copyright (c) All contributors. All rights reserved. Licensed under the MIT license.
 
 using System;
+using System.Threading;
 using System.Threading.Tasks;
 using Arc.Threading;
 
@@ -34,7 +35,7 @@ public partial class BigMachineBase
 
                 while (core.bigMachine.exceptionQueue.TryDequeue(out var exception))
                 {
-                    bigMachine.exceptionHandler(exception);
+                    Volatile.Read(ref bigMachine.exceptionHandler)(exception);
                 }
 
                 var utcNow = DateTime.UtcNow;

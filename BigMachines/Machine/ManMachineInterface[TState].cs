@@ -26,7 +26,7 @@ public partial class Machine
         /// <see langword="true"/>: the state is successfully retrieved; otherwise <see langword="false"/> (the machine is terminated).</returns>
         public bool TryGetState(out TState state)
         {
-            if (this.Machine.__operationalState__ == OperationalFlag.Terminated)
+            if (this.Machine.__operationalState__.HasFlag(OperationalFlag.Terminated))
             {
                 state = default;
                 return false;
@@ -48,7 +48,7 @@ public partial class Machine
 
             using (this.Machine.Semaphore.EnterScope())
             {
-                if (this.Machine.__operationalState__ == OperationalFlag.Terminated)
+                if (this.Machine.__operationalState__.HasFlag(OperationalFlag.Terminated))
                 {// Terminated
                     result = ChangeStateResult.Terminated;
                 }

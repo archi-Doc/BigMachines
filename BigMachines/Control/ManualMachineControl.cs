@@ -51,8 +51,8 @@ public sealed partial class ManualMachineControl : MachineControl // , ITinyhand
 
     public override MachineInformation MachineInformation => MachineInformation.Default;
 
-    private Lock lockObject = new();
-    private Dictionary<Type, Machine> typeToMachine = new();
+    private readonly Lock lockObject = new();
+    private readonly Dictionary<Type, Machine> typeToMachine = new();
     // private Item.GoshujinClass items = new();
 
     #region Abstract
@@ -143,11 +143,6 @@ public sealed partial class ManualMachineControl : MachineControl // , ITinyhand
             else
             {
                 machine = MachineRegistry.CreateMachine<TMachine>();
-                if (machine is null)
-                {
-                    return default;
-                }
-
                 machine.PrepareCreateStart(this, createParam);
                 this.typeToMachine.TryAdd(typeof(TMachine), machine);
             }
