@@ -20,7 +20,7 @@ jobs:
     - name: Build
       run: dotnet build --configuration Release --no-restore
     - name: Test
-      run: dotnet test --no-restore --verbosity normal
+      run: dotnet test --solution BigMachines.slnx --configuration Release --no-build --no-restore --verbosity normal
     - name: Publish NativeAOT smoke test
       run: dotnet publish NativeAotTest/NativeAotTest.csproj --configuration Release --runtime linux-x64
     - name: Run NativeAOT smoke test
