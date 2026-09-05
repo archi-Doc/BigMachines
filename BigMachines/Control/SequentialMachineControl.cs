@@ -4,7 +4,6 @@ using System;
 using System.Linq;
 using System.Runtime.CompilerServices;
 using Arc.Threading;
-using Microsoft.Extensions.DependencyInjection;
 using Tinyhand;
 using Tinyhand.IO;
 using ValueLink;
@@ -14,6 +13,9 @@ using ValueLink;
 
 namespace BigMachines.Control;
 
+/// <summary>
+/// Provides non-generic operations for a sequential machine control.
+/// </summary>
 public interface ISequentialMachineControl
 {
     void Start();
@@ -21,6 +23,12 @@ public interface ISequentialMachineControl
     Machine.ManMachineInterface? GetFirst();
 }
 
+/// <summary>
+/// Manages identified machines in a FIFO queue with optional dedicated workers.
+/// </summary>
+/// <typeparam name="TIdentifier">The machine identifier type.</typeparam>
+/// <typeparam name="TMachine">The machine type.</typeparam>
+/// <typeparam name="TInterface">The generated machine interface type.</typeparam>
 [TinyhandObject(Structural = true)]
 public sealed partial class SequentialMachineControl<TIdentifier, TMachine, TInterface> : MultiMachineControl<TIdentifier, TInterface>, ISequentialMachineControl, ITinyhandSerializable<SequentialMachineControl<TIdentifier, TMachine, TInterface>>, ITinyhandCustomJournal, ITinyhandSingleLayoutSerializable
     where TIdentifier : notnull
@@ -50,6 +58,12 @@ public sealed partial class SequentialMachineControl<TIdentifier, TMachine, TInt
             ((IStructuralObject)this.items).SetupStructure(obj);
         }
     }
+
+    /// <summary>
+    /// Registers the formatter for the closed generic item type.
+    /// </summary>
+    public static void RegisterTinyhandFormatter()
+        => Tinyhand.Resolvers.GeneratedResolver.RegisterObject<Item>();
 
     [TinyhandObject(Structural = true)]
     [ValueLinkObject(Isolation = IsolationLevel.Serializable)]
@@ -88,7 +102,15 @@ public sealed partial class SequentialMachineControl<TIdentifier, TMachine, TInt
     #region Abstract
 
     public override int Count
-        => this.items.Count;
+    {
+        get
+        {
+            using (this.items.LockObject.EnterScope())
+            {
+                return this.items.Count;
+            }
+        }
+    }
 
     public void Start()
     {
@@ -193,7 +215,7 @@ public sealed partial class SequentialMachineControl<TIdentifier, TMachine, TInt
             {// Have dedicated tasks
                 foreach (var x in this.items)
                 {
-                    runner.Add(x.Machine);
+                    runner.AddLifespan(x.Machine);
                 }
             }
             else
@@ -273,13 +295,8 @@ public sealed partial class SequentialMachineControl<TIdentifier, TMachine, TInt
 
     #endregion
 
-    private void StartCore()
-    {
-        foreach (var x in this.cores)
-        {
-            x.Start();
-        }
-    }
+    internal override void OnMachineUnpaused()
+        => this.PulseCore();
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     private void PulseCore()
@@ -299,7 +316,7 @@ public sealed partial class SequentialMachineControl<TIdentifier, TMachine, TInt
                 return default;
             }
 
-            while (item.Machine.OperationalState.HasFlag(OperationalFlag.Running))
+            while (item.Machine.OperationalState != 0)
             {
                 item = item.SequentialLink.Next;
                 if (item is null)
@@ -332,7 +349,6 @@ public sealed partial class SequentialMachineControl<TIdentifier, TMachine, TInt
             return;
         }
 
-        var root = TinyhandSerializer.ServiceProvider.GetRequiredService<ExecutionRoot>();
         value ??= new();
         value.items = TinyhandSerializer.DeserializeObject<Item.GoshujinClass>(ref reader, options) ?? new();
         foreach (var x in value.items)

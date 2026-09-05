@@ -19,7 +19,7 @@ namespace BigMachines;
 
 internal readonly struct RecursiveChecker
 {
-    public static AsyncLocal<RecursiveChecker> AsyncLocalInstance = new();
+    public static readonly AsyncLocal<RecursiveChecker> AsyncLocalInstance = new();
 
     public readonly ulong Id0;
     public readonly ulong Id1;

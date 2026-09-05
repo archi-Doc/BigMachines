@@ -17,9 +17,10 @@ using Tinyhand.IO;
 namespace BigMachines;
 
 /// <summary>
-/// Represents an abstract class that serves as the base for the actual machine class.
+/// Provides the runtime base for generated state machines.
 /// </summary>
-[TinyhandObject(ReservedKeyCount = ReservedKeyCount)]
+// TinyhandObject must be applied to each serializable concrete machine. Applying it here
+// makes Tinyhand's NativeAOT registration treat every derived machine as serializable.
 public abstract partial class Machine
 {
     internal const int ReservedKeyCount = 9;
@@ -97,7 +98,7 @@ public abstract partial class Machine
     }
 
     /// <summary>
-    /// The time until the machine starts.
+    /// The remaining time until the machine runs.
     /// </summary>
     [Key(2)]
     protected long __timeUntilRun__ = long.MaxValue; // TimeSpan.Ticks (for interlocked)
@@ -128,7 +129,7 @@ public abstract partial class Machine
     }
 
     /// <summary>
-    /// The last <see cref="DateTime"/> when this machine ran.
+    /// The UTC time when this machine last ran.
     /// </summary>
     [Key(3)]
     protected DateTime __lastRunTime__;
@@ -159,7 +160,7 @@ public abstract partial class Machine
     }
 
     /// <summary>
-    /// The next scheduled <see cref="DateTime"/> for this machine to run.
+    /// The next scheduled UTC time for this machine to run.
     /// </summary>
     [Key(4)]
     protected DateTime __nextRunTime__;
@@ -222,7 +223,7 @@ public abstract partial class Machine
     }
 
     /// <summary>
-    /// Gets or sets the time for the machine to shut down automatically.
+    /// Stores the UTC time at which the machine terminates automatically.
     /// </summary>
     [Key(6)]
     protected DateTime __terminationTime__ = DateTime.MaxValue;
@@ -277,7 +278,7 @@ public abstract partial class Machine
 
     internal bool IsActive =>
         !this.__operationalState__.HasFlag(OperationalFlag.Terminated) &&
-        (this.__operationalState__.HasFlag(OperationalFlag.Running) || (this.DefaultTimeout is TimeSpan ts && ts > TimeSpan.Zero));
+        (this.__operationalState__.HasFlag(OperationalFlag.Running) || this.DefaultTimeout > TimeSpan.Zero);
 
     internal bool IsRunning =>
         this.__operationalState__.HasFlag(OperationalFlag.Running) &&
@@ -289,9 +290,8 @@ public abstract partial class Machine
     protected readonly SemaphoreLock Semaphore = new();
 
     /// <summary>
-    /// Gets the default time interval at which the machine will run.<br/>
-    /// <see cref="TimeSpan.Zero"/>: No interval execution.<br/>
-    /// This property is NOT serialization target.
+    /// Gets the default interval at which the machine runs.<br/>
+    /// <see cref="TimeSpan.Zero"/> disables interval execution. This property is not serialized.
     /// </summary>
     [IgnoreMember]
     protected TimeSpan DefaultTimeout { get; init; }
@@ -306,13 +306,13 @@ public abstract partial class Machine
     protected object? __interfaceInstance__;
 
     /// <summary>
-    /// Gets or sets a value indicating whether the machine is going to re-run.
+    /// Indicates whether the current state dispatch should run again.
     /// </summary>
     [IgnoreMember]
     protected bool __requestRerun__;
 
     /// <summary>
-    /// Get the serial (unique) number of this machine.
+    /// Stores the process-local serial number of this machine.
     /// </summary>
     [IgnoreMember]
     protected uint __machineSerial__;
@@ -321,8 +321,6 @@ public abstract partial class Machine
 
     internal void Process(DateTime now, TimeSpan elapsed)
     {
-        var canRun = true;
-
         Interlocked.Add(ref this.__lifespan__, -elapsed.Ticks);
         if (this.__operationalState__ == 0)
         {// Stand-by
@@ -333,7 +331,8 @@ public abstract partial class Machine
         {// Terminate
             this.InterfaceInstance.TerminateMachine();
         }
-        else if (canRun && (this.__timeUntilRun__ <= 0 || this.__nextRunTime__ >= now) && !this.__operationalState__.HasFlag(OperationalFlag.Running))
+        else if (this.__operationalState__ == 0 &&
+            (this.__timeUntilRun__ <= 0 || (this.__nextRunTime__ != default && this.__nextRunTime__ <= now)))
         {// Screening
             this.RunAndForget(now);
         }
@@ -346,7 +345,7 @@ public abstract partial class Machine
         {// Terminate
             this.InterfaceInstance.TerminateMachine();
         }
-        else if (!this.__operationalState__.HasFlag(OperationalFlag.Running))
+        else if (this.__operationalState__ == 0)
         {// Screening
             return this.RunAndForget(now);
         }
@@ -366,12 +365,12 @@ public abstract partial class Machine
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     internal Task RunAndForget(DateTime now)
     {
-        return Task.Run(() =>
+        return Task.Run(async () =>
         {
             this.Semaphore.Enter();
             try
             {
-                if (this.TryRun(now) == StateResult.Terminate)
+                if (await this.TryRun(now).ConfigureAwait(false) == StateResult.Terminate)
                 {
                     this.__operationalState__ |= OperationalFlag.Terminated;
                     this.OnTerminate();
@@ -389,7 +388,7 @@ public abstract partial class Machine
         });
     }
 
-    private StateResult TryRun(DateTime now)
+    private async Task<StateResult> TryRun(DateTime now)
     {// Locked
         var runFlag = false;
         if (this.__timeUntilRun__ <= 0)
@@ -406,7 +405,7 @@ public abstract partial class Machine
             runFlag = true;
         }
 
-        if (this.__nextRunTime__ >= now)
+        if (this.__nextRunTime__ != default && this.__nextRunTime__ <= now)
         {
             this.__nextRunTime__ = default;
             runFlag = true;
@@ -417,20 +416,19 @@ public abstract partial class Machine
             return StateResult.Continue;
         }
 
-        return this.RunMachine(RunType.Timer, now).Result;
+        return await this.RunMachine(RunType.Timer, now).ConfigureAwait(false);
     }
 
     /// <summary>
-    /// Run the machine.<br/>
-    /// This code is inside 'lock (this.Machine)' statement.
+    /// Runs the machine while its semaphore is held.
     /// </summary>
     /// <param name="runType">A trigger of the machine running.</param>
     /// <param name="now">Current time.</param>
-    /// <returns>true: The machine is terminated.</returns>
+    /// <returns>The state-method result.</returns>
     private async Task<StateResult> RunMachine(RunType runType, DateTime now)
     {// Called: Machine.DistributeCommand(), BigMachine.MainLoop()
-        if (this.__operationalState__.HasFlag(OperationalFlag.Running))
-        {// Machine is running
+        if ((this.__operationalState__ & (OperationalFlag.Running | OperationalFlag.Paused | OperationalFlag.Terminated)) != 0)
+        {// Machine cannot run
             return StateResult.Continue;
         }
 
@@ -479,21 +477,21 @@ RerunLoop:
     }
 
     /// <summary>
-    /// Generated method which is called when the machine executes.
+    /// Represents the generated dispatch method called when the machine executes.
     /// </summary>
-    /// <param name="parameter">StateParameter.</param>
-    /// <returns>StateResult.</returns>
+    /// <param name="parameter">The state invocation context.</param>
+    /// <returns>The state-method result.</returns>
     protected virtual Task<StateResult> __InternalRun__(StateParameter parameter)
     {// Called: Machine.RunMachine()
         return Task.FromResult(StateResult.Terminate);
     }
 
     /// <summary>
-    /// Generated method which is called when the state changes.
+    /// Represents the generated dispatch method called when the state changes.
     /// </summary>
     /// <param name="state">The next state.</param>
-    /// <param name="rerun">The machine wll re-run if <paramref name="rerun"/> is <see langword="true"/>, and the machine state is changed.</param>
-    /// <returns><see langword="true"/>: State changed. <see langword="false"/>: Not changed (same state or denied). </returns>
+    /// <param name="rerun">Whether to run the new state immediately after a successful transition.</param>
+    /// <returns>The result of the transition.</returns>
     protected virtual ChangeStateResult __InternalChangeState__(int state, bool rerun)
         => ChangeStateResult.Terminated;
 
@@ -508,7 +506,7 @@ RerunLoop:
     }
 
     /// <summary>
-    /// Called when the machine is ready to start<br/>
+    /// Called when the machine is ready to start.<br/>
     /// Note that it is called before the actual state method.<br/>
     /// <see cref="OnCreate(object?)"/> -> <see cref="OnStart()"/> -> <see cref="OnTerminate"/>.
     /// </summary>
@@ -518,8 +516,8 @@ RerunLoop:
 
     /// <summary>
     /// Called when the machine is terminating.<br/>
-    ///  This code is inside a semaphore lock.<br/>
-    ///  <see cref="OnCreate(object?)"/> -> <see cref="OnStart()"/> -> <see cref="OnTerminate"/>.
+    /// This method runs while the machine semaphore is held.<br/>
+    /// <see cref="OnCreate(object?)"/> -> <see cref="OnStart()"/> -> <see cref="OnTerminate"/>.
     /// </summary>
     protected virtual void OnTerminate()
     {

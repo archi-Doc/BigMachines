@@ -258,7 +258,7 @@ internal class BigMachine : IEquatable<BigMachine>
             this.GenerateSerialize(ssb, info);
             this.GenerateDeserialize(ssb, info);
             ssb.AppendLine($"static void ITinyhandReconstructable<{this.SimpleName}>.Reconstruct([NotNull] scoped ref {this.SimpleName}? value, TinyhandSerializerOptions options) => value ??= new(TinyhandSerializer.ServiceProvider.GetRequiredService<Arc.Threading.ExecutionRoot>());");
-            ssb.AppendLine($"static {this.SimpleName}? ITinyhandCloneable<{this.SimpleName}>.Clone(scoped ref {this.SimpleName}? v, TinyhandSerializerOptions options) => v == null ? null : TinyhandSerializer.Deserialize<{this.SimpleName}>(TinyhandSerializer.Serialize(v));");
+            ssb.AppendLine($"static {this.SimpleName}? ITinyhandCloneable<{this.SimpleName}>.Clone(scoped ref {this.SimpleName}? v, TinyhandSerializerOptions options) => v == null ? null : TinyhandSerializer.Deserialize<{this.SimpleName}>(TinyhandSerializer.Serialize(v, options), options);");
             ssb.AppendLine();
 
             this.GenerateStructural(ssb, info);

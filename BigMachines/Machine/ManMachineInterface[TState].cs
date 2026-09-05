@@ -7,9 +7,9 @@ namespace BigMachines;
 public partial class Machine
 {
     /// <summary>
-    /// An interface class for users to interact with machines.
+    /// Provides a user-facing handle for controlling a stateful machine.
     /// </summary>
-    /// <typeparam name="TState">The type of the machine state.</typeparam>
+    /// <typeparam name="TState">The machine state type.</typeparam>
     public abstract class ManMachineInterface<TState> : ManMachineInterface
         where TState : struct
     {
@@ -26,7 +26,7 @@ public partial class Machine
         /// <see langword="true"/>: the state is successfully retrieved; otherwise <see langword="false"/> (the machine is terminated).</returns>
         public bool TryGetState(out TState state)
         {
-            if (this.Machine.__operationalState__ == OperationalFlag.Terminated)
+            if (this.Machine.__operationalState__.HasFlag(OperationalFlag.Terminated))
             {
                 state = default;
                 return false;
@@ -48,7 +48,7 @@ public partial class Machine
 
             using (this.Machine.Semaphore.EnterScope())
             {
-                if (this.Machine.__operationalState__ == OperationalFlag.Terminated)
+                if (this.Machine.__operationalState__.HasFlag(OperationalFlag.Terminated))
                 {// Terminated
                     result = ChangeStateResult.Terminated;
                 }

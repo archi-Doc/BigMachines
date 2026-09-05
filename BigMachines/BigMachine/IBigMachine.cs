@@ -6,7 +6,7 @@ using Arc.Threading;
 namespace BigMachines;
 
 /// <summary>
-///  The top-level abstract class for managing groups of machines.
+/// Defines runtime operations shared by generated big-machine roots.
 /// </summary>
 public interface IBigMachine
 {

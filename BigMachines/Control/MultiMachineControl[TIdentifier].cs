@@ -3,10 +3,9 @@
 namespace BigMachines.Control;
 
 /// <summary>
-/// Represents the abstract class for managing multiple machines.<br/>
-/// <see cref="MultiMachineControl{TIdentifier}"/> = <see cref="MachineControl"/>+<typeparamref name="TIdentifier"/>.
+/// Defines a machine control whose machines are addressed by identifiers.
 /// </summary>
-/// <typeparam name="TIdentifier">The type of an identifier.</typeparam>
+/// <typeparam name="TIdentifier">The machine identifier type.</typeparam>
 public abstract class MultiMachineControl<TIdentifier> : MachineControl
     where TIdentifier : notnull
 {

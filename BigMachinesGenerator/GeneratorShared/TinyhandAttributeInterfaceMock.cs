@@ -44,7 +44,7 @@ public sealed class TinyhandObjectAttributeMock
 
     public bool UseServiceProvider { get; set; } = false;
 
-    public int ReservedKeys { get; set; } = -1;
+    public int ReservedKeyCount { get; set; } = 0;
 
     public string LockObject { get; set; } = string.Empty;
 
@@ -53,6 +53,14 @@ public sealed class TinyhandObjectAttributeMock
     public bool UseResolver { get; set; } = false;
 
     public bool Structural { get; set; } = false;
+
+    public bool External { get; set; } = false;
+
+    public bool AddSignatureId { get; set; } = true;
+
+    public bool AddImmutable { get; set; } = false;
+
+    public bool AddAlternateKey { get; set; } = false;
 
     public TinyhandObjectAttributeMock()
     {
@@ -111,10 +119,10 @@ public sealed class TinyhandObjectAttributeMock
             attribute.UseServiceProvider = (bool)val;
         }
 
-        val = VisceralHelper.GetValue(-1, nameof(ReservedKeys), constructorArguments, namedArguments);
+        val = VisceralHelper.GetValue(-1, nameof(ReservedKeyCount), constructorArguments, namedArguments);
         if (val != null)
         {
-            attribute.ReservedKeys = (int)val;
+            attribute.ReservedKeyCount = (int)val;
         }
 
         val = VisceralHelper.GetValue(-1, nameof(LockObject), constructorArguments, namedArguments);
@@ -139,6 +147,30 @@ public sealed class TinyhandObjectAttributeMock
         if (val != null)
         {
             attribute.Structural = (bool)val;
+        }
+
+        val = VisceralHelper.GetValue(-1, nameof(External), constructorArguments, namedArguments);
+        if (val != null)
+        {
+            attribute.External = (bool)val;
+        }
+
+        val = VisceralHelper.GetValue(-1, nameof(AddSignatureId), constructorArguments, namedArguments);
+        if (val != null)
+        {
+            attribute.AddSignatureId = (bool)val;
+        }
+
+        val = VisceralHelper.GetValue(-1, nameof(AddImmutable), constructorArguments, namedArguments);
+        if (val != null)
+        {
+            attribute.AddImmutable = (bool)val;
+        }
+
+        val = VisceralHelper.GetValue(-1, nameof(AddAlternateKey), constructorArguments, namedArguments);
+        if (val != null)
+        {
+            attribute.AddAlternateKey = (bool)val;
         }
 
         return attribute;

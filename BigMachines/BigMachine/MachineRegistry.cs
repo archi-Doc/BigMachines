@@ -4,11 +4,13 @@ using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
-using Microsoft.Extensions.DependencyInjection;
 using Tinyhand;
 
 namespace BigMachines;
 
+/// <summary>
+/// Stores generated machine metadata and creates registered machine instances.
+/// </summary>
 public static class MachineRegistry
 {
     /*/// <summary>
@@ -16,16 +18,16 @@ public static class MachineRegistry
     /// </summary>
     public static IServiceProvider? ServiceProvider { get; set; }*/
 
-    private static ConcurrentDictionary<Type, MachineInformation> typeToInformation = new();
+    private static readonly ConcurrentDictionary<Type, MachineInformation> TypeToInformation = new();
 
     public static void Register(MachineInformation information)
     {
-        typeToInformation.TryAdd(information.MachineType, information);
+        TypeToInformation.TryAdd(information.MachineType, information);
     }
 
     public static MachineInformation Get<TMachine>()
     {
-        if (typeToInformation.TryGetValue(typeof(TMachine), out var information))
+        if (TypeToInformation.TryGetValue(typeof(TMachine), out var information))
         {
             return information;
         }
@@ -37,7 +39,7 @@ public static class MachineRegistry
 
     public static bool TryGet<TMachine>([MaybeNullWhen(false)] out MachineInformation information)
     {
-        return typeToInformation.TryGetValue(typeof(TMachine), out information);
+        return TypeToInformation.TryGetValue(typeof(TMachine), out information);
     }
 
     public static TMachine CreateMachine<TMachine>()

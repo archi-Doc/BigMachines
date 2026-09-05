@@ -13,6 +13,9 @@ using ValueLink;
 
 namespace BigMachines.Control;
 
+/// <summary>
+/// Manages one manually created machine per machine type.
+/// </summary>
 [TinyhandObject]
 public sealed partial class ManualMachineControl : MachineControl // , ITinyhandSerializable<ManualMachineControl>
 {
@@ -51,14 +54,22 @@ public sealed partial class ManualMachineControl : MachineControl // , ITinyhand
 
     public override MachineInformation MachineInformation => MachineInformation.Default;
 
-    private Lock lockObject = new();
-    private Dictionary<Type, Machine> typeToMachine = new();
+    private readonly Lock lockObject = new();
+    private readonly Dictionary<Type, Machine> typeToMachine = new();
     // private Item.GoshujinClass items = new();
 
     #region Abstract
 
     public override int Count
-        => this.typeToMachine.Count;
+    {
+        get
+        {
+            using (this.lockObject.EnterScope())
+            {
+                return this.typeToMachine.Count;
+            }
+        }
+    }
 
     public override bool ContainsActiveMachine()
     {
@@ -143,11 +154,6 @@ public sealed partial class ManualMachineControl : MachineControl // , ITinyhand
             else
             {
                 machine = MachineRegistry.CreateMachine<TMachine>();
-                if (machine is null)
-                {
-                    return default;
-                }
-
                 machine.PrepareCreateStart(this, createParam);
                 this.typeToMachine.TryAdd(typeof(TMachine), machine);
             }

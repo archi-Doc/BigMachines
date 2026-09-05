@@ -7,11 +7,11 @@ namespace BigMachines;
 /// <summary>
 /// Defines the type of delegate for handling BigMachine exceptions.
 /// </summary>
-/// <param name="exception">Exception.</param>
+/// <param name="exception">The queued machine exception.</param>
 public delegate void ExceptionHandlerDelegate(BigMachineException exception);
 
 /// <summary>
-/// A class for handling exceptions that occur during BigMachine processing.
+/// Associates an exception with the machine that raised it.
 /// </summary>
 public class BigMachineException
 {
@@ -31,7 +31,7 @@ public class BigMachineException
 }
 
 /// <summary>
-/// An exception caused by a circular invocation of commands.
+/// Represents an error caused by circular command invocation.
 /// </summary>
 public class CircularCommandException : Exception
 {

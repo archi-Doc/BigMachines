@@ -12,6 +12,12 @@ using ValueLink;
 
 namespace BigMachines.Control;
 
+/// <summary>
+/// Manages identified machines without execution-order guarantees.
+/// </summary>
+/// <typeparam name="TIdentifier">The machine identifier type.</typeparam>
+/// <typeparam name="TMachine">The machine type.</typeparam>
+/// <typeparam name="TInterface">The generated machine interface type.</typeparam>
 [TinyhandObject(Structural = true)]
 public sealed partial class UnorderedMachineControl<TIdentifier, TMachine, TInterface> : MultiMachineControl<TIdentifier, TInterface>, ITinyhandSerializable<UnorderedMachineControl<TIdentifier, TMachine, TInterface>>, ITinyhandCustomJournal, ITinyhandSingleLayoutSerializable
     where TIdentifier : notnull
@@ -42,6 +48,12 @@ public sealed partial class UnorderedMachineControl<TIdentifier, TMachine, TInte
             ((IStructuralObject)this.items).SetupStructure(obj);
         }
     }
+
+    /// <summary>
+    /// Registers the formatter for the closed generic item type.
+    /// </summary>
+    public static void RegisterTinyhandFormatter()
+        => Tinyhand.Resolvers.GeneratedResolver.RegisterObject<Item>();
 
     [TinyhandObject(Structural = true)]
     [ValueLinkObject(Isolation = IsolationLevel.Serializable)]
@@ -74,7 +86,15 @@ public sealed partial class UnorderedMachineControl<TIdentifier, TMachine, TInte
     #region Abstract
 
     public override int Count
-        => this.items.Count;
+    {
+        get
+        {
+            using (this.items.LockObject.EnterScope())
+            {
+                return this.items.Count;
+            }
+        }
+    }
 
     public override TIdentifier[] GetIdentifiers()
     {

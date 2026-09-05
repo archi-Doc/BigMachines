@@ -11,11 +11,10 @@ using Tinyhand.IO;
 namespace BigMachines;
 
 /// <summary>
-/// Represents an abstract class that serves as the base for the actual machine class.<br/>
-/// <see cref="Machine{TIdentifier}"/> = <see cref="Machine"/>+<typeparamref name="TIdentifier"/>.
+/// Provides the runtime base for machines addressed by an identifier.
 /// </summary>
-/// <typeparam name="TIdentifier">The type of an identifier.</typeparam>
-[TinyhandObject(ReservedKeyCount = Machine.ReservedKeyCount)]
+/// <typeparam name="TIdentifier">The machine identifier type.</typeparam>
+// See Machine for why TinyhandObject is intentionally applied only to concrete machines.
 public abstract partial class Machine<TIdentifier> : Machine
     where TIdentifier : notnull
 {

@@ -1,6 +1,7 @@
 ﻿// Copyright (c) All contributors. All rights reserved. Licensed under the MIT license.
 
 using System;
+using System.Threading;
 using System.Threading.Tasks;
 using Arc.Threading;
 
@@ -8,6 +9,9 @@ namespace BigMachines;
 
 public partial class BigMachineBase
 {
+    /// <summary>
+    /// Runs periodic processing for a <see cref="BigMachineBase"/> instance.
+    /// </summary>
     public class BigMachineCore : TaskCore<BigMachineCore>
     {
         public int TimeIntervalInMilliseconds { get; set; } = 500; // 500 ms
@@ -34,7 +38,7 @@ public partial class BigMachineBase
 
                 while (core.bigMachine.exceptionQueue.TryDequeue(out var exception))
                 {
-                    bigMachine.exceptionHandler(exception);
+                    Volatile.Read(ref bigMachine.exceptionHandler)(exception);
                 }
 
                 var utcNow = DateTime.UtcNow;

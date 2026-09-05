@@ -21,3 +21,7 @@ jobs:
       run: dotnet build --configuration Release --no-restore
     - name: Test
       run: dotnet test --no-restore --verbosity normal
+    - name: Publish NativeAOT smoke test
+      run: dotnet publish NativeAotTest/NativeAotTest.csproj --configuration Release --runtime linux-x64
+    - name: Run NativeAOT smoke test
+      run: ./NativeAotTest/bin/Release/net10.0/linux-x64/publish/NativeAotTest

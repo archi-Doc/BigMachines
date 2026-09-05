@@ -177,11 +177,11 @@ public class CommandMethod
 
             if (this.ResponseObject is null)
             {
-                ssb.AppendLine("if (this.machine.__operationalState__ == OperationalFlag.Terminated) return CommandResult.Terminated;");
+                ssb.AppendLine("if (this.machine.__operationalState__.HasFlag(OperationalFlag.Terminated)) return CommandResult.Terminated;");
             }
             else
             {
-                ssb.AppendLine("if (this.machine.__operationalState__ == OperationalFlag.Terminated) return new(CommandResult.Terminated, default);");
+                ssb.AppendLine("if (this.machine.__operationalState__.HasFlag(OperationalFlag.Terminated)) return new(CommandResult.Terminated, default);");
             }
 
             if (this.ReturnTask)
