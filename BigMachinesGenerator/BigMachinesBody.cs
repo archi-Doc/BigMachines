@@ -301,7 +301,7 @@ public class BigMachinesBody : VisceralBody<BigMachinesObject>
 
         using (var scopeFormatter = ssb.ScopeNamespace($"{BigMachineNamespace}.Generator"))
         {
-            using (var methods = ssb.ScopeBrace("static class Generated"))
+            using (var methods = ssb.ScopeBrace("file static class Generated"))
             {
                 info.FinalizeBlock(ssb);
 
