@@ -13,6 +13,9 @@ using ValueLink;
 
 namespace BigMachines.Control;
 
+/// <summary>
+/// Manages one manually created machine per machine type.
+/// </summary>
 [TinyhandObject]
 public sealed partial class ManualMachineControl : MachineControl // , ITinyhandSerializable<ManualMachineControl>
 {

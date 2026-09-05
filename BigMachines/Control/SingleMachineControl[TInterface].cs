@@ -12,11 +12,10 @@ using Tinyhand.IO;
 namespace BigMachines.Control;
 
 /// <summary>
-/// Represents a class for managing single machine.<br/>
-/// <see cref="SingleMachineControl{TMachine, TInterface}"/> = <see cref="MachineControl"/>+<typeparamref name="TMachine"/>+<typeparamref name="TInterface"/>.
+/// Manages at most one instance of a machine type.
 /// </summary>
-/// <typeparam name="TMachine">The type of a machine.</typeparam>
-/// <typeparam name="TInterface">The type of an interface.</typeparam>
+/// <typeparam name="TMachine">The machine type.</typeparam>
+/// <typeparam name="TInterface">The generated machine interface type.</typeparam>
 [TinyhandObject(Structural = true)]
 public partial class SingleMachineControl<TMachine, TInterface> : MachineControl, ITinyhandSerializable<SingleMachineControl<TMachine, TInterface>>, ITinyhandCustomJournal, ITinyhandSingleLayoutSerializable
     where TMachine : Machine

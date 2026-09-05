@@ -12,6 +12,12 @@ using ValueLink;
 
 namespace BigMachines.Control;
 
+/// <summary>
+/// Manages identified machines without execution-order guarantees.
+/// </summary>
+/// <typeparam name="TIdentifier">The machine identifier type.</typeparam>
+/// <typeparam name="TMachine">The machine type.</typeparam>
+/// <typeparam name="TInterface">The generated machine interface type.</typeparam>
 [TinyhandObject(Structural = true)]
 public sealed partial class UnorderedMachineControl<TIdentifier, TMachine, TInterface> : MultiMachineControl<TIdentifier, TInterface>, ITinyhandSerializable<UnorderedMachineControl<TIdentifier, TMachine, TInterface>>, ITinyhandCustomJournal, ITinyhandSingleLayoutSerializable
     where TIdentifier : notnull

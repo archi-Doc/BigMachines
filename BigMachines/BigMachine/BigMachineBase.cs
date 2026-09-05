@@ -11,7 +11,7 @@ using BigMachines.Control;
 namespace BigMachines;
 
 /// <summary>
-///  The top-level abstract class for managing groups of machines.
+/// Provides the root runtime for a generated collection of machine controls.
 /// </summary>
 public abstract partial class BigMachineBase : IBigMachine
 {

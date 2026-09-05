@@ -13,6 +13,9 @@ using ValueLink;
 
 namespace BigMachines.Control;
 
+/// <summary>
+/// Provides non-generic operations for a sequential machine control.
+/// </summary>
 public interface ISequentialMachineControl
 {
     void Start();
@@ -20,6 +23,12 @@ public interface ISequentialMachineControl
     Machine.ManMachineInterface? GetFirst();
 }
 
+/// <summary>
+/// Manages identified machines in a FIFO queue with optional dedicated workers.
+/// </summary>
+/// <typeparam name="TIdentifier">The machine identifier type.</typeparam>
+/// <typeparam name="TMachine">The machine type.</typeparam>
+/// <typeparam name="TInterface">The generated machine interface type.</typeparam>
 [TinyhandObject(Structural = true)]
 public sealed partial class SequentialMachineControl<TIdentifier, TMachine, TInterface> : MultiMachineControl<TIdentifier, TInterface>, ISequentialMachineControl, ITinyhandSerializable<SequentialMachineControl<TIdentifier, TMachine, TInterface>>, ITinyhandCustomJournal, ITinyhandSingleLayoutSerializable
     where TIdentifier : notnull

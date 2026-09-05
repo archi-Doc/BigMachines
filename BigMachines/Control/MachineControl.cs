@@ -6,7 +6,7 @@ using Tinyhand;
 namespace BigMachines.Control;
 
 /// <summary>
-/// Represents the abstract class for managing machines.
+/// Defines common operations for a generated machine control.
 /// </summary>
 public abstract class MachineControl
 {
@@ -26,7 +26,7 @@ public abstract class MachineControl
     public abstract int Count { get; }
 
     /// <summary>
-    /// Gets a <see cref="MachineInformation"/> instance.
+    /// Gets the metadata for the managed machine type.
     /// </summary>
     [IgnoreMember]
     public abstract MachineInformation MachineInformation { get; }

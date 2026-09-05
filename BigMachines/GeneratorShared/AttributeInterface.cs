@@ -7,12 +7,12 @@ using Tinyhand;
 namespace BigMachines;
 
 /// <summary>
-/// Represents the type of MachineControl.
+/// Specifies how a machine is managed.
 /// </summary>
 public enum MachineControlKind
 {
     /// <summary>
-    /// Assigns <see cref="SingleMachineControl{TMachine, TInterface}"/> if the machine is derived from <see cref="Machine"/>, or <see cref="UnorderedMachineControl{TIdentifier, TMachine, TInterface}"/> if the machine is derived from <see cref="Machine{TIdentifier}"/>.
+    /// Selects <see cref="SingleMachineControl{TMachine, TInterface}"/> for <see cref="Machine"/> or <see cref="UnorderedMachineControl{TIdentifier, TMachine, TInterface}"/> for <see cref="Machine{TIdentifier}"/>.
     /// </summary>
     Default,
 
@@ -22,19 +22,18 @@ public enum MachineControlKind
     Single,
 
     /// <summary>
-    /// Manage multiple machines with identifiers (<see cref="UnorderedMachineControl{TIdentifier, TMachine, TInterface}"/>.
+    /// Manages identified machines without ordering guarantees.
     /// </summary>
     Unordered,
 
     /// <summary>
-    /// Manage multiple machines and run them sequentially (<see cref="SequentialMachineControl{TIdentifier, TMachine, TInterface}"/>.
+    /// Manages identified machines through a sequential queue.
     /// </summary>
     Sequential,
 }
 
 /// <summary>
-/// Add the attribute to the target class to create a big machine.<br/>
-/// The target class must be an empty partial class and must not have a default constructor.
+/// Marks a partial class as a generated big-machine root.
 /// </summary>
 [AttributeUsage(AttributeTargets.Class, AllowMultiple = false, Inherited = true)]
 public sealed class BigMachineObjectAttribute : Attribute
@@ -44,20 +43,21 @@ public sealed class BigMachineObjectAttribute : Attribute
     }
 
     /// <summary>
-    /// Gets or sets a value indicating whether or not to include all machines contained in this assembly [default is <see langword="false"/>].
+    /// Gets or sets a value indicating whether to include all non-private machines in the assembly.
     /// </summary>
     public bool Inclusive { get; set; } = false;
 
     /// <summary>
-    /// Gets or sets a value indicating whether or not to enable the check function for recursive calls of state methods and command methods [default is <see langword="false"/>].
+    /// Gets or sets a value indicating whether to request recursive-call detection.
     /// </summary>
+    /// <remarks>This option is currently reserved and does not enable generated checks.</remarks>
     public bool RecursiveDetection { get; set; } = false;
 }
 
 /// <summary>
-/// Add a machine to the BigMachine.
+/// Adds a machine type to a generated big-machine root.
 /// </summary>
-/// <typeparam name="TMachine">The type of the machine.</typeparam>
+/// <typeparam name="TMachine">The machine type to add.</typeparam>
 [AttributeUsage(AttributeTargets.Class, AllowMultiple = true, Inherited = false)]
 public sealed class AddMachineAttribute<TMachine> : Attribute
     where TMachine : Machine
@@ -72,14 +72,13 @@ public sealed class AddMachineAttribute<TMachine> : Attribute
     public string Name { get; set; } = string.Empty;
 
     /// <summary>
-    /// Gets or sets a value indicating whether or not to make the machine volatile and exclude it during data persistence. [default is <see langword="false"/>].
+    /// Gets or sets a value indicating whether to exclude the machine control from persistence.
     /// </summary>
     public bool Volatile { get; set; }
 }
 
 /// <summary>
-/// Add the attribute to the target class to create a machine.<br/>
-/// The class must be a partial class and inherit from either <see cref="Machine"/> or <see cref="Machine{TIdentifier}"/>.
+/// Marks a partial <see cref="Machine"/>-derived class for source generation.
 /// </summary>
 [AttributeUsage(AttributeTargets.Class, AllowMultiple = false, Inherited = true)]
 public sealed class MachineObjectAttribute : Attribute
@@ -92,30 +91,27 @@ public sealed class MachineObjectAttribute : Attribute
     }
 
     /// <summary>
-    /// Gets or sets a value indicating which <see cref="BigMachines.Control.MachineControl"/> is assigned to the machine.
+    /// Gets or sets the control used to manage the machine.
     /// </summary>
     public MachineControlKind Control { get; set; }
 
     /// <summary>
-    /// Gets or sets a value indicating whether or not to use <seealso cref="IServiceProvider"/> to create an instance [default is <see langword="false"/>]. Set <see cref="TinyhandSerializer.ServiceProvider"/>.
+    /// Gets or sets a value indicating whether <see cref="TinyhandSerializer.ServiceProvider"/> creates machine instances.
     /// </summary>
     public bool UseServiceProvider { get; set; } = false;
 
     /// <summary>
-    /// Gets or sets a value indicating whether or not to start the machine by default.<br/>
-    /// This feature is only active for a single machine. [default is <see langword="false"/>].
+    /// Gets or sets a value indicating whether a single machine is created when its big-machine root starts.
     /// </summary>
     public bool StartByDefault { get; set; } = false;
 
     /// <summary>
-    /// Gets or sets the number of tasks assigned to execute machines.<br/>
-    /// This is only effective when the machine is managed by <see cref="SequentialMachineControl{TIdentifier, TMachine, TInterface}"/>.
+    /// Gets or sets the number of dedicated workers for a sequential control.
     /// </summary>
     public int NumberOfTasks { get; set; } = 0;
 
     /// <summary>
-    /// Gets or sets a value indicating whether the machine is private [default is <see langword="false"/>].<br/>
-    /// Private machines are not automatically registered with BigMachine.
+    /// Gets or sets a value indicating whether the machine is excluded from automatic root registration.
     /// </summary>
     public bool Private { get; set; } = false;
 }
@@ -123,12 +119,7 @@ public sealed class MachineObjectAttribute : Attribute
 #pragma warning disable SA1629
 
 /// <summary>
-/// Adds a state method to the machine.<br/>
-/// The format of the method is as follows: <br/><br/>
-/// <see langword="protected"/> <see cref="StateResult"/> ExampleState(<see cref="StateParameter"/> parameter)<br/>
-///  => <see cref="StateResult.Continue"/>;<br/><br/>
-///  <see langword="protected"/> <see langword="async"/> Task&lt;<see cref="StateResult"/>&gt; ExampleState(<see cref="StateParameter"/> parameter)<br/>
-///  => <see cref="StateResult.Terminate"/>;
+/// Marks a machine method as a state handler.
 /// </summary>
 #pragma warning restore SA1629
 [AttributeUsage(AttributeTargets.Method, AllowMultiple = false, Inherited = true)]
@@ -157,13 +148,7 @@ public sealed class StateMethodAttribute : Attribute
 
 #pragma warning disable SA1629
 /// <summary>
-/// Adds a command method to the machine.<br/>
-/// Command methods are executed asynchronously.<br/>
-/// The format of the method is as follows: <br/><br/>
-/// <see langword="protected"/> <see cref="CommandResult"/> ExampleCommand(any param)<br/>
-/// => <see cref="CommandResult.Success"/>;<br/><br/>
-/// <see langword="protected"/> <see cref="CommandResult{TResponse}"/> ExampleCommand(any param)<br/>
-/// => new(<see cref="CommandResult.Success"/>, response);
+/// Marks a machine method as a generated asynchronous command endpoint.
 /// </summary>
 #pragma warning restore SA1629
 [AttributeUsage(AttributeTargets.Method, AllowMultiple = false, Inherited = true)]
@@ -186,12 +171,12 @@ public sealed class CommandMethodAttribute : Attribute
     public uint CommandId { get; }*/
 
     /// <summary>
-    /// Gets or sets a value indicating whether the command method executes with locking the machine [the default is <see langword="true"/>].
+    /// Gets or sets a value indicating whether the command holds the machine semaphore while executing.
     /// </summary>
     public bool WithLock { get; set; } = true;
 
     /// <summary>
-    /// Gets or sets a value indicating whether or not to add an extension method for issuing commands to all machines [the default is <see langword="false"/>].
+    /// Gets or sets a value indicating whether to generate an extension that invokes the command on all matching machines.
     /// </summary>
     public bool All { get; set; } = false;
 }
@@ -202,12 +187,12 @@ public sealed class CommandMethodAttribute : Attribute
 public enum StateResult
 {
     /// <summary>
-    /// The machine will continue to run.
+    /// Keeps the machine available for future execution.
     /// </summary>
     Continue,
 
     /// <summary>
-    /// The machine is going to be terminated.
+    /// Terminates the machine after the state method returns.
     /// </summary>
     Terminate,
 }
@@ -233,6 +218,10 @@ public enum CommandResult
     Terminated,
 }
 
+/// <summary>
+/// Combines a command status with its response value.
+/// </summary>
+/// <typeparam name="TResponse">The response type.</typeparam>
 public readonly struct CommandResult<TResponse>
 {
     public CommandResult(CommandResult result, TResponse response)
@@ -256,6 +245,10 @@ public readonly struct CommandResult<TResponse>
     public TResponse Response => this.Resnpose;
 }
 
+/// <summary>
+/// Associates a machine identifier with a command status.
+/// </summary>
+/// <typeparam name="TIdentifier">The machine identifier type.</typeparam>
 public readonly struct IdentifierAndCommandResult<TIdentifier>
     where TIdentifier : notnull
 {
@@ -269,6 +262,11 @@ public readonly struct IdentifierAndCommandResult<TIdentifier>
     public readonly CommandResult Result;
 }
 
+/// <summary>
+/// Associates a machine identifier with a command response.
+/// </summary>
+/// <typeparam name="TIdentifier">The machine identifier type.</typeparam>
+/// <typeparam name="TResponse">The response type.</typeparam>
 public readonly struct IdentifierAndCommandResult<TIdentifier, TResponse>
     where TIdentifier : notnull
 {
@@ -295,17 +293,17 @@ public readonly struct IdentifierAndCommandResult<TIdentifier, TResponse>
 public enum OperationalFlag
 {
     /// <summary>
-    /// Machine is running (in state methods).
+    /// The machine is executing a state method.
     /// </summary>
     Running = 1,
 
     /// <summary>
-    /// Machine is paused.
+    /// The machine is paused.
     /// </summary>
     Paused = 2,
 
     /// <summary>
-    /// Machine is terminated.
+    /// The machine is terminated.
     /// </summary>
     Terminated = 4,
 }
@@ -316,35 +314,35 @@ public enum OperationalFlag
 public enum RunType
 {
     /// <summary>
-    /// Machine is not running.
+    /// No execution trigger is active.
     /// </summary>
     NotRunning,
 
     /// <summary>
-    /// Machine is run by <see cref="Machine.ManMachineInterface.RunAsync"/> method.
+    /// The machine was invoked by <see cref="Machine.ManMachineInterface.RunAsync"/>.
     /// </summary>
     Manual,
 
     /// <summary>
-    /// Machine is run by interval timer.
+    /// The machine was invoked by its timer.
     /// </summary>
     Timer,
 
     /// <summary>
-    /// Machine is run by. // tempcode.
+    /// Reserved for continuous execution.
     /// </summary>
     Continuous,
 }
 
 /// <summary>
-/// Input parameter of a state method.
+/// Provides context for a state-method invocation.
 /// </summary>
 public struct StateParameter
 {
     /*/// <summary>
     /// Initializes a new instance of the <see cref="StateParameter"/> struct.
     /// </summary>
-    /// <param name="type">RunType.</param>
+    /// <param name="type">The execution trigger.</param>
     /// <param name="message">Message.</param>
     public StateParameter(RunType type, object? message)
     {
@@ -364,7 +362,7 @@ public struct StateParameter
     }
 
     /// <summary>
-    /// Gets a RunType.
+    /// Gets the execution trigger.
     /// </summary>
     public RunType RunType { get; }
 
@@ -380,7 +378,7 @@ public struct StateParameter
 }
 
 /// <summary>
-/// Represents the result of <see cref="Machine{TIdentifier}"/>.ChangeState() method.
+/// Describes the outcome of a requested state transition.
 /// </summary>
 public enum ChangeStateResult
 {
@@ -405,6 +403,9 @@ public enum ChangeStateResult
     Terminated,
 }
 
+/// <summary>
+/// Configures BigMachines source generation for the containing compilation.
+/// </summary>
 [AttributeUsage(AttributeTargets.Class | AttributeTargets.Struct, AllowMultiple = false, Inherited = true)]
 public sealed class BigMachinesGeneratorOptionAttribute : Attribute
 {

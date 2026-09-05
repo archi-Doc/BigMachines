@@ -9,6 +9,9 @@ namespace BigMachines;
 
 public partial class BigMachineBase
 {
+    /// <summary>
+    /// Runs periodic processing for a <see cref="BigMachineBase"/> instance.
+    /// </summary>
     public class BigMachineCore : TaskCore<BigMachineCore>
     {
         public int TimeIntervalInMilliseconds { get; set; } = 500; // 500 ms

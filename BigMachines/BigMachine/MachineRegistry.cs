@@ -9,6 +9,9 @@ using Tinyhand;
 
 namespace BigMachines;
 
+/// <summary>
+/// Stores generated machine metadata and creates registered machine instances.
+/// </summary>
 public static class MachineRegistry
 {
     /*/// <summary>

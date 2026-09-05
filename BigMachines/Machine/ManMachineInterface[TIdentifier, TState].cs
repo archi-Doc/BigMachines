@@ -5,10 +5,10 @@ namespace BigMachines;
 public partial class Machine
 {
     /// <summary>
-    /// An interface class for users to interact with machines.
+    /// Provides a user-facing handle for an identified, stateful machine.
     /// </summary>
-    /// <typeparam name="TIdentifier">The type of the identifier.</typeparam>
-    /// <typeparam name="TState">The type of the machine state.</typeparam>
+    /// <typeparam name="TIdentifier">The machine identifier type.</typeparam>
+    /// <typeparam name="TState">The machine state type.</typeparam>
     public abstract class ManMachineInterface<TIdentifier, TState> : ManMachineInterface<TState>
         where TIdentifier : notnull
         where TState : struct

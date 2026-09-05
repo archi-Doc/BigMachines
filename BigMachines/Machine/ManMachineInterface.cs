@@ -11,7 +11,7 @@ namespace BigMachines;
 public partial class Machine
 {
     /// <summary>
-    /// An interface class for users to interact with machines.
+    /// Provides a user-facing handle for controlling a machine.
     /// </summary>
     public abstract class ManMachineInterface
     {// MANMACHINE INTERFACE by Shirow.
@@ -115,14 +115,14 @@ public partial class Machine
             => this.Machine.NextRunTime;
 
         /// <summary>
-        /// Set the next scheduled execution time.
+        /// Sets the next scheduled execution time.
         /// </summary>
         /// <param name="nextRunTime">The next scheduled execution time.</param>
         public void SetNextRunTime(DateTime nextRunTime)
             => this.Machine.NextRunTime = nextRunTime;
 
         /// <summary>
-        /// Set the time interval from now and schedule the next execution time.
+        /// Schedules the next execution relative to the current UTC time.
         /// </summary>
         /// <param name="timeFromNow">The time interval from now (DateTime.UtcNow).</param>
         public void SetNextRunTimeFromNow(TimeSpan timeFromNow)
@@ -137,7 +137,7 @@ public partial class Machine
             => this.Machine.Lifespan;
 
         /// <summary>
-        /// Set the remaining lifespan of the machine.
+        /// Sets the remaining lifespan of the machine.
         /// </summary>
         /// <param name="lifespan">The remaining lifespan of the machine.</param>
         public void SetLifespan(TimeSpan lifespan)
@@ -151,14 +151,14 @@ public partial class Machine
             => this.Machine.TerminationTime;
 
         /// <summary>
-        /// Set the time for the machine to shut down automatically.
+        /// Sets the time at which the machine terminates automatically.
         /// </summary>
         /// <param name="terminationTime">The time for the machine to shut down automatically.</param>
         public void SetTerminationTime(DateTime terminationTime)
             => this.Machine.TerminationTime = terminationTime;
 
         /// <summary>
-        /// Set the time for the machine to shut down automatically.
+        /// Schedules automatic termination relative to the current UTC time.
         /// </summary>
         /// <param name="timeFromNow">The time interval from now (DateTime.UtcNow).</param>
         public void SetTerminationTimeFromNow(TimeSpan timeFromNow)
@@ -167,8 +167,7 @@ public partial class Machine
         /// <summary>
         /// Gets the default timeout of the machine.
         /// </summary>
-        /// <returns>The default timeout of the machine.<br/>
-        /// <see langword="null"/>: Machine is not available.</returns>
+        /// <returns>The default timeout of the machine.</returns>
         public TimeSpan GetDefaultTimeout()
             => this.Machine.DefaultTimeout;
 

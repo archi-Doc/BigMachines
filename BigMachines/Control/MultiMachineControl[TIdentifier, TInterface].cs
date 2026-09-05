@@ -5,11 +5,10 @@ using System.Threading.Tasks;
 namespace BigMachines.Control;
 
 /// <summary>
-/// Represents the abstract class for managing machines.<br/>
-/// <see cref="MultiMachineControl{TIdentifier, TInterface}"/> = <see cref="MultiMachineControl{TIdentifier}"/>+<typeparamref name="TInterface"/>.
+/// Defines a typed control for machines addressed by identifiers.
 /// </summary>
-/// <typeparam name="TIdentifier">The type of an identifier.</typeparam>
-/// <typeparam name="TInterface">The type of a machine interface.</typeparam>
+/// <typeparam name="TIdentifier">The machine identifier type.</typeparam>
+/// <typeparam name="TInterface">The generated machine interface type.</typeparam>
 public abstract class MultiMachineControl<TIdentifier, TInterface> : MultiMachineControl<TIdentifier>
     where TIdentifier : notnull
     where TInterface : Machine.ManMachineInterface
