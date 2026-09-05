@@ -8,6 +8,7 @@
   <Project Path="BigMachines.Tests/BigMachines.Tests.csproj" />
   <Project Path="BigMachinesGenerator/BigMachinesGenerator.csproj" />
   <Project Path="ExternalMachine/ExternalMachine.csproj" />
+  <Project Path="GeneratorCollisionAssembly/GeneratorCollisionAssembly.csproj" />
   <Project Path="Playground/Playground.csproj" />
   <Project Path="QuickStart/QuickStart.csproj" />
 </Solution>
