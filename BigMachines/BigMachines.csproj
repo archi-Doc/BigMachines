@@ -2,6 +2,7 @@
 
   <PropertyGroup>
     <TargetFramework>net10.0</TargetFramework>
+    <IsAotCompatible>true</IsAotCompatible>
     <GenerateDocumentationFile>true</GenerateDocumentationFile>
   </PropertyGroup>
 
@@ -9,7 +10,7 @@
     <PackageId>BigMachines</PackageId>
     <Authors>archi-Doc</Authors>
     <Product>BigMachines</Product>
-    <Description>BigMachines is State Machine library for .NET</Description>
+    <Description>A source-generated state-machine library for .NET.</Description>
     <PackageReadmeFile>README.md</PackageReadmeFile>
     <PackageLicenseExpression>MIT</PackageLicenseExpression>
     <PackageProjectUrl>https://github.com/archi-Doc/BigMachines</PackageProjectUrl>
@@ -26,9 +27,9 @@
   </ItemGroup>
 
   <ItemGroup>
-    <PackageReference Include="Arc.Unit" Version="0.46.1" />
     <PackageReference Include="Arc.Collections" Version="1.45.0" />
     <PackageReference Include="Arc.Threading" Version="0.52.0" />
+    <PackageReference Include="Microsoft.Extensions.DependencyInjection.Abstractions" Version="10.0.11" />
     <PackageReference Include="Tinyhand" Version="0.144.1" />
     <PackageReference Include="ValueLink" Version="0.118.2" />
     <PackageReference Include="StyleCop.Analyzers" Version="1.2.0-beta.556">

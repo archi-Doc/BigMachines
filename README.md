@@ -243,6 +243,8 @@ Enable NativeAOT in the application project, not in the analyzer project:
 </PropertyGroup>
 ```
 
+The repository's `NativeAotTest` project publishes with trimming warnings treated as errors and executes Tinyhand round trips for single, unordered, and sequential controls.
+
 For file persistence, register the generated root with [CrystalData](https://github.com/archi-Doc/CrystalData):
 
 ```shell

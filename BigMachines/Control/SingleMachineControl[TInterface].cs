@@ -27,7 +27,7 @@ public partial class SingleMachineControl<TMachine, TInterface> : MachineControl
     private TMachine? machine;
 
     public override int Count
-        => this.machine is null ? 0 : 1;
+        => Volatile.Read(ref this.machine) is null ? 0 : 1;
 
     #endregion
 
@@ -54,7 +54,7 @@ public partial class SingleMachineControl<TMachine, TInterface> : MachineControl
     /// </returns>
     public bool TryGet([MaybeNullWhen(false)] out TInterface machineInterface)
     {
-        machineInterface = this.machine?.InterfaceInstance as TInterface;
+        machineInterface = Volatile.Read(ref this.machine)?.InterfaceInstance as TInterface;
         return machineInterface is not null;
     }
 
@@ -90,7 +90,7 @@ public partial class SingleMachineControl<TMachine, TInterface> : MachineControl
 
     public override bool ContainsActiveMachine()
     {
-        if (this.machine?.IsActive == true)
+        if (Volatile.Read(ref this.machine)?.IsActive == true)
         {
             return true;
         }
@@ -100,7 +100,7 @@ public partial class SingleMachineControl<TMachine, TInterface> : MachineControl
 
     public override Machine.ManMachineInterface[] GetArray()
     {
-        if (this.machine?.InterfaceInstance is { } obj)
+        if (Volatile.Read(ref this.machine)?.InterfaceInstance is { } obj)
         {
             return new Machine.ManMachineInterface[] { obj, };
         }
@@ -112,7 +112,7 @@ public partial class SingleMachineControl<TMachine, TInterface> : MachineControl
 
     internal override Machine[] GetMachines()
     {
-        if (this.machine is { } obj)
+        if (Volatile.Read(ref this.machine) is { } obj)
         {
             return new Machine[] { obj, };
         }
@@ -128,7 +128,7 @@ public partial class SingleMachineControl<TMachine, TInterface> : MachineControl
         {
             if (this.machine == machine)
             {
-                this.machine = null;
+                Volatile.Write(ref this.machine, null);
                 return true;
             }
             else
@@ -140,7 +140,7 @@ public partial class SingleMachineControl<TMachine, TInterface> : MachineControl
 
     internal override void Process(MachineRunner runner)
     {
-        if (this.machine is { } machine)
+        if (Volatile.Read(ref this.machine) is { } machine)
         {
             runner.Add(machine);
         }
@@ -154,7 +154,7 @@ public partial class SingleMachineControl<TMachine, TInterface> : MachineControl
             {
                 var machine = MachineRegistry.CreateMachine<TMachine>(this.MachineInformation);
                 machine.PrepareCreateStart(this, createParam);
-                this.machine = machine;
+                Volatile.Write(ref this.machine, machine);
             }
 
             return this.machine;
@@ -169,7 +169,7 @@ public partial class SingleMachineControl<TMachine, TInterface> : MachineControl
             {
                 var machine = MachineRegistry.CreateMachine<TMachine>(this.MachineInformation);
                 machine.PrepareStart(this);
-                this.machine = machine;
+                Volatile.Write(ref this.machine, machine);
             }
 
             return this.machine;
@@ -196,8 +196,8 @@ Loop:
 
             var machine = MachineRegistry.CreateMachine<TMachine>(this.MachineInformation);
             machine.PrepareCreateStart(this, createParam);
-            this.machine = machine;
-            return this.machine;
+            Volatile.Write(ref this.machine, machine);
+            return machine;
         }
     }
 
@@ -221,14 +221,15 @@ Loop:
 
             var machine = MachineRegistry.CreateMachine<TMachine>(this.MachineInformation);
             machine.PrepareStart(this);
-            this.machine = machine;
-            return this.machine;
+            Volatile.Write(ref this.machine, machine);
+            return machine;
         }
     }
 
     static void ITinyhandSerializable<SingleMachineControl<TMachine, TInterface>>.Serialize(ref TinyhandWriter writer, scoped ref SingleMachineControl<TMachine, TInterface>? value, TinyhandSerializerOptions options)
     {
-        TinyhandSerializer.Serialize(ref writer, value?.machine, options);
+        var machine = value is null ? null : Volatile.Read(ref value.machine);
+        TinyhandSerializer.Serialize(ref writer, machine, options);
 
         /*if (value?.machine is ITinyhandSerializable obj)
         {

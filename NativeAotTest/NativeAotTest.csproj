@@ -1,22 +1,19 @@
-﻿<Project Sdk="Microsoft.NET.Sdk">
+<Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
     <OutputType>Exe</OutputType>
     <TargetFramework>net10.0</TargetFramework>
-    <GenerateDocumentationFile>true</GenerateDocumentationFile>
+    <PublishAot>true</PublishAot>
+    <InvariantGlobalization>true</InvariantGlobalization>
+    <TrimmerSingleWarn>false</TrimmerSingleWarn>
+    <IlcGenerateStackTraceData>true</IlcGenerateStackTraceData>
+    <TreatWarningsAsErrors>true</TreatWarningsAsErrors>
   </PropertyGroup>
 
   <ItemGroup>
-    <PackageReference Include="Arc.Unit" Version="0.46.1" />
-  </ItemGroup>
-
-  <ItemGroup>
+    <TrimmerRootAssembly Include="BigMachines" />
     <ProjectReference Include="..\BigMachinesGenerator\BigMachinesGenerator.csproj" ReferenceOutputAssembly="false" OutputItemType="Analyzer" />
     <ProjectReference Include="..\BigMachines\BigMachines.csproj" />
-  </ItemGroup>
-
-  <ItemGroup>
-    <Compile Remove="Generated\*" />
   </ItemGroup>
 
 </Project>

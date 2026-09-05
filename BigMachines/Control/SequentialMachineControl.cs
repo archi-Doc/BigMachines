@@ -102,7 +102,15 @@ public sealed partial class SequentialMachineControl<TIdentifier, TMachine, TInt
     #region Abstract
 
     public override int Count
-        => this.items.Count;
+    {
+        get
+        {
+            using (this.items.LockObject.EnterScope())
+            {
+                return this.items.Count;
+            }
+        }
+    }
 
     public void Start()
     {

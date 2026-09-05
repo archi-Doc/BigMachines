@@ -86,7 +86,15 @@ public sealed partial class UnorderedMachineControl<TIdentifier, TMachine, TInte
     #region Abstract
 
     public override int Count
-        => this.items.Count;
+    {
+        get
+        {
+            using (this.items.LockObject.EnterScope())
+            {
+                return this.items.Count;
+            }
+        }
+    }
 
     public override TIdentifier[] GetIdentifiers()
     {

@@ -61,7 +61,15 @@ public sealed partial class ManualMachineControl : MachineControl // , ITinyhand
     #region Abstract
 
     public override int Count
-        => this.typeToMachine.Count;
+    {
+        get
+        {
+            using (this.lockObject.EnterScope())
+            {
+                return this.typeToMachine.Count;
+            }
+        }
+    }
 
     public override bool ContainsActiveMachine()
     {

@@ -278,7 +278,7 @@ public abstract partial class Machine
 
     internal bool IsActive =>
         !this.__operationalState__.HasFlag(OperationalFlag.Terminated) &&
-        (this.__operationalState__.HasFlag(OperationalFlag.Running) || (this.DefaultTimeout is TimeSpan ts && ts > TimeSpan.Zero));
+        (this.__operationalState__.HasFlag(OperationalFlag.Running) || this.DefaultTimeout > TimeSpan.Zero);
 
     internal bool IsRunning =>
         this.__operationalState__.HasFlag(OperationalFlag.Running) &&
