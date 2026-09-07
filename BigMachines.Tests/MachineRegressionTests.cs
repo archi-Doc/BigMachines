@@ -264,6 +264,7 @@ public class MachineRegressionTests
         var data = TinyhandSerializer.Serialize(source);
 
         var destinationRoot = new ExecutionRoot();
+        var previousServiceProvider = TinyhandSerializer.ServiceProvider;
         TinyhandSerializer.ServiceProvider = new RootServiceProvider(destinationRoot);
         try
         {
@@ -278,6 +279,7 @@ public class MachineRegressionTests
         }
         finally
         {
+            TinyhandSerializer.ServiceProvider = previousServiceProvider;
             await StopAsync(destinationRoot);
             await StopAsync(sourceRoot);
         }

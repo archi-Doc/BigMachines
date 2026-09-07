@@ -40,8 +40,4 @@ public abstract partial class Machine<TIdentifier> : Machine
         get => this.__identifier__;
         internal set => this.__identifier__ = value;
     }
-
-    [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    internal void SetIdentifier(TIdentifier identifier)
-        => this.__identifier__ = identifier;
 }

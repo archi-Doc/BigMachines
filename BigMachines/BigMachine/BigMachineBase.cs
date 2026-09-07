@@ -43,10 +43,18 @@ public abstract partial class BigMachineBase : IBigMachine
     {
         this.ExecutionGroup = new(root, false, GroupName);
         this.core = new(this.ExecutionGroup, this);
+        this.ManualControl.Prepare(this);
     }
 
+    /// <summary>
+    /// Gets the runtime-only control for manually registered machines.
+    /// </summary>
     public ManualMachineControl ManualControl { get; } = new();
 
+    /// <summary>
+    /// Returns a snapshot of this root's controls. The controls themselves remain shared.
+    /// </summary>
+    /// <returns>The current controls, including the manual control.</returns>
     public abstract MachineControl[] GetArray();
 
     public void Start()

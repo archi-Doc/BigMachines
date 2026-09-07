@@ -2,7 +2,6 @@
 
 using System;
 using System.Diagnostics.CodeAnalysis;
-using System.Linq;
 using Tinyhand;
 using Tinyhand.IO;
 using ValueLink;
@@ -18,7 +17,7 @@ namespace BigMachines.Control;
 /// <typeparam name="TIdentifier">The machine identifier type.</typeparam>
 /// <typeparam name="TMachine">The machine type.</typeparam>
 /// <typeparam name="TInterface">The generated machine interface type.</typeparam>
-[TinyhandObject(Structural = true)]
+[TinyhandObject]
 public sealed partial class UnorderedMachineControl<TIdentifier, TMachine, TInterface> : MultiMachineControl<TIdentifier, TInterface>, ITinyhandSerializable<UnorderedMachineControl<TIdentifier, TMachine, TInterface>>, ITinyhandCustomJournal, ITinyhandSingleLayoutSerializable
     where TIdentifier : notnull
     where TMachine : Machine<TIdentifier>
@@ -42,11 +41,7 @@ public sealed partial class UnorderedMachineControl<TIdentifier, TMachine, TInte
     public void Prepare(BigMachineBase bigMachine)
     {
         this.BigMachine = bigMachine;
-        if (this.MachineInformation.Serializable &&
-            this.BigMachine is IStructuralObject obj)
-        {
-            ((IStructuralObject)this.items).SetupStructure(obj);
-        }
+        this.RestoreStructure();
     }
 
     /// <summary>
@@ -54,6 +49,18 @@ public sealed partial class UnorderedMachineControl<TIdentifier, TMachine, TInte
     /// </summary>
     public static void RegisterTinyhandFormatter()
         => Tinyhand.Resolvers.GeneratedResolver.RegisterObject<Item>();
+
+    protected override void RestoreStructure()
+    {
+        using (this.items.LockObject.EnterScope())
+        {
+            ((IStructuralObject)this.items).SetupStructure(this);
+            foreach (var item in this.items)
+            {
+                item.RestoreStructure();
+            }
+        }
+    }
 
     [TinyhandObject(Structural = true)]
     [ValueLinkObject(Isolation = IsolationLevel.Serializable)]
@@ -69,6 +76,23 @@ public sealed partial class UnorderedMachineControl<TIdentifier, TMachine, TInte
         {
             this.Identifier = identifier;
             this.Machine = machine;
+        }
+
+        public void RestoreStructure()
+        {
+            if (this.Machine is IStructuralObject child)
+            {
+                child.SetupStructure(this, 1);
+            }
+        }
+
+        public bool ReadMachineRecord(ref TinyhandReader reader)
+        {
+            return reader.TryReadJournalRecord(out var record) &&
+                record == JournalRecord.Key &&
+                reader.ReadInt32() == 1 &&
+                this.Machine is IStructuralObject child &&
+                child.ProcessJournalRecord(ref reader);
         }
 
 #pragma warning disable SA1401 // Fields should be private
@@ -100,7 +124,14 @@ public sealed partial class UnorderedMachineControl<TIdentifier, TMachine, TInte
     {
         using (this.items.LockObject.EnterScope())
         {
-            return this.items.Select(x => x.Identifier).ToArray();
+            var result = this.items.Count == 0 ? Array.Empty<TIdentifier>() : new TIdentifier[this.items.Count];
+            var index = 0;
+            foreach (var item in this.items)
+            {
+                result[index++] = item.Identifier;
+            }
+
+            return result;
         }
     }
 
@@ -124,7 +155,14 @@ public sealed partial class UnorderedMachineControl<TIdentifier, TMachine, TInte
     {
         using (this.items.LockObject.EnterScope())
         {
-            return this.items.Select(x => (TInterface)x.Machine.InterfaceInstance).ToArray();
+            var result = this.items.Count == 0 ? Array.Empty<TInterface>() : new TInterface[this.items.Count];
+            var index = 0;
+            foreach (var item in this.items)
+            {
+                result[index++] = (TInterface)item.Machine.InterfaceInstance;
+            }
+
+            return result;
         }
     }
 
@@ -132,7 +170,14 @@ public sealed partial class UnorderedMachineControl<TIdentifier, TMachine, TInte
     {
         using (this.items.LockObject.EnterScope())
         {
-            return this.items.Select(x => x.Machine).ToArray();
+            var result = this.items.Count == 0 ? Array.Empty<TMachine>() : new TMachine[this.items.Count];
+            var index = 0;
+            foreach (var item in this.items)
+            {
+                result[index++] = item.Machine;
+            }
+
+            return result;
         }
     }
 
@@ -145,7 +190,7 @@ public sealed partial class UnorderedMachineControl<TIdentifier, TMachine, TInte
 
         using (this.items.LockObject.EnterScope())
         {
-            if (this.items.IdentifierChain.TryGetValue(m.Identifier, out var item))
+            if (this.items.IdentifierChain.TryGetValue(m.Identifier, out var item) && ReferenceEquals(item.Machine, machine))
             {
                 item.Goshujin = null;
                 return true;
@@ -216,6 +261,7 @@ public sealed partial class UnorderedMachineControl<TIdentifier, TMachine, TInte
                 machine.PrepareCreateStart(this, createParam);
                 item = new(identifier, machine);
                 item.Goshujin = this.items;
+                item.RestoreStructure();
                 return (TInterface)item.Machine.InterfaceInstance;
             }
         }
@@ -227,24 +273,7 @@ public sealed partial class UnorderedMachineControl<TIdentifier, TMachine, TInte
     /// <param name="identifier">The identifier of the machine.</param>
     /// <returns>The machine interface for the existing or newly created machine.</returns>
     public TInterface GetOrCreate(TIdentifier identifier)
-    {
-        using (this.items.LockObject.EnterScope())
-        {
-            if (this.items.IdentifierChain.TryGetValue(identifier, out var item))
-            {
-                return (TInterface)item.Machine.InterfaceInstance;
-            }
-            else
-            {
-                var machine = MachineRegistry.CreateMachine<TMachine>(this.MachineInformation);
-                machine.Identifier = identifier;
-                machine.PrepareStart(this);
-                item = new(identifier, machine);
-                item.Goshujin = this.items;
-                return (TInterface)item.Machine.InterfaceInstance;
-            }
-        }
-    }
+        => this.GetOrCreate(identifier, null);
 
     /// <summary>
     /// Creates a new machine with the specified identifier, terminating any existing machine with the same identifier first, using the specified creation parameter.
@@ -275,6 +304,7 @@ Loop:
             machine.PrepareCreateStart(this, createParam);
             item = new(identifier, machine);
             item.Goshujin = this.items;
+            item.RestoreStructure();
             return (TInterface)item.Machine.InterfaceInstance;
         }
     }
@@ -285,31 +315,7 @@ Loop:
     /// <param name="identifier">The identifier of the machine.</param>
     /// <returns>The machine interface for the newly created machine.</returns>
     public TInterface CreateAlways(TIdentifier identifier)
-    {
-        Machine.ManMachineInterface? interfaceInstance = default;
-
-Loop:
-        if (interfaceInstance is not null)
-        {
-            interfaceInstance.TerminateMachine();
-        }
-
-        using (this.items.LockObject.EnterScope())
-        {
-            if (this.items.IdentifierChain.TryGetValue(identifier, out var item))
-            {
-                interfaceInstance = (TInterface)item.Machine.InterfaceInstance;
-                goto Loop;
-            }
-
-            var machine = MachineRegistry.CreateMachine<TMachine>(this.MachineInformation);
-            machine.Identifier = identifier;
-            machine.PrepareStart(this);
-            item = new(identifier, machine);
-            item.Goshujin = this.items;
-            return (TInterface)item.Machine.InterfaceInstance;
-        }
-    }
+        => this.CreateAlways(identifier, null);
 
     #endregion
 
@@ -330,25 +336,69 @@ Loop:
     {
         if (reader.TryReadNil())
         {
+            if (value is not null)
+            {
+                value.items = new();
+                value.RestoreStructure();
+            }
+
             return;
         }
 
         value ??= new();
-        value.items = TinyhandSerializer.DeserializeObject<Item.GoshujinClass>(ref reader, options) ?? new();
-        foreach (var x in value.items)
+        var restored = TinyhandSerializer.DeserializeObject<Item.GoshujinClass>(ref reader, options) ?? new();
+        foreach (var x in restored)
         {
-            x.Machine.PrepareStart(value);
+            if (x.Machine is null || !System.Collections.Generic.EqualityComparer<TIdentifier>.Default.Equals(x.Identifier, x.Machine.Identifier))
+            {
+                throw new TinyhandException("The stored machine and control identifiers do not match.");
+            }
         }
+
+        foreach (var item in restored)
+        {
+            item.Machine.PrepareStart(value);
+        }
+
+        value.items = restored;
+        value.RestoreStructure();
     }
 
     bool ITinyhandCustomJournal.ReadCustomRecord(ref TinyhandReader reader)
     {
-        if (this.items is IStructuralObject obj)
+        using (this.items.LockObject.EnterScope())
         {
-            return obj.ProcessJournalRecord(ref reader);
+            var fork = reader.Fork();
+            if (fork.TryReadJournalRecord(out var record) && record == JournalRecord.Locator)
+            {
+                var identifier = TinyhandSerializer.Deserialize<TIdentifier>(ref fork);
+                if (identifier is null || !this.items.IdentifierChain.TryGetValue(identifier, out var item) ||
+                    !item.ReadMachineRecord(ref fork))
+                {
+                    return false;
+                }
+
+                reader = fork;
+                return true;
+            }
+
+            if (!((IStructuralObject)this.items).ProcessJournalRecord(ref reader))
+            {
+                return false;
+            }
+
+            foreach (var item in this.items)
+            {
+                if (!item.Machine.IsPreparedFor(this))
+                {
+                    item.Machine.PrepareStart(this);
+                }
+
+                item.RestoreStructure();
+            }
         }
 
-        return false;
+        return true;
     }
 
     #endregion
