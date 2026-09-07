@@ -7,7 +7,7 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <PackageReference Include="Arc.Unit" Version="0.46.1" />
+    <PackageReference Include="Arc.Unit" Version="0.47.0" />
   </ItemGroup>
 
   <ItemGroup>

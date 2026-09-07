@@ -12,8 +12,8 @@
     <PackageReference Include="Microsoft.Testing.Extensions.CodeCoverage" Version="18.11.0">
       <PrivateAssets>all</PrivateAssets>
     </PackageReference>
-    <PackageReference Include="Arc.Threading" Version="0.52.0" />
-    <PackageReference Include="Tinyhand" Version="0.144.1" />
+    <PackageReference Include="Arc.Threading" Version="0.53.0" />
+    <PackageReference Include="Tinyhand" Version="0.146.0" />
     <PackageReference Include="xunit.runner.visualstudio" Version="4.0.0">
       <PrivateAssets>all</PrivateAssets>
       <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
