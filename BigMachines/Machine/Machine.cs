@@ -25,6 +25,24 @@ public abstract partial class Machine
 {
     internal const int ReservedKeyCount = 9;
     private static uint serialNumber;
+    private int removed;
+    private int runQueued;
+
+    private static void DecreaseRemaining(ref long remaining, long elapsed)
+    {
+        var current = Volatile.Read(ref remaining);
+        while (current > 0 && current != long.MaxValue && elapsed > 0)
+        {
+            var next = current <= elapsed ? 0 : current - elapsed;
+            var observed = Interlocked.CompareExchange(ref remaining, next, current);
+            if (observed == current)
+            {
+                return;
+            }
+
+            current = observed;
+        }
+    }
 
     public Machine()
     {
@@ -33,10 +51,14 @@ public abstract partial class Machine
 
     private void Prepare(MachineControl control)
     {// Deserialize
-        this.__machineControl__ = control;
-        this.__operationalState__ = default; // Initialize the state in case the Machine instance is reused.
+        if (Interlocked.CompareExchange(ref this.__machineControl__, control, null!) is not null)
+        {
+            throw new InvalidOperationException("A machine instance cannot be attached more than once. Register machine services as transient.");
+        }
+
+        this.__operationalState__ = default; // Operational flags are not persisted.
         if (this is IStructuralObject obj &&
-            this.MachineControl is IStructuralObject parent)
+            control is IStructuralObject parent)
         {
             obj.SetupStructure(parent);
         }
@@ -52,6 +74,9 @@ public abstract partial class Machine
         this.Prepare(control);
         this.OnStart();
     }
+
+    internal bool IsPreparedFor(MachineControl control)
+        => ReferenceEquals(this.__machineControl__, control);
 
     internal void PrepareCreateStart(MachineControl control, object? createParam)
     {// Create machine
@@ -106,7 +131,7 @@ public abstract partial class Machine
     [IgnoreMember]
     protected TimeSpan TimeUntilRun
     {
-        get => new(this.__timeUntilRun__);
+        get => new(Volatile.Read(ref this.__timeUntilRun__));
         set
         {
             if (this.__timeUntilRun__ == value.Ticks)
@@ -124,7 +149,7 @@ public abstract partial class Machine
                 root.AddJournalAndDispose(ref writer);
             }
 
-            this.__timeUntilRun__ = value.Ticks;
+            Volatile.Write(ref this.__timeUntilRun__, value.Ticks);
         }
     }
 
@@ -200,7 +225,7 @@ public abstract partial class Machine
     [IgnoreMember]
     protected TimeSpan Lifespan
     {
-        get => new(this.__lifespan__);
+        get => new(Volatile.Read(ref this.__lifespan__));
         set
         {
             if (this.__lifespan__ == value.Ticks)
@@ -218,7 +243,7 @@ public abstract partial class Machine
                 root.AddJournalAndDispose(ref writer);
             }
 
-            this.__lifespan__ = value.Ticks;
+            Volatile.Write(ref this.__lifespan__, value.Ticks);
         }
     }
 
@@ -278,7 +303,8 @@ public abstract partial class Machine
 
     internal bool IsActive =>
         !this.__operationalState__.HasFlag(OperationalFlag.Terminated) &&
-        (this.__operationalState__.HasFlag(OperationalFlag.Running) || this.DefaultTimeout > TimeSpan.Zero);
+        (this.__operationalState__.HasFlag(OperationalFlag.Running) || this.DefaultTimeout > TimeSpan.Zero ||
+            Volatile.Read(ref this.__timeUntilRun__) != long.MaxValue || this.__nextRunTime__ != default);
 
     internal bool IsRunning =>
         this.__operationalState__.HasFlag(OperationalFlag.Running) &&
@@ -290,14 +316,13 @@ public abstract partial class Machine
     protected readonly SemaphoreLock Semaphore = new();
 
     /// <summary>
-    /// Gets the default interval at which the machine runs.<br/>
-    /// <see cref="TimeSpan.Zero"/> disables interval execution. This property is not serialized.
+    /// Gets the default interval between timer runs. Zero disables periodic execution; this value is not serialized.
     /// </summary>
     [IgnoreMember]
     protected TimeSpan DefaultTimeout { get; init; }
 
     [IgnoreMember]
-    protected OperationalFlag __operationalState__;
+    protected volatile OperationalFlag __operationalState__;
 
     [IgnoreMember]
     protected object __machineControl__ = default!;
@@ -321,10 +346,10 @@ public abstract partial class Machine
 
     internal void Process(DateTime now, TimeSpan elapsed)
     {
-        Interlocked.Add(ref this.__lifespan__, -elapsed.Ticks);
+        DecreaseRemaining(ref this.__lifespan__, elapsed.Ticks);
         if (this.__operationalState__ == 0)
         {// Stand-by
-            Interlocked.Add(ref this.__timeUntilRun__, -elapsed.Ticks);
+            DecreaseRemaining(ref this.__timeUntilRun__, elapsed.Ticks);
         }
 
         if (this.__lifespan__ <= 0 || this.__terminationTime__ <= now)
@@ -347,15 +372,19 @@ public abstract partial class Machine
         }
         else if (this.__operationalState__ == 0)
         {// Screening
-            return this.RunAndForget(now);
+            return this.RunAndForget(now, reserved: true);
         }
 
+        Volatile.Write(ref this.runQueued, 0);
         return Task.CompletedTask;
     }
 
+    internal bool TryReserveRun()
+        => Interlocked.CompareExchange(ref this.runQueued, 1, 0) == 0;
+
     internal void ProcessLifespan(DateTime now, TimeSpan elapsed)
     {
-        Interlocked.Add(ref this.__lifespan__, -elapsed.Ticks);
+        DecreaseRemaining(ref this.__lifespan__, elapsed.Ticks);
         if (this.__lifespan__ <= 0 || this.__terminationTime__ <= now)
         {// Terminate
             this.InterfaceInstance.TerminateMachine();
@@ -363,26 +392,37 @@ public abstract partial class Machine
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    internal Task RunAndForget(DateTime now)
+    internal Task RunAndForget(DateTime now, bool reserved = false)
     {
+        if (!reserved && !this.TryReserveRun())
+        {
+            return Task.CompletedTask;
+        }
+
         return Task.Run(async () =>
         {
-            this.Semaphore.Enter();
+            await this.Semaphore.EnterAsync().ConfigureAwait(false);
             try
             {
                 if (await this.TryRun(now).ConfigureAwait(false) == StateResult.Terminate)
                 {
-                    this.__operationalState__ |= OperationalFlag.Terminated;
-                    this.OnTerminate();
+                    this.Terminate();
                 }
             }
             finally
             {
                 this.Semaphore.Exit();
 
-                if (this.__operationalState__.HasFlag(OperationalFlag.Terminated))
+                try
                 {
-                    this.RemoveFromControl();
+                    if (this.IsTerminated)
+                    {
+                        this.RemoveFromControl();
+                    }
+                }
+                finally
+                {
+                    Volatile.Write(ref this.runQueued, 0);
                 }
             }
         });
@@ -390,16 +430,21 @@ public abstract partial class Machine
 
     private async Task<StateResult> TryRun(DateTime now)
     {// Locked
+        if (this.__operationalState__ != 0)
+        {
+            return StateResult.Continue;
+        }
+
         var runFlag = false;
         if (this.__timeUntilRun__ <= 0)
         {// Timeout
             if (this.DefaultTimeout <= TimeSpan.Zero)
             {
-                Volatile.Write(ref this.__timeUntilRun__, long.MinValue);
+                this.TimeUntilRun = TimeSpan.MaxValue;
             }
             else
             {
-                Volatile.Write(ref this.__timeUntilRun__, this.DefaultTimeout.Ticks);
+                this.TimeUntilRun = this.DefaultTimeout;
             }
 
             runFlag = true;
@@ -407,7 +452,7 @@ public abstract partial class Machine
 
         if (this.__nextRunTime__ != default && this.__nextRunTime__ <= now)
         {
-            this.__nextRunTime__ = default;
+            this.NextRunTime = default;
             runFlag = true;
         }
 
@@ -444,7 +489,7 @@ RerunLoop:
         catch (Exception ex)
         {
             result = StateResult.Terminate;
-            (this.MachineControl?.BigMachine as IBigMachine)?.ReportException(new(this, ex));
+            ((IBigMachine)this.BigMachine).ReportException(new(this, ex));
         }
 
         if (result == StateResult.Terminate)
@@ -466,14 +511,40 @@ RerunLoop:
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     private bool RemoveFromControl()
     {
+        if (Interlocked.Exchange(ref this.removed, 1) != 0)
+        {
+            return false;
+        }
+
         var result = (this.__machineControl__ as MachineControl)?.RemoveMachine(this) == true;
 
         if (this is IDisposable disposable)
         {
-            disposable.Dispose();
+            try
+            {
+                disposable.Dispose();
+            }
+            catch (Exception exception)
+            {
+                ((IBigMachine)this.BigMachine).ReportException(new(this, exception));
+            }
         }
 
         return result;
+    }
+
+    // Called with the machine semaphore held; callbacks cannot prevent removal.
+    private void Terminate()
+    {
+        this.__operationalState__ |= OperationalFlag.Terminated;
+        try
+        {
+            this.OnTerminate();
+        }
+        catch (Exception exception)
+        {
+            ((IBigMachine)this.BigMachine).ReportException(new(this, exception));
+        }
     }
 
     /// <summary>
@@ -496,7 +567,7 @@ RerunLoop:
         => ChangeStateResult.Terminated;
 
     /// <summary>
-    /// Called when the machine is newly created.<br/>
+    /// Called once when the machine is newly created, including creation without a parameter.<br/>
     /// Note that it is not called after deserialization.<br/>
     /// <see cref="OnCreate(object?)"/> -> <see cref="OnStart()"/> -> <see cref="OnTerminate"/>.
     /// </summary>
@@ -516,7 +587,7 @@ RerunLoop:
 
     /// <summary>
     /// Called when the machine is terminating.<br/>
-    /// This method runs while the machine semaphore is held.<br/>
+    /// This method runs once while the machine semaphore is held. Exceptions are queued on the root.<br/>
     /// <see cref="OnCreate(object?)"/> -> <see cref="OnStart()"/> -> <see cref="OnTerminate"/>.
     /// </summary>
     protected virtual void OnTerminate()

@@ -107,7 +107,8 @@ public sealed partial class ManualMachineControl : MachineControl // , ITinyhand
     {
         using (this.lockObject.EnterScope())
         {
-            return this.typeToMachine.Remove(machine.GetType());
+            return this.typeToMachine.TryGetValue(machine.GetType(), out var current) &&
+                ReferenceEquals(current, machine) && this.typeToMachine.Remove(machine.GetType());
         }
     }
 

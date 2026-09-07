@@ -40,6 +40,7 @@ internal class BigMachine : IEquatable<BigMachine>
             machine.Control = machineObject.ObjectAttribute.Control;
             machine.MachineObject = machineObject;
             machine.IdentifierObject = machineObject.IdentifierObject;
+            machine.IsPersistent = attribute?.Volatile != true && machineObject.TinyhandAttribute is not null;
 
             if (machine.Control == MachineControlKind.Single)
             {
@@ -86,6 +87,8 @@ internal class BigMachine : IEquatable<BigMachine>
         public string ControlType { get; private set; } = string.Empty;
 
         public int Key { get; private set; }
+
+        public bool IsPersistent { get; private set; }
     }
 
     public BigMachinesBody Body { get; }
@@ -300,7 +303,10 @@ internal class BigMachine : IEquatable<BigMachine>
 
                 ssb.AppendLine($"this._{x.Name} = new();");
                 ssb.AppendLine($"this.{x.Name}.Prepare(this);");
-                ssb.AppendLine($"((IStructuralObject)this.{x.Name}).SetupStructure(this, {x.Key.ToString()});");
+                if (x.IsPersistent)
+                {
+                    ssb.AppendLine($"((IStructuralObject)this.{x.Name}).SetupStructure(this, {x.Key.ToString()});");
+                }
 
                 sb.Append($"this.{x.Name}, ");
             }
@@ -313,7 +319,7 @@ internal class BigMachine : IEquatable<BigMachine>
     public void GenerateMembers(ScopingStringBuilder ssb, GeneratorInformation info)
     {
         ssb.AppendLine("private MachineControl[] controls = Array.Empty<MachineControl>();");
-        ssb.AppendLine("public override MachineControl[] GetArray() => controls;");
+        ssb.AppendLine("public override MachineControl[] GetArray() => (MachineControl[])this.controls.Clone();");
         foreach (var x in this.Machines.Values)
         {
             ssb.AppendLine($"private {x.ControlType} _{x.Name};");
@@ -326,17 +332,13 @@ internal class BigMachine : IEquatable<BigMachine>
         using (var scopeMethod = ssb.ScopeBrace($"static void ITinyhandSerializable<{this.SimpleName}>.Serialize(ref TinyhandWriter writer, scoped ref {this.SimpleName}? value, TinyhandSerializerOptions options)"))
         {
             ssb.AppendLine("if (value == null) { writer.WriteNil(); return; }");
-            ssb.AppendLine("var count = value.controls.Count(x => x.MachineInformation.Serializable);");
-            ssb.AppendLine("writer.WriteMapHeader(count);");
+            ssb.AppendLine($"writer.WriteMapHeader({this.Machines.Values.Count(x => x.IsPersistent)});");
 
-            foreach (var x in this.Machines.Values)
+            foreach (var x in this.Machines.Values.Where(x => x.IsPersistent))
             {
                 ssb.AppendLine();
-                using (var scopeSerialize = ssb.ScopeBrace($"if (value.{x.Name}.MachineInformation.Serializable)"))
-                {
-                    ssb.AppendLine($"writer.Write({x.Key.ToString()});");
-                    ssb.AppendLine($"TinyhandSerializer.SerializeObject(ref writer, value.{x.Name}, options);");
-                }
+                ssb.AppendLine($"writer.Write({x.Key.ToString()});");
+                ssb.AppendLine($"TinyhandSerializer.SerializeObject(ref writer, value.{x.Name}, options);");
             }
         }
     }
@@ -350,7 +352,7 @@ internal class BigMachine : IEquatable<BigMachine>
             ssb.AppendLine("var count = reader.ReadMapHeader2();");
 
             var trie = new VisceralTrieInt<Machine>(null);
-            foreach (var x in this.Machines.Values)
+            foreach (var x in this.Machines.Values.Where(x => x.IsPersistent))
             {
                 trie.AddNode(x.Key, x);
             }
@@ -375,12 +377,21 @@ internal class BigMachine : IEquatable<BigMachine>
         ssb.AppendLine("IStructuralObject? IStructuralObject.StructuralParent { get; set; }");
         ssb.AppendLine("int IStructuralObject.StructuralKey { get; set; }");
 
+        using (var scope = ssb.ScopeBrace("void IStructuralObject.SetupStructure(IStructuralObject? parent, int key)"))
+        {
+            ssb.AppendLine("((IStructuralObject)this).SetParentAndKey(parent, key);");
+            foreach (var machine in this.Machines.Values.Where(x => x.IsPersistent))
+            {
+                ssb.AppendLine($"((IStructuralObject)this.{machine.Name}).SetupStructure(this, {machine.Key});");
+            }
+        }
+
         using (var scopeMethod = ssb.ScopeBrace("bool IStructuralObject.ProcessJournalRecord(ref TinyhandReader reader)"))
         {
             ssb.AppendLine("if (!reader.TryReadJournalRecord(out JournalRecord record)) return false;");
 
             var trie = new VisceralTrieInt<Machine>(null);
-            foreach (var x in this.Machines.Values)
+            foreach (var x in this.Machines.Values.Where(x => x.IsPersistent))
             {
                 trie.AddNode(x.Key, x);
             }

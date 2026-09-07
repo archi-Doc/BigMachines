@@ -747,7 +747,7 @@ ModuleInitializerClass_Added:
             ssb.AppendLine($"public {this.OverrideOrNew} {controlType}? MachineControl => this.__machineControl__ as {controlType};");
         }
 
-        ssb.AppendLine($"public override ManMachineInterface InterfaceInstance => (Interface)(this.__interfaceInstance__ ??= new Interface(this));");
+        ssb.AppendLine($"public override ManMachineInterface InterfaceInstance => (Interface)(System.Threading.Volatile.Read(ref this.__interfaceInstance__) ?? System.Threading.Interlocked.CompareExchange(ref this.__interfaceInstance__, new Interface(this), null) ?? this.__interfaceInstance__);");
 
         // ssb.AppendLine($"public override ManMachineInterface CreateInterface() => new Interface(this);");
 

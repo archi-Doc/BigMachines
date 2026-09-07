@@ -25,10 +25,10 @@ public interface IBigMachine
     public DateTime LastRun { get; }
 
     /// <summary>
-    /// Check if there are any machines currently active.
+    /// Determines whether any non-excluded machine is active or exceptions remain queued.
     /// </summary>
     /// <param name="machineTypeToBeExcluded">The type of the machine to be excluded.</param>
-    /// <returns><see langword="true"/>; Active machines are present.</returns>
+    /// <returns>Whether execution or exception processing remains pending.</returns>
     public bool CheckActiveMachine(Type? machineTypeToBeExcluded = null);
 
     /// <summary>
@@ -38,7 +38,7 @@ public interface IBigMachine
     public int GetExceptionCount();
 
     /// <summary>
-    /// Add the exception to BigMachine's exception queue.
+    /// Adds an exception to the root's queue.
     /// </summary>
     /// <param name="exception">The exception to be queued.</param>
     public void ReportException(BigMachineException exception);

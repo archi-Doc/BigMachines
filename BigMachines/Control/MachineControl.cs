@@ -2,14 +2,43 @@
 
 using System;
 using Tinyhand;
+using Tinyhand.IO;
 
 namespace BigMachines.Control;
 
 /// <summary>
 /// Defines common operations for a generated machine control.
 /// </summary>
-public abstract class MachineControl
+public abstract class MachineControl : IStructuralObject
 {
+    IStructuralRoot? IStructuralObject.StructuralRoot { get; set; }
+
+    IStructuralObject? IStructuralObject.StructuralParent { get; set; }
+
+    int IStructuralObject.StructuralKey { get; set; } = -1;
+
+    void IStructuralObject.SetupStructure(IStructuralObject? parent, int key)
+    {
+        ((IStructuralObject)this).SetParentAndKey(parent, key);
+        this.RestoreStructure();
+    }
+
+    void IStructuralObject.WriteLocator(ref TinyhandWriter writer)
+    {
+        writer.Write_Key();
+        writer.Write(((IStructuralObject)this).StructuralKey);
+    }
+
+    bool IStructuralObject.ProcessJournalRecord(ref TinyhandReader reader)
+        => this is ITinyhandCustomJournal custom && custom.ReadCustomRecord(ref reader);
+
+    /// <summary>
+    /// Reattaches persisted children after the structural parent or contents change.
+    /// </summary>
+    protected virtual void RestoreStructure()
+    {
+    }
+
     public MachineControl()
     {
     }
@@ -31,6 +60,10 @@ public abstract class MachineControl
     [IgnoreMember]
     public abstract MachineInformation MachineInformation { get; }
 
+    /// <summary>
+    /// Returns a snapshot of the current machine handles. The machines themselves remain shared.
+    /// </summary>
+    /// <returns>A snapshot of the current handles.</returns>
     public abstract Machine.ManMachineInterface[] GetArray();
 
     /// <summary>

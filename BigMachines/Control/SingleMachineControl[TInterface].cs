@@ -16,7 +16,7 @@ namespace BigMachines.Control;
 /// </summary>
 /// <typeparam name="TMachine">The machine type.</typeparam>
 /// <typeparam name="TInterface">The generated machine interface type.</typeparam>
-[TinyhandObject(Structural = true)]
+[TinyhandObject]
 public partial class SingleMachineControl<TMachine, TInterface> : MachineControl, ITinyhandSerializable<SingleMachineControl<TMachine, TInterface>>, ITinyhandCustomJournal, ITinyhandSingleLayoutSerializable
     where TMachine : Machine
     where TInterface : Machine.ManMachineInterface
@@ -42,6 +42,14 @@ public partial class SingleMachineControl<TMachine, TInterface> : MachineControl
     }
 
     public override MachineInformation MachineInformation { get; }
+
+    protected override void RestoreStructure()
+    {
+        if (Volatile.Read(ref this.machine) is IStructuralObject child)
+        {
+            child.SetupStructure(this);
+        }
+    }
 
     /// <summary>
     /// Attempts to retrieve the machine interface if a machine exists.
@@ -128,6 +136,7 @@ public partial class SingleMachineControl<TMachine, TInterface> : MachineControl
         {
             if (this.machine == machine)
             {
+                this.WriteJournal(null);
                 Volatile.Write(ref this.machine, null);
                 return true;
             }
@@ -154,6 +163,7 @@ public partial class SingleMachineControl<TMachine, TInterface> : MachineControl
             {
                 var machine = MachineRegistry.CreateMachine<TMachine>(this.MachineInformation);
                 machine.PrepareCreateStart(this, createParam);
+                this.WriteJournal(machine);
                 Volatile.Write(ref this.machine, machine);
             }
 
@@ -162,19 +172,7 @@ public partial class SingleMachineControl<TMachine, TInterface> : MachineControl
     }
 
     private TMachine GetOrCreateMachine()
-    {
-        using (this.lockObject.EnterScope())
-        {
-            if (this.machine is null)
-            {
-                var machine = MachineRegistry.CreateMachine<TMachine>(this.MachineInformation);
-                machine.PrepareStart(this);
-                Volatile.Write(ref this.machine, machine);
-            }
-
-            return this.machine;
-        }
-    }
+        => this.GetOrCreateMachine(null);
 
     private TMachine CreateAlwaysMachine(object? createParam)
     {
@@ -196,35 +194,14 @@ Loop:
 
             var machine = MachineRegistry.CreateMachine<TMachine>(this.MachineInformation);
             machine.PrepareCreateStart(this, createParam);
+            this.WriteJournal(machine);
             Volatile.Write(ref this.machine, machine);
             return machine;
         }
     }
 
     private TMachine CreateAlwaysMachine()
-    {
-        Machine.ManMachineInterface? machineInterface = default;
-
-Loop:
-        if (machineInterface is not null)
-        {
-            machineInterface.TerminateMachine();
-        }
-
-        using (this.lockObject.EnterScope())
-        {
-            machineInterface = this.machine?.InterfaceInstance;
-            if (machineInterface is not null)
-            {
-                goto Loop;
-            }
-
-            var machine = MachineRegistry.CreateMachine<TMachine>(this.MachineInformation);
-            machine.PrepareStart(this);
-            Volatile.Write(ref this.machine, machine);
-            return machine;
-        }
-    }
+        => this.CreateAlwaysMachine(null);
 
     static void ITinyhandSerializable<SingleMachineControl<TMachine, TInterface>>.Serialize(ref TinyhandWriter writer, scoped ref SingleMachineControl<TMachine, TInterface>? value, TinyhandSerializerOptions options)
     {
@@ -244,8 +221,10 @@ Loop:
     static void ITinyhandSerializable<SingleMachineControl<TMachine, TInterface>>.Deserialize(ref TinyhandReader reader, scoped ref SingleMachineControl<TMachine, TInterface>? value, TinyhandSerializerOptions options)
     {
         value ??= new();
-        value.machine = TinyhandSerializer.Deserialize<TMachine>(ref reader, options);
-        value.machine?.PrepareStart(value);
+        var restored = TinyhandSerializer.Deserialize<TMachine>(ref reader, options);
+        restored?.PrepareStart(value);
+        Volatile.Write(ref value.machine, restored);
+        value.RestoreStructure();
 
         /*value ??= new();
         if (value.BigMachine is not null &&
@@ -262,11 +241,64 @@ Loop:
 
     bool ITinyhandCustomJournal.ReadCustomRecord(ref TinyhandReader reader)
     {
-        if (this.GetOrCreateMachine() is IStructuralObject obj)
+        var fork = reader.Fork();
+        if (fork.TryReadJournalRecord(out var record))
+        {
+            if (record == JournalRecord.AddItem)
+            {
+                var restored = TinyhandSerializer.Deserialize<TMachine>(ref fork);
+                if (restored is null)
+                {
+                    return false;
+                }
+
+                restored.PrepareStart(this);
+                Volatile.Write(ref this.machine, restored);
+                reader = fork;
+                return true;
+            }
+            else if (record == JournalRecord.DeleteItem)
+            {
+                Volatile.Write(ref this.machine, null);
+                reader = fork;
+                return true;
+            }
+        }
+
+        TMachine machine;
+        using (this.lockObject.EnterScope())
+        {
+            machine = this.machine!;
+            if (machine is null)
+            {
+                machine = MachineRegistry.CreateMachine<TMachine>(this.MachineInformation);
+                machine.PrepareStart(this);
+                Volatile.Write(ref this.machine, machine);
+            }
+        }
+
+        if (machine is IStructuralObject obj)
         {
             return obj.ProcessJournalRecord(ref reader);
         }
 
         return false;
+    }
+
+    private void WriteJournal(TMachine? machine)
+    {
+        var structural = (IStructuralObject)this;
+        if (structural.TryGetJournalWriter(out var root, out var writer, true))
+        {
+            writer.Write(machine is null ? JournalRecord.DeleteItem : JournalRecord.AddItem);
+            if (machine is not null)
+            {
+                TinyhandSerializer.Serialize(ref writer, machine);
+            }
+
+            root.AddJournalAndDispose(ref writer);
+        }
+
+        structural.StructuralRoot?.AddToSaveQueue();
     }
 }
