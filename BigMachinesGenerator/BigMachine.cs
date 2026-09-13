@@ -40,11 +40,11 @@ internal class BigMachine : IEquatable<BigMachine>
             machine.Control = machineObject.ObjectAttribute.Control;
             machine.MachineObject = machineObject;
             machine.IdentifierObject = machineObject.IdentifierObject;
-            machine.IsPersistent = attribute?.Volatile != true && machineObject.TinyhandAttribute is not null;
+            machine.IsPersistent = attribute?.NonPersistent != true && machineObject.TinyhandAttribute is not null;
 
             if (machine.Control == MachineControlKind.Single)
             {
-                machine.ControlType = $"SingleMachineControl<{machine.FullName}, {machine.FullName}.Interface>";
+                machine.ControlType = $"SingleMachineControl<{machine.FullName}, {machine.FullName}.Handle>";
             }
             else if (machine.Control == MachineControlKind.Unordered)
             {
@@ -53,7 +53,7 @@ internal class BigMachine : IEquatable<BigMachine>
                     return null;
                 }
 
-                machine.ControlType = $"UnorderedMachineControl<{machine.IdentifierObject.FullName}, {machine.FullName}, {machine.FullName}.Interface>";
+                machine.ControlType = $"UnorderedMachineControl<{machine.IdentifierObject.FullName}, {machine.FullName}, {machine.FullName}.Handle>";
             }
             else if (machine.Control == MachineControlKind.Sequential)
             {
@@ -62,14 +62,15 @@ internal class BigMachine : IEquatable<BigMachine>
                     return null;
                 }
 
-                machine.ControlType = $"SequentialMachineControl<{machine.IdentifierObject.FullName}, {machine.FullName}, {machine.FullName}.Interface>";
+                machine.ControlType = $"SequentialMachineControl<{machine.IdentifierObject.FullName}, {machine.FullName}, {machine.FullName}.Handle>";
             }
             else
             {
                 return null;
             }
 
-            machine.Key = (int)FarmHash.Hash64(machine.ControlType);
+            // Hash the pre-rename handle name ("Interface") so that existing snapshots and journals keep their control keys.
+            machine.Key = (int)FarmHash.Hash64(machine.ControlType.Replace($"{machine.FullName}.{BigMachinesBody.HandleIdentifier}>", $"{machine.FullName}.Interface>"));
 
             return machine;
         }
@@ -101,7 +102,7 @@ internal class BigMachine : IEquatable<BigMachine>
 
     public string SimpleName { get; }
 
-    public bool Inclusive { get; set; }
+    public bool IncludeAllMachines { get; set; }
 
     public Dictionary<BigMachinesObject, AddMachineAttributeMock?> AddedMachines { get; } = new();
 
@@ -129,18 +130,18 @@ internal class BigMachine : IEquatable<BigMachine>
 
         if (this.Object is null)
         {
-            this.Inclusive = true;
+            this.IncludeAllMachines = true;
         }
         else
         {
-            this.Inclusive = this.Attribute?.Inclusive == true;
+            this.IncludeAllMachines = this.Attribute?.IncludeAllMachines == true;
         }
 
         var start = AddMachineAttributeMock.FullName + "<";
 
-        if (this.Inclusive)
-        {// Inclusive big machine
-            var array = this.Body.FullNameToObject.Values.Where(x => x.ObjectFlag.HasFlag(BigMachinesObjectFlag.MachineObject) && x.ObjectAttribute?.Private == false).ToArray();
+        if (this.IncludeAllMachines)
+        {// Include all machines
+            var array = this.Body.FullNameToObject.Values.Where(x => x.ObjectFlag.HasFlag(BigMachinesObjectFlag.MachineObject) && x.ObjectAttribute?.ExcludeFromIncludeAllMachines == false).ToArray();
             foreach (var x in array)
             {
                 this.AddedMachines[x] = null;
@@ -267,15 +268,15 @@ internal class BigMachine : IEquatable<BigMachine>
             this.GenerateStructural(ssb, info);
             ssb.AppendLine();
 
-            this.GenerateStartByDefault(ssb, info);
+            this.GenerateOnStart(ssb, info);
         }
     }
 
-    public void GenerateStartByDefault(ScopingStringBuilder ssb, GeneratorInformation info)
+    public void GenerateOnStart(ScopingStringBuilder ssb, GeneratorInformation info)
     {
-        using (var scopeMethod = ssb.ScopeBrace($"protected override void StartBigMachine()"))
+        using (var scopeMethod = ssb.ScopeBrace($"protected override void OnStart()"))
         {
-            foreach (var x in this.Machines.Values.Where(a => a.MachineObject.ObjectAttribute?.StartByDefault == true && a.MachineObject.ObjectAttribute.Control == MachineControlKind.Single))
+            foreach (var x in this.Machines.Values.Where(a => a.MachineObject.ObjectAttribute?.CreateOnStart == true && a.MachineObject.ObjectAttribute.Control == MachineControlKind.Single))
             {
                 ssb.AppendLine($"this.{x.Name}.GetOrCreate();");
             }
@@ -298,11 +299,11 @@ internal class BigMachine : IEquatable<BigMachine>
             {
                 if (x.MachineObject.Generics_Kind == VisceralGenericsKind.ClosedGeneric)
                 {
-                    ssb.AppendLine($"{x.FullName}.RegisterBM();");
+                    ssb.AppendLine($"{x.FullName}.RegisterMachine();");
                 }
 
                 ssb.AppendLine($"this._{x.Name} = new();");
-                ssb.AppendLine($"this.{x.Name}.Prepare(this);");
+                ssb.AppendLine($"this.{x.Name}.Attach(this);");
                 if (x.IsPersistent)
                 {
                     ssb.AppendLine($"((IStructuralObject)this.{x.Name}).SetupStructure(this, {x.Key.ToString()});");
@@ -319,7 +320,7 @@ internal class BigMachine : IEquatable<BigMachine>
     public void GenerateMembers(ScopingStringBuilder ssb, GeneratorInformation info)
     {
         ssb.AppendLine("private MachineControl[] controls = Array.Empty<MachineControl>();");
-        ssb.AppendLine("public override MachineControl[] GetArray() => (MachineControl[])this.controls.Clone();");
+        ssb.AppendLine("public override MachineControl[] GetControls() => (MachineControl[])this.controls.Clone();");
         foreach (var x in this.Machines.Values)
         {
             ssb.AppendLine($"private {x.ControlType} _{x.Name};");
@@ -349,7 +350,7 @@ internal class BigMachine : IEquatable<BigMachine>
         {
             ssb.AppendLine("if (reader.TryReadNil()) return;");
             ssb.AppendLine("value ??= new(TinyhandSerializer.ServiceProvider.GetRequiredService<Arc.Threading.ExecutionRoot>());");
-            ssb.AppendLine("var count = reader.ReadMapHeader2();");
+            ssb.AppendLine("var count = reader.ReadMapHeaderOrEmptyArray();");
 
             var trie = new VisceralTrieInt<Machine>(null);
             foreach (var x in this.Machines.Values.Where(x => x.IsPersistent))
@@ -388,7 +389,7 @@ internal class BigMachine : IEquatable<BigMachine>
 
         using (var scopeMethod = ssb.ScopeBrace("bool IStructuralObject.ProcessJournalRecord(ref TinyhandReader reader)"))
         {
-            ssb.AppendLine("if (!reader.TryReadJournalRecord(out JournalRecord record)) return false;");
+            ssb.AppendLine("if (!reader.TryReadJournalRecord(out JournalRecordType record)) return false;");
 
             var trie = new VisceralTrieInt<Machine>(null);
             foreach (var x in this.Machines.Values.Where(x => x.IsPersistent))
@@ -403,7 +404,7 @@ internal class BigMachine : IEquatable<BigMachine>
                     ssb.AppendLine($"return ((IStructuralObject)this.{node.Member.Name}).ProcessJournalRecord(ref reader);");
                 });
 
-            using (var scopeKey = ssb.ScopeBrace("if (record == JournalRecord.Key)"))
+            using (var scopeKey = ssb.ScopeBrace("if (record == JournalRecordType.Key)"))
             {
                 trie.Generate(context);
             }

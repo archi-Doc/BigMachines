@@ -20,13 +20,13 @@ public partial class ServiceProviderMachine : Machine<int>
         : base()
     {
         this.Service = service;
-        this.DefaultTimeout = TimeSpan.FromSeconds(1);
+        this.DefaultInterval = TimeSpan.FromSeconds(1);
         this.Lifespan = TimeSpan.FromSeconds(3);
     }
 
-    protected override void OnCreate(object? createParam)
+    protected override void OnCreate(object? createParameter)
     {// Receives the parameter at the time of creation. Note that it is not called during deserialization.
-        this.Text = (string?)createParam;
+        this.Text = (string?)createParameter;
     }
 
     public SomeService Service { get; }

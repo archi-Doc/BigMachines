@@ -9,7 +9,7 @@ public partial class Machine1 : Machine
 {// A machine without an identifier is derived from the Machine class.
     public Machine1()
     {
-        this.DefaultTimeout = TimeSpan.FromSeconds(1);
+        this.DefaultInterval = TimeSpan.FromSeconds(1);
         this.Lifespan = TimeSpan.FromSeconds(3);
     }
 

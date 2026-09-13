@@ -24,21 +24,21 @@ public class BigMachinesBody : VisceralBody<BigMachinesObject>
     public const string BigMachineIdentifier = "BigMachine";
     public const string IMachineGroupIdentifier = "IMachineGroup<TIdentifier>";
     public const string StateIdentifier = "State";
-    public const string InterfaceIdentifier = "Interface";
-    public const string CreateInterfaceIdentifier = "CreateInterface";
+    public const string HandleIdentifier = "Handle";
+    public const string CreateHandleIdentifier = "CreateHandle";
     public const string InternalRunIdentifier = "__InternalRun__";
     public const string ChangeState = "ChangeState";
     public const string GetCurrentState = "GetCurrentState";
     public const string InternalChangeState = "__InternalChangeState__";
     public const string InternalCommand = "InternalCommand";
     public const string IntInitState = "IntInitState";
-    public const string RegisterBM = "RegisterBM";
+    public const string RegisterMachine = "RegisterMachine";
     public const string CommandIdentifier = "Command";
 
     public const string StateResultFullName = BigMachineNamespace + ".StateResult";
     public const string StateParameterFullName = BigMachineNamespace + ".StateParameter";
-    public const string CommandResultResultFullName = BigMachineNamespace + ".CommandResult";
-    public const string CommandResultResultFullName2 = BigMachineNamespace + ".CommandResult<TResponse>";
+    public const string CommandStatusFullName = BigMachineNamespace + ".CommandStatus";
+    public const string CommandResultFullName = BigMachineNamespace + ".CommandResult<TResponse>";
     public const string TaskFullName = "System.Threading.Tasks.Task";
     public const string TaskFullName2 = "System.Threading.Tasks.Task<TResult>";
     public const string CommandParameterFullName = BigMachineNamespace + ".CommandPost<{0}>.Command";
@@ -98,7 +98,7 @@ public class BigMachinesBody : VisceralBody<BigMachinesObject>
         category: "BigMachinesGenerator", DiagnosticSeverity.Error, isEnabledByDefault: true);
 
     public static readonly DiagnosticDescriptor Error_MethodFormat2 = new DiagnosticDescriptor(
-        id: "BMG014", title: "Invalid method", messageFormat: "Command method must be in the format of 'CommandResult Method(any param)' or 'CommandResult<TResponse> Method(any param)' or 'Task<CommandResult> Method(any param)' or 'Task<CommandResult<TResponse>> Method(any param)'",
+        id: "BMG014", title: "Invalid method", messageFormat: "Command method must be in the format of 'CommandStatus Method(any param)' or 'CommandResult<TResponse> Method(any param)' or 'Task<CommandStatus> Method(any param)' or 'Task<CommandResult<TResponse>> Method(any param)'",
         category: "BigMachinesGenerator", DiagnosticSeverity.Error, isEnabledByDefault: true);
 
     public static readonly DiagnosticDescriptor Warning_MachineWithoutIdentifier = new DiagnosticDescriptor(
@@ -379,7 +379,7 @@ public class BigMachinesBody : VisceralBody<BigMachinesObject>
                     foreach (var x in info.ModuleInitializerClass)
                     {
                         ssb.Append(x, true);
-                        ssb.AppendLine(".RegisterBM();", false);
+                        ssb.AppendLine(".RegisterMachine();", false);
                     }
                 }
             }
@@ -396,7 +396,7 @@ public class BigMachinesBody : VisceralBody<BigMachinesObject>
         }
 
         ssb.AppendLine();
-        using (var scopeExtension = ssb.ScopeBrace("public static class AllCommandExtension"))
+        using (var scopeExtension = ssb.ScopeBrace("public static class AllCommandExtensions"))
         {
             foreach (var x in this.AllCommands)
             {
@@ -413,14 +413,14 @@ public class BigMachinesBody : VisceralBody<BigMachinesObject>
         }
 
         var identifierType = machine.IdentifierObject.FullName;
-        var interfaceType = machine.FullName + ".Interface";
+        var handleType = machine.FullName + ".Handle";
         var responseType = commandMethod.ResponseObject?.FullName;
         var resultType = responseType is null ? $"IdentifierAndCommandResult<{identifierType}>" : $"IdentifierAndCommandResult<{identifierType}, {responseType}>";
         var param = string.IsNullOrEmpty(commandMethod.ParameterTypesAndNames) ? string.Empty : ", ";
 
-        using (var scopeMethod = ssb.ScopeBrace($"public static async Task<{resultType}[]> All{commandMethod.Name}(this MultiMachineControl<{identifierType}, {interfaceType}> control{param}{commandMethod.ParameterTypesAndNames})"))
+        using (var scopeMethod = ssb.ScopeBrace($"public static async Task<{resultType}[]> All{commandMethod.Name}(this MultiMachineControl<{identifierType}, {handleType}> control{param}{commandMethod.ParameterTypesAndNames})"))
         {
-            ssb.AppendLine("var machines = control.GetArray();");
+            ssb.AppendLine("var machines = control.GetHandles();");
             ssb.AppendLine($"var results = new {resultType}[machines.Length];");
             ssb.AppendLine($"for (var i = 0; i < machines.Length; i++) results[i] = new(machines[i].Identifier, await machines[i].Command.{commandMethod.Name}({commandMethod.ParameterNames}).ConfigureAwait(false));");
             ssb.AppendLine("return results;");

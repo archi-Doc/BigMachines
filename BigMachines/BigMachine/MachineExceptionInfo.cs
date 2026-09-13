@@ -8,14 +8,14 @@ namespace BigMachines;
 /// Defines the type of delegate for handling BigMachine exceptions.
 /// </summary>
 /// <param name="exception">The queued machine exception.</param>
-public delegate void ExceptionHandlerDelegate(BigMachineException exception);
+public delegate void MachineExceptionHandler(MachineExceptionInfo exception);
 
 /// <summary>
 /// Associates an exception with the machine that raised it.
 /// </summary>
-public class BigMachineException
+public class MachineExceptionInfo
 {
-    public BigMachineException(Machine machine, Exception exception)
+    public MachineExceptionInfo(Machine machine, Exception exception)
         : base()
     {
         this.Machine = machine;

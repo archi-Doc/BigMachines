@@ -9,10 +9,10 @@ namespace BigMachines;
 /// </summary>
 /// <param name="MachineType">The registered machine type.</param>
 /// <param name="Constructor">The generated constructor, or <see langword="null"/> when a service provider creates the machine.</param>
-/// <param name="Serializable">Whether the machine participates in Tinyhand serialization.</param>
+/// <param name="IsSerializable">Whether the machine participates in Tinyhand serialization.</param>
 /// <param name="IdentifierType">The identifier type, or <see langword="null"/> for a single machine.</param>
-/// <param name="NumberOfTasks">The number of dedicated sequential workers.</param>
-public record MachineInformation(Type MachineType, Func<Machine>? Constructor, bool Serializable, Type? IdentifierType, int NumberOfTasks)
+/// <param name="WorkerCount">The number of dedicated sequential workers.</param>
+public record MachineInformation(Type MachineType, Func<Machine>? Constructor, bool IsSerializable, Type? IdentifierType, int WorkerCount)
 {
     public static readonly MachineInformation Default = new(typeof(Machine), null, false, null, 0);
 }

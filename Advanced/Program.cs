@@ -20,10 +20,10 @@ public class Program
 
     public static async Task Main(string[] args)
     {
-        AppCloseHandler.Set(() =>
+        AppCloseHandler.Register(() =>
         {// Closing the console window or terminating the process.
             root?.RequestTermination(); // Send a termination signal to the root.
-            root?.WaitForTermination(TimeSpan.FromSeconds(2)).Wait();
+            root?.WaitForTerminationAsync(TimeSpan.FromSeconds(2)).Wait();
         });
 
         Console.CancelKeyPress += (s, e) =>
@@ -46,7 +46,7 @@ public class Program
                 {
                     FileConfiguration = new LocalFileConfiguration("Data/BigMachine.tinyhand"),
                     SaveFormat = SaveFormat.Utf8,
-                    NumberOfFileHistories = 3,
+                    NumberOfHistoryFiles = 3,
                 });
             });
 
@@ -79,9 +79,9 @@ public class Program
         // var bin = TinyhandSerializer.Serialize(bigMachine);
         // var bigMachine2 = TinyhandSerializer.Deserialize<BigMachine>(bin);
 
-        await bigMachine.ExecutionGroup.WaitForTermination();
+        await bigMachine.ExecutionGroup.WaitForTerminationAsync();
 
         await crystalControl.StoreAndRip();
-        await root.WaitForTermination(TerminationOptions.IncludeIndependent); // Wait for the termination infinitely.
+        await root.WaitForTerminationAsync(TerminationOptions.IncludeIndependent); // Wait for the termination infinitely.
     }
 }

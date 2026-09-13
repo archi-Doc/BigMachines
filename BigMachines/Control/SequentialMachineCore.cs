@@ -6,14 +6,14 @@ using Arc.Threading;
 
 namespace BigMachines.Control;
 
-public sealed partial class SequentialMachineControl<TIdentifier, TMachine, TInterface>
+public sealed partial class SequentialMachineControl<TIdentifier, TMachine, THandle>
     where TIdentifier : notnull
     where TMachine : Machine<TIdentifier>
-    where TInterface : Machine.ManMachineInterface
+    where THandle : Machine.MachineHandle
 {
     private class SequentialCore : TaskCore<SequentialCore>
     {
-        public SequentialCore(ExecutionGroup group, SequentialMachineControl<TIdentifier, TMachine, TInterface> control)
+        public SequentialCore(ExecutionGroup group, SequentialMachineControl<TIdentifier, TMachine, THandle> control)
             : base(group, Process, ExecutionCoreOptions.DelayedStart)
         {
             this.control = control;
@@ -26,7 +26,7 @@ public sealed partial class SequentialMachineControl<TIdentifier, TMachine, TInt
 
         public void Pulse() => this.updateEvent.Pulse();
 
-        private readonly SequentialMachineControl<TIdentifier, TMachine, TInterface> control;
+        private readonly SequentialMachineControl<TIdentifier, TMachine, THandle> control;
         private readonly AsyncPulseEvent updateEvent = new();
 
         private static async Task Process(SequentialCore core)
@@ -34,7 +34,7 @@ public sealed partial class SequentialMachineControl<TIdentifier, TMachine, TInt
             var control = core.control;
             while (core.CanContinue)
             {
-                /*if (await core.Delay(core.TimeIntervalInMilliseconds) == false)
+                /*if (await core.TryDelay(core.TimeIntervalInMilliseconds) == false)
                 {// Terminated
                     break;
                 }*/

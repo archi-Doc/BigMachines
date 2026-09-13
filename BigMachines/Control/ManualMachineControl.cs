@@ -24,7 +24,7 @@ public sealed partial class ManualMachineControl : MachineControl // , ITinyhand
     {
     }
 
-    public void Prepare(BigMachineBase bigMachine)
+    public void Attach(BigMachineBase bigMachine)
     {
         this.BigMachine = bigMachine;
     }
@@ -87,11 +87,11 @@ public sealed partial class ManualMachineControl : MachineControl // , ITinyhand
         return false;
     }
 
-    public override Machine.ManMachineInterface[] GetArray()
+    public override Machine.MachineHandle[] GetHandles()
     {
         using (this.lockObject.EnterScope())
         {
-            return this.typeToMachine.Values.Select(x => x.InterfaceInstance).ToArray();
+            return this.typeToMachine.Values.Select(x => x.HandleInstance).ToArray();
         }
     }
 
@@ -127,14 +127,14 @@ public sealed partial class ManualMachineControl : MachineControl // , ITinyhand
 
     #region Main
 
-    public Machine.ManMachineInterface? TryGet<TMachine>()
+    public Machine.MachineHandle? Find<TMachine>()
         where TMachine : Machine
     {
         using (this.lockObject.EnterScope())
         {
             if (this.typeToMachine.TryGetValue(typeof(TMachine), out var item))
             {
-                return item.InterfaceInstance;
+                return item.HandleInstance;
             }
             else
             {
@@ -143,7 +143,7 @@ public sealed partial class ManualMachineControl : MachineControl // , ITinyhand
         }
     }
 
-    public Machine.ManMachineInterface? TryCreate<TMachine>(object? createParam = null)
+    public Machine.MachineHandle? TryCreate<TMachine>(object? createParameter = null)
         where TMachine : Machine
     {
         using (this.lockObject.EnterScope())
@@ -155,15 +155,15 @@ public sealed partial class ManualMachineControl : MachineControl // , ITinyhand
             else
             {
                 machine = MachineRegistry.CreateMachine<TMachine>();
-                machine.PrepareCreateStart(this, createParam);
+                machine.PrepareCreateStart(this, createParameter);
                 this.typeToMachine.TryAdd(typeof(TMachine), machine);
             }
 
-            return machine.InterfaceInstance;
+            return machine.HandleInstance;
         }
     }
 
-    public Machine.ManMachineInterface GetOrCreate<TMachine>(object? createParam = null)
+    public Machine.MachineHandle GetOrCreate<TMachine>(object? createParameter = null)
         where TMachine : Machine
     {
         using (this.lockObject.EnterScope())
@@ -171,11 +171,11 @@ public sealed partial class ManualMachineControl : MachineControl // , ITinyhand
             if (!this.typeToMachine.TryGetValue(typeof(TMachine), out var machine))
             {
                 machine = MachineRegistry.CreateMachine<TMachine>();
-                machine.PrepareCreateStart(this, createParam);
+                machine.PrepareCreateStart(this, createParameter);
                 this.typeToMachine.TryAdd(typeof(TMachine), machine);
             }
 
-            return machine.InterfaceInstance;
+            return machine.HandleInstance;
         }
     }
 

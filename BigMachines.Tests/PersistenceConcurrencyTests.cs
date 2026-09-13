@@ -27,7 +27,7 @@ public class PersistenceConcurrencyTests
         var machines = new ReviewBigMachine(root);
         try
         {
-            Func<Machine.ManMachineInterface> create = kind switch
+            Func<Machine.MachineHandle> create = kind switch
             {
                 0 => () => machines.DisposableSingleMachine.GetOrCreate(),
                 1 => () => machines.DisposableUnorderedMachine.GetOrCreate(1),
@@ -35,10 +35,10 @@ public class PersistenceConcurrencyTests
                 _ => () => machines.ManualControl.GetOrCreate<DisposableSingleMachine>(),
             };
             var old = create();
-            Assert.True(old.TerminateMachine());
+            Assert.True(old.Terminate());
             var replacement = create();
             await Task.WhenAll(Enumerable.Range(0, 32).Select(_ => old.RunAsync()));
-            Assert.False(old.TerminateMachine());
+            Assert.False(old.Terminate());
             Assert.Same(replacement, create());
             Assert.False(replacement.IsTerminated);
             Assert.Equal(1, DisposableSingleMachine.Disposals + DisposableUnorderedMachine.Disposals + DisposableSequentialMachine.Disposals);
@@ -59,9 +59,9 @@ public class PersistenceConcurrencyTests
         {
             Assert.Same(machines, machines.ManualControl.BigMachine);
             var machine = machines.ManualControl.GetOrCreate<ThrowingTerminationMachine>();
-            Assert.True(machine.TerminateMachine());
+            Assert.True(machine.Terminate());
             Assert.True(machine.IsTerminated);
-            Assert.False(machine.TerminateMachine());
+            Assert.False(machine.Terminate());
             Assert.Equal(0, machines.ManualControl.Count);
             Assert.Equal(1, ThrowingTerminationMachine.Terminations);
             Assert.Equal(2, ((IBigMachine)machines).GetExceptionCount());
@@ -83,7 +83,7 @@ public class PersistenceConcurrencyTests
         var machines = new ReviewBigMachine(root);
         try
         {
-            Func<Machine.ManMachineInterface> create = kind switch
+            Func<Machine.MachineHandle> create = kind switch
             {
                 0 => () => machines.DisposableSingleMachine.GetOrCreate(),
                 1 => () => machines.DisposableUnorderedMachine.GetOrCreate(1),
@@ -92,11 +92,11 @@ public class PersistenceConcurrencyTests
             };
             var handles = await Task.WhenAll(Enumerable.Range(0, 64).Select(_ => Task.Run(create)));
             Assert.All(handles, handle => Assert.Same(handles[0], handle));
-            Assert.Equal(1, machines.GetArray().Sum(control => control.Count));
-            var controls = machines.GetArray();
+            Assert.Equal(1, machines.GetControls().Sum(control => control.Count));
+            var controls = machines.GetControls();
             Array.Clear(controls);
-            Assert.All(machines.GetArray(), control => Assert.NotNull(control));
-            Assert.Single(machines.GetArray().SelectMany(control => control.GetArray()));
+            Assert.All(machines.GetControls(), control => Assert.NotNull(control));
+            Assert.Single(machines.GetControls().SelectMany(control => control.GetHandles()));
         }
         finally
         {
@@ -183,7 +183,7 @@ public class PersistenceConcurrencyTests
     private static int ReadMapCount(byte[] bytes)
     {
         var reader = new TinyhandReader(bytes);
-        return reader.ReadMapHeader2();
+        return reader.ReadMapHeaderOrEmptyArray();
     }
 
     [Fact]
@@ -200,7 +200,7 @@ public class PersistenceConcurrencyTests
             Replay(replica, Assert.Single(journal.Records));
             Assert.Equal(42, (await replica.JournalSingleMachine.GetOrCreate().Command.GetValue()).Response);
             journal.Records.Clear();
-            Assert.True(machine.TerminateMachine());
+            Assert.True(machine.Terminate());
             Replay(replica, Assert.Single(journal.Records));
             Assert.False(replica.JournalSingleMachine.TryGet(out _));
         }
@@ -222,9 +222,9 @@ public class PersistenceConcurrencyTests
             ((IStructuralObject)source).SetupStructure(journal);
             var machine = source.JournalMachine.GetOrCreate(5);
             Replay(replica, Assert.Single(journal.Records));
-            Assert.Equal(CommandResult.Success, (await replica.JournalMachine.GetOrCreate(5).Command.GetValue()).Result);
+            Assert.Equal(CommandStatus.Success, (await replica.JournalMachine.GetOrCreate(5).Command.GetValue()).Status);
             journal.Records.Clear();
-            machine.TerminateMachine();
+            machine.Terminate();
             Replay(replica, Assert.Single(journal.Records));
             Assert.Equal(0, replica.JournalMachine.Count);
         }
@@ -266,7 +266,7 @@ public class PersistenceConcurrencyTests
         {
             var machine = machines.OneShotMachine.GetOrCreate();
             machines.Start();
-            await WaitUntil(() => ((IBigMachine)machines).LastRun != default);
+            await WaitUntil(() => ((IBigMachine)machines).LastRunTime != default);
             Assert.Equal(TimeSpan.MaxValue, machine.GetTimeUntilRun());
             Assert.False(machine.IsActive);
             machine.SetTimeUntilRun(TimeSpan.MinValue);
@@ -309,7 +309,7 @@ public class PersistenceConcurrencyTests
 
             machines.Start();
             await WaitUntil(() => Volatile.Read(ref TwoWorkerMachine.Starts) == 2);
-            Assert.Equal(2, machines.TwoWorkerMachine.GetArray().Count(x => x.IsRunning));
+            Assert.Equal(2, machines.TwoWorkerMachine.GetHandles().Count(x => x.IsRunning));
             TwoWorkerMachine.Release.TrySetResult();
             await WaitUntil(() => machines.TwoWorkerMachine.Count == 0);
             Assert.Equal(4, TwoWorkerMachine.Starts);
@@ -376,13 +376,13 @@ public class PersistenceConcurrencyTests
         {
             var first = machines.DisposableSequentialMachine.GetOrCreate(1);
             var second = machines.DisposableSequentialMachine.GetOrCreate(2);
-            first.PauseMachine();
+            first.Pause();
             second.SetLifespan(TimeSpan.Zero);
             machines.Start();
             await WaitUntil(() => machines.DisposableSequentialMachine.Count == 1);
             Assert.True(second.IsTerminated);
             Assert.False(first.IsTerminated);
-            Assert.Same(first, machines.DisposableSequentialMachine.GetFirst());
+            Assert.Same(first, machines.DisposableSequentialMachine.PeekFirst());
         }
         finally
         {
@@ -439,7 +439,7 @@ public class PersistenceConcurrencyTests
             var data = NilControl(((IStructuralObject)control).StructuralKey);
             TinyhandSerializer.DeserializeObject(data, ref machines!);
             Assert.Equal(0, control.Count);
-            Assert.Contains(control, machines.GetArray());
+            Assert.Contains(control, machines.GetControls());
         }
         finally
         {
@@ -475,7 +475,7 @@ public class PersistenceConcurrencyTests
     private static async Task Stop(ExecutionRoot root)
     {
         root.RequestTermination();
-        await root.WaitForTermination(TimeSpan.FromSeconds(5));
+        await root.WaitForTerminationAsync(TimeSpan.FromSeconds(5));
     }
 
     private sealed class MemoryJournal : IStructuralObject, IStructuralRoot

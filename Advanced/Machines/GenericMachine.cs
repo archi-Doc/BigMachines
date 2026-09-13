@@ -15,7 +15,7 @@ public partial class GenericMachine<TData> : Machine<int>
 
     public GenericMachine()
     {
-        this.DefaultTimeout = TimeSpan.FromSeconds(1); // Default time interval for machine execution.
+        this.DefaultInterval = TimeSpan.FromSeconds(1); // Default time interval for machine execution.
         this.Lifespan = TimeSpan.FromSeconds(5); // The time until the machine automatically terminates.
     }
 
@@ -30,9 +30,9 @@ public partial class GenericMachine<TData> : Machine<int>
         return StateResult.Continue;
     }
 
-    protected override void OnCreate(object? createParam)
+    protected override void OnCreate(object? createParameter)
     {
-        this.Data = (TData)createParam!;
+        this.Data = (TData)createParameter!;
     }
 }
 
@@ -48,7 +48,7 @@ public partial class GenericMachine2<TData> : Machine<TData>
 
     public GenericMachine2()
     {
-        this.DefaultTimeout = TimeSpan.FromSeconds(1); // Default time interval for machine execution.
+        this.DefaultInterval = TimeSpan.FromSeconds(1); // Default time interval for machine execution.
         this.Lifespan = TimeSpan.FromSeconds(5); // The time until the machine automatically terminates.
     }
 
@@ -63,8 +63,8 @@ public partial class GenericMachine2<TData> : Machine<TData>
         return StateResult.Continue;
     }
 
-    protected override void OnCreate(object? createParam)
+    protected override void OnCreate(object? createParameter)
     {
-        this.Data = (TData)createParam!;
+        this.Data = (TData)createParameter!;
     }
 }*/

@@ -38,12 +38,12 @@ internal readonly struct RecursiveChecker
         this.Id5 = id5;
     }
 
-    public int TryAdd(uint machineSerial, ulong id, out RecursiveChecker newDetetcion)
+    public int TryAdd(uint machineSerial, ulong id, out RecursiveChecker newDetection)
     {// -1: Id collision, 0: Machine collision, 1: No collision
         var result = 1;
         if (this.Id0 == 0)
         {
-            newDetetcion = new(id);
+            newDetection = new(id);
             return 1;
         }
         else if (this.Id1 == 0)
@@ -52,7 +52,7 @@ internal readonly struct RecursiveChecker
             {
                 if (this.Id0 == id)
                 {
-                    newDetetcion = default;
+                    newDetection = default;
                     return -1;
                 }
                 else
@@ -61,7 +61,7 @@ internal readonly struct RecursiveChecker
                 }
             }
 
-            newDetetcion = new(this.Id0, id);
+            newDetection = new(this.Id0, id);
             return result;
         }
         else if (this.Id2 == 0)
@@ -70,7 +70,7 @@ internal readonly struct RecursiveChecker
             {
                 if (this.Id0 == id)
                 {
-                    newDetetcion = default;
+                    newDetection = default;
                     return -1;
                 }
                 else
@@ -83,7 +83,7 @@ internal readonly struct RecursiveChecker
             {
                 if (this.Id1 == id)
                 {
-                    newDetetcion = default;
+                    newDetection = default;
                     return -1;
                 }
                 else
@@ -92,7 +92,7 @@ internal readonly struct RecursiveChecker
                 }
             }
 
-            newDetetcion = new(this.Id0, this.Id1, id);
+            newDetection = new(this.Id0, this.Id1, id);
             return result;
         }
         else if (this.Id3 == 0)
@@ -101,7 +101,7 @@ internal readonly struct RecursiveChecker
             {
                 if (this.Id0 == id)
                 {
-                    newDetetcion = default;
+                    newDetection = default;
                     return -1;
                 }
                 else
@@ -114,7 +114,7 @@ internal readonly struct RecursiveChecker
             {
                 if (this.Id1 == id)
                 {
-                    newDetetcion = default;
+                    newDetection = default;
                     return -1;
                 }
                 else
@@ -127,7 +127,7 @@ internal readonly struct RecursiveChecker
             {
                 if (this.Id2 == id)
                 {
-                    newDetetcion = default;
+                    newDetection = default;
                     return -1;
                 }
                 else
@@ -136,7 +136,7 @@ internal readonly struct RecursiveChecker
                 }
             }
 
-            newDetetcion = new(this.Id0, this.Id1, this.Id2, id);
+            newDetection = new(this.Id0, this.Id1, this.Id2, id);
             return result;
         }
         else if (this.Id4 == 0)
@@ -145,7 +145,7 @@ internal readonly struct RecursiveChecker
             {
                 if (this.Id0 == id)
                 {
-                    newDetetcion = default;
+                    newDetection = default;
                     return -1;
                 }
                 else
@@ -158,7 +158,7 @@ internal readonly struct RecursiveChecker
             {
                 if (this.Id1 == id)
                 {
-                    newDetetcion = default;
+                    newDetection = default;
                     return -1;
                 }
                 else
@@ -171,7 +171,7 @@ internal readonly struct RecursiveChecker
             {
                 if (this.Id2 == id)
                 {
-                    newDetetcion = default;
+                    newDetection = default;
                     return -1;
                 }
                 else
@@ -184,7 +184,7 @@ internal readonly struct RecursiveChecker
             {
                 if (this.Id3 == id)
                 {
-                    newDetetcion = default;
+                    newDetection = default;
                     return -1;
                 }
                 else
@@ -193,7 +193,7 @@ internal readonly struct RecursiveChecker
                 }
             }
 
-            newDetetcion = new(this.Id0, this.Id1, this.Id2, this.Id3, id);
+            newDetection = new(this.Id0, this.Id1, this.Id2, this.Id3, id);
             return result;
         }
         else if (this.Id5 == 0)
@@ -202,7 +202,7 @@ internal readonly struct RecursiveChecker
             {
                 if (this.Id0 == id)
                 {
-                    newDetetcion = default;
+                    newDetection = default;
                     return -1;
                 }
                 else
@@ -215,7 +215,7 @@ internal readonly struct RecursiveChecker
             {
                 if (this.Id1 == id)
                 {
-                    newDetetcion = default;
+                    newDetection = default;
                     return -1;
                 }
                 else
@@ -228,7 +228,7 @@ internal readonly struct RecursiveChecker
             {
                 if (this.Id2 == id)
                 {
-                    newDetetcion = default;
+                    newDetection = default;
                     return -1;
                 }
                 else
@@ -241,7 +241,7 @@ internal readonly struct RecursiveChecker
             {
                 if (this.Id3 == id)
                 {
-                    newDetetcion = default;
+                    newDetection = default;
                     return -1;
                 }
                 else
@@ -254,7 +254,7 @@ internal readonly struct RecursiveChecker
             {
                 if (this.Id4 == id)
                 {
-                    newDetetcion = default;
+                    newDetection = default;
                     return -1;
                 }
                 else
@@ -263,7 +263,7 @@ internal readonly struct RecursiveChecker
                 }
             }
 
-            newDetetcion = new(this.Id0, this.Id1, this.Id2, this.Id3, this.Id4, id);
+            newDetection = new(this.Id0, this.Id1, this.Id2, this.Id3, this.Id4, id);
             return result;
         }
         else
@@ -272,7 +272,7 @@ internal readonly struct RecursiveChecker
             {
                 if (this.Id0 == id)
                 {
-                    newDetetcion = default;
+                    newDetection = default;
                     return -1;
                 }
                 else
@@ -285,7 +285,7 @@ internal readonly struct RecursiveChecker
             {
                 if (this.Id1 == id)
                 {
-                    newDetetcion = default;
+                    newDetection = default;
                     return -1;
                 }
                 else
@@ -298,7 +298,7 @@ internal readonly struct RecursiveChecker
             {
                 if (this.Id2 == id)
                 {
-                    newDetetcion = default;
+                    newDetection = default;
                     return -1;
                 }
                 else
@@ -311,7 +311,7 @@ internal readonly struct RecursiveChecker
             {
                 if (this.Id3 == id)
                 {
-                    newDetetcion = default;
+                    newDetection = default;
                     return -1;
                 }
                 else
@@ -324,7 +324,7 @@ internal readonly struct RecursiveChecker
             {
                 if (this.Id4 == id)
                 {
-                    newDetetcion = default;
+                    newDetection = default;
                     return -1;
                 }
                 else
@@ -337,7 +337,7 @@ internal readonly struct RecursiveChecker
             {
                 if (this.Id5 == id)
                 {
-                    newDetetcion = default;
+                    newDetection = default;
                     return -1;
                 }
                 else
@@ -346,76 +346,76 @@ internal readonly struct RecursiveChecker
                 }
             }
 
-            newDetetcion = this;
+            newDetection = this;
             return result;
         }
     }
 
-    /*public bool TryAdd(ulong id, out RecursiveDetection newDetetcion)
+    /*public bool TryAdd(ulong id, out RecursiveDetection newDetection)
     {
         if (this.Id0 == 0)
         {
-            newDetetcion = new(id);
+            newDetection = new(id);
         }
         else if (this.Id1 == 0)
         {
             if (id == this.Id0)
             {
-                newDetetcion = default;
+                newDetection = default;
                 return false;
             }
 
-            newDetetcion = new(this.Id0, id);
+            newDetection = new(this.Id0, id);
         }
         else if (this.Id2 == 0)
         {
             if (id == this.Id0 || id == this.Id1)
             {
-                newDetetcion = default;
+                newDetection = default;
                 return false;
             }
 
-            newDetetcion = new(this.Id0, this.Id1, id);
+            newDetection = new(this.Id0, this.Id1, id);
         }
         else if (this.Id3 == 0)
         {
             if (id == this.Id0 || id == this.Id1 || id == this.Id2)
             {
-                newDetetcion = default;
+                newDetection = default;
                 return false;
             }
 
-            newDetetcion = new(this.Id0, this.Id1, this.Id2, id);
+            newDetection = new(this.Id0, this.Id1, this.Id2, id);
         }
         else if (this.Id4 == 0)
         {
             if (id == this.Id0 || id == this.Id1 || id == this.Id2 || id == this.Id3)
             {
-                newDetetcion = default;
+                newDetection = default;
                 return false;
             }
 
-            newDetetcion = new(this.Id0, this.Id1, this.Id2, this.Id3, id);
+            newDetection = new(this.Id0, this.Id1, this.Id2, this.Id3, id);
         }
         else if (this.Id5 == 0)
         {
             if (id == this.Id0 || id == this.Id1 || id == this.Id2 || id == this.Id3 || id == this.Id4)
             {
-                newDetetcion = default;
+                newDetection = default;
                 return false;
             }
 
-            newDetetcion = new(this.Id0, this.Id1, this.Id2, this.Id3, this.Id4, id);
+            newDetection = new(this.Id0, this.Id1, this.Id2, this.Id3, this.Id4, id);
         }
         else
         {
             if (id == this.Id0 || id == this.Id1 || id == this.Id2 || id == this.Id3 || id == this.Id4 || id == this.Id5)
             {
-                newDetetcion = default;
+                newDetection = default;
                 return false;
             }
 
-            newDetetcion = new(this.Id0, this.Id1, this.Id2, this.Id3, this.Id4, this.Id5);
+            newDetection = new(this.Id0, this.Id1, this.Id2, this.Id3, this.Id4, this.Id5);
         }
 
         return true;

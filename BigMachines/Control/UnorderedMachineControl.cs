@@ -16,12 +16,12 @@ namespace BigMachines.Control;
 /// </summary>
 /// <typeparam name="TIdentifier">The machine identifier type.</typeparam>
 /// <typeparam name="TMachine">The machine type.</typeparam>
-/// <typeparam name="TInterface">The generated machine interface type.</typeparam>
+/// <typeparam name="THandle">The generated machine handle type.</typeparam>
 [TinyhandObject]
-public sealed partial class UnorderedMachineControl<TIdentifier, TMachine, TInterface> : MultiMachineControl<TIdentifier, TInterface>, ITinyhandSerializable<UnorderedMachineControl<TIdentifier, TMachine, TInterface>>, ITinyhandCustomJournal, ITinyhandSingleLayoutSerializable
+public sealed partial class UnorderedMachineControl<TIdentifier, TMachine, THandle> : MultiMachineControl<TIdentifier, THandle>, ITinyhandSerializable<UnorderedMachineControl<TIdentifier, TMachine, THandle>>, ITinyhandCustomJournal, ITinyhandSingleLayoutSerializable
     where TIdentifier : notnull
     where TMachine : Machine<TIdentifier>
-    where TInterface : Machine.ManMachineInterface
+    where THandle : Machine.MachineHandle
 {
     #region FieldAndProperty
 
@@ -34,11 +34,11 @@ public sealed partial class UnorderedMachineControl<TIdentifier, TMachine, TInte
     public UnorderedMachineControl()
         : base()
     {
-        this.MachineInformation = MachineRegistry.Get<TMachine>();
+        this.MachineInformation = MachineRegistry.GetInformation<TMachine>();
         this.items = new();
     }
 
-    public void Prepare(BigMachineBase bigMachine)
+    public void Attach(BigMachineBase bigMachine)
     {
         this.BigMachine = bigMachine;
         this.RestoreStructure();
@@ -89,7 +89,7 @@ public sealed partial class UnorderedMachineControl<TIdentifier, TMachine, TInte
         public bool ReadMachineRecord(ref TinyhandReader reader)
         {
             return reader.TryReadJournalRecord(out var record) &&
-                record == JournalRecord.Key &&
+                record == JournalRecordType.Key &&
                 reader.ReadInt32() == 1 &&
                 this.Machine is IStructuralObject child &&
                 child.ProcessJournalRecord(ref reader);
@@ -151,15 +151,15 @@ public sealed partial class UnorderedMachineControl<TIdentifier, TMachine, TInte
         return false;
     }
 
-    public override TInterface[] GetArray()
+    public override THandle[] GetHandles()
     {
         using (this.items.LockObject.EnterScope())
         {
-            var result = this.items.Count == 0 ? Array.Empty<TInterface>() : new TInterface[this.items.Count];
+            var result = this.items.Count == 0 ? Array.Empty<THandle>() : new THandle[this.items.Count];
             var index = 0;
             foreach (var item in this.items)
             {
-                result[index++] = (TInterface)item.Machine.InterfaceInstance;
+                result[index++] = (THandle)item.Machine.HandleInstance;
             }
 
             return result;
@@ -218,23 +218,23 @@ public sealed partial class UnorderedMachineControl<TIdentifier, TMachine, TInte
     #region Main
 
     /// <summary>
-    /// Attempts to retrieve a machine interface by its identifier.
+    /// Attempts to retrieve a machine handle by its identifier.
     /// </summary>
     /// <param name="identifier">The identifier of the machine to retrieve.</param>
-    /// <param name="machineInterface">When this method returns, contains the machine interface associated with the specified identifier, if found; otherwise, the default value.</param>
+    /// <param name="handle">When this method returns, contains the machine handle associated with the specified identifier, if found; otherwise, the default value.</param>
     /// <returns><see langword="true"/> if the machine was found; otherwise, <see langword="false"/>.</returns>
-    public bool TryGet(TIdentifier identifier, [MaybeNullWhen(false)] out TInterface machineInterface)
+    public bool TryGet(TIdentifier identifier, [MaybeNullWhen(false)] out THandle handle)
     {
         using (this.items.LockObject.EnterScope())
         {
             if (this.items.IdentifierChain.TryGetValue(identifier, out var item))
             {
-                machineInterface = (TInterface)item.Machine.InterfaceInstance;
+                handle = (THandle)item.Machine.HandleInstance;
                 return true;
             }
             else
             {
-                machineInterface = default;
+                handle = default;
                 return false;
             }
         }
@@ -244,25 +244,25 @@ public sealed partial class UnorderedMachineControl<TIdentifier, TMachine, TInte
     /// Gets an existing machine or creates a new one if it doesn't exist, using the specified creation parameter.
     /// </summary>
     /// <param name="identifier">The identifier of the machine.</param>
-    /// <param name="createParam">The parameter to pass to the machine's creation process if a new machine is created.</param>
-    /// <returns>The machine interface for the existing or newly created machine.</returns>
-    public TInterface GetOrCreate(TIdentifier identifier, object? createParam)
+    /// <param name="createParameter">The parameter to pass to the machine's creation process if a new machine is created.</param>
+    /// <returns>The machine handle for the existing or newly created machine.</returns>
+    public THandle GetOrCreate(TIdentifier identifier, object? createParameter)
     {
         using (this.items.LockObject.EnterScope())
         {
             if (this.items.IdentifierChain.TryGetValue(identifier, out var item))
             {
-                return (TInterface)item.Machine.InterfaceInstance;
+                return (THandle)item.Machine.HandleInstance;
             }
             else
             {
                 var machine = MachineRegistry.CreateMachine<TMachine>(this.MachineInformation);
                 machine.Identifier = identifier;
-                machine.PrepareCreateStart(this, createParam);
+                machine.PrepareCreateStart(this, createParameter);
                 item = new(identifier, machine);
                 item.Goshujin = this.items;
                 item.RestoreStructure();
-                return (TInterface)item.Machine.InterfaceInstance;
+                return (THandle)item.Machine.HandleInstance;
             }
         }
     }
@@ -271,41 +271,41 @@ public sealed partial class UnorderedMachineControl<TIdentifier, TMachine, TInte
     /// Gets an existing machine or creates a new one if it doesn't exist.
     /// </summary>
     /// <param name="identifier">The identifier of the machine.</param>
-    /// <returns>The machine interface for the existing or newly created machine.</returns>
-    public TInterface GetOrCreate(TIdentifier identifier)
+    /// <returns>The machine handle for the existing or newly created machine.</returns>
+    public THandle GetOrCreate(TIdentifier identifier)
         => this.GetOrCreate(identifier, null);
 
     /// <summary>
     /// Creates a new machine with the specified identifier, terminating any existing machine with the same identifier first, using the specified creation parameter.
     /// </summary>
     /// <param name="identifier">The identifier of the machine.</param>
-    /// <param name="createParam">The parameter to pass to the machine's creation process.</param>
-    /// <returns>The machine interface for the newly created machine.</returns>
-    public TInterface CreateAlways(TIdentifier identifier, object? createParam)
+    /// <param name="createParameter">The parameter to pass to the machine's creation process.</param>
+    /// <returns>The machine handle for the newly created machine.</returns>
+    public THandle CreateOrReplace(TIdentifier identifier, object? createParameter)
     {
-        Machine.ManMachineInterface? machineInterface = default;
+        Machine.MachineHandle? handle = default;
 
 Loop:
-        if (machineInterface is not null)
+        if (handle is not null)
         {
-            machineInterface.TerminateMachine();
+            handle.Terminate();
         }
 
         using (this.items.LockObject.EnterScope())
         {
             if (this.items.IdentifierChain.TryGetValue(identifier, out var item))
             {
-                machineInterface = (TInterface)item.Machine.InterfaceInstance;
+                handle = (THandle)item.Machine.HandleInstance;
                 goto Loop;
             }
 
             var machine = MachineRegistry.CreateMachine<TMachine>(this.MachineInformation);
             machine.Identifier = identifier;
-            machine.PrepareCreateStart(this, createParam);
+            machine.PrepareCreateStart(this, createParameter);
             item = new(identifier, machine);
             item.Goshujin = this.items;
             item.RestoreStructure();
-            return (TInterface)item.Machine.InterfaceInstance;
+            return (THandle)item.Machine.HandleInstance;
         }
     }
 
@@ -313,15 +313,15 @@ Loop:
     /// Creates a new machine with the specified identifier, terminating any existing machine with the same identifier first.
     /// </summary>
     /// <param name="identifier">The identifier of the machine.</param>
-    /// <returns>The machine interface for the newly created machine.</returns>
-    public TInterface CreateAlways(TIdentifier identifier)
-        => this.CreateAlways(identifier, null);
+    /// <returns>The machine handle for the newly created machine.</returns>
+    public THandle CreateOrReplace(TIdentifier identifier)
+        => this.CreateOrReplace(identifier, null);
 
     #endregion
 
     #region Tinyhand
 
-    static void ITinyhandSerializable<UnorderedMachineControl<TIdentifier, TMachine, TInterface>>.Serialize(ref TinyhandWriter writer, scoped ref UnorderedMachineControl<TIdentifier, TMachine, TInterface>? value, TinyhandSerializerOptions options)
+    static void ITinyhandSerializable<UnorderedMachineControl<TIdentifier, TMachine, THandle>>.Serialize(ref TinyhandWriter writer, scoped ref UnorderedMachineControl<TIdentifier, TMachine, THandle>? value, TinyhandSerializerOptions options)
     {
         if (value is null)
         {
@@ -332,7 +332,7 @@ Loop:
         TinyhandSerializer.SerializeObject(ref writer, value.items, options);
     }
 
-    static void ITinyhandSerializable<UnorderedMachineControl<TIdentifier, TMachine, TInterface>>.Deserialize(ref TinyhandReader reader, scoped ref UnorderedMachineControl<TIdentifier, TMachine, TInterface>? value, TinyhandSerializerOptions options)
+    static void ITinyhandSerializable<UnorderedMachineControl<TIdentifier, TMachine, THandle>>.Deserialize(ref TinyhandReader reader, scoped ref UnorderedMachineControl<TIdentifier, TMachine, THandle>? value, TinyhandSerializerOptions options)
     {
         if (reader.TryReadNil())
         {
@@ -369,7 +369,7 @@ Loop:
         using (this.items.LockObject.EnterScope())
         {
             var fork = reader.Fork();
-            if (fork.TryReadJournalRecord(out var record) && record == JournalRecord.Locator)
+            if (fork.TryReadJournalRecord(out var record) && record == JournalRecordType.Locator)
             {
                 var identifier = TinyhandSerializer.Deserialize<TIdentifier>(ref fork);
                 if (identifier is null || !this.items.IdentifierChain.TryGetValue(identifier, out var item) ||

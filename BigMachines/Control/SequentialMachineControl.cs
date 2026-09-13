@@ -26,7 +26,7 @@ public interface ISequentialMachineControl
     /// Gets the first queued machine, including a paused or running machine.
     /// </summary>
     /// <returns>The first handle, or <see langword="null"/> when empty.</returns>
-    Machine.ManMachineInterface? GetFirst();
+    Machine.MachineHandle? PeekFirst();
 }
 
 /// <summary>
@@ -34,26 +34,26 @@ public interface ISequentialMachineControl
 /// </summary>
 /// <typeparam name="TIdentifier">The machine identifier type.</typeparam>
 /// <typeparam name="TMachine">The machine type.</typeparam>
-/// <typeparam name="TInterface">The generated machine interface type.</typeparam>
+/// <typeparam name="THandle">The generated machine handle type.</typeparam>
 [TinyhandObject]
-public sealed partial class SequentialMachineControl<TIdentifier, TMachine, TInterface> : MultiMachineControl<TIdentifier, TInterface>, ISequentialMachineControl, ITinyhandSerializable<SequentialMachineControl<TIdentifier, TMachine, TInterface>>, ITinyhandCustomJournal, ITinyhandSingleLayoutSerializable
+public sealed partial class SequentialMachineControl<TIdentifier, TMachine, THandle> : MultiMachineControl<TIdentifier, THandle>, ISequentialMachineControl, ITinyhandSerializable<SequentialMachineControl<TIdentifier, TMachine, THandle>>, ITinyhandCustomJournal, ITinyhandSingleLayoutSerializable
     where TIdentifier : notnull
     where TMachine : Machine<TIdentifier>
-    where TInterface : Machine.ManMachineInterface
+    where THandle : Machine.MachineHandle
 {
     public SequentialMachineControl()
         : base()
     {
-        this.MachineInformation = MachineRegistry.Get<TMachine>();
+        this.MachineInformation = MachineRegistry.GetInformation<TMachine>();
         this.cores = [];
         this.items = new();
     }
 
-    public void Prepare(BigMachineBase bigMachine)
+    public void Attach(BigMachineBase bigMachine)
     {
         this.BigMachine = bigMachine;
-        this.cores = new SequentialCore[this.MachineInformation.NumberOfTasks];
-        for (var i = 0; i < this.MachineInformation.NumberOfTasks; i++)
+        this.cores = new SequentialCore[this.MachineInformation.WorkerCount];
+        for (var i = 0; i < this.MachineInformation.WorkerCount; i++)
         {
             this.cores[i] = new(this.BigMachine.ExecutionGroup, this);
         }
@@ -106,7 +106,7 @@ public sealed partial class SequentialMachineControl<TIdentifier, TMachine, TInt
         public bool ReadMachineRecord(ref TinyhandReader reader)
         {
             return reader.TryReadJournalRecord(out var record) &&
-                record == JournalRecord.Key &&
+                record == JournalRecordType.Key &&
                 reader.ReadInt32() == 1 &&
                 this.Machine is IStructuralObject child &&
                 child.ProcessJournalRecord(ref reader);
@@ -155,13 +155,13 @@ public sealed partial class SequentialMachineControl<TIdentifier, TMachine, TInt
     }
 
     /// <inheritdoc/>
-    public Machine.ManMachineInterface? GetFirst()
+    public Machine.MachineHandle? PeekFirst()
     {
         using (this.items.LockObject.EnterScope())
         {
             if (this.items.SequentialChain.TryPeek(out var item))
             {
-                return item.Machine.InterfaceInstance;
+                return item.Machine.HandleInstance;
             }
 
             return default;
@@ -199,15 +199,15 @@ public sealed partial class SequentialMachineControl<TIdentifier, TMachine, TInt
         }
     }
 
-    public override TInterface[] GetArray()
+    public override THandle[] GetHandles()
     {
         using (this.items.LockObject.EnterScope())
         {
-            var result = this.items.Count == 0 ? Array.Empty<TInterface>() : new TInterface[this.items.Count];
+            var result = this.items.Count == 0 ? Array.Empty<THandle>() : new THandle[this.items.Count];
             var index = 0;
             foreach (var item in this.items)
             {
-                result[index++] = (TInterface)item.Machine.InterfaceInstance;
+                result[index++] = (THandle)item.Machine.HandleInstance;
             }
 
             return result;
@@ -245,7 +245,7 @@ public sealed partial class SequentialMachineControl<TIdentifier, TMachine, TInt
                 result = true;
             }
 
-            /*if (this.MachineInformation.NumberOfTasks <= 0)
+            /*if (this.MachineInformation.WorkerCount <= 0)
             {// No dedicated tasks
                 if (this.items.SequentialChain.TryPeek(out var first))
                 {
@@ -267,7 +267,7 @@ public sealed partial class SequentialMachineControl<TIdentifier, TMachine, TInt
     {
         using (this.items.LockObject.EnterScope())
         {
-            if (this.MachineInformation.NumberOfTasks > 0)
+            if (this.MachineInformation.WorkerCount > 0)
             {// Have dedicated tasks
                 foreach (var x in this.items)
                 {
@@ -305,13 +305,13 @@ public sealed partial class SequentialMachineControl<TIdentifier, TMachine, TInt
     /// </summary>
     /// <param name="identifier">The machine identifier.</param>
     /// <returns>The handle, or <see langword="null"/> when absent.</returns>
-    public TInterface? TryGet(TIdentifier identifier)
+    public THandle? Find(TIdentifier identifier)
     {
         using (this.items.LockObject.EnterScope())
         {
             if (this.items.IdentifierChain.TryGetValue(identifier, out var item))
             {
-                return (TInterface)item.Machine.InterfaceInstance;
+                return (THandle)item.Machine.HandleInstance;
             }
             else
             {
@@ -324,9 +324,9 @@ public sealed partial class SequentialMachineControl<TIdentifier, TMachine, TInt
     /// Creates and queues a machine if the identifier is unused.
     /// </summary>
     /// <param name="identifier">The machine identifier.</param>
-    /// <param name="createParam">The value passed to the creation callback.</param>
+    /// <param name="createParameter">The value passed to the creation callback.</param>
     /// <returns>The new handle, or <see langword="null"/> if the identifier exists.</returns>
-    public TInterface? TryCreate(TIdentifier identifier, object? createParam = null)
+    public THandle? TryCreate(TIdentifier identifier, object? createParameter = null)
     {
         using (this.items.LockObject.EnterScope())
         {
@@ -338,14 +338,14 @@ public sealed partial class SequentialMachineControl<TIdentifier, TMachine, TInt
             {
                 var machine = MachineRegistry.CreateMachine<TMachine>(this.MachineInformation);
                 machine.Identifier = identifier;
-                machine.PrepareCreateStart(this, createParam);
+                machine.PrepareCreateStart(this, createParameter);
                 item = new(identifier, machine);
                 item.Goshujin = this.items;
                 item.RestoreStructure();
                 this.PulseCore();
             }
 
-            return (TInterface)item.Machine.InterfaceInstance;
+            return (THandle)item.Machine.HandleInstance;
         }
     }
 
@@ -353,9 +353,9 @@ public sealed partial class SequentialMachineControl<TIdentifier, TMachine, TInt
     /// Gets the existing handle or creates and queues a machine atomically.
     /// </summary>
     /// <param name="identifier">The machine identifier.</param>
-    /// <param name="createParam">The value passed to the creation callback when creating a machine.</param>
+    /// <param name="createParameter">The value passed to the creation callback when creating a machine.</param>
     /// <returns>The existing or new handle.</returns>
-    public TInterface GetOrCreate(TIdentifier identifier, object? createParam = null)
+    public THandle GetOrCreate(TIdentifier identifier, object? createParameter = null)
     {
         using (this.items.LockObject.EnterScope())
         {
@@ -363,20 +363,20 @@ public sealed partial class SequentialMachineControl<TIdentifier, TMachine, TInt
             {
                 var machine = MachineRegistry.CreateMachine<TMachine>(this.MachineInformation);
                 machine.Identifier = identifier;
-                machine.PrepareCreateStart(this, createParam);
+                machine.PrepareCreateStart(this, createParameter);
                 item = new(identifier, machine);
                 item.Goshujin = this.items;
                 item.RestoreStructure();
                 this.PulseCore();
             }
 
-            return (TInterface)item.Machine.InterfaceInstance;
+            return (THandle)item.Machine.HandleInstance;
         }
     }
 
     #endregion
 
-    internal override void OnMachineUnpaused()
+    internal override void OnMachineResumed()
         => this.PulseCore();
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -412,7 +412,7 @@ public sealed partial class SequentialMachineControl<TIdentifier, TMachine, TInt
 
     #region Tinyhand
 
-    static void ITinyhandSerializable<SequentialMachineControl<TIdentifier, TMachine, TInterface>>.Serialize(ref TinyhandWriter writer, scoped ref SequentialMachineControl<TIdentifier, TMachine, TInterface>? value, TinyhandSerializerOptions options)
+    static void ITinyhandSerializable<SequentialMachineControl<TIdentifier, TMachine, THandle>>.Serialize(ref TinyhandWriter writer, scoped ref SequentialMachineControl<TIdentifier, TMachine, THandle>? value, TinyhandSerializerOptions options)
     {
         if (value is null)
         {
@@ -423,7 +423,7 @@ public sealed partial class SequentialMachineControl<TIdentifier, TMachine, TInt
         TinyhandSerializer.SerializeObject(ref writer, value.items, options);
     }
 
-    static void ITinyhandSerializable<SequentialMachineControl<TIdentifier, TMachine, TInterface>>.Deserialize(ref TinyhandReader reader, scoped ref SequentialMachineControl<TIdentifier, TMachine, TInterface>? value, TinyhandSerializerOptions options)
+    static void ITinyhandSerializable<SequentialMachineControl<TIdentifier, TMachine, THandle>>.Deserialize(ref TinyhandReader reader, scoped ref SequentialMachineControl<TIdentifier, TMachine, THandle>? value, TinyhandSerializerOptions options)
     {
         if (reader.TryReadNil())
         {
@@ -460,7 +460,7 @@ public sealed partial class SequentialMachineControl<TIdentifier, TMachine, TInt
         using (this.items.LockObject.EnterScope())
         {
             var fork = reader.Fork();
-            if (fork.TryReadJournalRecord(out var record) && record == JournalRecord.Locator)
+            if (fork.TryReadJournalRecord(out var record) && record == JournalRecordType.Locator)
             {
                 var identifier = TinyhandSerializer.Deserialize<TIdentifier>(ref fork);
                 if (identifier is null || !this.items.IdentifierChain.TryGetValue(identifier, out var item) ||

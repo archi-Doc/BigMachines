@@ -26,10 +26,10 @@ public partial class AotSingleMachine : Machine
         => StateResult.Continue;
 
     [CommandMethod]
-    protected CommandResult SetValue(int value)
+    protected CommandStatus SetValue(int value)
     {
         this.Value = value;
-        return CommandResult.Success;
+        return CommandStatus.Success;
     }
 
     [CommandMethod]
@@ -49,10 +49,10 @@ public partial class AotUnorderedMachine : Machine<int>
         => StateResult.Continue;
 
     [CommandMethod]
-    protected CommandResult SetValue(int value)
+    protected CommandStatus SetValue(int value)
     {
         this.Value = value;
-        return CommandResult.Success;
+        return CommandStatus.Success;
     }
 
     [CommandMethod]
@@ -72,10 +72,10 @@ public partial class AotSequentialMachine : Machine<int>
         => StateResult.Continue;
 
     [CommandMethod]
-    protected CommandResult SetValue(int value)
+    protected CommandStatus SetValue(int value)
     {
         this.Value = value;
-        return CommandResult.Success;
+        return CommandStatus.Success;
     }
 
     [CommandMethod]
@@ -93,14 +93,14 @@ public static class Program
         {
             var source = new AotBigMachine(sourceRoot);
             var single = source.AotSingleMachine.GetOrCreate();
-            Ensure(await single.Command.SetValue(11) == CommandResult.Success, "Single-machine command failed.");
+            Ensure(await single.Command.SetValue(11) == CommandStatus.Success, "Single-machine command failed.");
 
             var unordered = source.AotUnorderedMachine.GetOrCreate(2);
-            Ensure(await unordered.Command.SetValue(22) == CommandResult.Success, "Unordered-machine command failed.");
+            Ensure(await unordered.Command.SetValue(22) == CommandStatus.Success, "Unordered-machine command failed.");
 
             var sequential = source.AotSequentialMachine.TryCreate(3)
                 ?? throw new InvalidOperationException("Sequential machine was not created.");
-            Ensure(await sequential.Command.SetValue(33) == CommandResult.Success, "Sequential-machine command failed.");
+            Ensure(await sequential.Command.SetValue(33) == CommandStatus.Success, "Sequential-machine command failed.");
 
             var data = TinyhandSerializer.Serialize(source);
             TinyhandSerializer.ServiceProvider = new RootServiceProvider(destinationRoot);
@@ -121,7 +121,7 @@ public static class Program
 
             Ensure((await restoredUnordered.Command.GetValue()).Response == 22, "Unordered-machine state did not round-trip.");
 
-            var restoredSequential = restored.AotSequentialMachine.TryGet(3)
+            var restoredSequential = restored.AotSequentialMachine.Find(3)
                 ?? throw new InvalidOperationException("Sequential machine was not restored.");
             Ensure((await restoredSequential.Command.GetValue()).Response == 33, "Sequential-machine state did not round-trip.");
 

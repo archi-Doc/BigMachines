@@ -9,11 +9,11 @@ public partial class Machine
     /// </summary>
     /// <typeparam name="TIdentifier">The machine identifier type.</typeparam>
     /// <typeparam name="TState">The machine state type.</typeparam>
-    public abstract class ManMachineInterface<TIdentifier, TState> : ManMachineInterface<TState>
+    public abstract class MachineHandle<TIdentifier, TState> : MachineHandle<TState>
         where TIdentifier : notnull
         where TState : struct
     {
-        public ManMachineInterface(Machine<TIdentifier> machine)
+        public MachineHandle(Machine<TIdentifier> machine)
             : base(machine)
         {
         }

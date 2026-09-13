@@ -4,12 +4,12 @@
 
 namespace Advanced;
 
-[MachineObject(Private = true)]
+[MachineObject(ExcludeFromIncludeAllMachines = true)]
 internal partial class ChildMachine : Machine
 {// A machine without an identifier is derived from the Machine class.
     public ChildMachine()
     {
-        this.DefaultTimeout = TimeSpan.FromSeconds(1);
+        this.DefaultInterval = TimeSpan.FromSeconds(1);
     }
 
     public int Count { get; set; }
@@ -31,12 +31,12 @@ internal partial class ChildMachine : Machine
 [MachineObject]
 public partial class ParentMachine : Machine
 {// A machine without an identifier is derived from the Machine class.
-    [MachineObject(Private = true)]
+    [MachineObject(ExcludeFromIncludeAllMachines = true)]
     public partial class NestedMachine : Machine
     {// A machine without an identifier is derived from the Machine class.
         public NestedMachine()
         {
-            this.DefaultTimeout = TimeSpan.FromSeconds(1);
+            this.DefaultInterval = TimeSpan.FromSeconds(1);
         }
 
         public int Count { get; set; }
@@ -62,14 +62,14 @@ public partial class ParentMachine : Machine
 
     public ParentMachine()
     {
-        this.DefaultTimeout = TimeSpan.FromSeconds(1);
+        this.DefaultInterval = TimeSpan.FromSeconds(1);
     }
 
     protected override void OnStart()
     {
         var machine = this.BigMachine.ManualControl.GetOrCreate<ChildMachine>();
         var machine2 = this.BigMachine.ManualControl.GetOrCreate<NestedMachine>();
-        machine2.TerminateMachine();
+        machine2.Terminate();
     }
 
     public int Count { get; set; }

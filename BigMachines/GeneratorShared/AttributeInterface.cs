@@ -12,12 +12,12 @@ namespace BigMachines;
 public enum MachineControlKind
 {
     /// <summary>
-    /// Selects <see cref="SingleMachineControl{TMachine, TInterface}"/> for <see cref="Machine"/> or <see cref="UnorderedMachineControl{TIdentifier, TMachine, TInterface}"/> for <see cref="Machine{TIdentifier}"/>.
+    /// Selects <see cref="SingleMachineControl{TMachine, THandle}"/> for <see cref="Machine"/> or <see cref="UnorderedMachineControl{TIdentifier, TMachine, THandle}"/> for <see cref="Machine{TIdentifier}"/>.
     /// </summary>
     Default,
 
     /// <summary>
-    /// Manages a single machine (<see cref="SingleMachineControl{TMachine, TInterface}"/>).
+    /// Manages a single machine (<see cref="SingleMachineControl{TMachine, THandle}"/>).
     /// </summary>
     Single,
 
@@ -43,15 +43,15 @@ public sealed class BigMachineObjectAttribute : Attribute
     }
 
     /// <summary>
-    /// Gets or sets a value indicating whether to include all non-private machines in the assembly.
+    /// Gets or sets a value indicating whether to include all machines in the assembly, except those marked with <see cref="MachineObjectAttribute.ExcludeFromIncludeAllMachines"/>.
     /// </summary>
-    public bool Inclusive { get; set; } = false;
+    public bool IncludeAllMachines { get; set; } = false;
 
     /// <summary>
     /// Gets or sets a value indicating whether to request recursive-call detection.
     /// </summary>
     /// <remarks>This option is currently reserved and does not enable generated checks.</remarks>
-    public bool RecursiveDetection { get; set; } = false;
+    public bool EnableRecursiveDetection { get; set; } = false;
 }
 
 /// <summary>
@@ -74,7 +74,7 @@ public sealed class AddMachineAttribute<TMachine> : Attribute
     /// <summary>
     /// Gets or sets a value indicating whether to exclude the machine control from persistence.
     /// </summary>
-    public bool Volatile { get; set; }
+    public bool NonPersistent { get; set; }
 }
 
 /// <summary>
@@ -103,17 +103,17 @@ public sealed class MachineObjectAttribute : Attribute
     /// <summary>
     /// Gets or sets a value indicating whether a single machine is created when its big-machine root starts.
     /// </summary>
-    public bool StartByDefault { get; set; } = false;
+    public bool CreateOnStart { get; set; } = false;
 
     /// <summary>
     /// Gets or sets the number of dedicated workers for a sequential control.
     /// </summary>
-    public int NumberOfTasks { get; set; } = 0;
+    public int WorkerCount { get; set; } = 0;
 
     /// <summary>
-    /// Gets or sets a value indicating whether the machine is excluded from automatic root registration.
+    /// Gets or sets a value indicating whether the machine is excluded from <see cref="BigMachineObjectAttribute.IncludeAllMachines"/> discovery.
     /// </summary>
-    public bool Private { get; set; } = false;
+    public bool ExcludeFromIncludeAllMachines { get; set; } = false;
 }
 
 #pragma warning disable SA1629
@@ -178,7 +178,7 @@ public sealed class CommandMethodAttribute : Attribute
     /// <summary>
     /// Gets or sets a value indicating whether to generate an extension that invokes the command on all matching machines.
     /// </summary>
-    public bool All { get; set; } = false;
+    public bool GenerateAllCommand { get; set; } = false;
 }
 
 /// <summary>
@@ -200,7 +200,7 @@ public enum StateResult
 /// <summary>
 /// Represents the result of a command method.
 /// </summary>
-public enum CommandResult
+public enum CommandStatus
 {
     /// <summary>
     /// The command was successfully executed.
@@ -224,25 +224,24 @@ public enum CommandResult
 /// <typeparam name="TResponse">The response type.</typeparam>
 public readonly struct CommandResult<TResponse>
 {
-    public CommandResult(CommandResult result, TResponse response)
+    public CommandResult(CommandStatus status, TResponse response)
     {
-        this.Result = result;
-        this.Resnpose = response;
+        this.Status = status;
+        this.Response = response;
     }
 
     public CommandResult(TResponse response)
     {
-        this.Result = CommandResult.Success;
-        this.Resnpose = response;
+        this.Status = CommandStatus.Success;
+        this.Response = response;
     }
 
-    public readonly CommandResult Result;
-    public readonly TResponse Resnpose;
+    public readonly CommandStatus Status;
 
     /// <summary>
     /// Gets the response returned by the command.
     /// </summary>
-    public TResponse Response => this.Resnpose;
+    public TResponse Response { get; }
 }
 
 /// <summary>
@@ -252,14 +251,14 @@ public readonly struct CommandResult<TResponse>
 public readonly struct IdentifierAndCommandResult<TIdentifier>
     where TIdentifier : notnull
 {
-    public IdentifierAndCommandResult(TIdentifier identifier, CommandResult result)
+    public IdentifierAndCommandResult(TIdentifier identifier, CommandStatus status)
     {
         this.Identifier = identifier;
-        this.Result = result;
+        this.Status = status;
     }
 
     public readonly TIdentifier Identifier;
-    public readonly CommandResult Result;
+    public readonly CommandStatus Status;
 }
 
 /// <summary>
@@ -290,7 +289,7 @@ public readonly struct IdentifierAndCommandResult<TIdentifier, TResponse>
 /// Represents the operational state of the machine.
 /// </summary>
 [Flags]
-public enum OperationalFlag
+public enum OperationalFlags
 {
     /// <summary>
     /// The machine is executing a state method.
@@ -319,7 +318,7 @@ public enum RunType
     NotRunning,
 
     /// <summary>
-    /// The machine was invoked by <see cref="Machine.ManMachineInterface.RunAsync"/>.
+    /// The machine was invoked by <see cref="Machine.MachineHandle.RunAsync"/>.
     /// </summary>
     Manual,
 

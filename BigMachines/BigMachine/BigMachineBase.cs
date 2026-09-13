@@ -15,7 +15,7 @@ namespace BigMachines;
 /// </summary>
 public abstract partial class BigMachineBase : IBigMachine
 {
-    public const string GroupName = "BigMachine";
+    public const string ExecutionGroupName = "BigMachine";
 
     #region FieldAndProperty
 
@@ -28,22 +28,22 @@ public abstract partial class BigMachineBase : IBigMachine
     /// </summary>
     public CancellationToken CancellationToken => this.core.CancellationToken;
 
-    DateTime IBigMachine.LastRun => this.lastRun;
+    DateTime IBigMachine.LastRunTime => this.lastRun;
 
     // RecursiveDetectionMode IBigMachine.RecursiveDetectionMode { get; set; }
 
     private readonly BigMachineCore core;
-    private readonly ConcurrentQueue<BigMachineException> exceptionQueue = new();
+    private readonly ConcurrentQueue<MachineExceptionInfo> exceptionQueue = new();
     private DateTime lastRun;
-    private ExceptionHandlerDelegate exceptionHandler = DefaultExceptionHandler;
+    private MachineExceptionHandler exceptionHandler = DefaultExceptionHandler;
 
     #endregion
 
     public BigMachineBase(ExecutionRoot root)
     {
-        this.ExecutionGroup = new(root, false, GroupName);
+        this.ExecutionGroup = new(root, false, ExecutionGroupName);
         this.core = new(this.ExecutionGroup, this);
-        this.ManualControl.Prepare(this);
+        this.ManualControl.Attach(this);
     }
 
     /// <summary>
@@ -55,21 +55,21 @@ public abstract partial class BigMachineBase : IBigMachine
     /// Returns a snapshot of this root's controls. The controls themselves remain shared.
     /// </summary>
     /// <returns>The current controls, including the manual control.</returns>
-    public abstract MachineControl[] GetArray();
+    public abstract MachineControl[] GetControls();
 
     public void Start()
     {
         this.core.SendSignal(ExecutionSignal.Start);
-        this.StartBigMachine();
+        this.OnStart();
     }
 
-    bool IBigMachine.CheckActiveMachine(Type? machineTypeToBeExcluded)
+    bool IBigMachine.HasPendingWork(Type? excludedMachineType)
     {
-        foreach (var x in this.GetArray())
+        foreach (var x in this.GetControls())
         {
             if (x.ContainsActiveMachine())
             {
-                if (x.MachineInformation.MachineType != machineTypeToBeExcluded)
+                if (x.MachineInformation.MachineType != excludedMachineType)
                 {
                     return true;
                 }
@@ -84,7 +84,7 @@ public abstract partial class BigMachineBase : IBigMachine
         return false;
     }
 
-    int IBigMachine.CheckRecursive(uint machineSerial, ulong id)
+    int IBigMachine.CheckCircularCommand(uint machineSerial, ulong commandId)
     {
         /*if (((IBigMachine)this).RecursiveDetectionMode == RecursiveDetectionMode.Disabled)
         {
@@ -92,10 +92,10 @@ public abstract partial class BigMachineBase : IBigMachine
         }*/
 
         var detection = RecursiveChecker.AsyncLocalInstance.Value;
-        var result = detection.TryAdd(machineSerial, id, out var newDetection); // -1: Id collision, 0: Machine collision, 1: No collision
+        var result = detection.TryAdd(machineSerial, commandId, out var newDetection); // -1: Id collision, 0: Machine collision, 1: No collision
         if (result < 0)
         {
-            // this.exceptionQueue.Enqueue(new BigMachineException(default!, new CircularCommandException($"Circular commands detected")));
+            // this.exceptionQueue.Enqueue(new MachineExceptionInfo(default!, new CircularCommandException($"Circular commands detected")));
             throw new CircularCommandException($"Circular commands detected");
         }
 
@@ -103,7 +103,7 @@ public abstract partial class BigMachineBase : IBigMachine
         return result;
     }
 
-    protected virtual void StartBigMachine()
+    protected virtual void OnStart()
     {
     }
 
@@ -120,20 +120,20 @@ public abstract partial class BigMachineBase : IBigMachine
     /// Add the exception to BigMachine's exception queue.
     /// </summary>
     /// <param name="exception">The exception to be queued.</param>
-    void IBigMachine.ReportException(BigMachineException exception)
+    void IBigMachine.ReportException(MachineExceptionInfo exception)
         => this.exceptionQueue.Enqueue(exception);
 
     /// <summary>
     /// Sets an exception handler.
     /// </summary>
     /// <param name="handler">The exception handler.</param>
-    void IBigMachine.SetExceptionHandler(ExceptionHandlerDelegate handler)
+    void IBigMachine.SetExceptionHandler(MachineExceptionHandler handler)
         => Volatile.Write(ref this.exceptionHandler, handler);
 
     /// <summary>
     /// Process queued exceptions using the exception handler.
     /// </summary>
-    void IBigMachine.ProcessException()
+    void IBigMachine.ProcessExceptions()
     {
         while (this.exceptionQueue.TryDequeue(out var exception))
         {
@@ -141,7 +141,7 @@ public abstract partial class BigMachineBase : IBigMachine
         }
     }
 
-    private static void DefaultExceptionHandler(BigMachineException exception)
+    private static void DefaultExceptionHandler(MachineExceptionInfo exception)
     {// throw exception.Exception;
         Console.WriteLine(exception.ToString());
     }

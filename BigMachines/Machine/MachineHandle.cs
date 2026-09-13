@@ -13,9 +13,9 @@ public partial class Machine
     /// <summary>
     /// Provides a user-facing handle for controlling a machine.
     /// </summary>
-    public abstract class ManMachineInterface
+    public abstract class MachineHandle
     {// MANMACHINE INTERFACE by Shirow.
-        public ManMachineInterface(Machine machine)
+        public MachineHandle(Machine machine)
         {
             this.Machine = machine;
         }
@@ -26,18 +26,18 @@ public partial class Machine
         /// Gets the operational state of the machine.
         /// </summary>
         /// <returns>The operational state of the machine.</returns>
-        public OperationalFlag GetOperationalState()
+        public OperationalFlags GetOperationalState()
             => this.Machine.__operationalState__;
 
         /// <summary>
         /// Terminates and removes this instance. Termination callbacks run once; failures are queued on the root.
         /// </summary>
         /// <returns>Whether this call removed the instance from its control.</returns>
-        public bool TerminateMachine()
+        public bool Terminate()
         {
             using (this.Machine.Semaphore.EnterScope())
             {
-                if (this.Machine.__operationalState__.HasFlag(OperationalFlag.Terminated))
+                if (this.Machine.__operationalState__.HasFlag(OperationalFlags.Terminated))
                 {
                     return false;
                 }
@@ -52,16 +52,16 @@ public partial class Machine
         /// Waits for the current operation and pauses state dispatch. Commands remain available.
         /// </summary>
         /// <returns>Whether the machine has not terminated.</returns>
-        public bool PauseMachine()
+        public bool Pause()
         {
             using (this.Machine.Semaphore.EnterScope())
             {
-                if (this.Machine.__operationalState__.HasFlag(OperationalFlag.Terminated))
+                if (this.Machine.__operationalState__.HasFlag(OperationalFlags.Terminated))
                 {
                     return false;
                 }
 
-                this.Machine.__operationalState__ |= OperationalFlag.Paused;
+                this.Machine.__operationalState__ |= OperationalFlags.Paused;
             }
 
             return true;
@@ -71,17 +71,17 @@ public partial class Machine
         /// Resumes state dispatch and wakes dedicated sequential workers.
         /// </summary>
         /// <returns>Whether the machine has not terminated.</returns>
-        public bool UnpauseMachine()
+        public bool Resume()
         {
             using (this.Machine.Semaphore.EnterScope())
             {
-                if (this.Machine.__operationalState__.HasFlag(OperationalFlag.Terminated))
+                if (this.Machine.__operationalState__.HasFlag(OperationalFlags.Terminated))
                 {
                     return false;
                 }
 
-                this.Machine.__operationalState__ &= ~OperationalFlag.Paused;
-                this.Machine.MachineControl?.OnMachineUnpaused();
+                this.Machine.__operationalState__ &= ~OperationalFlags.Paused;
+                this.Machine.MachineControl?.OnMachineResumed();
             }
 
             return true;
@@ -201,11 +201,11 @@ public partial class Machine
             => this.SetTerminationTime(DateTime.UtcNow + timeFromNow);
 
         /// <summary>
-        /// Gets the default timeout of the machine.
+        /// Gets the default interval between timer runs.
         /// </summary>
-        /// <returns>The default timeout of the machine.</returns>
-        public TimeSpan GetDefaultTimeout()
-            => this.Machine.DefaultTimeout;
+        /// <returns>The default interval between timer runs.</returns>
+        public TimeSpan GetDefaultInterval()
+            => this.Machine.DefaultInterval;
 
         /// <summary>
         /// Runs a state handler while holding the machine semaphore; paused or terminated machines are skipped.
@@ -214,7 +214,7 @@ public partial class Machine
         /// <remarks>Do not call this method from a handler that already holds the same machine semaphore.</remarks>
         public async Task RunAsync()
         {
-            if (CheckRecursive(1))
+            if (CheckCircularCommand(1))
             {// Recursive command
                 return;
             }
@@ -231,13 +231,13 @@ public partial class Machine
             {
                 this.Machine.Semaphore.Exit();
 
-                if (this.Machine.__operationalState__.HasFlag(OperationalFlag.Terminated))
+                if (this.Machine.__operationalState__.HasFlag(OperationalFlags.Terminated))
                 {
                     this.Machine.RemoveFromControl();
                 }
             }
 
-            bool CheckRecursive(ulong run)
+            bool CheckCircularCommand(ulong run)
             {
                 /*if (command.LoopChecker is { } checker)
                 {

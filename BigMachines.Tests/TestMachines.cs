@@ -82,10 +82,10 @@ public partial class TerminationMachine : Machine
         => StateResult.Continue;
 
     [CommandMethod]
-    protected CommandResult Ping()
+    protected CommandStatus Ping()
     {
         Interlocked.Increment(ref Commands);
-        return CommandResult.Success;
+        return CommandStatus.Success;
     }
 }
 
@@ -106,10 +106,10 @@ public partial class SerializableSingleMachine : Machine
         => StateResult.Continue;
 
     [CommandMethod]
-    protected CommandResult SetValue(int value)
+    protected CommandStatus SetValue(int value)
     {
         this.Value = value;
-        return CommandResult.Success;
+        return CommandStatus.Success;
     }
 
     [CommandMethod]
@@ -118,7 +118,7 @@ public partial class SerializableSingleMachine : Machine
 }
 
 [TinyhandObject]
-[MachineObject(Control = MachineControlKind.Sequential, NumberOfTasks = 1)]
+[MachineObject(Control = MachineControlKind.Sequential, WorkerCount = 1)]
 public partial class SequentialIdleMachine : Machine<int>
 {
     public static int Runs;
@@ -131,7 +131,7 @@ public partial class SequentialIdleMachine : Machine<int>
     }
 }
 
-[MachineObject(Control = MachineControlKind.Sequential, NumberOfTasks = 1)]
+[MachineObject(Control = MachineControlKind.Sequential, WorkerCount = 1)]
 public partial class SequentialCoordinatedMachine : Machine<int>
 {
     private static TaskCompletionSource firstEntered = NewCompletionSource();
@@ -140,7 +140,7 @@ public partial class SequentialCoordinatedMachine : Machine<int>
 
     public SequentialCoordinatedMachine()
     {
-        this.DefaultTimeout = TimeSpan.FromMilliseconds(1);
+        this.DefaultInterval = TimeSpan.FromMilliseconds(1);
     }
 
     public static int Starts;
@@ -214,13 +214,13 @@ public partial class UnorderedTestMachine : Machine<int>
         => new(this.Runs);
 }
 
-[MachineObject(Private = true)]
+[MachineObject(ExcludeFromIncludeAllMachines = true)]
 public partial class ManualTestMachine : Machine
 {
     public static object? CreateParameter;
 
-    protected override void OnCreate(object? createParam)
-        => CreateParameter = createParam;
+    protected override void OnCreate(object? createParameter)
+        => CreateParameter = createParameter;
 
     [StateMethod(0)]
     protected StateResult Initial(StateParameter parameter)
@@ -235,6 +235,6 @@ public partial class ThrowingMachine : Machine
         => StateResult.Continue;
 
     [CommandMethod]
-    protected CommandResult Throw()
+    protected CommandStatus Throw()
         => throw new InvalidOperationException("Expected test exception.");
 }

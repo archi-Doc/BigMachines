@@ -18,7 +18,7 @@ BigMachines is a source-generated state-machine library for .NET. It provides ty
 - [Serialization and persistence](#serialization-and-persistence)
 - [Dependency injection](#dependency-injection)
 - [Exceptions](#exceptions)
-- [Generic, external, and private machines](#generic-external-and-private-machines)
+- [Generic, external, and excluded machines](#generic-external-and-excluded-machines)
 - [Building and testing](#building-and-testing)
 
 ## Requirements
@@ -58,7 +58,7 @@ public partial class CounterMachine : Machine<int>
 {
     public CounterMachine()
     {
-        this.DefaultTimeout = TimeSpan.FromSeconds(1);
+        this.DefaultInterval = TimeSpan.FromSeconds(1);
         this.Lifespan = TimeSpan.FromSeconds(5);
     }
 
@@ -80,10 +80,10 @@ public partial class CounterMachine : Machine<int>
     }
 
     [CommandMethod]
-    protected CommandResult Print(string message)
+    protected CommandStatus Print(string message)
     {
         Console.WriteLine(message);
-        return CommandResult.Success;
+        return CommandStatus.Success;
     }
 
     protected override void OnTerminate()
@@ -104,18 +104,18 @@ public static class Program
         await counter.Command.Print("Hello from BigMachines");
         await counter.RunAsync();
 
-        await root.WaitForTermination();
+        await root.WaitForTerminationAsync();
     }
 }
 ```
 
-The generator adds the root constructor, typed controls, machine interface, state enum, and command proxy.
+The generator adds the root constructor, typed controls, machine handle, state enum, and command proxy.
 
 ## Core concepts
 
-- A **big-machine root** derives from `BigMachineBase` through generated code and owns the machine controls declared with `AddMachine<TMachine>` or discovered with `BigMachineObject(Inclusive = true)`.
+- A **big-machine root** derives from `BigMachineBase` through generated code and owns the machine controls declared with `AddMachine<TMachine>` or discovered with `BigMachineObject(IncludeAllMachines = true)`.
 - A **machine** derives from `Machine` or `Machine<TIdentifier>` and contains state and command methods.
-- A generated **machine interface** is the public handle used to inspect, run, pause, unpause, or terminate a machine.
+- A generated **machine handle** (`<MachineName>.Handle`, derived from `Machine.MachineHandle`) is the public object used to inspect, run, pause, resume, or terminate a machine.
 - A **machine control** creates, finds, enumerates, and schedules machine instances.
 - An `ExecutionRoot` owns the execution lifetime. Construct the generated root with it, call `Start()`, and request termination through the root or the generated root's `ExecutionGroup`.
 
@@ -128,7 +128,7 @@ The generator adds the root constructor, typed controls, machine interface, stat
 | `Default` | Uses `Single` for `Machine` and `Unordered` for `Machine<TIdentifier>`. |
 | `Single` | Manages at most one instance of a machine type. |
 | `Unordered` | Manages multiple identified machines without ordering guarantees. |
-| `Sequential` | Queues identified machines in creation order. `NumberOfTasks` sets the number of dedicated workers. |
+| `Sequential` | Queues identified machines in creation order. `WorkerCount` sets the number of dedicated workers. |
 
 Common control operations include:
 
@@ -146,19 +146,19 @@ foreach (var identifier in machines.CounterMachine.GetIdentifiers())
 }
 ```
 
-`CreateAlways` terminates an existing matching instance before creating its replacement. `TryCreate` is available on sequential and manual controls when creation must fail instead of returning an existing machine.
+`CreateOrReplace` terminates an existing matching instance before creating its replacement. `TryCreate` is available on sequential and manual controls when creation must fail instead of returning an existing machine. On those controls, `Find` returns the existing handle or `null`.
 
-`GetArray()` and `GetIdentifiers()` return snapshots. Editing the returned array does not change the control; its machine handles still refer to live instances. The root's `GetArray()` likewise returns a separate array of shared controls.
+`GetHandles()` and `GetIdentifiers()` return snapshots. Editing the returned array does not change the control; its machine handles still refer to live instances. The root's `GetControls()` likewise returns a separate array of shared controls.
 
-Dedicated sequential workers reserve different eligible machines before dispatch. With `NumberOfTasks = 1`, only one worker dispatch runs at a time; with more workers, completion order is not guaranteed. Dedicated workers process available machines immediately, independently of their timer delay. Manual `RunAsync()` calls are outside this worker limit. Restored queues start processing when the root starts.
+Dedicated sequential workers reserve different eligible machines before dispatch. With `WorkerCount = 1`, only one worker dispatch runs at a time; with more workers, completion order is not guaranteed. Dedicated workers process available machines immediately, independently of their timer delay. Manual `RunAsync()` calls are outside this worker limit. Restored queues start processing when the root starts.
 
-Machines marked with `MachineObject(Private = true)` are not added to a root automatically. They can be managed through `ManualControl` or added explicitly when appropriate.
+Machines marked with `MachineObject(ExcludeFromIncludeAllMachines = true)` are not added by `BigMachineObject(IncludeAllMachines = true)`. They can be managed through `ManualControl` or added explicitly when appropriate.
 
 ## Execution and lifecycle
 
 A machine can run manually, on a timer, or through a sequential control.
 
-- `DefaultTimeout` sets the periodic interval. `TimeSpan.Zero` disables interval execution.
+- `DefaultInterval` sets the periodic interval. `TimeSpan.Zero` disables interval execution.
 - `SetTimeUntilRun` changes the remaining delay.
 - `SetNextRunTime` schedules an absolute UTC execution time.
 - `Lifespan` terminates a machine after the remaining duration reaches zero.
@@ -166,20 +166,20 @@ A machine can run manually, on a timer, or through a sequential control.
 
 `TimeSpan.MaxValue` disables the relative timer or lifespan. A non-positive delay runs on the next timer pass; a non-positive lifespan terminates on the next pass. A one-shot timer with no periodic interval becomes disabled after firing. Pausing stops state dispatch, but commands and lifespan expiration remain enabled.
 
-Use the generated interface for runtime control:
+Use the generated handle for runtime control:
 
 ```csharp
 await machine.RunAsync();
-machine.PauseMachine();
-machine.UnpauseMachine();
+machine.Pause();
+machine.Resume();
 machine.SetNextRunTimeFromNow(TimeSpan.FromMinutes(1));
-machine.TerminateMachine();
+machine.Terminate();
 ```
 
 The lifecycle callbacks are invoked in this order for a newly created machine:
 
 ```text
-OnCreate(createParam) -> OnStart() -> OnTerminate()
+OnCreate(createParameter) -> OnStart() -> OnTerminate()
 ```
 
 `OnCreate` is not called after deserialization. `OnStart` is called after both creation and deserialization. `OnTerminate` runs while the machine semaphore is held.
@@ -201,7 +201,7 @@ protected StateResult Initial(StateParameter parameter)
 
 A method named `<StateName>CanExit` can reject leaving a state, and `<StateName>CanEnter` can reject entering one. Both methods return `bool`.
 
-Mark command handlers with `CommandMethodAttribute`. The generator exposes them as asynchronous methods on `machine.Command` and converts thrown exceptions into `CommandResult.Failure`.
+Mark command handlers with `CommandMethodAttribute`. The generator exposes them as asynchronous methods on `machine.Command` and converts thrown exceptions into `CommandStatus.Failure`.
 
 ```csharp
 [CommandMethod]
@@ -209,22 +209,22 @@ protected CommandResult<string> Echo(string value)
     => new(value);
 
 var result = await machine.Command.Echo("message");
-if (result.Result == CommandResult.Success)
+if (result.Status == CommandStatus.Success)
 {
     Console.WriteLine(result.Response);
 }
 ```
 
-Commands acquire the machine semaphore by default. Set `CommandMethod(WithLock = false)` only when the handler is safe to run concurrently. `All = true` generates an extension that sends the command to every instance managed by the root.
+Commands acquire the machine semaphore by default. Set `CommandMethod(WithLock = false)` only when the handler is safe to run concurrently. `GenerateAllCommand = true` generates an `All<CommandName>` extension that sends the command to every instance managed by the root.
 
 ## Concurrency and snapshots
 
-Control creation, lookup, removal, and enumeration synchronize access to membership. State handlers and commands with the default `WithLock = true` share each machine's semaphore. Public scheduling setters also acquire that semaphore. Within a handler, use the protected machine properties directly; calling a locking interface method on the same machine can deadlock. Avoid cyclic calls between machines holding their semaphores.
+Control creation, lookup, removal, and enumeration synchronize access to membership. State handlers and commands with the default `WithLock = true` share each machine's semaphore. Public scheduling setters also acquire that semaphore. Within a handler, use the protected machine properties directly; calling a locking handle method on the same machine can deadlock. Avoid cyclic calls between machines holding their semaphores.
 
 A root snapshot is not a transaction across machines. Collection locks protect membership, but do not automatically protect arbitrary fields modified by a handler. For per-machine consistency, opt in to Tinyhand's serialization lock:
 
 ```csharp
-[TinyhandObject(LockObject = nameof(Semaphore))]
+[TinyhandObject(LockMemberName = nameof(Semaphore))]
 [MachineObject]
 public partial class PersistentMachine : Machine<int>
 {
@@ -276,9 +276,9 @@ var restored = TinyhandSerializer.Deserialize<PersistentMachines>(data)!;
 restored.Start();
 ```
 
-The base machine uses reserved Tinyhand keys for runtime state. Use key `10` or greater for machine data, as shown in the repository examples. A machine without `TinyhandObjectAttribute` remains runtime-only. `AddMachine(Volatile = true)` excludes that control from root persistence.
+The base machine uses reserved Tinyhand keys for runtime state. Use key `10` or greater for machine data, as shown in the repository examples. A machine without `TinyhandObjectAttribute` remains runtime-only. `AddMachine(NonPersistent = true)` excludes that control from root persistence.
 
-`ManualControl` is runtime-only. Volatile controls are excluded from root snapshots and journal routing, including when loading older snapshots that contain their keys. Deserialization preserves control objects, replaces the contents of present entries, and leaves omitted entries unchanged. A `nil` control entry clears its contents. Invalid machine identifiers are rejected before replacing the affected collection; loading a whole root is not transactional if a later entry fails.
+`ManualControl` is runtime-only. Non-persistent controls are excluded from root snapshots and journal routing, including when loading older snapshots that contain their keys. Deserialization preserves control objects, replaces the contents of present entries, and leaves omitted entries unchanged. A `nil` control entry clears its contents. Invalid machine identifiers are rejected before replacing the affected collection; loading a whole root is not transactional if a later entry fails.
 
 For incremental journals, use `TinyhandObject(Structural = true)` on each persistent machine and attach the generated root to a Tinyhand structural root (normally through CrystalData). BigMachines reconnects controls and machines after loading, and records collection additions, removals, and runtime-property changes. Ordinary assignments to user data require Tinyhand's journal-aware setters or explicit journaling; `[Key]` alone only includes a field in snapshots. Replay restores data, not an in-flight handler or an external side effect.
 
@@ -313,7 +313,7 @@ var builder = new CrystalUnit.Builder()
         {
             FileConfiguration = new LocalFileConfiguration("Data/AppMachines.tinyhand"),
             SaveFormat = SaveFormat.Utf8,
-            NumberOfFileHistories = 3,
+            NumberOfHistoryFiles = 3,
         });
     });
 ```
@@ -349,11 +349,11 @@ public partial class ServiceMachine : Machine<int>
 }
 ```
 
-Pass per-instance data through `GetOrCreate(identifier, createParam)` and receive it in `OnCreate`. Constructor dependencies and creation parameters serve different purposes.
+Pass per-instance data through `GetOrCreate(identifier, createParameter)` and receive it in `OnCreate`. Constructor dependencies and creation parameters serve different purposes.
 
 ## Exceptions
 
-Exceptions thrown by generated state or command dispatch are wrapped in `BigMachineException` and queued on the root. The default handler writes them to the console. Install a custom handler through `IBigMachine` when the application needs logging or another policy:
+Exceptions thrown by generated state or command dispatch are wrapped in `MachineExceptionInfo` and queued on the root. The default handler writes them to the console. Install a custom handler through `IBigMachine` when the application needs logging or another policy:
 
 ```csharp
 ((IBigMachine)machines).SetExceptionHandler(exception =>
@@ -362,9 +362,9 @@ Exceptions thrown by generated state or command dispatch are wrapped in `BigMach
 });
 ```
 
-Command callers receive `CommandResult.Failure` when a command handler throws. A command sent to a terminated machine returns `CommandResult.Terminated`.
+Command callers receive `CommandStatus.Failure` when a command handler throws. A command sent to a terminated machine returns `CommandStatus.Terminated`.
 
-## Generic, external, and private machines
+## Generic, external, and excluded machines
 
 Constructed generic machines and machines from referenced assemblies can be added explicitly:
 
@@ -375,7 +375,7 @@ Constructed generic machines and machines from referenced assemblies can be adde
 public partial class AppMachines;
 ```
 
-`BigMachineObject(Inclusive = true)` includes eligible non-private machines discovered in the current assembly. Explicit `AddMachine<TMachine>` declarations remain the clearest choice for constructed generic and external types.
+`BigMachineObject(IncludeAllMachines = true)` includes machines discovered in the current assembly, except those marked with `MachineObject(ExcludeFromIncludeAllMachines = true)`. Explicit `AddMachine<TMachine>` declarations remain the clearest choice for constructed generic and external types.
 
 ## Building and testing
 
@@ -388,4 +388,4 @@ dotnet test --solution BigMachines.slnx --configuration Release --coverage --cov
 dotnet publish NativeAotTest/NativeAotTest.csproj --configuration Release --runtime win-x64
 ```
 
-Run the published NativeAOT executable to verify serialization and registration at runtime. CI performs the corresponding `linux-x64` publish and execution. Regression tests cover snapshot and journal restoration, volatile controls, lifecycle cleanup, scheduling boundaries, concurrent creation, dedicated-worker limits, and generated helper name collisions.
+Run the published NativeAOT executable to verify serialization and registration at runtime. CI performs the corresponding `linux-x64` publish and execution. Regression tests cover snapshot and journal restoration, non-persistent controls, lifecycle cleanup, scheduling boundaries, concurrent creation, dedicated-worker limits, and generated helper name collisions.

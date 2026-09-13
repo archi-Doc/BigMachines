@@ -33,7 +33,7 @@ public enum BigMachinesObjectFlag
     TinyhandObject = 1 << 5,
 
     CanCreateInstance = 1 << 12, // Can create an instance
-    HasRegisterBM = 1 << 13, // RegisterBM() declared
+    HasRegisterMachine = 1 << 13, // RegisterMachine() declared
     StructuralEnabled = 1 << 14, // Tinyhand structural
 }
 
@@ -404,7 +404,7 @@ public class BigMachinesObject : VisceralObjectBase<BigMachinesObject>
         /*if (this.ContainingObject is not null &&
             this.ObjectAttribute is not null)
         {
-            this.ObjectAttribute.Private = true;
+            this.ObjectAttribute.ExcludeFromIncludeAllMachines = true;
         }*/
 
         /*var id = this.ObjectAttribute!.MachineId;
@@ -437,14 +437,14 @@ public class BigMachinesObject : VisceralObjectBase<BigMachinesObject>
         }
 
         this.CheckKeyword(BigMachinesBody.StateIdentifier, this.Location);
-        this.CheckKeyword(BigMachinesBody.InterfaceIdentifier, this.Location);
-        this.CheckKeyword(BigMachinesBody.CreateInterfaceIdentifier, this.Location);
+        this.CheckKeyword(BigMachinesBody.HandleIdentifier, this.Location);
+        this.CheckKeyword(BigMachinesBody.CreateHandleIdentifier, this.Location);
         this.CheckKeyword(BigMachinesBody.InternalRunIdentifier, this.Location);
         this.CheckKeyword(BigMachinesBody.ChangeState, this.Location);
         this.CheckKeyword(BigMachinesBody.GetCurrentState, this.Location);
         this.CheckKeyword(BigMachinesBody.InternalChangeState, this.Location);
         this.CheckKeyword(BigMachinesBody.InternalCommand, this.Location);
-        this.CheckKeyword(BigMachinesBody.RegisterBM, this.Location);
+        this.CheckKeyword(BigMachinesBody.RegisterMachine, this.Location);
         // this.CheckKeyword(BigMachinesBody.IntInitState, this.Location);
         this.CheckKeyword(BigMachinesBody.CommandIdentifier, this.Location);
 
@@ -479,7 +479,7 @@ public class BigMachinesObject : VisceralObjectBase<BigMachinesObject>
                 if (commandMethod != null)
                 {// Add
                     this.CommandMethodList.Add(commandMethod);
-                    if (commandMethod.All &&
+                    if (commandMethod.GenerateAllCommand &&
                         (this.ObjectAttribute.Control == MachineControlKind.Unordered ||
                         this.ObjectAttribute.Control == MachineControlKind.Sequential))
                     {
@@ -608,7 +608,7 @@ ModuleInitializerClass_Added:
                 {
                     foreach (var x in list3)
                     {
-                        ssb.AppendLine($"{x.FullName}.RegisterBM({x.ObjectAttribute!.MachineId});");
+                        ssb.AppendLine($"{x.FullName}.RegisterMachine({x.ObjectAttribute!.MachineId});");
                     }
                 }
             }
@@ -616,10 +616,10 @@ ModuleInitializerClass_Added:
 
         if (parent != null)
         {
-            parent.ObjectFlag |= BigMachinesObjectFlag.HasRegisterBM;
+            parent.ObjectFlag |= BigMachinesObjectFlag.HasRegisterMachine;
         }
 
-        using (var m = ssb.ScopeBrace("internal static void RegisterBM()"))
+        using (var m = ssb.ScopeBrace("internal static void RegisterMachine()"))
         {
             foreach (var x in list2)
             {
@@ -630,14 +630,14 @@ ModuleInitializerClass_Added:
 
                 if (x.Generics_Kind != VisceralGenericsKind.OpenGeneric)
                 {// Register fixed types.
-                    // ssb.AppendLine($"{x.FullName}.RegisterBM();"); // {x.ObjectAttribute.MachineId}
-                    x.Generate_RegisterBM(ssb, info, false);
+                    // ssb.AppendLine($"{x.FullName}.RegisterMachine();"); // {x.ObjectAttribute.MachineId}
+                    x.Generate_RegisterMachine(ssb, info, false);
                 }
             }
 
-            foreach (var x in list.Where(a => a.ObjectFlag.HasFlag(BigMachinesObjectFlag.HasRegisterBM)))
+            foreach (var x in list.Where(a => a.ObjectFlag.HasFlag(BigMachinesObjectFlag.HasRegisterMachine)))
             {// Children
-                ssb.AppendLine($"{x.FullName}.RegisterBM();");
+                ssb.AppendLine($"{x.FullName}.RegisterMachine();");
             }
 
             /*if (loaderIdentifier != null)
@@ -683,13 +683,13 @@ ModuleInitializerClass_Added:
     internal void Generate2(ScopingStringBuilder ssb, GeneratorInformation info)
     {
         this.Generate_State(ssb, info);
-        this.Generate_InterfaceInstance(ssb, info);
-        this.Generate_Interface(ssb, info);
+        this.Generate_HandleInstance(ssb, info);
+        this.Generate_Handle(ssb, info);
         this.Generate_InternalRun(ssb, info);
         this.Generate_ChangeStateInternal(ssb, info);
         if (this.Generics_Kind == VisceralGenericsKind.OpenGeneric)
         {
-            this.Generate_RegisterBM(ssb, info, true);
+            this.Generate_RegisterMachine(ssb, info, true);
         }
 
         return;
@@ -713,7 +713,7 @@ ModuleInitializerClass_Added:
         ssb.AppendLine();
     }
 
-    internal void Generate_InterfaceInstance(ScopingStringBuilder ssb, GeneratorInformation info)
+    internal void Generate_HandleInstance(ScopingStringBuilder ssb, GeneratorInformation info)
     {
         if (this.MachineObject == null)
         {
@@ -723,20 +723,20 @@ ModuleInitializerClass_Added:
         string? controlType = default;
         if (this.ObjectAttribute?.Control == MachineControlKind.Single)
         {
-            controlType = $"SingleMachineControl<{this.FullName}, {this.FullName}.Interface>";
+            controlType = $"SingleMachineControl<{this.FullName}, {this.FullName}.Handle>";
         }
         else if (this.ObjectAttribute?.Control == MachineControlKind.Unordered)
         {
             if (this.IdentifierObject is not null)
             {
-                controlType = $"UnorderedMachineControl<{this.IdentifierObject.FullName}, {this.FullName}, {this.FullName}.Interface>";
+                controlType = $"UnorderedMachineControl<{this.IdentifierObject.FullName}, {this.FullName}, {this.FullName}.Handle>";
             }
         }
         else if (this.ObjectAttribute?.Control == MachineControlKind.Sequential)
         {
             if (this.IdentifierObject is not null)
             {
-                controlType = $"SequentialMachineControl<{this.IdentifierObject.FullName}, {this.FullName}, {this.FullName}.Interface>";
+                controlType = $"SequentialMachineControl<{this.IdentifierObject.FullName}, {this.FullName}, {this.FullName}.Handle>";
             }
         }
 
@@ -747,23 +747,23 @@ ModuleInitializerClass_Added:
             ssb.AppendLine($"public {this.OverrideOrNew} {controlType}? MachineControl => this.__machineControl__ as {controlType};");
         }
 
-        ssb.AppendLine($"public override ManMachineInterface InterfaceInstance => (Interface)(System.Threading.Volatile.Read(ref this.__interfaceInstance__) ?? System.Threading.Interlocked.CompareExchange(ref this.__interfaceInstance__, new Interface(this), null) ?? this.__interfaceInstance__);");
+        ssb.AppendLine($"public override MachineHandle HandleInstance => (Handle)(System.Threading.Volatile.Read(ref this.__handleInstance__) ?? System.Threading.Interlocked.CompareExchange(ref this.__handleInstance__, new Handle(this), null) ?? this.__handleInstance__);");
 
-        // ssb.AppendLine($"public override ManMachineInterface CreateInterface() => new Interface(this);");
+        // ssb.AppendLine($"public override MachineHandle CreateInterface() => new Interface(this);");
 
         /*if (this.FullName == "Advanced.DerivedMachine")
         {
-            ssb.AppendLine($"public override Advanced.IntermittentMachine.Interface InterfaceInstance => (Interface)(this.__interfaceInstance__ ??= new Advanced.DerivedMachine.Interface(this));");
-            // ssb.AppendLine($"public new Interface InterfaceInstance => (Interface)(this.__interfaceInstance__ ??= new Advanced.DerivedMachine.Interface(this));");
+            ssb.AppendLine($"public override Advanced.IntermittentMachine.Interface HandleInstance => (Interface)(this.__handleInstance__ ??= new Advanced.DerivedMachine.Interface(this));");
+            // ssb.AppendLine($"public new Interface HandleInstance => (Interface)(this.__handleInstance__ ??= new Advanced.DerivedMachine.Interface(this));");
         }
         else
         {
-            ssb.AppendLine($"public {this.OverrideOrNew} Interface InterfaceInstance => (Interface)(this.__interfaceInstance__ ??= new Interface(this));");
+            ssb.AppendLine($"public {this.OverrideOrNew} Interface HandleInstance => (Interface)(this.__handleInstance__ ??= new Interface(this));");
         }*/
 
-        // ssb.AppendLine($"public {this.OverrideOrNew} Interface InterfaceInstance => (Interface)(this.__interfaceInstance__ ??= this.CreateInterface());");
+        // ssb.AppendLine($"public {this.OverrideOrNew} Interface HandleInstance => (Interface)(this.__handleInstance__ ??= this.CreateInterface());");
 
-        /*ssb.AppendLine("public override ManMachineInterface InterfaceInstance");
+        /*ssb.AppendLine("public override MachineHandle HandleInstance");
         ssb.AppendLine("{");
         ssb.IncrementIndent();
 
@@ -771,12 +771,12 @@ ModuleInitializerClass_Added:
         ssb.AppendLine("{");
         ssb.IncrementIndent();
 
-        ssb.AppendLine("if (this.__interfaceInstance__ is not Interface obj)");
+        ssb.AppendLine("if (this.__handleInstance__ is not Interface obj)");
         ssb.AppendLine("{");
         ssb.IncrementIndent();
 
         ssb.AppendLine("obj = new(this);");
-        ssb.AppendLine("this.__interfaceInstance__ = obj;");
+        ssb.AppendLine("this.__handleInstance__ = obj;");
 
         ssb.DecrementIndent();
         ssb.AppendLine("}");
@@ -790,36 +790,36 @@ ModuleInitializerClass_Added:
         ssb.AppendLine("}");*/
     }
 
-    internal void Generate_Interface(ScopingStringBuilder ssb, GeneratorInformation info)
+    internal void Generate_Handle(ScopingStringBuilder ssb, GeneratorInformation info)
     {
         if (this.MachineObject == null)
         {
             return;
         }
 
-        string interfaceName;
+        string handleName;
         if (this.IdentifierObject is null)
         {
-            interfaceName = $"public {this.NewIfDerived}class Interface : ManMachineInterface<{this.StateName}>";
+            handleName = $"public {this.NewIfDerived}class Handle : MachineHandle<{this.StateName}>";
         }
         else
         {
-            interfaceName = $"public {this.NewIfDerived}class Interface : ManMachineInterface<{this.IdentifierObject.FullName}, {this.StateName}>";
+            handleName = $"public {this.NewIfDerived}class Handle : MachineHandle<{this.IdentifierObject.FullName}, {this.StateName}>";
         }
 
-        using (var scopeInterface = ssb.ScopeBrace(interfaceName))
+        using (var scopeHandle = ssb.ScopeBrace(handleName))
         {
             if (this.FullName == "Advanced.DerivedMachine")
             {
                 // ssb.AppendLine($"public Interface({this.LocalName} machine) : base(machine) {{ throw new Exception(); }}");
-                ssb.AppendLine($"public Interface({this.LocalName} machine) : base(machine) {{ }}");
+                ssb.AppendLine($"public Handle({this.LocalName} machine) : base(machine) {{ }}");
             }
             else
             {
-                ssb.AppendLine($"public Interface({this.LocalName} machine) : base(machine) {{ }}");
+                ssb.AppendLine($"public Handle({this.LocalName} machine) : base(machine) {{ }}");
             }
 
-            // ssb.AppendLine($"private new {this.LocalName} Machine => ({this.LocalName})((ManMachineInterface)this).Machine;");
+            // ssb.AppendLine($"private new {this.LocalName} Machine => ({this.LocalName})((MachineHandle)this).Machine;");
 
             this.Generate_CommandList(ssb, info);
         }
@@ -968,22 +968,22 @@ ModuleInitializerClass_Added:
         ssb.AppendLine();
     }
 
-    internal void Generate_RegisterBM(ScopingStringBuilder ssb, GeneratorInformation info, bool method)
+    internal void Generate_RegisterMachine(ScopingStringBuilder ssb, GeneratorInformation info, bool method)
     {
         if (this.MachineObject == null || this.ObjectAttribute == null)
         {
             return;
         }
 
-        ScopingStringBuilder.IScope? scope = method ? ssb.ScopeBrace($"public static {this.NewIfDerived}void RegisterBM()") : null;
+        ScopingStringBuilder.IScope? scope = method ? ssb.ScopeBrace($"public static {this.NewIfDerived}void RegisterMachine()") : null;
 
         // MachineInformation
         var machineType = $"typeof({this.FullName})";
         var constructor = this.UseServiceProvider ? "null" : $"() => new {this.FullName}()";
         var serializable = this.TinyhandAttribute is not null ? "true" : "false";
         var identifierType = this.IdentifierObject is not null ? $"typeof({this.IdentifierObject.FullName})" : "null";
-        var numberOfTasks = this.ObjectAttribute.NumberOfTasks;
-        ssb.AppendLine($"MachineRegistry.Register(new({machineType}, {constructor}, {serializable}, {identifierType}, {numberOfTasks}));");
+        var workerCount = this.ObjectAttribute.WorkerCount;
+        ssb.AppendLine($"MachineRegistry.Register(new({machineType}, {constructor}, {serializable}, {identifierType}, {workerCount}));");
 
         scope?.Dispose();
     }

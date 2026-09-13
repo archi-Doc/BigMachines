@@ -25,7 +25,7 @@ public abstract class MachineControl : IStructuralObject
 
     void IStructuralObject.WriteLocator(ref TinyhandWriter writer)
     {
-        writer.Write_Key();
+        writer.WriteKeyRecord();
         writer.Write(((IStructuralObject)this).StructuralKey);
     }
 
@@ -64,7 +64,7 @@ public abstract class MachineControl : IStructuralObject
     /// Returns a snapshot of the current machine handles. The machines themselves remain shared.
     /// </summary>
     /// <returns>A snapshot of the current handles.</returns>
-    public abstract Machine.ManMachineInterface[] GetArray();
+    public abstract Machine.MachineHandle[] GetHandles();
 
     /// <summary>
     /// Determines whether this control contains any active machines.
@@ -93,7 +93,7 @@ public abstract class MachineControl : IStructuralObject
     /// <param name="runner">The <see cref="MachineRunner"/> instance used to execute machine processing.</param>
     internal abstract void Process(MachineRunner runner);
 
-    internal virtual void OnMachineUnpaused()
+    internal virtual void OnMachineResumed()
     {
     }
 }

@@ -19,10 +19,10 @@ public partial class TestMachine : Machine<TestMachineKind> // Inherit Machine<T
     {
         bigMachine.TestMachine.GetOrCreate(TestMachineKind.Alpha);
         bigMachine.TestMachine.TryGet(TestMachineKind.Alpha, out var testMachine); // Get the created machine.
-        // bigMachine.TestMachine.CreateAlways(3);
+        // bigMachine.TestMachine.CreateOrReplace(3);
 
         var testMachine2 = bigMachine.TestMachine.GetOrCreate(TestMachineKind.Beta);
-        // testMachine2.GetOperationalState(OperationalFlag.Paused);
+        // testMachine2.GetOperationalState(OperationalFlags.Paused);
 
         // bigMachine.TestMachine
         // testGroup.CommandAsync(TestMachine.Command.PrintText, "group message").Wait();
@@ -31,7 +31,7 @@ public partial class TestMachine : Machine<TestMachineKind> // Inherit Machine<T
 
     public TestMachine()
     {
-        this.DefaultTimeout = TimeSpan.FromSeconds(1); // Default time interval for machine processing.
+        this.DefaultInterval = TimeSpan.FromSeconds(1); // Default time interval for machine processing.
         this.Lifespan = TimeSpan.FromSeconds(10); // The time until the machine automatically terminates.
     }
 
@@ -91,7 +91,7 @@ public partial class TestMachine : Machine<TestMachineKind> // Inherit Machine<T
     {
         if (n == 0)
         {
-            // this.BigMachine.TryGet<TerminatorMachine<int>.Interface>(0)?.CommandAndReceiveAsync(TerminatorMachine<int>.Command)<int, int>(0);
+            // this.BigMachine.TryGet<TerminatorMachine<int>.Handle>(0)?.CommandAndReceiveAsync(TerminatorMachine<int>.Command)<int, int>(0);
             return new(this.Count);
         }
 
@@ -101,14 +101,14 @@ public partial class TestMachine : Machine<TestMachineKind> // Inherit Machine<T
     /*[CommandMethod]
     protected void RelayString(string st)
     {// LoopMachine -> TestMachine -> LoopMachine
-        this.BigMachine.TryGet<LoopMachine.Interface>(0)?.CommandAsync(LoopMachine.Command.RelayString, st);
+        this.BigMachine.TryGet<LoopMachine.Handle>(0)?.CommandAsync(LoopMachine.Command.RelayString, st);
     }*/
 
     [CommandMethod]
-    protected CommandResult PrintText(string text)
+    protected CommandStatus PrintText(string text)
     {
         Console.WriteLine($"TestMachine {this.Identifier} PrintText : {text}");
-        return CommandResult.Success;
+        return CommandStatus.Success;
     }
 
     protected override void OnTerminate()

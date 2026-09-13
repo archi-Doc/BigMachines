@@ -19,7 +19,7 @@ namespace BigMachines.Tests;
 public partial class ReviewBigMachine;
 
 [BigMachineObject]
-[AddMachine<SerializableSingleMachine>(Volatile = true)]
+[AddMachine<SerializableSingleMachine>(NonPersistent = true)]
 public partial class VolatileBigMachine;
 
 [MachineObject]
@@ -46,7 +46,7 @@ public partial class DisposableSequentialMachine : Machine<int>, IDisposable
     public void Dispose() => Interlocked.Increment(ref Disposals);
 }
 
-[MachineObject(Private = true)]
+[MachineObject(ExcludeFromIncludeAllMachines = true)]
 public partial class ThrowingTerminationMachine : Machine, IDisposable
 {
     public static int Terminations;
@@ -71,22 +71,22 @@ public partial class JournalMachine : Machine<int>
     protected CommandResult<int> GetValue() => new(this.Value);
 
     [CommandMethod]
-    protected CommandResult CorruptIdentifier(int identifier)
+    protected CommandStatus CorruptIdentifier(int identifier)
     {
         this.__identifier__ = identifier;
-        return CommandResult.Success;
+        return CommandStatus.Success;
     }
 
     [CommandMethod]
-    protected CommandResult SetDelay(long ticks)
+    protected CommandStatus SetDelay(long ticks)
     {
         this.TimeUntilRun = TimeSpan.FromTicks(ticks);
-        return CommandResult.Success;
+        return CommandStatus.Success;
     }
 }
 
 [TinyhandObject(Structural = true)]
-[MachineObject(Control = MachineControlKind.Sequential, NumberOfTasks = 1)]
+[MachineObject(Control = MachineControlKind.Sequential, WorkerCount = 1)]
 public partial class JournalSequentialMachine : Machine<int>
 {
     public static int Runs;
@@ -106,8 +106,8 @@ public partial class JournalSingleMachine : Machine
     [Key(10)]
     public int Value { get; set; }
 
-    protected override void OnCreate(object? createParam)
-        => this.Value = createParam is int value ? value : 0;
+    protected override void OnCreate(object? createParameter)
+        => this.Value = createParameter is int value ? value : 0;
 
     [CommandMethod]
     protected CommandResult<int> GetValue() => new(this.Value);
@@ -126,7 +126,7 @@ public partial class OneShotMachine : Machine
     }
 }
 
-[MachineObject(Control = MachineControlKind.Sequential, NumberOfTasks = 2)]
+[MachineObject(Control = MachineControlKind.Sequential, WorkerCount = 2)]
 public partial class TwoWorkerMachine : Machine<int>
 {
     public static int Starts;
@@ -141,10 +141,10 @@ public partial class TwoWorkerMachine : Machine<int>
     }
 }
 
-[MachineObject(Private = true, UseServiceProvider = true)]
+[MachineObject(ExcludeFromIncludeAllMachines = true, UseServiceProvider = true)]
 public partial class ReusedServiceMachine : Machine;
 
-[MachineObject(Private = true)]
+[MachineObject(ExcludeFromIncludeAllMachines = true)]
 public partial class ManualStateFailureMachine : Machine
 {
     [StateMethod(0)]
@@ -152,7 +152,7 @@ public partial class ManualStateFailureMachine : Machine
         => throw new InvalidOperationException("Manual state failed.");
 }
 
-[TinyhandObject(LockObject = nameof(Semaphore))]
+[TinyhandObject(LockMemberName = nameof(Semaphore))]
 [MachineObject]
 public partial class SnapshotPairMachine : Machine
 {
@@ -163,13 +163,13 @@ public partial class SnapshotPairMachine : Machine
     public int Right { get; set; }
 
     [CommandMethod]
-    protected async Task<CommandResult> Update(TaskCompletionSource entered, Task release)
+    protected async Task<CommandStatus> Update(TaskCompletionSource entered, Task release)
     {
         this.Left = 42;
         entered.TrySetResult();
         await release.ConfigureAwait(false);
         this.Right = 42;
-        return CommandResult.Success;
+        return CommandStatus.Success;
     }
 
     [CommandMethod]
