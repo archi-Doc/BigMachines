@@ -34,7 +34,7 @@ public sealed partial class SequentialMachineControl<TIdentifier, TMachine, TInt
             var control = core.control;
             while (core.CanContinue)
             {
-                /*if (await core.Delay(core.TimeIntervalInMilliseconds) == false)
+                /*if (await core.TryDelay(core.TimeIntervalInMilliseconds) == false)
                 {// Terminated
                     break;
                 }*/

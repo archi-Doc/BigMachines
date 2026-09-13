@@ -244,7 +244,7 @@ Loop:
         var fork = reader.Fork();
         if (fork.TryReadJournalRecord(out var record))
         {
-            if (record == JournalRecord.AddItem)
+            if (record == JournalRecordType.AddItem)
             {
                 var restored = TinyhandSerializer.Deserialize<TMachine>(ref fork);
                 if (restored is null)
@@ -257,7 +257,7 @@ Loop:
                 reader = fork;
                 return true;
             }
-            else if (record == JournalRecord.DeleteItem)
+            else if (record == JournalRecordType.DeleteItem)
             {
                 Volatile.Write(ref this.machine, null);
                 reader = fork;
@@ -290,7 +290,7 @@ Loop:
         var structural = (IStructuralObject)this;
         if (structural.TryGetJournalWriter(out var root, out var writer, true))
         {
-            writer.Write(machine is null ? JournalRecord.DeleteItem : JournalRecord.AddItem);
+            writer.Write(machine is null ? JournalRecordType.DeleteItem : JournalRecordType.AddItem);
             if (machine is not null)
             {
                 TinyhandSerializer.Serialize(ref writer, machine);

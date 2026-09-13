@@ -25,7 +25,7 @@ public abstract class MachineControl : IStructuralObject
 
     void IStructuralObject.WriteLocator(ref TinyhandWriter writer)
     {
-        writer.Write_Key();
+        writer.WriteKeyRecord();
         writer.Write(((IStructuralObject)this).StructuralKey);
     }
 

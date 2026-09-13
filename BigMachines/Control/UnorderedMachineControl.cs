@@ -89,7 +89,7 @@ public sealed partial class UnorderedMachineControl<TIdentifier, TMachine, TInte
         public bool ReadMachineRecord(ref TinyhandReader reader)
         {
             return reader.TryReadJournalRecord(out var record) &&
-                record == JournalRecord.Key &&
+                record == JournalRecordType.Key &&
                 reader.ReadInt32() == 1 &&
                 this.Machine is IStructuralObject child &&
                 child.ProcessJournalRecord(ref reader);
@@ -369,7 +369,7 @@ Loop:
         using (this.items.LockObject.EnterScope())
         {
             var fork = reader.Fork();
-            if (fork.TryReadJournalRecord(out var record) && record == JournalRecord.Locator)
+            if (fork.TryReadJournalRecord(out var record) && record == JournalRecordType.Locator)
             {
                 var identifier = TinyhandSerializer.Deserialize<TIdentifier>(ref fork);
                 if (identifier is null || !this.items.IdentifierChain.TryGetValue(identifier, out var item) ||

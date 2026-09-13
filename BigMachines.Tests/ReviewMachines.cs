@@ -152,7 +152,7 @@ public partial class ManualStateFailureMachine : Machine
         => throw new InvalidOperationException("Manual state failed.");
 }
 
-[TinyhandObject(LockObject = nameof(Semaphore))]
+[TinyhandObject(LockMemberName = nameof(Semaphore))]
 [MachineObject]
 public partial class SnapshotPairMachine : Machine
 {

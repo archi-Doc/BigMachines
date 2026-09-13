@@ -183,7 +183,7 @@ public class PersistenceConcurrencyTests
     private static int ReadMapCount(byte[] bytes)
     {
         var reader = new TinyhandReader(bytes);
-        return reader.ReadMapHeader2();
+        return reader.ReadMapHeaderOrEmptyArray();
     }
 
     [Fact]
@@ -475,7 +475,7 @@ public class PersistenceConcurrencyTests
     private static async Task Stop(ExecutionRoot root)
     {
         root.RequestTermination();
-        await root.WaitForTermination(TimeSpan.FromSeconds(5));
+        await root.WaitForTerminationAsync(TimeSpan.FromSeconds(5));
     }
 
     private sealed class MemoryJournal : IStructuralObject, IStructuralRoot

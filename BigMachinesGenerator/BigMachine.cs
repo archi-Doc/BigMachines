@@ -349,7 +349,7 @@ internal class BigMachine : IEquatable<BigMachine>
         {
             ssb.AppendLine("if (reader.TryReadNil()) return;");
             ssb.AppendLine("value ??= new(TinyhandSerializer.ServiceProvider.GetRequiredService<Arc.Threading.ExecutionRoot>());");
-            ssb.AppendLine("var count = reader.ReadMapHeader2();");
+            ssb.AppendLine("var count = reader.ReadMapHeaderOrEmptyArray();");
 
             var trie = new VisceralTrieInt<Machine>(null);
             foreach (var x in this.Machines.Values.Where(x => x.IsPersistent))
@@ -388,7 +388,7 @@ internal class BigMachine : IEquatable<BigMachine>
 
         using (var scopeMethod = ssb.ScopeBrace("bool IStructuralObject.ProcessJournalRecord(ref TinyhandReader reader)"))
         {
-            ssb.AppendLine("if (!reader.TryReadJournalRecord(out JournalRecord record)) return false;");
+            ssb.AppendLine("if (!reader.TryReadJournalRecord(out JournalRecordType record)) return false;");
 
             var trie = new VisceralTrieInt<Machine>(null);
             foreach (var x in this.Machines.Values.Where(x => x.IsPersistent))
@@ -403,7 +403,7 @@ internal class BigMachine : IEquatable<BigMachine>
                     ssb.AppendLine($"return ((IStructuralObject)this.{node.Member.Name}).ProcessJournalRecord(ref reader);");
                 });
 
-            using (var scopeKey = ssb.ScopeBrace("if (record == JournalRecord.Key)"))
+            using (var scopeKey = ssb.ScopeBrace("if (record == JournalRecordType.Key)"))
             {
                 trie.Generate(context);
             }

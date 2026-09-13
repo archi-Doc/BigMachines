@@ -82,6 +82,6 @@ public class Program
         await testMachine.Command.TestCommand("Test message"); // Send a command to the machine.
         Console.WriteLine();
 
-        await root.WaitForTermination(); // Wait for the termination infinitely.
+        await root.WaitForTerminationAsync(); // Wait for the termination infinitely.
     }
 }

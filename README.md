@@ -104,7 +104,7 @@ public static class Program
         await counter.Command.Print("Hello from BigMachines");
         await counter.RunAsync();
 
-        await root.WaitForTermination();
+        await root.WaitForTerminationAsync();
     }
 }
 ```
@@ -224,7 +224,7 @@ Control creation, lookup, removal, and enumeration synchronize access to members
 A root snapshot is not a transaction across machines. Collection locks protect membership, but do not automatically protect arbitrary fields modified by a handler. For per-machine consistency, opt in to Tinyhand's serialization lock:
 
 ```csharp
-[TinyhandObject(LockObject = nameof(Semaphore))]
+[TinyhandObject(LockMemberName = nameof(Semaphore))]
 [MachineObject]
 public partial class PersistentMachine : Machine<int>
 {
@@ -313,7 +313,7 @@ var builder = new CrystalUnit.Builder()
         {
             FileConfiguration = new LocalFileConfiguration("Data/AppMachines.tinyhand"),
             SaveFormat = SaveFormat.Utf8,
-            NumberOfFileHistories = 3,
+            NumberOfHistoryFiles = 3,
         });
     });
 ```

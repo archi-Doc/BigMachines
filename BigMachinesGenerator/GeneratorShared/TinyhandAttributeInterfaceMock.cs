@@ -46,7 +46,7 @@ public sealed class TinyhandObjectAttributeMock
 
     public int ReservedKeyCount { get; set; } = 0;
 
-    public string LockObject { get; set; } = string.Empty;
+    public string LockMemberName { get; set; } = string.Empty;
 
     public bool EnumAsString { get; set; } = false;
 
@@ -125,10 +125,10 @@ public sealed class TinyhandObjectAttributeMock
             attribute.ReservedKeyCount = (int)val;
         }
 
-        val = VisceralHelper.GetValue(-1, nameof(LockObject), constructorArguments, namedArguments);
+        val = VisceralHelper.GetValue(-1, nameof(LockMemberName), constructorArguments, namedArguments);
         if (val != null)
         {
-            attribute.LockObject = (string)val;
+            attribute.LockMemberName = (string)val;
         }
 
         val = VisceralHelper.GetValue(-1, nameof(EnumAsString), constructorArguments, namedArguments);
@@ -191,7 +191,7 @@ public class KeyAttributeMock
 
     public bool Condition { get; private set; } = true;
 
-    public string AddProperty { get; set; } = string.Empty;
+    public string PropertyName { get; set; } = string.Empty;
 
     public PropertyAccessibility PropertyAccessibility { get; set; } = PropertyAccessibility.PublicSetter;
 
@@ -233,10 +233,10 @@ public class KeyAttributeMock
             attribute.Condition = (bool)v;
         }
 
-        v = VisceralHelper.GetValue(-1, nameof(AddProperty), constructorArguments, namedArguments);
+        v = VisceralHelper.GetValue(-1, nameof(PropertyName), constructorArguments, namedArguments);
         if (v != null)
         {
-            attribute.AddProperty = (string)v;
+            attribute.PropertyName = (string)v;
         }
 
         v = VisceralHelper.GetValue(-1, nameof(PropertyAccessibility), constructorArguments, namedArguments);

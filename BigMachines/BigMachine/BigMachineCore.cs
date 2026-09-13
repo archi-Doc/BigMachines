@@ -31,7 +31,7 @@ public partial class BigMachineBase
             var runner = new MachineRunner();
             while (!core.IsTerminated)
             {
-                if (await core.Delay(core.TimeIntervalInMilliseconds) == false)
+                if (await core.TryDelay(core.TimeIntervalInMilliseconds) == false)
                 {// Terminated
                     break;
                 }

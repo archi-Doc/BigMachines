@@ -332,7 +332,7 @@ public class MachineRegressionTests
     private static async Task StopAsync(ExecutionRoot root)
     {
         root.RequestTermination();
-        await root.WaitForTermination(TimeSpan.FromSeconds(5));
+        await root.WaitForTerminationAsync(TimeSpan.FromSeconds(5));
     }
 
     private sealed class RootServiceProvider(ExecutionRoot root) : IServiceProvider

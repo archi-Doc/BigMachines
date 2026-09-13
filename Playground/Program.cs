@@ -19,10 +19,10 @@ class Program
 
     static async Task Main(string[] args)
     {
-        AppCloseHandler.Set(() =>
+        AppCloseHandler.Register(() =>
         {// Closing the console window or terminating the process.
             root?.RequestTermination(); // Send a termination signal to the root.
-            root?.WaitForTermination(TimeSpan.FromSeconds(2)).Wait();
+            root?.WaitForTerminationAsync(TimeSpan.FromSeconds(2)).Wait();
         });
 
         Console.CancelKeyPress += (s, e) =>
@@ -49,7 +49,7 @@ class Program
         var tinyControl = bigMachine.TinyMachine;
         var machine = tinyControl.GetOrCreate();
 
-        await root.WaitForTermination(TerminationOptions.IncludeIndependent); // Wait for the termination infinitely.
+        await root.WaitForTerminationAsync(TerminationOptions.IncludeIndependent); // Wait for the termination infinitely.
 
         Console.WriteLine("Terminated.");
     }

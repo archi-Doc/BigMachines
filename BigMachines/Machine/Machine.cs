@@ -111,9 +111,9 @@ public abstract partial class Machine
             if (this is IStructuralObject structuralObject &&
                 structuralObject.TryGetJournalWriter(out var root, out var writer, true))
             {
-                writer.Write_Key();
+                writer.WriteKeyRecord();
                 writer.Write(1);
-                writer.Write_Value();
+                writer.WriteValueRecord();
                 writer.Write(value);
                 root.AddJournalAndDispose(ref writer);
             }
@@ -142,9 +142,9 @@ public abstract partial class Machine
             if (this is IStructuralObject structuralObject &&
                 structuralObject.TryGetJournalWriter(out var root, out var writer, true))
             {
-                writer.Write_Key();
+                writer.WriteKeyRecord();
                 writer.Write(2);
-                writer.Write_Value();
+                writer.WriteValueRecord();
                 writer.Write(value.Ticks);
                 root.AddJournalAndDispose(ref writer);
             }
@@ -173,9 +173,9 @@ public abstract partial class Machine
             if (this is IStructuralObject structuralObject &&
                 structuralObject.TryGetJournalWriter(out var root, out var writer, true))
             {
-                writer.Write_Key();
+                writer.WriteKeyRecord();
                 writer.Write(3);
-                writer.Write_Value();
+                writer.WriteValueRecord();
                 writer.Write(value);
                 root.AddJournalAndDispose(ref writer);
             }
@@ -204,9 +204,9 @@ public abstract partial class Machine
             if (this is IStructuralObject structuralObject &&
                 structuralObject.TryGetJournalWriter(out var root, out var writer, true))
             {
-                writer.Write_Key();
+                writer.WriteKeyRecord();
                 writer.Write(4);
-                writer.Write_Value();
+                writer.WriteValueRecord();
                 writer.Write(value);
                 root.AddJournalAndDispose(ref writer);
             }
@@ -236,9 +236,9 @@ public abstract partial class Machine
             if (this is IStructuralObject structuralObject &&
                 structuralObject.TryGetJournalWriter(out var root, out var writer, true))
             {
-                writer.Write_Key();
+                writer.WriteKeyRecord();
                 writer.Write(5);
-                writer.Write_Value();
+                writer.WriteValueRecord();
                 writer.Write(value.Ticks);
                 root.AddJournalAndDispose(ref writer);
             }
@@ -267,9 +267,9 @@ public abstract partial class Machine
             if (this is IStructuralObject structuralObject &&
                 structuralObject.TryGetJournalWriter(out var root, out var writer, true))
             {
-                writer.Write_Key();
+                writer.WriteKeyRecord();
                 writer.Write(6);
-                writer.Write_Value();
+                writer.WriteValueRecord();
                 writer.Write(value);
                 root.AddJournalAndDispose(ref writer);
             }
