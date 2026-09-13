@@ -7,7 +7,7 @@ internal partial class GlobalNamespaceMachine : Machine
     public GlobalNamespaceMachine()
         : base()
     {
-        this.DefaultTimeout = TimeSpan.FromSeconds(1);
+        this.DefaultInterval = TimeSpan.FromSeconds(1);
     }
 
     [StateMethod(0)]

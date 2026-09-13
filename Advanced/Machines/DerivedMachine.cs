@@ -12,7 +12,7 @@ public partial class DerivedMachine : IntermittentMachine
 
     public DerivedMachine()
     {
-        this.DefaultTimeout = TimeSpan.FromSeconds(1); // Default time interval for machine execution.
+        this.DefaultInterval = TimeSpan.FromSeconds(1); // Default time interval for machine execution.
         this.Lifespan = TimeSpan.FromSeconds(5); // The time until the machine automatically terminates.
     }
 
@@ -50,7 +50,7 @@ public partial class DerivedMachine2 : EmptyMachineBase
 
     public DerivedMachine2()
     {
-        this.DefaultTimeout = TimeSpan.FromSeconds(1); // Default time interval for machine execution.
+        this.DefaultInterval = TimeSpan.FromSeconds(1); // Default time interval for machine execution.
         this.Lifespan = TimeSpan.FromSeconds(3); // The time until the machine automatically terminates.
     }
 

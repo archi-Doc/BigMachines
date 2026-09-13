@@ -18,7 +18,7 @@ public partial class FirstMachine : Machine<int> // Inherit Machine class. The t
 {
     public FirstMachine()
     {
-        this.DefaultTimeout = TimeSpan.FromSeconds(1); // The default time interval for machine execution.
+        this.DefaultInterval = TimeSpan.FromSeconds(1); // The default time interval for machine execution.
         this.Lifespan = TimeSpan.FromSeconds(5); // The time until the machine automatically terminates.
     }
 
@@ -40,10 +40,10 @@ public partial class FirstMachine : Machine<int> // Inherit Machine class. The t
     }
 
     [CommandMethod] // Add a CommandMethod attribute to a method which receives and processes commands.
-    protected CommandResult TestCommand(string message)
+    protected CommandStatus TestCommand(string message)
     {
         Console.WriteLine($"Command received: {message}");
-        return CommandResult.Success;
+        return CommandStatus.Success;
     }
 
     protected override void OnTerminate()
@@ -61,8 +61,8 @@ public class Program
         var bigMachine = new BigMachine(root); // Create a BigMachine instance.
         bigMachine.Start(); // Launch BigMachine to run machines and change the parent of the BigMachine thread to the application thread.
 
-        var testMachine = bigMachine.FirstMachine.GetOrCreate(42); // Machine is created via an interface class and the identifier, not the machine class itself.
-        testMachine.TryGetState(out var state); // Get the current state. You can operate machines using the interface class.
+        var testMachine = bigMachine.FirstMachine.GetOrCreate(42); // Machine is created via a handle class and the identifier, not the machine class itself.
+        testMachine.TryGetState(out var state); // Get the current state. You can operate machines using the handle class.
         Console.WriteLine($"FirstMachine state: {state}");
 
         testMachine = bigMachine.FirstMachine.GetOrCreate(42); // Get the created machine.

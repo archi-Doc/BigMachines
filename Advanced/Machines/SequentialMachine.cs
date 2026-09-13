@@ -3,7 +3,7 @@
 namespace Advanced;
 
 [TinyhandObject]
-[MachineObject(Control = MachineControlKind.Sequential, NumberOfTasks = 1)]
+[MachineObject(Control = MachineControlKind.Sequential, WorkerCount = 1)]
 public partial class SequentialMachine : Machine<int>
 {// SequentialMachine executes one at a time, in the order of their creation.
     public static void Test(BigMachine bigMachine)
@@ -16,7 +16,7 @@ public partial class SequentialMachine : Machine<int>
     public SequentialMachine()
     {
         this.Lifespan = TimeSpan.FromSeconds(10);
-        this.DefaultTimeout = TimeSpan.FromSeconds(1);
+        this.DefaultInterval = TimeSpan.FromSeconds(1);
     }
 
     [Key(10)]

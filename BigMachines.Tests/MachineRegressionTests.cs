@@ -40,7 +40,7 @@ public class MachineRegressionTests
         try
         {
             var machine = bigMachine.PausedMachine.GetOrCreate();
-            Assert.True(machine.PauseMachine());
+            Assert.True(machine.Pause());
             machine.SetTimeUntilRun(TimeSpan.Zero);
 
             await machine.RunAsync();
@@ -86,11 +86,11 @@ public class MachineRegressionTests
         var bigMachine = new TestBigMachine(root);
         var machine = bigMachine.TerminationMachine.GetOrCreate();
 
-        Assert.True(machine.PauseMachine());
-        machine.TerminateMachine();
-        Assert.Equal(OperationalFlag.Paused | OperationalFlag.Terminated, machine.GetOperationalState());
+        Assert.True(machine.Pause());
+        machine.Terminate();
+        Assert.Equal(OperationalFlags.Paused | OperationalFlags.Terminated, machine.GetOperationalState());
         Assert.False(machine.TryGetState(out _));
-        Assert.Equal(CommandResult.Terminated, await machine.Command.Ping());
+        Assert.Equal(CommandStatus.Terminated, await machine.Command.Ping());
         Assert.Equal(0, Volatile.Read(ref TerminationMachine.Commands));
 
         await StopAsync(root);
@@ -162,14 +162,14 @@ public class MachineRegressionTests
         ((IBigMachine)bigMachine).Core.TimeIntervalInMilliseconds = 10;
         var machine = bigMachine.SequentialCoordinatedMachine.TryCreate(3);
         Assert.NotNull(machine);
-        Assert.True(machine.PauseMachine());
+        Assert.True(machine.Pause());
         bigMachine.Start();
         try
         {
             await Task.Delay(100, TestContext.Current.CancellationToken);
             Assert.Equal(0, Volatile.Read(ref SequentialCoordinatedMachine.Starts));
 
-            Assert.True(machine.UnpauseMachine());
+            Assert.True(machine.Resume());
             await WaitUntilAsync(() => Volatile.Read(ref SequentialCoordinatedMachine.Starts) == 1);
         }
         finally
@@ -193,18 +193,18 @@ public class MachineRegressionTests
         Assert.False(bigMachine.UnorderedTestMachine.TryGet(3, out _));
         Assert.Equal(new[] { 1, 2 }, bigMachine.UnorderedTestMachine.GetIdentifiers().Order().ToArray());
 
-        await bigMachine.UnorderedTestMachine.AllRunAsync();
+        await bigMachine.UnorderedTestMachine.RunAllAsync();
         var firstResult = await first.Command.GetRuns();
         var secondResult = await second.Command.GetRuns();
-        Assert.Equal(CommandResult.Success, firstResult.Result);
+        Assert.Equal(CommandStatus.Success, firstResult.Status);
         Assert.Equal(1, firstResult.Response);
         Assert.Equal(1, secondResult.Response);
 
-        var replacement = bigMachine.UnorderedTestMachine.CreateAlways(1);
+        var replacement = bigMachine.UnorderedTestMachine.CreateOrReplace(1);
         Assert.NotSame(first, replacement);
         Assert.True(first.IsTerminated);
         Assert.Equal(0, (await replacement.Command.GetRuns()).Response);
-        Assert.True(replacement.TerminateMachine());
+        Assert.True(replacement.Terminate());
         Assert.False(bigMachine.UnorderedTestMachine.TryGet(1, out _));
         await StopAsync(root);
     }
@@ -216,15 +216,15 @@ public class MachineRegressionTests
         var root = new ExecutionRoot();
         var bigMachine = new TestBigMachine(root);
 
-        Assert.Null(bigMachine.ManualControl.TryGet<ManualTestMachine>());
+        Assert.Null(bigMachine.ManualControl.Find<ManualTestMachine>());
         var machine = bigMachine.ManualControl.TryCreate<ManualTestMachine>("manual parameter");
         Assert.NotNull(machine);
         Assert.Equal("manual parameter", ManualTestMachine.CreateParameter);
-        Assert.Same(machine, bigMachine.ManualControl.TryGet<ManualTestMachine>());
+        Assert.Same(machine, bigMachine.ManualControl.Find<ManualTestMachine>());
         Assert.Null(bigMachine.ManualControl.TryCreate<ManualTestMachine>());
         Assert.Equal(1, bigMachine.ManualControl.Count);
 
-        Assert.True(machine.TerminateMachine());
+        Assert.True(machine.Terminate());
         Assert.Equal(0, bigMachine.ManualControl.Count);
         await StopAsync(root);
     }
@@ -235,12 +235,12 @@ public class MachineRegressionTests
         var root = new ExecutionRoot();
         var bigMachine = new TestBigMachine(root);
         var machine = bigMachine.ThrowingMachine.GetOrCreate();
-        BigMachineException? reported = null;
+        MachineExceptionInfo? reported = null;
         ((IBigMachine)bigMachine).SetExceptionHandler(exception => reported = exception);
 
-        Assert.Equal(CommandResult.Failure, await machine.Command.Throw());
+        Assert.Equal(CommandStatus.Failure, await machine.Command.Throw());
         Assert.Equal(1, ((IBigMachine)bigMachine).GetExceptionCount());
-        ((IBigMachine)bigMachine).ProcessException();
+        ((IBigMachine)bigMachine).ProcessExceptions();
 
         Assert.NotNull(reported);
         Assert.Same(typeof(ThrowingMachine), reported.Machine.GetType());
@@ -257,7 +257,7 @@ public class MachineRegressionTests
         var sourceRoot = new ExecutionRoot();
         var source = new TestBigMachine(sourceRoot);
         var single = source.SerializableSingleMachine.GetOrCreate();
-        Assert.Equal(CommandResult.Success, await single.Command.SetValue(42));
+        Assert.Equal(CommandStatus.Success, await single.Command.SetValue(42));
         var unordered = source.UnorderedTestMachine.GetOrCreate(7);
         await unordered.RunAsync();
         Assert.NotNull(source.SequentialIdleMachine.TryCreate(8));
@@ -274,7 +274,7 @@ public class MachineRegressionTests
             Assert.Equal(42, (await restoredSingle.Command.GetValue()).Response);
             Assert.True(restored.UnorderedTestMachine.TryGet(7, out var restoredUnordered));
             Assert.Equal(1, (await restoredUnordered.Command.GetRuns()).Response);
-            Assert.NotNull(restored.SequentialIdleMachine.TryGet(8));
+            Assert.NotNull(restored.SequentialIdleMachine.Find(8));
             Assert.Equal(2, Volatile.Read(ref SerializableSingleMachine.Starts));
         }
         finally
@@ -295,13 +295,13 @@ public class MachineRegressionTests
         for (uint serial = 1; serial <= 7; serial++)
         {
             var id = ((ulong)serial << 32) | serial;
-            Assert.Equal(1, api.CheckRecursive(serial, id));
+            Assert.Equal(1, api.CheckCircularCommand(serial, id));
         }
 
         var alternateId = (1UL << 32) | 100UL;
-        Assert.Equal(0, api.CheckRecursive(1, alternateId));
+        Assert.Equal(0, api.CheckCircularCommand(1, alternateId));
         var duplicateId = (1UL << 32) | 1UL;
-        var exception = Assert.Throws<CircularCommandException>(() => api.CheckRecursive(1, duplicateId));
+        var exception = Assert.Throws<CircularCommandException>(() => api.CheckCircularCommand(1, duplicateId));
         Assert.Contains("Circular commands detected", exception.Message);
         await StopAsync(root);
     }

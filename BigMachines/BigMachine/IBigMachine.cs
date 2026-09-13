@@ -17,19 +17,19 @@ public interface IBigMachine
 
     public void Start();
 
-    public int CheckRecursive(uint machineSerial, ulong id);
+    public int CheckCircularCommand(uint machineSerial, ulong commandId);
 
     /// <summary>
     /// Gets <see cref="DateTime"/> when the BigMachine was last executed.
     /// </summary>
-    public DateTime LastRun { get; }
+    public DateTime LastRunTime { get; }
 
     /// <summary>
     /// Determines whether any non-excluded machine is active or exceptions remain queued.
     /// </summary>
-    /// <param name="machineTypeToBeExcluded">The type of the machine to be excluded.</param>
+    /// <param name="excludedMachineType">The type of the machine to be excluded.</param>
     /// <returns>Whether execution or exception processing remains pending.</returns>
-    public bool CheckActiveMachine(Type? machineTypeToBeExcluded = null);
+    public bool HasPendingWork(Type? excludedMachineType = null);
 
     /// <summary>
     /// Gets the number of exceptions queued.
@@ -41,16 +41,16 @@ public interface IBigMachine
     /// Adds an exception to the root's queue.
     /// </summary>
     /// <param name="exception">The exception to be queued.</param>
-    public void ReportException(BigMachineException exception);
+    public void ReportException(MachineExceptionInfo exception);
 
     /// <summary>
     /// Sets an exception handler.
     /// </summary>
     /// <param name="handler">The exception handler.</param>
-    public void SetExceptionHandler(ExceptionHandlerDelegate handler);
+    public void SetExceptionHandler(MachineExceptionHandler handler);
 
     /// <summary>
     /// Processes the queued exceptions.
     /// </summary>
-    public void ProcessException();
+    public void ProcessExceptions();
 }

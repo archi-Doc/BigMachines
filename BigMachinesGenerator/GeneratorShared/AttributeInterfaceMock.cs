@@ -25,25 +25,25 @@ public sealed class BigMachineObjectAttributeMock : Attribute
     public static readonly string StandardName = SimpleName + "Attribute";
     public static readonly string FullName = BigMachinesBody.BigMachineNamespace + "." + StandardName;
 
-    public bool Inclusive { get; set; }
+    public bool IncludeAllMachines { get; set; }
 
-    public bool RecursiveDetection { get; set; }
+    public bool EnableRecursiveDetection { get; set; }
 
     public static BigMachineObjectAttributeMock FromArray(object?[] constructorArguments, KeyValuePair<string, object?>[] namedArguments)
     {
         var attribute = new BigMachineObjectAttributeMock();
         object? val;
 
-        val = VisceralHelper.GetValue(-1, nameof(Inclusive), constructorArguments, namedArguments);
+        val = VisceralHelper.GetValue(-1, nameof(IncludeAllMachines), constructorArguments, namedArguments);
         if (val != null)
         {
-            attribute.Inclusive = (bool)val;
+            attribute.IncludeAllMachines = (bool)val;
         }
 
-        val = VisceralHelper.GetValue(-1, nameof(RecursiveDetection), constructorArguments, namedArguments);
+        val = VisceralHelper.GetValue(-1, nameof(EnableRecursiveDetection), constructorArguments, namedArguments);
         if (val != null)
         {
-            attribute.RecursiveDetection = (bool)val;
+            attribute.EnableRecursiveDetection = (bool)val;
         }
 
         return attribute;
@@ -63,7 +63,7 @@ public sealed class AddMachineAttributeMock : Attribute
 
     public string Name { get; set; } = string.Empty;
 
-    public bool Volatile { get; set; }
+    public bool NonPersistent { get; set; }
 
     internal Location? Location { get; set; }
 
@@ -72,10 +72,10 @@ public sealed class AddMachineAttributeMock : Attribute
         var attribute = new AddMachineAttributeMock();
         object? val;
 
-        val = VisceralHelper.GetValue(-1, nameof(Volatile), constructorArguments, namedArguments);
+        val = VisceralHelper.GetValue(-1, nameof(NonPersistent), constructorArguments, namedArguments);
         if (val != null)
         {
-            attribute.Volatile = (bool)val;
+            attribute.NonPersistent = (bool)val;
         }
 
         val = VisceralHelper.GetValue(-1, nameof(Name), constructorArguments, namedArguments);
@@ -105,11 +105,11 @@ public sealed class MachineObjectAttributeMock : Attribute
 
     public bool UseServiceProvider { get; set; } = false;
 
-    public bool StartByDefault { get; set; } = false;
+    public bool CreateOnStart { get; set; } = false;
 
-    public int NumberOfTasks { get; set; } = 0;
+    public int WorkerCount { get; set; } = 0;
 
-    public bool Private { get; set; } = false;
+    public bool ExcludeFromIncludeAllMachines { get; set; } = false;
 
     public static MachineObjectAttributeMock FromArray(object?[] constructorArguments, KeyValuePair<string, object?>[] namedArguments)
     {
@@ -134,22 +134,22 @@ public sealed class MachineObjectAttributeMock : Attribute
             attribute.UseServiceProvider = (bool)val;
         }
 
-        val = VisceralHelper.GetValue(-1, nameof(StartByDefault), constructorArguments, namedArguments);
+        val = VisceralHelper.GetValue(-1, nameof(CreateOnStart), constructorArguments, namedArguments);
         if (val != null)
         {
-            attribute.StartByDefault = (bool)val;
+            attribute.CreateOnStart = (bool)val;
         }
 
-        val = VisceralHelper.GetValue(-1, nameof(NumberOfTasks), constructorArguments, namedArguments);
+        val = VisceralHelper.GetValue(-1, nameof(WorkerCount), constructorArguments, namedArguments);
         if (val != null)
         {
-            attribute.NumberOfTasks = (int)val;
+            attribute.WorkerCount = (int)val;
         }
 
-        val = VisceralHelper.GetValue(-1, nameof(Private), constructorArguments, namedArguments);
+        val = VisceralHelper.GetValue(-1, nameof(ExcludeFromIncludeAllMachines), constructorArguments, namedArguments);
         if (val != null)
         {
-            attribute.Private = (bool)val;
+            attribute.ExcludeFromIncludeAllMachines = (bool)val;
         }
 
         return attribute;
@@ -199,7 +199,7 @@ public sealed class CommandMethodAttributeMock : Attribute
 
     public bool WithLock { get; set; } = true;
 
-    public bool All { get; set; } = false;
+    public bool GenerateAllCommand { get; set; } = false;
 
     public static CommandMethodAttributeMock FromArray(object?[] constructorArguments, KeyValuePair<string, object?>[] namedArguments)
     {
@@ -218,10 +218,10 @@ public sealed class CommandMethodAttributeMock : Attribute
             attribute.WithLock = (bool)val;
         }
 
-        val = VisceralHelper.GetValue(-1, nameof(All), constructorArguments, namedArguments);
+        val = VisceralHelper.GetValue(-1, nameof(GenerateAllCommand), constructorArguments, namedArguments);
         if (val != null)
         {
-            attribute.All = (bool)val;
+            attribute.GenerateAllCommand = (bool)val;
         }
 
         return attribute;

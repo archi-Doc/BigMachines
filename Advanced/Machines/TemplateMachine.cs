@@ -11,7 +11,7 @@ public partial class TemplateMachine : Machine<int>
 
     public TemplateMachine()
     {
-        this.DefaultTimeout = TimeSpan.FromSeconds(1);
+        this.DefaultInterval = TimeSpan.FromSeconds(1);
     }
 
     public int Count { get; set; }

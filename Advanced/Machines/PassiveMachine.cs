@@ -67,9 +67,9 @@ public partial class PassiveMachine : Machine<int>
     }
 
     [CommandMethod]
-    protected CommandResult ReceiveString(string message)
+    protected CommandStatus ReceiveString(string message)
     {
         Console.WriteLine($"PassiveMachine command: {message}");
-        return CommandResult.Success;
+        return CommandStatus.Success;
     }
 }

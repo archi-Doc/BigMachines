@@ -15,11 +15,11 @@ namespace BigMachines.Control;
 /// Manages at most one instance of a machine type.
 /// </summary>
 /// <typeparam name="TMachine">The machine type.</typeparam>
-/// <typeparam name="TInterface">The generated machine interface type.</typeparam>
+/// <typeparam name="THandle">The generated machine handle type.</typeparam>
 [TinyhandObject]
-public partial class SingleMachineControl<TMachine, TInterface> : MachineControl, ITinyhandSerializable<SingleMachineControl<TMachine, TInterface>>, ITinyhandCustomJournal, ITinyhandSingleLayoutSerializable
+public partial class SingleMachineControl<TMachine, THandle> : MachineControl, ITinyhandSerializable<SingleMachineControl<TMachine, THandle>>, ITinyhandCustomJournal, ITinyhandSingleLayoutSerializable
     where TMachine : Machine
-    where TInterface : Machine.ManMachineInterface
+    where THandle : Machine.MachineHandle
 {
     #region FieldAndProperty
 
@@ -33,10 +33,10 @@ public partial class SingleMachineControl<TMachine, TInterface> : MachineControl
 
     public SingleMachineControl()
     {
-        this.MachineInformation = MachineRegistry.Get<TMachine>();
+        this.MachineInformation = MachineRegistry.GetInformation<TMachine>();
     }
 
-    public void Prepare(BigMachineBase bigMachine)
+    public void Attach(BigMachineBase bigMachine)
     {
         this.BigMachine = bigMachine;
     }
@@ -52,49 +52,49 @@ public partial class SingleMachineControl<TMachine, TInterface> : MachineControl
     }
 
     /// <summary>
-    /// Attempts to retrieve the machine interface if a machine exists.
+    /// Attempts to retrieve the machine handle if a machine exists.
     /// </summary>
-    /// <param name="machineInterface">
-    /// When this method returns, contains the machine interface of type <typeparamref name="TInterface"/> if a machine exists; otherwise, <see langword="null"/>.
+    /// <param name="handle">
+    /// When this method returns, contains the machine handle of type <typeparamref name="THandle"/> if a machine exists; otherwise, <see langword="null"/>.
     /// </param>
     /// <returns>
-    /// <see langword="true"/> if a machine exists and the interface was successfully retrieved; otherwise, <see langword="false"/>.
+    /// <see langword="true"/> if a machine exists and the handle was successfully retrieved; otherwise, <see langword="false"/>.
     /// </returns>
-    public bool TryGet([MaybeNullWhen(false)] out TInterface machineInterface)
+    public bool TryGet([MaybeNullWhen(false)] out THandle handle)
     {
-        machineInterface = Volatile.Read(ref this.machine)?.InterfaceInstance as TInterface;
-        return machineInterface is not null;
+        handle = Volatile.Read(ref this.machine)?.HandleInstance as THandle;
+        return handle is not null;
     }
 
     /// <summary>
-    /// Gets an existing machine interface or creates a new machine with the specified creation parameters.
+    /// Gets an existing machine handle or creates a new machine with the specified creation parameters.
     /// </summary>
-    /// <param name="createParam">The parameters to pass to <see cref="Machine.OnCreate(object?)"/> when creating a new machine.</param>
-    /// <returns>The machine interface of type <typeparamref name="TInterface"/>.</returns>
-    public TInterface GetOrCreate(object? createParam = null)
-        => (TInterface)this.GetOrCreateMachine(createParam).InterfaceInstance;
+    /// <param name="createParameter">The parameters to pass to <see cref="Machine.OnCreate(object?)"/> when creating a new machine.</param>
+    /// <returns>The machine handle of type <typeparamref name="THandle"/>.</returns>
+    public THandle GetOrCreate(object? createParameter = null)
+        => (THandle)this.GetOrCreateMachine(createParameter).HandleInstance;
 
     /// <summary>
-    /// Gets an existing machine interface or creates a new machine without creation parameters.
+    /// Gets an existing machine handle or creates a new machine without creation parameters.
     /// </summary>
-    /// <returns>The machine interface of type <typeparamref name="TInterface"/>.</returns>
-    public TInterface GetOrCreate()
-        => (TInterface)this.GetOrCreateMachine().InterfaceInstance;
+    /// <returns>The machine handle of type <typeparamref name="THandle"/>.</returns>
+    public THandle GetOrCreate()
+        => (THandle)this.GetOrCreateMachine().HandleInstance;
 
     /// <summary>
     /// Terminates any existing machine and creates a new machine with the specified creation parameters.
     /// </summary>
-    /// <param name="createParam">The parameters to pass to <see cref="Machine.OnCreate(object?)"/> when creating the new machine.</param>
-    /// <returns>The machine interface of type <typeparamref name="TInterface"/> for the newly created machine.</returns>
-    public TInterface CreateAlways(object? createParam = null)
-        => (TInterface)this.CreateAlwaysMachine(createParam).InterfaceInstance;
+    /// <param name="createParameter">The parameters to pass to <see cref="Machine.OnCreate(object?)"/> when creating the new machine.</param>
+    /// <returns>The machine handle of type <typeparamref name="THandle"/> for the newly created machine.</returns>
+    public THandle CreateOrReplace(object? createParameter = null)
+        => (THandle)this.CreateOrReplaceMachine(createParameter).HandleInstance;
 
     /// <summary>
     /// Terminates any existing machine and creates a new machine without creation parameters.
     /// </summary>
-    /// <returns>The machine interface of type <typeparamref name="TInterface"/> for the newly created machine.</returns>
-    public TInterface CreateAlways()
-        => (TInterface)this.CreateAlwaysMachine().InterfaceInstance;
+    /// <returns>The machine handle of type <typeparamref name="THandle"/> for the newly created machine.</returns>
+    public THandle CreateOrReplace()
+        => (THandle)this.CreateOrReplaceMachine().HandleInstance;
 
     public override bool ContainsActiveMachine()
     {
@@ -106,15 +106,15 @@ public partial class SingleMachineControl<TMachine, TInterface> : MachineControl
         return false;
     }
 
-    public override Machine.ManMachineInterface[] GetArray()
+    public override Machine.MachineHandle[] GetHandles()
     {
-        if (Volatile.Read(ref this.machine)?.InterfaceInstance is { } obj)
+        if (Volatile.Read(ref this.machine)?.HandleInstance is { } obj)
         {
-            return new Machine.ManMachineInterface[] { obj, };
+            return new Machine.MachineHandle[] { obj, };
         }
         else
         {
-            return Array.Empty<Machine.ManMachineInterface>();
+            return Array.Empty<Machine.MachineHandle>();
         }
     }
 
@@ -155,14 +155,14 @@ public partial class SingleMachineControl<TMachine, TInterface> : MachineControl
         }
     }
 
-    private TMachine GetOrCreateMachine(object? createParam)
+    private TMachine GetOrCreateMachine(object? createParameter)
     {
         using (this.lockObject.EnterScope())
         {
             if (this.machine is null)
             {
                 var machine = MachineRegistry.CreateMachine<TMachine>(this.MachineInformation);
-                machine.PrepareCreateStart(this, createParam);
+                machine.PrepareCreateStart(this, createParameter);
                 this.WriteJournal(machine);
                 Volatile.Write(ref this.machine, machine);
             }
@@ -174,36 +174,36 @@ public partial class SingleMachineControl<TMachine, TInterface> : MachineControl
     private TMachine GetOrCreateMachine()
         => this.GetOrCreateMachine(null);
 
-    private TMachine CreateAlwaysMachine(object? createParam)
+    private TMachine CreateOrReplaceMachine(object? createParameter)
     {
-        Machine.ManMachineInterface? machineInterface = default;
+        Machine.MachineHandle? handle = default;
 
 Loop:
-        if (machineInterface is not null)
+        if (handle is not null)
         {
-            machineInterface.TerminateMachine();
+            handle.Terminate();
         }
 
         using (this.lockObject.EnterScope())
         {
-            machineInterface = this.machine?.InterfaceInstance;
-            if (machineInterface is not null)
+            handle = this.machine?.HandleInstance;
+            if (handle is not null)
             {
                 goto Loop;
             }
 
             var machine = MachineRegistry.CreateMachine<TMachine>(this.MachineInformation);
-            machine.PrepareCreateStart(this, createParam);
+            machine.PrepareCreateStart(this, createParameter);
             this.WriteJournal(machine);
             Volatile.Write(ref this.machine, machine);
             return machine;
         }
     }
 
-    private TMachine CreateAlwaysMachine()
-        => this.CreateAlwaysMachine(null);
+    private TMachine CreateOrReplaceMachine()
+        => this.CreateOrReplaceMachine(null);
 
-    static void ITinyhandSerializable<SingleMachineControl<TMachine, TInterface>>.Serialize(ref TinyhandWriter writer, scoped ref SingleMachineControl<TMachine, TInterface>? value, TinyhandSerializerOptions options)
+    static void ITinyhandSerializable<SingleMachineControl<TMachine, THandle>>.Serialize(ref TinyhandWriter writer, scoped ref SingleMachineControl<TMachine, THandle>? value, TinyhandSerializerOptions options)
     {
         var machine = value is null ? null : Volatile.Read(ref value.machine);
         TinyhandSerializer.Serialize(ref writer, machine, options);
@@ -218,7 +218,7 @@ Loop:
         }*/
     }
 
-    static void ITinyhandSerializable<SingleMachineControl<TMachine, TInterface>>.Deserialize(ref TinyhandReader reader, scoped ref SingleMachineControl<TMachine, TInterface>? value, TinyhandSerializerOptions options)
+    static void ITinyhandSerializable<SingleMachineControl<TMachine, THandle>>.Deserialize(ref TinyhandReader reader, scoped ref SingleMachineControl<TMachine, THandle>? value, TinyhandSerializerOptions options)
     {
         value ??= new();
         var restored = TinyhandSerializer.Deserialize<TMachine>(ref reader, options);

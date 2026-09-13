@@ -8,21 +8,21 @@ public partial class SingleMachine : Machine
     public static void Test(BigMachine bigMachine)
     {
         bigMachine.SingleMachine.GetOrCreate("test"); // Only one machine is created.
-        bigMachine.SingleMachine.CreateAlways("test2"); // Terminate the previous machine and create a new one.
-        bigMachine.SingleMachine.CreateAlways("test3"); // Terminate the previous machine and create a new one.
-        var exists = bigMachine.SingleMachine.TryGet(out var machineInterface); // Try to get the existing machine.
+        bigMachine.SingleMachine.CreateOrReplace("test2"); // Terminate the previous machine and create a new one.
+        bigMachine.SingleMachine.CreateOrReplace("test3"); // Terminate the previous machine and create a new one.
+        var exists = bigMachine.SingleMachine.TryGet(out var handle); // Try to get the existing machine.
     }
 
     public SingleMachine()
     {
-        this.DefaultTimeout = TimeSpan.FromSeconds(1);
+        this.DefaultInterval = TimeSpan.FromSeconds(1);
     }
 
     public int Count { get; set; }
 
-    protected override void OnCreate(object? createParam)
+    protected override void OnCreate(object? createParameter)
     {
-        Console.WriteLine($"Single machine: Created('{createParam?.ToString()}')");
+        Console.WriteLine($"Single machine: Created('{createParameter?.ToString()}')");
     }
 
     protected override void OnTerminate()

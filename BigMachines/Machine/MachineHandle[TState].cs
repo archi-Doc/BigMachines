@@ -10,10 +10,10 @@ public partial class Machine
     /// Provides a user-facing handle for controlling a stateful machine.
     /// </summary>
     /// <typeparam name="TState">The machine state type.</typeparam>
-    public abstract class ManMachineInterface<TState> : ManMachineInterface
+    public abstract class MachineHandle<TState> : MachineHandle
         where TState : struct
     {
-        public ManMachineInterface(Machine machine)
+        public MachineHandle(Machine machine)
             : base(machine)
         {
         }
@@ -26,7 +26,7 @@ public partial class Machine
         /// <see langword="true"/>: the state is successfully retrieved; otherwise <see langword="false"/> (the machine is terminated).</returns>
         public bool TryGetState(out TState state)
         {
-            if (this.Machine.__operationalState__.HasFlag(OperationalFlag.Terminated))
+            if (this.Machine.__operationalState__.HasFlag(OperationalFlags.Terminated))
             {
                 state = default;
                 return false;
@@ -48,7 +48,7 @@ public partial class Machine
 
             using (this.Machine.Semaphore.EnterScope())
             {
-                if (this.Machine.__operationalState__.HasFlag(OperationalFlag.Terminated))
+                if (this.Machine.__operationalState__.HasFlag(OperationalFlags.Terminated))
                 {// Terminated
                     result = ChangeStateResult.Terminated;
                 }

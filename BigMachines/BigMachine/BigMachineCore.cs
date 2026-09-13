@@ -27,7 +27,7 @@ public partial class BigMachineBase
         private static async Task Process(BigMachineCore core)
         {
             var bigMachine = core.bigMachine;
-            var controls = core.bigMachine.GetArray();
+            var controls = core.bigMachine.GetControls();
             var runner = new MachineRunner();
             while (!core.IsTerminated)
             {

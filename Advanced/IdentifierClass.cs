@@ -53,7 +53,7 @@ public partial class IdentifierMachine : Machine<IdentifierClass>
     public IdentifierMachine(BigMachine<IdentifierClass> bigMachine)
         : base(bigMachine)
     {
-        this.DefaultTimeout = TimeSpan.FromSeconds(1);
+        this.DefaultInterval = TimeSpan.FromSeconds(1);
     }
 
     public int Count { get; set; }
@@ -77,7 +77,7 @@ public partial class IdentifierMachine2 : Machine<IdentifierClass2>
     public IdentifierMachine2(BigMachine<IdentifierClass2> bigMachine)
         : base(bigMachine)
     {
-        this.DefaultTimeout = TimeSpan.FromSeconds(1);
+        this.DefaultInterval = TimeSpan.FromSeconds(1);
     }
 
     public int Count { get; set; }

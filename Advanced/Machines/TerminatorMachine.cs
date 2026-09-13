@@ -2,29 +2,29 @@
 
 namespace Advanced;
 
-[MachineObject(StartByDefault = true)]
+[MachineObject(CreateOnStart = true)]
 public partial class TerminatorMachine : Machine
 {
     public TerminatorMachine()
     {
-        this.DefaultTimeout = TimeSpan.FromSeconds(1);
+        this.DefaultInterval = TimeSpan.FromSeconds(1);
     }
 
     [StateMethod(0)]
     protected StateResult Initial(StateParameter parameter)
     {
-        /*if (!((IBigMachine)this.BigMachine).CheckActiveMachine(typeof(TerminatorMachine)))
+        /*if (!((IBigMachine)this.BigMachine).HasPendingWork(typeof(TerminatorMachine)))
         {
             Console.WriteLine("Terminate2 (no machine)");
             ThreadCore.Root.Terminate(); // Terminate the application thread.
             return StateResult.Terminate;
         }*/
 
-        foreach (var x in this.BigMachine.GetArray())
+        foreach (var x in this.BigMachine.GetControls())
         {
             if (x.MachineInformation.MachineType != typeof(TerminatorMachine) && x.Count > 0)
             {
-                foreach (var y in x.GetArray())
+                foreach (var y in x.GetHandles())
                 {
                     if (y.IsActive == true)
                     {

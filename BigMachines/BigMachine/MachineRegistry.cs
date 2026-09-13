@@ -25,7 +25,7 @@ public static class MachineRegistry
         TypeToInformation.TryAdd(information.MachineType, information);
     }
 
-    public static MachineInformation Get<TMachine>()
+    public static MachineInformation GetInformation<TMachine>()
     {
         if (TypeToInformation.TryGetValue(typeof(TMachine), out var information))
         {
@@ -37,7 +37,7 @@ public static class MachineRegistry
         }
     }
 
-    public static bool TryGet<TMachine>([MaybeNullWhen(false)] out MachineInformation information)
+    public static bool TryGetInformation<TMachine>([MaybeNullWhen(false)] out MachineInformation information)
     {
         return TypeToInformation.TryGetValue(typeof(TMachine), out information);
     }
@@ -45,7 +45,7 @@ public static class MachineRegistry
     public static TMachine CreateMachine<TMachine>()
         where TMachine : Machine
     {
-        var information = Get<TMachine>();
+        var information = GetInformation<TMachine>();
         return CreateMachine<TMachine>(information);
     }
 

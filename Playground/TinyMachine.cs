@@ -12,7 +12,7 @@ internal partial class TinyMachine : Machine
     public TinyMachine()
         : base()
     {
-        this.DefaultTimeout = TimeSpan.FromSeconds(1);
+        this.DefaultInterval = TimeSpan.FromSeconds(1);
     }
 
     [StateMethod(0)]
@@ -29,7 +29,7 @@ internal partial class TinyMachine : Machine
 
     [CommandMethod]
     protected CommandResult<int> Command1(int x)
-        => new(CommandResult.Success, x + 2);
+        => new(CommandStatus.Success, x + 2);
 
     protected override void OnTerminate()
     {

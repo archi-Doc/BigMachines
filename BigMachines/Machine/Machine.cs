@@ -63,7 +63,7 @@ public abstract partial class Machine
             obj.SetupStructure(parent);
         }
 
-        if (this.DefaultTimeout != TimeSpan.Zero && this.__timeUntilRun__ == long.MaxValue)
+        if (this.DefaultInterval != TimeSpan.Zero && this.__timeUntilRun__ == long.MaxValue)
         {
             this.__timeUntilRun__ = 0;
         }
@@ -78,10 +78,10 @@ public abstract partial class Machine
     internal bool IsPreparedFor(MachineControl control)
         => ReferenceEquals(this.__machineControl__, control);
 
-    internal void PrepareCreateStart(MachineControl control, object? createParam)
+    internal void PrepareCreateStart(MachineControl control, object? createParameter)
     {// Create machine
         this.Prepare(control);
-        this.OnCreate(createParam);
+        this.OnCreate(createParameter);
         this.OnStart();
     }
 
@@ -297,21 +297,21 @@ public abstract partial class Machine
     /// </summary>
     public virtual MachineControl? MachineControl => default!;
 
-    public virtual ManMachineInterface InterfaceInstance => default!;
+    public virtual MachineHandle HandleInstance => default!;
 
-    internal OperationalFlag OperationalState => this.__operationalState__;
+    internal OperationalFlags OperationalState => this.__operationalState__;
 
     internal bool IsActive =>
-        !this.__operationalState__.HasFlag(OperationalFlag.Terminated) &&
-        (this.__operationalState__.HasFlag(OperationalFlag.Running) || this.DefaultTimeout > TimeSpan.Zero ||
+        !this.__operationalState__.HasFlag(OperationalFlags.Terminated) &&
+        (this.__operationalState__.HasFlag(OperationalFlags.Running) || this.DefaultInterval > TimeSpan.Zero ||
             Volatile.Read(ref this.__timeUntilRun__) != long.MaxValue || this.__nextRunTime__ != default);
 
     internal bool IsRunning =>
-        this.__operationalState__.HasFlag(OperationalFlag.Running) &&
-        !this.__operationalState__.HasFlag(OperationalFlag.Terminated);
+        this.__operationalState__.HasFlag(OperationalFlags.Running) &&
+        !this.__operationalState__.HasFlag(OperationalFlags.Terminated);
 
     internal bool IsTerminated
-            => this.__operationalState__.HasFlag(OperationalFlag.Terminated);
+            => this.__operationalState__.HasFlag(OperationalFlags.Terminated);
 
     protected readonly SemaphoreLock Semaphore = new();
 
@@ -319,16 +319,16 @@ public abstract partial class Machine
     /// Gets the default interval between timer runs. Zero disables periodic execution; this value is not serialized.
     /// </summary>
     [IgnoreMember]
-    protected TimeSpan DefaultTimeout { get; init; }
+    protected TimeSpan DefaultInterval { get; init; }
 
     [IgnoreMember]
-    protected volatile OperationalFlag __operationalState__;
+    protected volatile OperationalFlags __operationalState__;
 
     [IgnoreMember]
     protected object __machineControl__ = default!;
 
     [IgnoreMember]
-    protected object? __interfaceInstance__;
+    protected object? __handleInstance__;
 
     /// <summary>
     /// Indicates whether the current state dispatch should run again.
@@ -354,7 +354,7 @@ public abstract partial class Machine
 
         if (this.__lifespan__ <= 0 || this.__terminationTime__ <= now)
         {// Terminate
-            this.InterfaceInstance.TerminateMachine();
+            this.HandleInstance.Terminate();
         }
         else if (this.__operationalState__ == 0 &&
             (this.__timeUntilRun__ <= 0 || (this.__nextRunTime__ != default && this.__nextRunTime__ <= now)))
@@ -368,7 +368,7 @@ public abstract partial class Machine
         Volatile.Write(ref this.__timeUntilRun__, 0);
         if (this.__lifespan__ <= 0 || this.__terminationTime__ <= now)
         {// Terminate
-            this.InterfaceInstance.TerminateMachine();
+            this.HandleInstance.Terminate();
         }
         else if (this.__operationalState__ == 0)
         {// Screening
@@ -387,7 +387,7 @@ public abstract partial class Machine
         DecreaseRemaining(ref this.__lifespan__, elapsed.Ticks);
         if (this.__lifespan__ <= 0 || this.__terminationTime__ <= now)
         {// Terminate
-            this.InterfaceInstance.TerminateMachine();
+            this.HandleInstance.Terminate();
         }
     }
 
@@ -438,13 +438,13 @@ public abstract partial class Machine
         var runFlag = false;
         if (this.__timeUntilRun__ <= 0)
         {// Timeout
-            if (this.DefaultTimeout <= TimeSpan.Zero)
+            if (this.DefaultInterval <= TimeSpan.Zero)
             {
                 this.TimeUntilRun = TimeSpan.MaxValue;
             }
             else
             {
-                this.TimeUntilRun = this.DefaultTimeout;
+                this.TimeUntilRun = this.DefaultInterval;
             }
 
             runFlag = true;
@@ -472,12 +472,12 @@ public abstract partial class Machine
     /// <returns>The state-method result.</returns>
     private async Task<StateResult> RunMachine(RunType runType, DateTime now)
     {// Called: Machine.DistributeCommand(), BigMachine.MainLoop()
-        if ((this.__operationalState__ & (OperationalFlag.Running | OperationalFlag.Paused | OperationalFlag.Terminated)) != 0)
+        if ((this.__operationalState__ & (OperationalFlags.Running | OperationalFlags.Paused | OperationalFlags.Terminated)) != 0)
         {// Machine cannot run
             return StateResult.Continue;
         }
 
-        this.__operationalState__ |= OperationalFlag.Running;
+        this.__operationalState__ |= OperationalFlags.Running;
 RerunLoop:
         StateResult result;
         this.__requestRerun__ = false;
@@ -495,7 +495,7 @@ RerunLoop:
         if (result == StateResult.Terminate)
         {
             this.LastRunTime = now;
-            this.__operationalState__ &= ~OperationalFlag.Running;
+            this.__operationalState__ &= ~OperationalFlags.Running;
             return result;
         }
         else if (this.__requestRerun__)
@@ -504,7 +504,7 @@ RerunLoop:
         }
 
         this.LastRunTime = now;
-        this.__operationalState__ &= ~OperationalFlag.Running;
+        this.__operationalState__ &= ~OperationalFlags.Running;
         return result;
     }
 
@@ -536,7 +536,7 @@ RerunLoop:
     // Called with the machine semaphore held; callbacks cannot prevent removal.
     private void Terminate()
     {
-        this.__operationalState__ |= OperationalFlag.Terminated;
+        this.__operationalState__ |= OperationalFlags.Terminated;
         try
         {
             this.OnTerminate();
@@ -571,8 +571,8 @@ RerunLoop:
     /// Note that it is not called after deserialization.<br/>
     /// <see cref="OnCreate(object?)"/> -> <see cref="OnStart()"/> -> <see cref="OnTerminate"/>.
     /// </summary>
-    /// <param name="createParam">The parameters used when creating a machine.</param>
-    protected virtual void OnCreate(object? createParam)
+    /// <param name="createParameter">The parameters used when creating a machine.</param>
+    protected virtual void OnCreate(object? createParameter)
     {
     }
 

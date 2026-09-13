@@ -8,10 +8,10 @@ namespace BigMachines.Control;
 /// Defines a typed control for machines addressed by identifiers.
 /// </summary>
 /// <typeparam name="TIdentifier">The machine identifier type.</typeparam>
-/// <typeparam name="TInterface">The generated machine interface type.</typeparam>
-public abstract class MultiMachineControl<TIdentifier, TInterface> : MultiMachineControl<TIdentifier>
+/// <typeparam name="THandle">The generated machine handle type.</typeparam>
+public abstract class MultiMachineControl<TIdentifier, THandle> : MultiMachineControl<TIdentifier>
     where TIdentifier : notnull
-    where TInterface : Machine.ManMachineInterface
+    where THandle : Machine.MachineHandle
 {
     public MultiMachineControl()
         : base()
@@ -22,14 +22,14 @@ public abstract class MultiMachineControl<TIdentifier, TInterface> : MultiMachin
     /// Runs all the machines managed by the control class.
     /// </summary>
     /// <returns>A <see cref="Task"/> representing the asynchronous operation.</returns>
-    public async Task AllRunAsync()
+    public async Task RunAllAsync()
     {
-        var machines = this.GetArray();
+        var machines = this.GetHandles();
         foreach (var x in machines)
         {
             await x.RunAsync().ConfigureAwait(false);
         }
     }
 
-    public override abstract TInterface[] GetArray();
+    public override abstract THandle[] GetHandles();
 }

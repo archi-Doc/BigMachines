@@ -10,7 +10,7 @@ using Tinyhand;
 
 namespace Sandbox;
 
-[BigMachineObject(Inclusive = true)]
+[BigMachineObject(IncludeAllMachines = true)]
 public partial class BigMachine { }
 
 class Program
