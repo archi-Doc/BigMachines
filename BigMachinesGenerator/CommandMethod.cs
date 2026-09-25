@@ -98,6 +98,7 @@ public class CommandMethod
                 sb.Append(", ");
             }
 
+            names[i] = "@" + names[i]; // Verbatim identifiers allow keyword names such as 'event'.
             sb.Append(types[i]);
             sb.Append(" ");
             sb.Append(names[i]);
@@ -153,15 +154,16 @@ public class CommandMethod
 
         using (var method = ssb.ScopeBrace($"public async Task<{commandResult}> {this.Name}({this.ParameterTypesAndNames})"))
         {
+            // Generated locals use reserved names so that they cannot collide with command parameter names.
             if (BigMachinesBody.EnableRecursiveDetection)
             {
-                ssb.AppendLine("var locked = 0;");
+                ssb.AppendLine("var __locked__ = 0;");
                 ssb.AppendLine("try {");
                 ssb.IncrementIndent();
-                ssb.AppendLine($"locked = ((IBigMachine)this.machine.BigMachine).CheckCircularCommand(this.machine.__machineSerial__, ((ulong)this.machine.__machineSerial__ << 32) | {(uint)FarmHash.Hash64(this.Method.FullName)});");
+                ssb.AppendLine($"__locked__ = ((IBigMachine)this.machine.BigMachine).CheckCircularCommand(this.machine.__machineSerial__, ((ulong)this.machine.__machineSerial__ << 32) | {(uint)FarmHash.Hash64(this.Method.FullName)});");
                 if (this.WithLock)
                 {
-                    ssb.AppendLine("if (locked > 0) await this.machine.Semaphore.EnterAsync().ConfigureAwait(false);");
+                    ssb.AppendLine("if (__locked__ > 0) await this.machine.Semaphore.EnterAsync().ConfigureAwait(false);");
                 }
             }
             else
@@ -197,18 +199,18 @@ public class CommandMethod
             ssb.AppendLine("}");
             if (this.ResponseObject is null)
             {
-                ssb.AppendLine("catch (Exception e) { ((IBigMachine)this.machine.BigMachine).ReportException(new(this.machine, e)); return CommandStatus.Failure; }");
+                ssb.AppendLine("catch (Exception __exception__) { ((IBigMachine)this.machine.BigMachine).ReportException(new(this.machine, __exception__)); return CommandStatus.Failure; }");
             }
             else
             {
-                ssb.AppendLine("catch (Exception e) { ((IBigMachine)this.machine.BigMachine).ReportException(new(this.machine, e)); return new(CommandStatus.Failure, default); }");
+                ssb.AppendLine("catch (Exception __exception__) { ((IBigMachine)this.machine.BigMachine).ReportException(new(this.machine, __exception__)); return new(CommandStatus.Failure, default); }");
             }
 
             if (this.WithLock)
             {
                 if (BigMachinesBody.EnableRecursiveDetection)
                 {
-                    ssb.AppendLine("finally { if (locked > 0) this.machine.Semaphore.Exit(); }");
+                    ssb.AppendLine("finally { if (__locked__ > 0) this.machine.Semaphore.Exit(); }");
                 }
                 else
                 {

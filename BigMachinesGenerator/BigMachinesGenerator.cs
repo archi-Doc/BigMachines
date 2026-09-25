@@ -13,22 +13,8 @@ using Microsoft.CodeAnalysis.CSharp.Syntax;
 namespace BigMachines.Generator;
 
 [Generator]
-public class BigMachinesGeneratorV2 : IIncrementalGenerator, IGeneratorInformation
+public class BigMachinesGeneratorV2 : IIncrementalGenerator
 {
-    public bool AttachDebugger { get; private set; }
-
-    public bool GenerateToFile { get; private set; }
-
-    public string? CustomNamespace { get; private set; }
-
-    public string? AssemblyName { get; private set; }
-
-    public int AssemblyId { get; private set; }
-
-    public OutputKind OutputKind { get; private set; }
-
-    public string? TargetFolder { get; private set; }
-
     public void Initialize(IncrementalGeneratorInitializationContext context)
     {
         var provider = context.CompilationProvider.Combine(
@@ -36,7 +22,7 @@ public class BigMachinesGeneratorV2 : IIncrementalGenerator, IGeneratorInformati
             .CreateSyntaxProvider(static (s, _) => IsSyntaxTargetForGeneration(s), static (ctx, _) => GetSemanticTargetForGeneration(ctx))
             .Collect());
 
-        context.RegisterImplementationSourceOutput(provider, this.Emit);
+        context.RegisterImplementationSourceOutput(provider, Emit);
     }
 
     private static bool IsSyntaxTargetForGeneration(SyntaxNode node) =>
@@ -72,7 +58,7 @@ public class BigMachinesGeneratorV2 : IIncrementalGenerator, IGeneratorInformati
         return null;
     }
 
-    private void Emit(SourceProductionContext context, (Compilation Compilation, ImmutableArray<TypeDeclarationSyntax?> Types) source)
+    private static void Emit(SourceProductionContext context, (Compilation Compilation, ImmutableArray<TypeDeclarationSyntax?> Types) source)
     {
         var compilation = source.Compilation;
         var bigMachineObjectAttributeSymbol = compilation.GetTypeByMetadataName(BigMachineObjectAttributeMock.FullName);
@@ -93,9 +79,11 @@ public class BigMachinesGeneratorV2 : IIncrementalGenerator, IGeneratorInformati
             return;
         }
 
-        this.AssemblyName = compilation.AssemblyName ?? string.Empty;
-        this.AssemblyId = this.AssemblyName.GetHashCode();
-        this.OutputKind = compilation.Options.OutputKind;
+        // Generator instances are shared across runs and compilations, so options are collected per run.
+        var options = new GeneratorOptions();
+        options.AssemblyName = compilation.AssemblyName ?? string.Empty;
+        options.AssemblyId = options.AssemblyName.GetHashCode();
+        options.OutputKind = compilation.Options.OutputKind;
 
         var body = new BigMachinesBody(context);
 #pragma warning disable RS1024 // Symbols should be compared for equality
@@ -144,10 +132,10 @@ public class BigMachinesGeneratorV2 : IIncrementalGenerator, IGeneratorInformati
                         var va = new VisceralAttribute(BigMachinesGeneratorOptionAttributeMock.FullName, y);
                         var ta = BigMachinesGeneratorOptionAttributeMock.FromArray(va.ConstructorArguments, va.NamedArguments);
 
-                        this.AttachDebugger = ta.AttachDebugger;
-                        this.GenerateToFile = ta.GenerateToFile;
-                        this.CustomNamespace = ta.CustomNamespace;
-                        this.TargetFolder = System.IO.Path.Combine(System.IO.Path.GetDirectoryName(x.SyntaxTree.FilePath), "Generated");
+                        options.AttachDebugger = ta.AttachDebugger;
+                        options.GenerateToFile = ta.GenerateToFile;
+                        options.CustomNamespace = ta.CustomNamespace;
+                        options.TargetFolder = System.IO.Path.GetDirectoryName(x.SyntaxTree.FilePath) is { Length: > 0 } directory ? System.IO.Path.Combine(directory, "Generated") : null;
                     }
                 }
             }
@@ -161,7 +149,24 @@ public class BigMachinesGeneratorV2 : IIncrementalGenerator, IGeneratorInformati
         }
 
         context.CancellationToken.ThrowIfCancellationRequested();
-        body.Generate(this, context.CancellationToken);
+        body.Generate(options, context.CancellationToken);
+    }
+
+    private sealed class GeneratorOptions : IGeneratorInformation
+    {
+        public bool AttachDebugger { get; set; }
+
+        public bool GenerateToFile { get; set; }
+
+        public string? CustomNamespace { get; set; }
+
+        public string? AssemblyName { get; set; }
+
+        public int AssemblyId { get; set; }
+
+        public OutputKind OutputKind { get; set; }
+
+        public string? TargetFolder { get; set; }
     }
 }
 

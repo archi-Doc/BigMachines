@@ -56,13 +56,8 @@ public abstract partial class Machine
             throw new InvalidOperationException("A machine instance cannot be attached more than once. Register machine services as transient.");
         }
 
+        // The control sets up the structure after publishing the machine; changes made by OnCreate/OnStart are persisted by its addition record.
         this.__operationalState__ = default; // Operational flags are not persisted.
-        if (this is IStructuralObject obj &&
-            control is IStructuralObject parent)
-        {
-            obj.SetupStructure(parent);
-        }
-
         if (this.DefaultInterval != TimeSpan.Zero && this.__timeUntilRun__ == long.MaxValue)
         {
             this.__timeUntilRun__ = 0;
@@ -354,7 +349,7 @@ public abstract partial class Machine
 
         if (this.__lifespan__ <= 0 || this.__terminationTime__ <= now)
         {// Terminate
-            this.HandleInstance.Terminate();
+            this.TryTerminate();
         }
         else if (this.__operationalState__ == 0 &&
             (this.__timeUntilRun__ <= 0 || (this.__nextRunTime__ != default && this.__nextRunTime__ <= now)))
@@ -387,7 +382,37 @@ public abstract partial class Machine
         DecreaseRemaining(ref this.__lifespan__, elapsed.Ticks);
         if (this.__lifespan__ <= 0 || this.__terminationTime__ <= now)
         {// Terminate
-            this.HandleInstance.Terminate();
+            this.TryTerminate();
+        }
+    }
+
+    /// <summary>
+    /// Terminates and removes this machine from the shared timer loop without waiting for its semaphore.<br/>
+    /// A busy machine keeps its expired lifespan or termination time and is retried on the next pass, so it cannot stall other machines.
+    /// </summary>
+    private void TryTerminate()
+    {
+        if (!this.Semaphore.TryEnter())
+        {
+            return;
+        }
+
+        var terminate = !this.IsTerminated;
+        try
+        {
+            if (terminate)
+            {
+                this.Terminate();
+            }
+        }
+        finally
+        {
+            this.Semaphore.Exit();
+        }
+
+        if (terminate)
+        {
+            this.RemoveFromControl();
         }
     }
 

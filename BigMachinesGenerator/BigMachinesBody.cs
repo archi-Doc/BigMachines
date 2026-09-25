@@ -418,12 +418,13 @@ public class BigMachinesBody : VisceralBody<BigMachinesObject>
         var resultType = responseType is null ? $"IdentifierAndCommandResult<{identifierType}>" : $"IdentifierAndCommandResult<{identifierType}, {responseType}>";
         var param = string.IsNullOrEmpty(commandMethod.ParameterTypesAndNames) ? string.Empty : ", ";
 
-        using (var scopeMethod = ssb.ScopeBrace($"public static async Task<{resultType}[]> All{commandMethod.Name}(this MultiMachineControl<{identifierType}, {handleType}> control{param}{commandMethod.ParameterTypesAndNames})"))
+        // Reserved names cannot collide with command parameter names.
+        using (var scopeMethod = ssb.ScopeBrace($"public static async Task<{resultType}[]> All{commandMethod.Name}(this MultiMachineControl<{identifierType}, {handleType}> __control__{param}{commandMethod.ParameterTypesAndNames})"))
         {
-            ssb.AppendLine("var machines = control.GetHandles();");
-            ssb.AppendLine($"var results = new {resultType}[machines.Length];");
-            ssb.AppendLine($"for (var i = 0; i < machines.Length; i++) results[i] = new(machines[i].Identifier, await machines[i].Command.{commandMethod.Name}({commandMethod.ParameterNames}).ConfigureAwait(false));");
-            ssb.AppendLine("return results;");
+            ssb.AppendLine("var __handles__ = __control__.GetHandles();");
+            ssb.AppendLine($"var __results__ = new {resultType}[__handles__.Length];");
+            ssb.AppendLine($"for (var __i__ = 0; __i__ < __handles__.Length; __i__++) __results__[__i__] = new(__handles__[__i__].Identifier, await __handles__[__i__].Command.{commandMethod.Name}({commandMethod.ParameterNames}).ConfigureAwait(false));");
+            ssb.AppendLine("return __results__;");
         }
     }
 

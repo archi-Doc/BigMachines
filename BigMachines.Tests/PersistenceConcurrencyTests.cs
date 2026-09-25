@@ -349,6 +349,84 @@ public class PersistenceConcurrencyTests
     }
 
     [Fact]
+    public async Task ManualControlRemovesDerivedServiceInstance()
+    {
+        var previous = TinyhandSerializer.ServiceProvider;
+        var root = new ExecutionRoot();
+        var machines = new ReviewBigMachine(root);
+        TinyhandSerializer.ServiceProvider = new DerivedServiceProvider();
+        try
+        {
+            var original = machines.ManualControl.GetOrCreate<ReusedServiceMachine>();
+            Assert.True(original.Terminate());
+            Assert.Equal(0, machines.ManualControl.Count);
+            Assert.Null(machines.ManualControl.Find<ReusedServiceMachine>());
+
+            var replacement = machines.ManualControl.GetOrCreate<ReusedServiceMachine>();
+            Assert.NotSame(original, replacement);
+            Assert.False(replacement.IsTerminated);
+        }
+        finally
+        {
+            TinyhandSerializer.ServiceProvider = previous;
+            await Stop(root);
+        }
+    }
+
+    private sealed class DerivedServiceProvider : IServiceProvider
+    {
+        public object? GetService(Type serviceType)
+            => serviceType == typeof(ReusedServiceMachine) ? new DerivedServiceMachine() : null;
+    }
+
+    [Theory]
+    [InlineData(0)]
+    [InlineData(1)]
+    [InlineData(2)]
+    public async Task CreationCallbackChangesAreJournaledByTheAdditionRecord(int kind)
+    {
+        var root = new ExecutionRoot();
+        var source = new CreationBigMachine(root);
+        var replica = new CreationBigMachine(root);
+        var journal = new MemoryJournal();
+        try
+        {
+            ((IStructuralObject)source).SetupStructure(journal);
+            Machine.MachineHandle created = kind switch
+            {
+                0 => source.CreationJournalSingleMachine.GetOrCreate(),
+                1 => source.CreationJournalUnorderedMachine.GetOrCreate(1),
+                _ => source.CreationJournalSequentialMachine.GetOrCreate(1),
+            };
+
+            CreationJournalSingleMachine.Starts = 0;
+            CreationJournalUnorderedMachine.Starts = 0;
+            CreationJournalSequentialMachine.Starts = 0;
+            Replay(replica, Assert.Single(journal.Records));
+
+            Machine.MachineHandle? restored = kind switch
+            {
+                0 => replica.CreationJournalSingleMachine.TryGet(out var single) ? single : null,
+                1 => replica.CreationJournalUnorderedMachine.TryGet(1, out var unordered) ? unordered : null,
+                _ => replica.CreationJournalSequentialMachine.Find(1),
+            };
+            Assert.NotNull(restored);
+            Assert.Equal(TimeSpan.FromTicks(777), restored.GetTimeUntilRun());
+            Assert.Equal(1, CreationJournalSingleMachine.Starts + CreationJournalUnorderedMachine.Starts + CreationJournalSequentialMachine.Starts);
+
+            // Changes after publication are journaled at the machine's location.
+            journal.Records.Clear();
+            created.SetTimeUntilRun(TimeSpan.FromTicks(888));
+            Replay(replica, Assert.Single(journal.Records));
+            Assert.Equal(TimeSpan.FromTicks(888), restored.GetTimeUntilRun());
+        }
+        finally
+        {
+            await Stop(root);
+        }
+    }
+
+    [Fact]
     public async Task ManualStateExceptionIsReportedOnItsOwningRoot()
     {
         var root = new ExecutionRoot();
