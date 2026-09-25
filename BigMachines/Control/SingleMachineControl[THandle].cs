@@ -51,6 +51,16 @@ public partial class SingleMachineControl<TMachine, THandle> : MachineControl, I
         }
     }
 
+    private void Publish(TMachine machine)
+    {// Set up the structure after creation callbacks and the addition journal.
+        if (machine is IStructuralObject child)
+        {
+            child.SetupStructure(this);
+        }
+
+        Volatile.Write(ref this.machine, machine);
+    }
+
     /// <summary>
     /// Attempts to retrieve the machine handle if a machine exists.
     /// </summary>
@@ -159,15 +169,16 @@ public partial class SingleMachineControl<TMachine, THandle> : MachineControl, I
     {
         using (this.lockObject.EnterScope())
         {
-            if (this.machine is null)
+            var machine = this.machine;
+            if (machine is null)
             {
-                var machine = MachineRegistry.CreateMachine<TMachine>(this.MachineInformation);
+                machine = MachineRegistry.CreateMachine<TMachine>(this.MachineInformation);
                 machine.PrepareCreateStart(this, createParameter);
                 this.WriteJournal(machine);
-                Volatile.Write(ref this.machine, machine);
+                this.Publish(machine);
             }
 
-            return this.machine;
+            return machine;
         }
     }
 
@@ -195,7 +206,7 @@ Loop:
             var machine = MachineRegistry.CreateMachine<TMachine>(this.MachineInformation);
             machine.PrepareCreateStart(this, createParameter);
             this.WriteJournal(machine);
-            Volatile.Write(ref this.machine, machine);
+            this.Publish(machine);
             return machine;
         }
     }
@@ -253,7 +264,7 @@ Loop:
                 }
 
                 restored.PrepareStart(this);
-                Volatile.Write(ref this.machine, restored);
+                this.Publish(restored);
                 reader = fork;
                 return true;
             }
@@ -273,7 +284,7 @@ Loop:
             {
                 machine = MachineRegistry.CreateMachine<TMachine>(this.MachineInformation);
                 machine.PrepareStart(this);
-                Volatile.Write(ref this.machine, machine);
+                this.Publish(machine);
             }
         }
 

@@ -79,6 +79,60 @@ public class MachineRegressionTests
     }
 
     [Fact]
+    public async Task ExpiredBusyMachineDoesNotStallOtherTimers()
+    {
+        LongRunningMachine.Reset();
+        ScheduledMachine.Runs = 0;
+        var (root, bigMachine) = StartBigMachine();
+        try
+        {
+            var busy = bigMachine.LongRunningMachine.GetOrCreate();
+            busy.SetLifespan(TimeSpan.FromMilliseconds(50));
+            var runTask = busy.RunAsync();
+            await LongRunningMachine.Entered.WaitAsync(TimeSpan.FromSeconds(2), TestContext.Current.CancellationToken);
+            await WaitUntilAsync(() => busy.GetLifespan() <= TimeSpan.Zero);
+
+            // The timer loop must keep serving other machines while the expired machine holds its semaphore.
+            bigMachine.ScheduledMachine.GetOrCreate().SetTimeUntilRun(TimeSpan.Zero);
+            await WaitUntilAsync(() => Volatile.Read(ref ScheduledMachine.Runs) > 0);
+            Assert.False(busy.IsTerminated);
+
+            LongRunningMachine.Release();
+            await runTask.WaitAsync(TimeSpan.FromSeconds(2), TestContext.Current.CancellationToken);
+            await WaitUntilAsync(() => busy.IsTerminated && bigMachine.LongRunningMachine.Count == 0);
+        }
+        finally
+        {
+            LongRunningMachine.Release();
+            await StopAsync(root);
+        }
+    }
+
+    [Fact]
+    public async Task GeneratedCommandsAcceptParameterNamesUsedByGeneratedCode()
+    {
+        var root = new ExecutionRoot();
+        var bigMachine = new CreationBigMachine(root);
+        try
+        {
+            var first = bigMachine.ParameterNameMachine.GetOrCreate(1);
+            bigMachine.ParameterNameMachine.GetOrCreate(2);
+
+            Assert.Equal(654_321, (await first.Command.Encode(1, 2, 3, 4, 5, 6)).Response);
+            var encoded = await bigMachine.ParameterNameMachine.AllEncode(1, 2, 3, 4, 5, 6);
+            Assert.Equal(new[] { 1, 2 }, encoded.Select(x => x.Identifier).Order().ToArray());
+            Assert.All(encoded, x => Assert.Equal(654_321, x.Result.Response));
+
+            Assert.Equal(CommandStatus.Success, await first.Command.Check("class", 1));
+            Assert.All(await bigMachine.ParameterNameMachine.AllCheck("class", 1), x => Assert.Equal(CommandStatus.Success, x.Status));
+        }
+        finally
+        {
+            await StopAsync(root);
+        }
+    }
+
+    [Fact]
     public async Task TerminatedFlagIsRecognizedWhenCombinedWithPaused()
     {
         TerminationMachine.Commands = 0;

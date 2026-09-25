@@ -91,7 +91,19 @@ public sealed partial class ManualMachineControl : MachineControl // , ITinyhand
     {
         using (this.lockObject.EnterScope())
         {
-            return this.typeToMachine.Values.Select(x => x.HandleInstance).ToArray();
+            if (this.typeToMachine.Count == 0)
+            {
+                return Array.Empty<Machine.MachineHandle>();
+            }
+
+            var result = new Machine.MachineHandle[this.typeToMachine.Count];
+            var index = 0;
+            foreach (var x in this.typeToMachine.Values)
+            {
+                result[index++] = x.HandleInstance;
+            }
+
+            return result;
         }
     }
 
@@ -106,9 +118,16 @@ public sealed partial class ManualMachineControl : MachineControl // , ITinyhand
     internal override bool RemoveMachine(Machine machine)
     {
         using (this.lockObject.EnterScope())
-        {
-            return this.typeToMachine.TryGetValue(machine.GetType(), out var current) &&
-                ReferenceEquals(current, machine) && this.typeToMachine.Remove(machine.GetType());
+        {// Machines are keyed by the requested type, which differs from the runtime type when a service provider returns a derived instance.
+            foreach (var x in this.typeToMachine)
+            {
+                if (ReferenceEquals(x.Value, machine))
+                {
+                    return this.typeToMachine.Remove(x.Key);
+                }
+            }
+
+            return false;
         }
     }
 

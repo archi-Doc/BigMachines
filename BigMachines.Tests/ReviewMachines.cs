@@ -22,6 +22,66 @@ public partial class ReviewBigMachine;
 [AddMachine<SerializableSingleMachine>(NonPersistent = true)]
 public partial class VolatileBigMachine;
 
+[BigMachineObject]
+[AddMachine<CreationJournalSingleMachine>]
+[AddMachine<CreationJournalUnorderedMachine>]
+[AddMachine<CreationJournalSequentialMachine>]
+[AddMachine<ParameterNameMachine>]
+public partial class CreationBigMachine;
+
+[TinyhandObject(Structural = true)]
+[MachineObject]
+public partial class CreationJournalSingleMachine : Machine
+{
+    public static int Starts;
+
+    protected override void OnCreate(object? createParameter)
+        => this.TimeUntilRun = TimeSpan.FromTicks(777);
+
+    protected override void OnStart()
+        => Interlocked.Increment(ref Starts);
+}
+
+[TinyhandObject(Structural = true)]
+[MachineObject]
+public partial class CreationJournalUnorderedMachine : Machine<int>
+{
+    public static int Starts;
+
+    protected override void OnCreate(object? createParameter)
+        => this.TimeUntilRun = TimeSpan.FromTicks(777);
+
+    protected override void OnStart()
+        => Interlocked.Increment(ref Starts);
+}
+
+[TinyhandObject(Structural = true)]
+[MachineObject(Control = MachineControlKind.Sequential)]
+public partial class CreationJournalSequentialMachine : Machine<int>
+{
+    public static int Starts;
+
+    protected override void OnCreate(object? createParameter)
+        => this.TimeUntilRun = TimeSpan.FromTicks(777);
+
+    protected override void OnStart()
+        => Interlocked.Increment(ref Starts);
+}
+
+[MachineObject]
+public partial class ParameterNameMachine : Machine<int>
+{// Parameter names that match generated locals or C# keywords.
+    [CommandMethod(GenerateAllCommand = true)]
+    protected CommandResult<int> Encode(int e, int control, int machines, int results, int i, int @event)
+        => new(e + (control * 10) + (machines * 100) + (results * 1_000) + (i * 10_000) + (@event * 100_000));
+
+    [CommandMethod(WithLock = false, GenerateAllCommand = true)]
+    protected Task<CommandStatus> Check(string @class, int value)
+        => Task.FromResult(@class == "class" && value == 1 ? CommandStatus.Success : CommandStatus.Failure);
+}
+
+public class DerivedServiceMachine : ReusedServiceMachine;
+
 [MachineObject]
 public partial class DisposableSingleMachine : Machine, IDisposable
 {
