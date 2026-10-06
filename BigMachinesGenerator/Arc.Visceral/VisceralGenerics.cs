@@ -20,7 +20,7 @@ public enum VisceralGenericsKind
 }
 
 /// <summary>
-/// Process generic syntax.
+/// Collects generic type syntax and resolves it against a compilation.
 /// </summary>
 public class VisceralGenerics
 {

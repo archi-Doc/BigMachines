@@ -17,64 +17,24 @@ public class BigMachinesGeneratorV2 : IIncrementalGenerator
 {
     public void Initialize(IncrementalGeneratorInitializationContext context)
     {
-        var provider = context.CompilationProvider.Combine(
-            context.SyntaxProvider
-            .CreateSyntaxProvider(static (s, _) => IsSyntaxTargetForGeneration(s), static (ctx, _) => GetSemanticTargetForGeneration(ctx))
-            .Collect());
+        var roots = GetAttributedTypes(context, BigMachineObjectAttributeMock.FullName);
+        var machines = GetAttributedTypes(context, MachineObjectAttributeMock.FullName);
+        var options = GetAttributedTypes(context, BigMachinesGeneratorOptionAttributeMock.FullName);
+        var provider = context.CompilationProvider.Combine(roots).Combine(machines).Combine(options);
 
-        context.RegisterImplementationSourceOutput(provider, Emit);
+        context.RegisterImplementationSourceOutput(provider, static (context, source) =>
+            Emit(context, source.Left.Left.Left, source.Left.Left.Right, source.Left.Right, source.Right));
     }
 
-    private static bool IsSyntaxTargetForGeneration(SyntaxNode node) =>
-        node is TypeDeclarationSyntax m && m.AttributeLists.Count > 0;
+    private static IncrementalValueProvider<ImmutableArray<INamedTypeSymbol>> GetAttributedTypes(IncrementalGeneratorInitializationContext context, string metadataName)
+        => context.SyntaxProvider.ForAttributeWithMetadataName(
+            metadataName,
+            static (node, _) => node is TypeDeclarationSyntax,
+            static (context, _) => (INamedTypeSymbol)context.TargetSymbol).Collect();
 
-    private static TypeDeclarationSyntax? GetSemanticTargetForGeneration(GeneratorSyntaxContext context)
+    private static void Emit(SourceProductionContext context, Compilation compilation, ImmutableArray<INamedTypeSymbol> roots, ImmutableArray<INamedTypeSymbol> machines, ImmutableArray<INamedTypeSymbol> optionTypes)
     {
-        var typeSyntax = (TypeDeclarationSyntax)context.Node;
-        foreach (var attributeList in typeSyntax.AttributeLists)
-        {
-            foreach (var attribute in attributeList.Attributes)
-            {
-                var name = attribute.Name.ToString();
-
-                if (name.EndsWith(BigMachineObjectAttributeMock.StandardName) ||
-                    name.EndsWith(BigMachineObjectAttributeMock.SimpleName))
-                {
-                    return typeSyntax;
-                }
-                else if (name.EndsWith(MachineObjectAttributeMock.StandardName) ||
-                    name.EndsWith(MachineObjectAttributeMock.SimpleName))
-                {
-                    return typeSyntax;
-                }
-                else if (name.EndsWith(BigMachinesGeneratorOptionAttributeMock.StandardName) ||
-                    name.EndsWith(BigMachinesGeneratorOptionAttributeMock.SimpleName))
-                {
-                    return typeSyntax;
-                }
-            }
-        }
-
-        return null;
-    }
-
-    private static void Emit(SourceProductionContext context, (Compilation Compilation, ImmutableArray<TypeDeclarationSyntax?> Types) source)
-    {
-        var compilation = source.Compilation;
-        var bigMachineObjectAttributeSymbol = compilation.GetTypeByMetadataName(BigMachineObjectAttributeMock.FullName);
-        if (bigMachineObjectAttributeSymbol == null)
-        {
-            return;
-        }
-
-        var machineObjectAttributeSymbol = compilation.GetTypeByMetadataName(MachineObjectAttributeMock.FullName);
-        if (machineObjectAttributeSymbol == null)
-        {
-            return;
-        }
-
-        var bigMachinesGeneratorOptionAttributeSymbol = compilation.GetTypeByMetadataName(BigMachinesGeneratorOptionAttributeMock.FullName);
-        if (bigMachinesGeneratorOptionAttributeSymbol == null)
+        if (roots.IsEmpty && machines.IsEmpty && optionTypes.IsEmpty)
         {
             return;
         }
@@ -82,64 +42,30 @@ public class BigMachinesGeneratorV2 : IIncrementalGenerator
         // Generator instances are shared across runs and compilations, so options are collected per run.
         var options = new GeneratorOptions();
         options.AssemblyName = compilation.AssemblyName ?? string.Empty;
-        options.AssemblyId = options.AssemblyName.GetHashCode();
         options.OutputKind = compilation.Options.OutputKind;
 
         var body = new BigMachinesBody(context);
-#pragma warning disable RS1024 // Symbols should be compared for equality
-        var processed = new HashSet<INamedTypeSymbol?>();
-#pragma warning restore RS1024 // Symbols should be compared for equality
-
-        var generatorOptionSet = false;
-        foreach (var x in source.Types)
+        if (!optionTypes.IsEmpty)
         {
-            if (x == null)
+            var attributeSymbol = compilation.GetTypeByMetadataName(BigMachinesGeneratorOptionAttributeMock.FullName);
+            foreach (var attribute in optionTypes[0].GetAttributes())
             {
-                continue;
-            }
-
-            context.CancellationToken.ThrowIfCancellationRequested();
-
-            var model = compilation.GetSemanticModel(x.SyntaxTree);
-            if (model.GetDeclaredSymbol(x) is INamedTypeSymbol s &&
-                !processed.Contains(s))
-            {
-                processed.Add(s);
-                foreach (var y in s.GetAttributes())
+                if (SymbolEqualityComparer.Default.Equals(attribute.AttributeClass, attributeSymbol))
                 {
-                    if (SymbolEqualityComparer.Default.Equals(y.AttributeClass, bigMachineObjectAttributeSymbol))
-                    { // BigMachineObject
-                        if (body.Add(s) is { } obj)
-                        {
-                            obj.ObjectFlag |= BigMachinesObjectFlag.BigMachineObject;
-                        }
-
-                        break;
-                    }
-                    else if (SymbolEqualityComparer.Default.Equals(y.AttributeClass, machineObjectAttributeSymbol))
-                    { // MachineObject
-                        if (body.Add(s) is { } obj)
-                        {
-                            obj.ObjectFlag |= BigMachinesObjectFlag.MachineObject;
-                        }
-
-                        break;
-                    }
-                    else if (!generatorOptionSet &&
-                        SymbolEqualityComparer.Default.Equals(y.AttributeClass, bigMachinesGeneratorOptionAttributeSymbol))
-                    {
-                        generatorOptionSet = true;
-                        var va = new VisceralAttribute(BigMachinesGeneratorOptionAttributeMock.FullName, y);
-                        var ta = BigMachinesGeneratorOptionAttributeMock.FromArray(va.ConstructorArguments, va.NamedArguments);
-
-                        options.AttachDebugger = ta.AttachDebugger;
-                        options.GenerateToFile = ta.GenerateToFile;
-                        options.CustomNamespace = ta.CustomNamespace;
-                        options.TargetFolder = System.IO.Path.GetDirectoryName(x.SyntaxTree.FilePath) is { Length: > 0 } directory ? System.IO.Path.Combine(directory, "Generated") : null;
-                    }
+                    var va = new VisceralAttribute(BigMachinesGeneratorOptionAttributeMock.FullName, attribute);
+                    var ta = BigMachinesGeneratorOptionAttributeMock.FromArray(va.ConstructorArguments, va.NamedArguments);
+                    options.AttachDebugger = ta.AttachDebugger;
+                    options.GenerateToFile = ta.GenerateToFile;
+                    options.CustomNamespace = ta.CustomNamespace;
+                    options.UseModuleInitializer = ta.UseModuleInitializer;
+                    options.TargetFolder = System.IO.Path.GetDirectoryName(attribute.ApplicationSyntaxReference?.SyntaxTree.FilePath) is { Length: > 0 } directory ? System.IO.Path.Combine(directory, "Generated") : null;
+                    break;
                 }
             }
         }
+
+        AddTypes(roots, BigMachinesObjectFlag.BigMachineObject);
+        AddTypes(machines, BigMachinesObjectFlag.MachineObject);
 
         context.CancellationToken.ThrowIfCancellationRequested();
         body.Prepare();
@@ -150,6 +76,18 @@ public class BigMachinesGeneratorV2 : IIncrementalGenerator
 
         context.CancellationToken.ThrowIfCancellationRequested();
         body.Generate(options, context.CancellationToken);
+
+        void AddTypes(ImmutableArray<INamedTypeSymbol> types, BigMachinesObjectFlag flag)
+        {
+            foreach (var type in types)
+            {
+                context.CancellationToken.ThrowIfCancellationRequested();
+                if (body.Add(type) is { } obj)
+                {
+                    obj.ObjectFlag |= flag;
+                }
+            }
+        }
     }
 
     private sealed class GeneratorOptions : IGeneratorInformation
@@ -159,6 +97,8 @@ public class BigMachinesGeneratorV2 : IIncrementalGenerator
         public bool GenerateToFile { get; set; }
 
         public string? CustomNamespace { get; set; }
+
+        public bool UseModuleInitializer { get; set; } = true;
 
         public string? AssemblyName { get; set; }
 

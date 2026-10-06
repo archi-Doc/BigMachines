@@ -24,7 +24,7 @@ public abstract partial class Machine<TIdentifier> : Machine
     }
 
     /// <summary>
-    /// Gets an instance of <see cref="MultiMachineControl{TIdentifier}"/>.
+    /// Gets the identified control, or <see langword="null"/> when attached to an incompatible control such as the manual control.
     /// </summary>
     public override MultiMachineControl<TIdentifier>? MachineControl { get; } = default!;
 

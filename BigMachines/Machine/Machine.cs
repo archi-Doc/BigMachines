@@ -24,6 +24,8 @@ namespace BigMachines;
 public abstract partial class Machine
 {
     internal const int ReservedKeyCount = 9;
+    private static readonly Task<StateResult> ContinueTask = Task.FromResult(StateResult.Continue);
+    private static readonly Task<StateResult> TerminateTask = Task.FromResult(StateResult.Terminate);
     private static uint serialNumber;
     private int removed;
     private int runQueued;
@@ -43,6 +45,19 @@ public abstract partial class Machine
             current = observed;
         }
     }
+
+    /// <summary>
+    /// Returns a completed task, reusing cached tasks for the standard state results.
+    /// </summary>
+    /// <param name="result">The result of a synchronous state method.</param>
+    /// <returns>A completed task containing the result.</returns>
+    protected static Task<StateResult> __FromStateResult__(StateResult result)
+        => result switch
+        {
+            StateResult.Continue => ContinueTask,
+            StateResult.Terminate => TerminateTask,
+            _ => Task.FromResult(result),
+        };
 
     public Machine()
     {
@@ -296,17 +311,22 @@ public abstract partial class Machine
 
     internal OperationalFlags OperationalState => this.__operationalState__;
 
-    internal bool IsActive =>
-        !this.__operationalState__.HasFlag(OperationalFlags.Terminated) &&
-        (this.__operationalState__.HasFlag(OperationalFlags.Running) || this.DefaultInterval > TimeSpan.Zero ||
-            Volatile.Read(ref this.__timeUntilRun__) != long.MaxValue || this.__nextRunTime__ != default);
+    internal bool IsActive
+    {
+        get
+        {
+            var state = this.__operationalState__;
+            return (state & OperationalFlags.Terminated) == 0 &&
+                ((state & OperationalFlags.Running) != 0 || this.DefaultInterval > TimeSpan.Zero ||
+                    Volatile.Read(ref this.__timeUntilRun__) != long.MaxValue || this.__nextRunTime__ != default);
+        }
+    }
 
     internal bool IsRunning =>
-        this.__operationalState__.HasFlag(OperationalFlags.Running) &&
-        !this.__operationalState__.HasFlag(OperationalFlags.Terminated);
+        (this.__operationalState__ & (OperationalFlags.Running | OperationalFlags.Terminated)) == OperationalFlags.Running;
 
     internal bool IsTerminated
-            => this.__operationalState__.HasFlag(OperationalFlags.Terminated);
+        => (this.__operationalState__ & OperationalFlags.Terminated) != 0;
 
     protected readonly SemaphoreLock Semaphore = new();
 
@@ -367,7 +387,7 @@ public abstract partial class Machine
         }
         else if (this.__operationalState__ == 0)
         {// Screening
-            return this.RunAndForget(now, reserved: true);
+            return this.RunReservedAsync(now);
         }
 
         Volatile.Write(ref this.runQueued, 0);
@@ -417,47 +437,52 @@ public abstract partial class Machine
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    internal Task RunAndForget(DateTime now, bool reserved = false)
+    internal Task RunAndForget(DateTime now)
     {
-        if (!reserved && !this.TryReserveRun())
+        if (!this.TryReserveRun())
         {
             return Task.CompletedTask;
         }
 
-        return Task.Run(async () =>
+        return this.QueueRun(now);
+    }
+
+    private Task QueueRun(DateTime now)
+        => Task.Run(() => this.RunReservedAsync(now));
+
+    private async Task RunReservedAsync(DateTime now)
+    {
+        await this.Semaphore.EnterAsync().ConfigureAwait(false);
+        try
         {
-            await this.Semaphore.EnterAsync().ConfigureAwait(false);
+            if (await this.TryRun(now).ConfigureAwait(false) == StateResult.Terminate)
+            {
+                this.Terminate();
+            }
+        }
+        finally
+        {
+            this.Semaphore.Exit();
+
             try
             {
-                if (await this.TryRun(now).ConfigureAwait(false) == StateResult.Terminate)
+                if (this.IsTerminated)
                 {
-                    this.Terminate();
+                    this.RemoveFromControl();
                 }
             }
             finally
             {
-                this.Semaphore.Exit();
-
-                try
-                {
-                    if (this.IsTerminated)
-                    {
-                        this.RemoveFromControl();
-                    }
-                }
-                finally
-                {
-                    Volatile.Write(ref this.runQueued, 0);
-                }
+                Volatile.Write(ref this.runQueued, 0);
             }
-        });
+        }
     }
 
-    private async Task<StateResult> TryRun(DateTime now)
+    private Task<StateResult> TryRun(DateTime now)
     {// Locked
         if (this.__operationalState__ != 0)
         {
-            return StateResult.Continue;
+            return ContinueTask;
         }
 
         var runFlag = false;
@@ -483,10 +508,10 @@ public abstract partial class Machine
 
         if (!runFlag)
         {
-            return StateResult.Continue;
+            return ContinueTask;
         }
 
-        return await this.RunMachine(RunType.Timer, now).ConfigureAwait(false);
+        return this.RunMachine(RunType.Timer, now);
     }
 
     /// <summary>
@@ -579,14 +604,14 @@ RerunLoop:
     /// <returns>The state-method result.</returns>
     protected virtual Task<StateResult> __InternalRun__(StateParameter parameter)
     {// Called: Machine.RunMachine()
-        return Task.FromResult(StateResult.Terminate);
+        return TerminateTask;
     }
 
     /// <summary>
     /// Represents the generated dispatch method called when the state changes.
     /// </summary>
     /// <param name="state">The next state.</param>
-    /// <param name="rerun">Whether to run the new state immediately after a successful transition.</param>
+    /// <param name="rerun">Whether to dispatch the changed state again after the current handler returns <see cref="StateResult.Continue"/>.</param>
     /// <returns>The result of the transition.</returns>
     protected virtual ChangeStateResult __InternalChangeState__(int state, bool rerun)
         => ChangeStateResult.Terminated;
@@ -602,9 +627,8 @@ RerunLoop:
     }
 
     /// <summary>
-    /// Called when the machine is ready to start.<br/>
-    /// Note that it is called before the actual state method.<br/>
-    /// <see cref="OnCreate(object?)"/> -> <see cref="OnStart()"/> -> <see cref="OnTerminate"/>.
+    /// Called after creation or deserialization, before any state method runs.
+    /// Newly created machines receive <see cref="OnCreate(object?)"/> first; restored machines do not.
     /// </summary>
     protected virtual void OnStart()
     {

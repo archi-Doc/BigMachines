@@ -12,6 +12,8 @@ public interface IGeneratorInformation
 
     public string? CustomNamespace { get; }
 
+    public bool UseModuleInitializer { get; }
+
     public string? AssemblyName { get; }
 
     public int AssemblyId { get; }

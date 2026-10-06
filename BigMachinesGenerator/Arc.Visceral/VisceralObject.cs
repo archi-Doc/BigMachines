@@ -203,12 +203,12 @@ public class VisceralAttribute : IComparable<VisceralAttribute>
     // public ImmutableArray<KeyValuePair<string, object?>> Arguments { get; }
 
     /// <summary>
-    /// Gets the constructor attribute arguments (object? value).
+    /// Gets the attribute's positional constructor arguments.
     /// </summary>
     public object?[] ConstructorArguments { get; }
 
     /// <summary>
-    /// Gets the named attribute arguments (string name, object? value).
+    /// Gets the attribute's named arguments as name/value pairs.
     /// </summary>
     public KeyValuePair<string, object?>[] NamedArguments { get; }
 
@@ -2316,7 +2316,7 @@ public abstract class VisceralObjectBase<T> : IComparable<T>
     }
 
     /// <summary>
-    /// Gets a value indicating whether the symbol is the original definition (not derived).
+    /// Gets a value indicating whether the symbol is an original definition rather than a constructed or substituted symbol.
     /// </summary>
     public bool IsDefinition
     {

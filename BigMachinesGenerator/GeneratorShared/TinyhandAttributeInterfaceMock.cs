@@ -67,7 +67,7 @@ public sealed class TinyhandObjectAttributeMock
     }
 
     /// <summary>
-    /// Create an attribute instance from constructor arguments and named arguments.
+    /// Creates an attribute instance from positional and named arguments.
     /// </summary>
     /// <param name="constructorArguments">Constructor arguments.</param>
     /// <param name="namedArguments">Named arguments.</param>

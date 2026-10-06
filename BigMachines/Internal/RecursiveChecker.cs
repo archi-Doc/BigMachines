@@ -1,5 +1,6 @@
-﻿// Copyright (c) All contributors. All rights reserved. Licensed under the MIT license.
+// Copyright (c) All contributors. All rights reserved. Licensed under the MIT license.
 
+using System;
 using System.Threading;
 
 namespace BigMachines;
@@ -38,317 +39,79 @@ internal readonly struct RecursiveChecker
         this.Id5 = id5;
     }
 
+    private readonly AdditionalId? additionalIds;
+
+    private RecursiveChecker(RecursiveChecker checker, ulong additionalId)
+    {
+        this.Id0 = checker.Id0;
+        this.Id1 = checker.Id1;
+        this.Id2 = checker.Id2;
+        this.Id3 = checker.Id3;
+        this.Id4 = checker.Id4;
+        this.Id5 = checker.Id5;
+        this.additionalIds = new(additionalId, checker.additionalIds);
+    }
+
     public int TryAdd(uint machineSerial, ulong id, out RecursiveChecker newDetection)
     {// -1: Id collision, 0: Machine collision, 1: No collision
         var result = 1;
-        if (this.Id0 == 0)
+        ReadOnlySpan<ulong> ids = [this.Id0, this.Id1, this.Id2, this.Id3, this.Id4, this.Id5];
+        var count = 0;
+        foreach (var previous in ids)
         {
-            newDetection = new(id);
-            return 1;
+            if (previous == 0)
+            {
+                break;
+            }
+
+            count++;
+            if (!CheckId(previous))
+            {
+                newDetection = default;
+                return -1;
+            }
         }
-        else if (this.Id1 == 0)
+
+        for (var additional = this.additionalIds; additional is not null; additional = additional.Next)
         {
-            if ((this.Id0 >> 32) == machineSerial)
+            if (!CheckId(additional.Id))
             {
-                if (this.Id0 == id)
-                {
-                    newDetection = default;
-                    return -1;
-                }
-                else
-                {
-                    result = 0;
-                }
+                newDetection = default;
+                return -1;
             }
-
-            newDetection = new(this.Id0, id);
-            return result;
         }
-        else if (this.Id2 == 0)
+
+        // Keep shallow call chains inline. Overflow nodes are immutable so inherited
+        // execution contexts cannot modify the chain of a parent or sibling call.
+        newDetection = count switch
         {
-            if ((this.Id0 >> 32) == machineSerial)
-            {
-                if (this.Id0 == id)
-                {
-                    newDetection = default;
-                    return -1;
-                }
-                else
-                {
-                    result = 0;
-                }
-            }
+            0 => new(id),
+            1 => new(this.Id0, id),
+            2 => new(this.Id0, this.Id1, id),
+            3 => new(this.Id0, this.Id1, this.Id2, id),
+            4 => new(this.Id0, this.Id1, this.Id2, this.Id3, id),
+            5 => new(this.Id0, this.Id1, this.Id2, this.Id3, this.Id4, id),
+            _ => new(this, id),
+        };
+        return result;
 
-            if ((this.Id1 >> 32) == machineSerial)
-            {
-                if (this.Id1 == id)
-                {
-                    newDetection = default;
-                    return -1;
-                }
-                else
-                {
-                    result = 0;
-                }
-            }
-
-            newDetection = new(this.Id0, this.Id1, id);
-            return result;
-        }
-        else if (this.Id3 == 0)
+        bool CheckId(ulong previous)
         {
-            if ((this.Id0 >> 32) == machineSerial)
+            if (previous >> 32 != machineSerial)
             {
-                if (this.Id0 == id)
-                {
-                    newDetection = default;
-                    return -1;
-                }
-                else
-                {
-                    result = 0;
-                }
+                return true;
             }
 
-            if ((this.Id1 >> 32) == machineSerial)
-            {
-                if (this.Id1 == id)
-                {
-                    newDetection = default;
-                    return -1;
-                }
-                else
-                {
-                    result = 0;
-                }
-            }
-
-            if ((this.Id2 >> 32) == machineSerial)
-            {
-                if (this.Id2 == id)
-                {
-                    newDetection = default;
-                    return -1;
-                }
-                else
-                {
-                    result = 0;
-                }
-            }
-
-            newDetection = new(this.Id0, this.Id1, this.Id2, id);
-            return result;
+            result = 0;
+            return previous != id;
         }
-        else if (this.Id4 == 0)
-        {
-            if ((this.Id0 >> 32) == machineSerial)
-            {
-                if (this.Id0 == id)
-                {
-                    newDetection = default;
-                    return -1;
-                }
-                else
-                {
-                    result = 0;
-                }
-            }
+    }
 
-            if ((this.Id1 >> 32) == machineSerial)
-            {
-                if (this.Id1 == id)
-                {
-                    newDetection = default;
-                    return -1;
-                }
-                else
-                {
-                    result = 0;
-                }
-            }
+    private sealed class AdditionalId(ulong id, AdditionalId? next)
+    {
+        public ulong Id { get; } = id;
 
-            if ((this.Id2 >> 32) == machineSerial)
-            {
-                if (this.Id2 == id)
-                {
-                    newDetection = default;
-                    return -1;
-                }
-                else
-                {
-                    result = 0;
-                }
-            }
-
-            if ((this.Id3 >> 32) == machineSerial)
-            {
-                if (this.Id3 == id)
-                {
-                    newDetection = default;
-                    return -1;
-                }
-                else
-                {
-                    result = 0;
-                }
-            }
-
-            newDetection = new(this.Id0, this.Id1, this.Id2, this.Id3, id);
-            return result;
-        }
-        else if (this.Id5 == 0)
-        {
-            if ((this.Id0 >> 32) == machineSerial)
-            {
-                if (this.Id0 == id)
-                {
-                    newDetection = default;
-                    return -1;
-                }
-                else
-                {
-                    result = 0;
-                }
-            }
-
-            if ((this.Id1 >> 32) == machineSerial)
-            {
-                if (this.Id1 == id)
-                {
-                    newDetection = default;
-                    return -1;
-                }
-                else
-                {
-                    result = 0;
-                }
-            }
-
-            if ((this.Id2 >> 32) == machineSerial)
-            {
-                if (this.Id2 == id)
-                {
-                    newDetection = default;
-                    return -1;
-                }
-                else
-                {
-                    result = 0;
-                }
-            }
-
-            if ((this.Id3 >> 32) == machineSerial)
-            {
-                if (this.Id3 == id)
-                {
-                    newDetection = default;
-                    return -1;
-                }
-                else
-                {
-                    result = 0;
-                }
-            }
-
-            if ((this.Id4 >> 32) == machineSerial)
-            {
-                if (this.Id4 == id)
-                {
-                    newDetection = default;
-                    return -1;
-                }
-                else
-                {
-                    result = 0;
-                }
-            }
-
-            newDetection = new(this.Id0, this.Id1, this.Id2, this.Id3, this.Id4, id);
-            return result;
-        }
-        else
-        {
-            if ((this.Id0 >> 32) == machineSerial)
-            {
-                if (this.Id0 == id)
-                {
-                    newDetection = default;
-                    return -1;
-                }
-                else
-                {
-                    result = 0;
-                }
-            }
-
-            if ((this.Id1 >> 32) == machineSerial)
-            {
-                if (this.Id1 == id)
-                {
-                    newDetection = default;
-                    return -1;
-                }
-                else
-                {
-                    result = 0;
-                }
-            }
-
-            if ((this.Id2 >> 32) == machineSerial)
-            {
-                if (this.Id2 == id)
-                {
-                    newDetection = default;
-                    return -1;
-                }
-                else
-                {
-                    result = 0;
-                }
-            }
-
-            if ((this.Id3 >> 32) == machineSerial)
-            {
-                if (this.Id3 == id)
-                {
-                    newDetection = default;
-                    return -1;
-                }
-                else
-                {
-                    result = 0;
-                }
-            }
-
-            if ((this.Id4 >> 32) == machineSerial)
-            {
-                if (this.Id4 == id)
-                {
-                    newDetection = default;
-                    return -1;
-                }
-                else
-                {
-                    result = 0;
-                }
-            }
-
-            if ((this.Id5 >> 32) == machineSerial)
-            {
-                if (this.Id5 == id)
-                {
-                    newDetection = default;
-                    return -1;
-                }
-                else
-                {
-                    result = 0;
-                }
-            }
-
-            newDetection = this;
-            return result;
-        }
+        public AdditionalId? Next { get; } = next;
     }
 
     /*public bool TryAdd(ulong id, out RecursiveDetection newDetection)

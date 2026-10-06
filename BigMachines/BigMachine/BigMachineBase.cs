@@ -15,16 +15,22 @@ namespace BigMachines;
 /// </summary>
 public abstract partial class BigMachineBase : IBigMachine
 {
+    /// <summary>
+    /// The name of the execution group used by each root.
+    /// </summary>
     public const string ExecutionGroupName = "BigMachine";
 
     #region FieldAndProperty
 
+    /// <summary>
+    /// Gets the group that owns the timer and sequential workers.
+    /// </summary>
     public ExecutionGroup ExecutionGroup { get; }
 
     BigMachineCore IBigMachine.Core => this.core;
 
     /// <summary>
-    /// Gets <see cref="System.Threading.CancellationToken"/> of the <see cref="BigMachineBase"/>.
+    /// Gets the cancellation token for this root's timer.
     /// </summary>
     public CancellationToken CancellationToken => this.core.CancellationToken;
 
@@ -39,6 +45,10 @@ public abstract partial class BigMachineBase : IBigMachine
 
     #endregion
 
+    /// <summary>
+    /// Initializes a new instance of the <see cref="BigMachineBase"/> class.
+    /// </summary>
+    /// <param name="root">The execution root that owns this instance.</param>
     public BigMachineBase(ExecutionRoot root)
     {
         this.ExecutionGroup = new(root, false, ExecutionGroupName);
@@ -57,6 +67,15 @@ public abstract partial class BigMachineBase : IBigMachine
     /// <returns>The current controls, including the manual control.</returns>
     public abstract MachineControl[] GetControls();
 
+    /// <summary>
+    /// Gets the controls for internal processing without requiring a public snapshot.
+    /// </summary>
+    /// <returns>The controls, including the manual control. Callers must not modify the array.</returns>
+    protected virtual MachineControl[] GetControlsCore() => this.GetControls();
+
+    /// <summary>
+    /// Starts periodic processing and invokes the startup hook.
+    /// </summary>
     public void Start()
     {
         this.core.SendSignal(ExecutionSignal.Start);
@@ -65,23 +84,22 @@ public abstract partial class BigMachineBase : IBigMachine
 
     bool IBigMachine.HasPendingWork(Type? excludedMachineType)
     {
-        foreach (var x in this.GetControls())
+        foreach (var x in this.GetControlsCore())
         {
-            if (x.ContainsActiveMachine())
+            if (x is ManualMachineControl manual)
             {
-                if (x.MachineInformation.MachineType != excludedMachineType)
+                if (manual.ContainsActiveMachine(excludedMachineType))
                 {
                     return true;
                 }
             }
+            else if (x.MachineInformation.MachineType != excludedMachineType && x.ContainsActiveMachine())
+            {
+                return true;
+            }
         }
 
-        if (((IBigMachine)this).GetExceptionCount() > 0)
-        {// Remaining exceptions.
-            return true;
-        }
-
-        return false;
+        return !this.exceptionQueue.IsEmpty;
     }
 
     int IBigMachine.CheckCircularCommand(uint machineSerial, ulong commandId)
@@ -96,13 +114,16 @@ public abstract partial class BigMachineBase : IBigMachine
         if (result < 0)
         {
             // this.exceptionQueue.Enqueue(new MachineExceptionInfo(default!, new CircularCommandException($"Circular commands detected")));
-            throw new CircularCommandException($"Circular commands detected");
+            throw new CircularCommandException("Circular commands detected");
         }
 
         RecursiveChecker.AsyncLocalInstance.Value = newDetection;
         return result;
     }
 
+    /// <summary>
+    /// Runs after the timer receives its start signal.
+    /// </summary>
     protected virtual void OnStart()
     {
     }
@@ -117,7 +138,7 @@ public abstract partial class BigMachineBase : IBigMachine
         => this.exceptionQueue.Count;
 
     /// <summary>
-    /// Add the exception to BigMachine's exception queue.
+    /// Adds an exception to this root's queue.
     /// </summary>
     /// <param name="exception">The exception to be queued.</param>
     void IBigMachine.ReportException(MachineExceptionInfo exception)
@@ -128,10 +149,13 @@ public abstract partial class BigMachineBase : IBigMachine
     /// </summary>
     /// <param name="handler">The exception handler.</param>
     void IBigMachine.SetExceptionHandler(MachineExceptionHandler handler)
-        => Volatile.Write(ref this.exceptionHandler, handler);
+    {
+        ArgumentNullException.ThrowIfNull(handler);
+        Volatile.Write(ref this.exceptionHandler, handler);
+    }
 
     /// <summary>
-    /// Process queued exceptions using the exception handler.
+    /// Processes queued exceptions using the current exception handler.
     /// </summary>
     void IBigMachine.ProcessExceptions()
     {

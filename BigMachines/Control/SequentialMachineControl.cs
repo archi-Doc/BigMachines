@@ -1,4 +1,4 @@
-﻿// Copyright (c) All contributors. All rights reserved. Licensed under the MIT license.
+// Copyright (c) All contributors. All rights reserved. Licensed under the MIT license.
 
 using System;
 using System.Runtime.CompilerServices;
@@ -72,7 +72,7 @@ public sealed partial class SequentialMachineControl<TIdentifier, TMachine, THan
         using (this.items.LockObject.EnterScope())
         {
             ((IStructuralObject)this.items).SetupStructure(this);
-            foreach (var item in this.items)
+            foreach (var item in this.items.SequentialChain)
             {
                 item.RestoreStructure();
             }
@@ -168,13 +168,17 @@ public sealed partial class SequentialMachineControl<TIdentifier, TMachine, THan
         }
     }
 
+    /// <summary>
+    /// Determines whether a machine has pending timer activity or remains queued for a dedicated worker.
+    /// </summary>
+    /// <returns>Whether execution remains pending, including paused machines waiting to resume.</returns>
     public override bool ContainsActiveMachine()
     {
         using (this.items.LockObject.EnterScope())
         {
-            foreach (var x in this.items)
+            foreach (var x in this.items.SequentialChain)
             {
-                if (x.Machine.IsActive)
+                if (this.MachineInformation.WorkerCount > 0 ? !x.Machine.IsTerminated : x.Machine.IsActive)
                 {
                     return true;
                 }
@@ -190,7 +194,7 @@ public sealed partial class SequentialMachineControl<TIdentifier, TMachine, THan
         {
             var result = this.items.Count == 0 ? Array.Empty<TIdentifier>() : new TIdentifier[this.items.Count];
             var index = 0;
-            foreach (var item in this.items)
+            foreach (var item in this.items.SequentialChain)
             {
                 result[index++] = item.Identifier;
             }
@@ -205,7 +209,7 @@ public sealed partial class SequentialMachineControl<TIdentifier, TMachine, THan
         {
             var result = this.items.Count == 0 ? Array.Empty<THandle>() : new THandle[this.items.Count];
             var index = 0;
-            foreach (var item in this.items)
+            foreach (var item in this.items.SequentialChain)
             {
                 result[index++] = (THandle)item.Machine.HandleInstance;
             }
@@ -220,7 +224,7 @@ public sealed partial class SequentialMachineControl<TIdentifier, TMachine, THan
         {
             var result = this.items.Count == 0 ? Array.Empty<TMachine>() : new TMachine[this.items.Count];
             var index = 0;
-            foreach (var item in this.items)
+            foreach (var item in this.items.SequentialChain)
             {
                 result[index++] = item.Machine;
             }
@@ -269,7 +273,7 @@ public sealed partial class SequentialMachineControl<TIdentifier, TMachine, THan
         {
             if (this.MachineInformation.WorkerCount > 0)
             {// Have dedicated tasks
-                foreach (var x in this.items)
+                foreach (var x in this.items.SequentialChain)
                 {
                     runner.AddLifespan(x.Machine);
                 }
@@ -281,7 +285,7 @@ public sealed partial class SequentialMachineControl<TIdentifier, TMachine, THan
                     return;
                 }
 
-                foreach (var item in this.items)
+                foreach (var item in this.items.SequentialChain)
                 {
                     if (ReferenceEquals(item, first) && item.Machine.OperationalState == 0)
                     {
@@ -438,7 +442,7 @@ public sealed partial class SequentialMachineControl<TIdentifier, TMachine, THan
 
         value ??= new();
         var restored = TinyhandSerializer.DeserializeObject<Item.GoshujinClass>(ref reader, options) ?? new();
-        foreach (var x in restored)
+        foreach (var x in restored.SequentialChain)
         {
             if (x.Machine is null || !System.Collections.Generic.EqualityComparer<TIdentifier>.Default.Equals(x.Identifier, x.Machine.Identifier))
             {
@@ -446,7 +450,7 @@ public sealed partial class SequentialMachineControl<TIdentifier, TMachine, THan
             }
         }
 
-        foreach (var item in restored)
+        foreach (var item in restored.SequentialChain)
         {
             item.Machine.PrepareStart(value);
         }
@@ -478,7 +482,7 @@ public sealed partial class SequentialMachineControl<TIdentifier, TMachine, THan
                 return false;
             }
 
-            foreach (var item in this.items)
+            foreach (var item in this.items.SequentialChain)
             {
                 if (!item.Machine.IsPreparedFor(this))
                 {

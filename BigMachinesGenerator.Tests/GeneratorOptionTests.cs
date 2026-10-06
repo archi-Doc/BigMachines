@@ -1,10 +1,8 @@
-using System;
-using System.IO;
-using System.Linq;
 using BigMachines.Generator;
 using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.CSharp;
 using Xunit;
+using static BigMachinesGenerator.Tests.GeneratorTestHelper;
 
 namespace BigMachinesGenerator.Tests;
 
@@ -23,13 +21,6 @@ public class GeneratorOptionTests
         [BigMachinesGeneratorOption(CustomNamespace = "CustomModule")]
         public partial class Option;
         """;
-
-    private static readonly MetadataReference[] References = ((string)AppContext.GetData("TRUSTED_PLATFORM_ASSEMBLIES")!)
-        .Split(Path.PathSeparator)
-        .Append(typeof(BigMachines.Machine).Assembly.Location)
-        .Distinct()
-        .Select(x => (MetadataReference)MetadataReference.CreateFromFile(x))
-        .ToArray();
 
     [Fact]
     public void OptionsDoNotLeakIntoLaterRuns()
@@ -57,13 +48,60 @@ public class GeneratorOptionTests
         Assert.Contains("namespace CustomModule", GetGeneratedText(driver));
     }
 
-    private static CSharpCompilation CreateCompilation(params (string Path, string Source)[] sources)
-        => CSharpCompilation.Create(
-            "Test",
-            sources.Select(x => CSharpSyntaxTree.ParseText(x.Source, path: x.Path.Length == 0 ? string.Empty : Path.Combine(AppContext.BaseDirectory, x.Path))),
-            References,
-            new CSharpCompilationOptions(OutputKind.DynamicallyLinkedLibrary));
+    [Theory]
+    [InlineData("[BigMachineObject]\n[BigMachinesGeneratorOption(CustomNamespace = \"CustomModule\")] public partial class Root;")]
+    [InlineData("[MachineObject]\n[BigMachinesGeneratorOption(CustomNamespace = \"CustomModule\")] public partial class Item : Machine;")]
+    public void OptionsOnGeneratedTypesAreApplied(string declaration)
+    {
+        var result = Generate("using BigMachines;\n" + declaration);
+        AssertCompiles(result.Compilation);
+        Assert.Contains("namespace CustomModule", GetGeneratedText(result.Driver));
+    }
 
-    private static string GetGeneratedText(GeneratorDriver driver)
-        => string.Join("\n", driver.GetRunResult().GeneratedTrees.Select(x => x.ToString()));
+    [Fact]
+    public void AttributeAliasesAreRecognized()
+    {
+        var result = Generate("""
+            using BigMachines;
+            using RootMarker = BigMachines.BigMachineObjectAttribute;
+            using MachineMarker = BigMachines.MachineObjectAttribute;
+            using Options = BigMachines.BigMachinesGeneratorOptionAttribute;
+
+            [RootMarker, Options(CustomNamespace = "Aliases")]
+            [AddMachine<Item>]
+            public partial class Root;
+
+            [MachineMarker]
+            public partial class Item : Machine;
+            """);
+
+        AssertCompiles(result.Compilation);
+        var generated = GetGeneratedText(result.Driver);
+        Assert.Contains("namespace Aliases", generated);
+        Assert.Contains("public partial class Item", generated);
+        Assert.Contains("public partial class Root : BigMachineBase", generated);
+    }
+
+    [Fact]
+    public void ModuleInitializerCanBeDisabledWithoutRemovingManualInitialization()
+    {
+        var compilation = CreateCompilation(("Root.cs", RootSource), ("Option.cs", OptionSource.Replace("CustomNamespace = \"CustomModule\"", "CustomNamespace = \"CustomModule\", UseModuleInitializer = false")));
+        GeneratorDriver driver = CSharpGeneratorDriver.Create(new BigMachinesGeneratorV2());
+        driver = driver.RunGeneratorsAndUpdateCompilation(compilation, out var output, out _, TestContext.Current.CancellationToken);
+
+        AssertCompiles(output);
+        Assert.DoesNotContain("[ModuleInitializer]", GetGeneratedText(driver));
+        Assert.Contains("public static void Initialize()", GetGeneratedText(driver));
+
+        driver = driver.RunGenerators(CreateCompilation(("Root.cs", RootSource)), TestContext.Current.CancellationToken);
+        Assert.Contains("[ModuleInitializer]", GetGeneratedText(driver));
+    }
+
+    [Fact]
+    public void UnrelatedAttributesDoNotGenerateSources()
+    {
+        var result = Generate("[System.Serializable] public class Item;");
+        AssertCompiles(result.Compilation);
+        Assert.Empty(result.Driver.GetRunResult().GeneratedTrees);
+    }
 }

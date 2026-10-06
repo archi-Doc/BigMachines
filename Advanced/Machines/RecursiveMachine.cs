@@ -7,14 +7,15 @@ public partial class RecursiveMachine : Machine<int>
 {
     public static async Task Test(BigMachine bigMachine)
     {
-        var bm = (IBigMachine)bigMachine;
-
         var machine1 = bigMachine.RecursiveMachine.GetOrCreate(1); // Lock(Control)
-        var machine2 = bigMachine.RecursiveMachine.GetOrCreate(2);
+        bigMachine.RecursiveMachine.GetOrCreate(2);
 
         // Case 1: Machine1 -> Machine1
         // await machine1.Command.RelayInt(1);
         await machine1.Command.RelayInt(1);
+
+        // Relay to another machine; the target completes without re-entering its own command.
+        await machine1.Command.RelayInt(2);
 
         // Case 2: LoopMachine -> TestMachine -> LoopMachine
         // bigMachine.CreateOrGet<TestMachine.Handle>(3);
@@ -29,20 +30,20 @@ public partial class RecursiveMachine : Machine<int>
     }
 
     [CommandMethod]
-    protected CommandStatus RelayInt(int n)
+    protected async Task<CommandStatus> RelayInt(int n)
     {// LoopMachine: Lock(Machine) -> Lock(Control)
         Console.WriteLine($"RelayInt: {n}");
-        CommandStatus result;
-        if (((BigMachine)this.BigMachine).RecursiveMachine.TryGet(this.Identifier, out var machine))
+        if (n == this.Identifier)
         {
-            result = machine.Command.RelayInt(n).Result;
-        }
-        else
-        {
-            result = CommandStatus.Failure;
+            return CommandStatus.Success;
         }
 
-        return result;
+        if (((BigMachine)this.BigMachine).RecursiveMachine.TryGet(n, out var machine))
+        {
+            return await machine.Command.RelayInt(n).ConfigureAwait(false);
+        }
+
+        return CommandStatus.Failure;
     }
 
     [CommandMethod]

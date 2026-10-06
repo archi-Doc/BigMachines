@@ -59,7 +59,7 @@ public class CommandMethod
             }
         }
 
-        if (!check)
+        if (!check || !method.IsSupportedMachineMethod())
         {
             method.Body.ReportDiagnostic(BigMachinesBody.Error_MethodFormat2, method.Location);
         }
@@ -83,6 +83,17 @@ public class CommandMethod
         commandMethod.GenerateAllCommand = methodAttribute.GenerateAllCommand;
         commandMethod.ReturnTask = returnTask;
         commandMethod.ResponseObject = responseObject;
+        if (responseObject is not null)
+        {
+            method.GetRawInformation(out var symbol, out _, out _);
+            var resultType = (INamedTypeSymbol)((IMethodSymbol)symbol!).ReturnType;
+            if (returnTask)
+            {
+                resultType = (INamedTypeSymbol)resultType.TypeArguments[0];
+            }
+
+            commandMethod.ResponseTypeName = method.Body.SymbolToFullName(resultType.TypeArguments[0], true);
+        }
 
         StringBuilder? sb = null;
         var types = commandMethod.Method.Method_Parameters;
@@ -139,6 +150,8 @@ public class CommandMethod
 
     public BigMachinesObject? ResponseObject { get; private set; }
 
+    public string? ResponseTypeName { get; private set; }
+
     public string ParameterTypesAndNames { get; private set; } = string.Empty;
 
     public string ParameterNames { get; private set; } = string.Empty;
@@ -150,20 +163,23 @@ public class CommandMethod
             return;
         }
 
-        var commandResult = this.ResponseObject is null ? "CommandStatus" : $"CommandResult<{this.ResponseObject.FullName}>";
+        var commandResult = this.ResponseObject is null ? "CommandStatus" : $"CommandResult<{this.ResponseTypeName}>";
+        var identifier = this.CreateIdentifier();
+        var exception = identifier.GetIdentifier();
+        var locked = identifier.GetIdentifier();
 
-        using (var method = ssb.ScopeBrace($"public async Task<{commandResult}> {this.Name}({this.ParameterTypesAndNames})"))
+        using (var method = ssb.ScopeBrace($"public async Task<{commandResult}> {this.EscapedName}({this.ParameterTypesAndNames})"))
         {
-            // Generated locals use reserved names so that they cannot collide with command parameter names.
+            // Allocate local names after reserving every command parameter name.
             if (BigMachinesBody.EnableRecursiveDetection)
             {
-                ssb.AppendLine("var __locked__ = 0;");
+                ssb.AppendLine($"var {locked} = 0;");
                 ssb.AppendLine("try {");
                 ssb.IncrementIndent();
-                ssb.AppendLine($"__locked__ = ((IBigMachine)this.machine.BigMachine).CheckCircularCommand(this.machine.__machineSerial__, ((ulong)this.machine.__machineSerial__ << 32) | {(uint)FarmHash.Hash64(this.Method.FullName)});");
+                ssb.AppendLine($"{locked} = ((IBigMachine)this.machine.BigMachine).CheckCircularCommand(this.machine.__machineSerial__, ((ulong)this.machine.__machineSerial__ << 32) | {(uint)FarmHash.Hash64(this.Method.FullName)});");
                 if (this.WithLock)
                 {
-                    ssb.AppendLine("if (__locked__ > 0) await this.machine.Semaphore.EnterAsync().ConfigureAwait(false);");
+                    ssb.AppendLine($"if ({locked} > 0) await this.machine.Semaphore.EnterAsync().ConfigureAwait(false);");
                 }
             }
             else
@@ -179,38 +195,38 @@ public class CommandMethod
 
             if (this.ResponseObject is null)
             {
-                ssb.AppendLine("if (this.machine.__operationalState__.HasFlag(OperationalFlags.Terminated)) return CommandStatus.Terminated;");
+                ssb.AppendLine("if ((this.machine.__operationalState__ & OperationalFlags.Terminated) != 0) return CommandStatus.Terminated;");
             }
             else
             {
-                ssb.AppendLine("if (this.machine.__operationalState__.HasFlag(OperationalFlags.Terminated)) return new(CommandStatus.Terminated, default);");
+                ssb.AppendLine("if ((this.machine.__operationalState__ & OperationalFlags.Terminated) != 0) return new(CommandStatus.Terminated, default!);");
             }
 
             if (this.ReturnTask)
             {
-                ssb.AppendLine($"return await this.machine.{this.Name}({this.ParameterNames}).ConfigureAwait(false);");
+                ssb.AppendLine($"return await this.machine.{this.EscapedName}({this.ParameterNames}).ConfigureAwait(false);");
             }
             else
             {
-                ssb.AppendLine($"return this.machine.{this.Name}({this.ParameterNames});");
+                ssb.AppendLine($"return this.machine.{this.EscapedName}({this.ParameterNames});");
             }
 
             ssb.DecrementIndent();
             ssb.AppendLine("}");
             if (this.ResponseObject is null)
             {
-                ssb.AppendLine("catch (Exception __exception__) { ((IBigMachine)this.machine.BigMachine).ReportException(new(this.machine, __exception__)); return CommandStatus.Failure; }");
+                ssb.AppendLine($"catch (Exception {exception}) {{ ((IBigMachine)this.machine.BigMachine).ReportException(new(this.machine, {exception})); return CommandStatus.Failure; }}");
             }
             else
             {
-                ssb.AppendLine("catch (Exception __exception__) { ((IBigMachine)this.machine.BigMachine).ReportException(new(this.machine, __exception__)); return new(CommandStatus.Failure, default); }");
+                ssb.AppendLine($"catch (Exception {exception}) {{ ((IBigMachine)this.machine.BigMachine).ReportException(new(this.machine, {exception})); return new(CommandStatus.Failure, default!); }}");
             }
 
             if (this.WithLock)
             {
                 if (BigMachinesBody.EnableRecursiveDetection)
                 {
-                    ssb.AppendLine("finally { if (__locked__ > 0) this.machine.Semaphore.Exit(); }");
+                    ssb.AppendLine($"finally {{ if ({locked} > 0) this.machine.Semaphore.Exit(); }}");
                 }
                 else
                 {
@@ -218,5 +234,18 @@ public class CommandMethod
                 }
             }
         }
+    }
+
+    internal string EscapedName => "@" + this.Name;
+
+    internal VisceralIdentifier CreateIdentifier()
+    {
+        var identifier = new VisceralIdentifier("__gen_bm_command__");
+        foreach (var name in this.Method.Method_ParameterNames())
+        {
+            identifier.Add(name);
+        }
+
+        return identifier;
     }
 }

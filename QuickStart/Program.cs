@@ -66,7 +66,7 @@ public class Program
         Console.WriteLine($"FirstMachine state: {state}");
 
         testMachine = bigMachine.FirstMachine.GetOrCreate(42); // Get the created machine.
-        testMachine.RunAsync().Wait(); // Run the machine manually.
+        await testMachine.RunAsync(); // Run the machine manually.
         Console.WriteLine();
 
         var testControl = bigMachine.FirstMachine; // Control is a collection of machines.
