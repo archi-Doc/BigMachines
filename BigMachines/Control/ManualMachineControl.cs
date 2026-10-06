@@ -72,12 +72,15 @@ public sealed partial class ManualMachineControl : MachineControl // , ITinyhand
     }
 
     public override bool ContainsActiveMachine()
+        => this.ContainsActiveMachine(null);
+
+    internal bool ContainsActiveMachine(Type? excludedMachineType)
     {
         using (this.lockObject.EnterScope())
         {
-            foreach (var x in this.typeToMachine.Values)
+            foreach (var x in this.typeToMachine)
             {
-                if (x.IsActive)
+                if (x.Key != excludedMachineType && x.Value.IsActive)
                 {
                     return true;
                 }
@@ -146,6 +149,11 @@ public sealed partial class ManualMachineControl : MachineControl // , ITinyhand
 
     #region Main
 
+    /// <summary>
+    /// Gets the handle registered for the specified machine type.
+    /// </summary>
+    /// <typeparam name="TMachine">The registered machine type.</typeparam>
+    /// <returns>The handle, or <see langword="null"/> when absent.</returns>
     public Machine.MachineHandle? Find<TMachine>()
         where TMachine : Machine
     {
@@ -162,6 +170,12 @@ public sealed partial class ManualMachineControl : MachineControl // , ITinyhand
         }
     }
 
+    /// <summary>
+    /// Creates a machine if the specified type is not already registered.
+    /// </summary>
+    /// <typeparam name="TMachine">The machine type to create.</typeparam>
+    /// <param name="createParameter">The value passed to the creation callback.</param>
+    /// <returns>The new handle, or <see langword="null"/> if the type is already registered.</returns>
     public Machine.MachineHandle? TryCreate<TMachine>(object? createParameter = null)
         where TMachine : Machine
     {
@@ -182,6 +196,12 @@ public sealed partial class ManualMachineControl : MachineControl // , ITinyhand
         }
     }
 
+    /// <summary>
+    /// Gets the existing handle or creates a machine for the specified type.
+    /// </summary>
+    /// <typeparam name="TMachine">The registered machine type.</typeparam>
+    /// <param name="createParameter">The value passed to the creation callback when creating a machine.</param>
+    /// <returns>The existing or new handle.</returns>
     public Machine.MachineHandle GetOrCreate<TMachine>(object? createParameter = null)
         where TMachine : Machine
     {

@@ -228,6 +228,11 @@ internal class BigMachine : IEquatable<BigMachine>
             {
                 this.Body.ReportDiagnostic(BigMachinesBody.Error_ExplicitDefaultConstructor, this.Object.Location);
             }
+
+            if (this.Object.AllMembers.Any(x => x.ContainingObject == this.Object && x.SimpleName == "GetControlsCore"))
+            {
+                this.Body.ReportDiagnostic(BigMachinesBody.Error_KeywordUsed, this.Object.Location, this.Object.SimpleName, "GetControlsCore");
+            }
         }
 
         foreach (var x in this.AddedMachines)
@@ -321,6 +326,7 @@ internal class BigMachine : IEquatable<BigMachine>
     {
         ssb.AppendLine("private MachineControl[] controls = Array.Empty<MachineControl>();");
         ssb.AppendLine("public override MachineControl[] GetControls() => (MachineControl[])this.controls.Clone();");
+        ssb.AppendLine("protected override MachineControl[] GetControlsCore() => this.controls;");
         foreach (var x in this.Machines.Values)
         {
             ssb.AppendLine($"private {x.ControlType} _{x.Name};");

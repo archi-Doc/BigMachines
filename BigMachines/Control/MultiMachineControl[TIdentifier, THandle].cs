@@ -19,7 +19,7 @@ public abstract class MultiMachineControl<TIdentifier, THandle> : MultiMachineCo
     }
 
     /// <summary>
-    /// Runs all the machines managed by the control class.
+    /// Runs a snapshot of the current machines, awaiting each in turn. Paused or terminated machines are skipped.
     /// </summary>
     /// <returns>A <see cref="Task"/> representing the asynchronous operation.</returns>
     public async Task RunAllAsync()

@@ -7,7 +7,7 @@ using System.Text;
 namespace Arc.Visceral;
 
 /// <summary>
-/// Simple string builder with a scoping function, mainly created for a source generator.
+/// Builds generated source with indentation, scopes, headers, and using directives.
 /// </summary>
 public class ScopingStringBuilder
 {
@@ -154,9 +154,9 @@ public class ScopingStringBuilder
     public int DecrementIndent() => this.CurrentScope.DecrementIndent();
 
     /// <summary>
-    /// Finalize and get the result. All scopes will be disposed.
+    /// Closes open scopes, returns the generated source, and clears the accumulated text and directives.
     /// </summary>
-    /// <returns>A result string.</returns>
+    /// <returns>The generated source.</returns>
     public string Finalize()
     {
         while (this.CurrentScope.Parent != null)

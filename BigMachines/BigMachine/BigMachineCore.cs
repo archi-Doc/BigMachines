@@ -14,8 +14,16 @@ public partial class BigMachineBase
     /// </summary>
     public class BigMachineCore : TaskCore<BigMachineCore>
     {
+        /// <summary>
+        /// Gets or sets the polling interval in milliseconds. The default is 500.
+        /// </summary>
         public int TimeIntervalInMilliseconds { get; set; } = 500; // 500 ms
 
+        /// <summary>
+        /// Initializes a new instance of the <see cref="BigMachineCore"/> class with a delayed start.
+        /// </summary>
+        /// <param name="group">The execution group that owns the timer.</param>
+        /// <param name="bigMachine">The root to process.</param>
         public BigMachineCore(ExecutionGroup group, BigMachineBase bigMachine)
             : base(group, Process, ExecutionCoreOptions.DelayedStart)
         {
@@ -27,11 +35,11 @@ public partial class BigMachineBase
         private static async Task Process(BigMachineCore core)
         {
             var bigMachine = core.bigMachine;
-            var controls = core.bigMachine.GetControls();
+            var controls = bigMachine.GetControlsCore();
             var runner = new MachineRunner();
             while (!core.IsTerminated)
             {
-                if (await core.TryDelay(core.TimeIntervalInMilliseconds) == false)
+                if (await core.TryDelay(core.TimeIntervalInMilliseconds).ConfigureAwait(false) == false)
                 {// Terminated
                     break;
                 }
@@ -63,8 +71,6 @@ public partial class BigMachineBase
 
                 bigMachine.lastRun = utcNow;
             }
-
-            return;
         }
     }
 }

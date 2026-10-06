@@ -15,19 +15,30 @@ public delegate void MachineExceptionHandler(MachineExceptionInfo exception);
 /// </summary>
 public class MachineExceptionInfo
 {
+    /// <summary>
+    /// Initializes a new instance of the <see cref="MachineExceptionInfo"/> class.
+    /// </summary>
+    /// <param name="machine">The machine that raised the exception.</param>
+    /// <param name="exception">The exception to report.</param>
     public MachineExceptionInfo(Machine machine, Exception exception)
-        : base()
     {
         this.Machine = machine;
         this.Exception = exception;
     }
 
+    /// <summary>
+    /// Gets the machine that raised the exception.
+    /// </summary>
     public Machine Machine { get; }
 
+    /// <summary>
+    /// Gets the reported exception.
+    /// </summary>
     public Exception Exception { get; }
 
+    /// <inheritdoc/>
     public override string ToString()
-        => $"{this.Machine.ToString()} Exception: {this.Exception.ToString()}";
+        => $"{this.Machine} Exception: {this.Exception}";
 }
 
 /// <summary>
@@ -35,6 +46,10 @@ public class MachineExceptionInfo
 /// </summary>
 public class CircularCommandException : Exception
 {
+    /// <summary>
+    /// Initializes a new instance of the <see cref="CircularCommandException"/> class.
+    /// </summary>
+    /// <param name="message">The circular-call description.</param>
     public CircularCommandException(string message)
         : base(message)
     {

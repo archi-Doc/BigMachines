@@ -35,8 +35,6 @@ public class Program
         await Benchmark.Design.CommandDesign7.Test();
         await Benchmark.Design.CommandDesign8.Test();*/
 
-        DebugRun<Test.AsyncLocalBenchmark>();
-
         var switcher = new BenchmarkSwitcher(new[]
         {
             typeof(Test.LoopCheckerBenchmark2),

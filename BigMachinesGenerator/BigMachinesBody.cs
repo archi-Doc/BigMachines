@@ -66,7 +66,7 @@ public class BigMachinesBody : VisceralBody<BigMachinesObject>
         category: "BigMachinesGenerator", DiagnosticSeverity.Error, isEnabledByDefault: true);
 
     public static readonly DiagnosticDescriptor Error_MethodFormat = new DiagnosticDescriptor(
-        id: "BMG006", title: "Invalid method", messageFormat: "State method must be in the format of 'protected StateResult {0}(StateParameter parameter)' or 'protected Task<StateResult> {0}(StateParameter parameter)'",
+        id: "BMG006", title: "Invalid method", messageFormat: "State method '{0}' must be a non-generic instance method returning StateResult or Task<StateResult> with one StateParameter passed by value",
         category: "BigMachinesGenerator", DiagnosticSeverity.Error, isEnabledByDefault: true);
 
     public static readonly DiagnosticDescriptor Error_OpenGenericClass = new DiagnosticDescriptor(
@@ -98,7 +98,7 @@ public class BigMachinesBody : VisceralBody<BigMachinesObject>
         category: "BigMachinesGenerator", DiagnosticSeverity.Error, isEnabledByDefault: true);
 
     public static readonly DiagnosticDescriptor Error_MethodFormat2 = new DiagnosticDescriptor(
-        id: "BMG014", title: "Invalid method", messageFormat: "Command method must be in the format of 'CommandStatus Method(any param)' or 'CommandResult<TResponse> Method(any param)' or 'Task<CommandStatus> Method(any param)' or 'Task<CommandResult<TResponse>> Method(any param)'",
+        id: "BMG014", title: "Invalid method", messageFormat: "Command method must be a non-generic instance method returning CommandStatus, CommandResult<TResponse>, Task<CommandStatus>, or Task<CommandResult<TResponse>>, with value parameters that can be used in async methods",
         category: "BigMachinesGenerator", DiagnosticSeverity.Error, isEnabledByDefault: true);
 
     public static readonly DiagnosticDescriptor Warning_MachineWithoutIdentifier = new DiagnosticDescriptor(
@@ -351,7 +351,10 @@ public class BigMachinesBody : VisceralBody<BigMachinesObject>
             {
                 ssb.AppendLine("private static bool Initialized;");
                 ssb.AppendLine();
-                ssb.AppendLine("[ModuleInitializer]");
+                if (generator.UseModuleInitializer)
+                {
+                    ssb.AppendLine("[ModuleInitializer]");
+                }
 
                 using (var scopeMethod = ssb.ScopeBrace("public static void Initialize()"))
                 {
@@ -414,17 +417,22 @@ public class BigMachinesBody : VisceralBody<BigMachinesObject>
 
         var identifierType = machine.IdentifierObject.FullName;
         var handleType = machine.FullName + ".Handle";
-        var responseType = commandMethod.ResponseObject?.FullName;
+        var responseType = commandMethod.ResponseTypeName;
         var resultType = responseType is null ? $"IdentifierAndCommandResult<{identifierType}>" : $"IdentifierAndCommandResult<{identifierType}, {responseType}>";
         var param = string.IsNullOrEmpty(commandMethod.ParameterTypesAndNames) ? string.Empty : ", ";
 
-        // Reserved names cannot collide with command parameter names.
-        using (var scopeMethod = ssb.ScopeBrace($"public static async Task<{resultType}[]> All{commandMethod.Name}(this MultiMachineControl<{identifierType}, {handleType}> __control__{param}{commandMethod.ParameterTypesAndNames})"))
+        var identifier = commandMethod.CreateIdentifier();
+        var control = identifier.GetIdentifier();
+        var handles = identifier.GetIdentifier();
+        var results = identifier.GetIdentifier();
+        var index = identifier.GetIdentifier();
+        using (var scopeMethod = ssb.ScopeBrace($"public static async Task<{resultType}[]> All{commandMethod.Name}(this MultiMachineControl<{identifierType}, {handleType}> {control}{param}{commandMethod.ParameterTypesAndNames})"))
         {
-            ssb.AppendLine("var __handles__ = __control__.GetHandles();");
-            ssb.AppendLine($"var __results__ = new {resultType}[__handles__.Length];");
-            ssb.AppendLine($"for (var __i__ = 0; __i__ < __handles__.Length; __i__++) __results__[__i__] = new(__handles__[__i__].Identifier, await __handles__[__i__].Command.{commandMethod.Name}({commandMethod.ParameterNames}).ConfigureAwait(false));");
-            ssb.AppendLine("return __results__;");
+            ssb.AppendLine($"var {handles} = {control}.GetHandles();");
+            ssb.AppendLine($"if ({handles}.Length == 0) return Array.Empty<{resultType}>();");
+            ssb.AppendLine($"var {results} = new {resultType}[{handles}.Length];");
+            ssb.AppendLine($"for (var {index} = 0; {index} < {handles}.Length; {index}++) {results}[{index}] = new({handles}[{index}].Identifier, await {handles}[{index}].Command.{commandMethod.EscapedName}({commandMethod.ParameterNames}).ConfigureAwait(false));");
+            ssb.AppendLine($"return {results};");
         }
     }
 

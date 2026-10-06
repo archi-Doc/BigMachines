@@ -30,10 +30,10 @@ internal class FarmHash
     }
 
     /// <summary>
-    /// Static function: Calculates a 64bit hash from the given data.
+    /// Computes a 64-bit hash of the supplied bytes.
     /// </summary>
-    /// <param name="input">The read-only span that contains input data.</param>
-    /// <returns>A 64bit hash.</returns>
+    /// <param name="input">The bytes to hash.</param>
+    /// <returns>The 64-bit hash.</returns>
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static unsafe ulong Hash64(ReadOnlySpan<byte> input)
     {
@@ -44,18 +44,18 @@ internal class FarmHash
     }
 
     /// <summary>
-    /// Static function: Calculates a 64bit hash from the given string.
+    /// Computes a 64-bit hash of the characters' UTF-16 bytes in native byte order.
     /// </summary>
-    /// <param name="input">The read-only span that contains input data.</param>
-    /// <returns>A 64bit hash.</returns>
+    /// <param name="input">The characters to hash.</param>
+    /// <returns>The 64-bit hash.</returns>
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static unsafe ulong Hash64(ReadOnlySpan<char> input) => Hash64(MemoryMarshal.Cast<char, byte>(input));
 
     /// <summary>
-    /// Static function: Calculates a 64bit hash from the given string.
+    /// Computes a 64-bit hash of the string's UTF-16 bytes in native byte order.
     /// </summary>
-    /// <param name="str">The string containing the characters to calculates.</param>
-    /// <returns>A 64bit hash.</returns>
+    /// <param name="str">The string to hash.</param>
+    /// <returns>The 64-bit hash.</returns>
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static unsafe ulong Hash64(string str) => Hash64(MemoryMarshal.Cast<char, byte>(str.AsSpan()));
 

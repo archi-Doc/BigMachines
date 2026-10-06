@@ -706,7 +706,7 @@ ModuleInitializerClass_Added:
         {
             foreach (var x in this.StateMethodList)
             {
-                ssb.AppendLine($"{x.Name} = {x.Id},");
+                ssb.AppendLine($"{x.EscapedName} = {x.Id},");
             }
         }
 
@@ -809,15 +809,8 @@ ModuleInitializerClass_Added:
 
         using (var scopeHandle = ssb.ScopeBrace(handleName))
         {
-            if (this.FullName == "Advanced.DerivedMachine")
-            {
-                // ssb.AppendLine($"public Interface({this.LocalName} machine) : base(machine) {{ throw new Exception(); }}");
-                ssb.AppendLine($"public Handle({this.LocalName} machine) : base(machine) {{ }}");
-            }
-            else
-            {
-                ssb.AppendLine($"public Handle({this.LocalName} machine) : base(machine) {{ }}");
-            }
+            // ssb.AppendLine($"public Interface({this.LocalName} machine) : base(machine) {{ throw new Exception(); }}");
+            ssb.AppendLine($"public Handle({this.LocalName} machine) : base(machine) {{ }}");
 
             // ssb.AppendLine($"private new {this.LocalName} Machine => ({this.LocalName})((MachineHandle)this).Machine;");
 
@@ -869,16 +862,16 @@ ModuleInitializerClass_Added:
                 if (x.ReturnTask)
                 {
                     // ssb.AppendLine($"State.{x.Name} => await this.{x.Name}(parameter).ConfigureAwait(false),");
-                    ssb.AppendLine($"State.{x.Name} => this.{x.Name}(parameter),");
+                    ssb.AppendLine($"State.{x.EscapedName} => this.{x.EscapedName}(parameter),");
                 }
                 else
                 {
                     // ssb.AppendLine($"State.{x.Name} => this.{x.Name}(parameter),");
-                    ssb.AppendLine($"State.{x.Name} => Task<StateResult>.FromResult(this.{x.Name}(parameter)),");
+                    ssb.AppendLine($"State.{x.EscapedName} => global::BigMachines.Machine.__FromStateResult__(this.{x.EscapedName}(parameter)),");
                 }
             }
 
-            ssb.AppendLine("_ => Task<StateResult>.FromResult(StateResult.Terminate),");
+            ssb.AppendLine("_ => global::BigMachines.Machine.__FromStateResult__(StateResult.Terminate),");
             ssb.DecrementIndent();
             ssb.AppendLine("};");
         }
@@ -909,7 +902,7 @@ ModuleInitializerClass_Added:
             {
                 if (x.CanExit)
                 {
-                    ssb.AppendLine($"State.{x.Name} => this.{x.Name}{StateMethod.CanExitName}(),");
+                    ssb.AppendLine($"State.{x.EscapedName} => this.{x.Name}{StateMethod.CanExitName}(),");
                 }
             }
 
@@ -926,11 +919,11 @@ ModuleInitializerClass_Added:
             {
                 if (x.CanEnter)
                 {
-                    ssb.AppendLine($"State.{x.Name} => this.{x.Name}{StateMethod.CanEnterName}(),");
+                    ssb.AppendLine($"State.{x.EscapedName} => this.{x.Name}{StateMethod.CanEnterName}(),");
                 }
                 else
                 {
-                    ssb.AppendLine($"State.{x.Name} => true,");
+                    ssb.AppendLine($"State.{x.EscapedName} => true,");
                 }
             }
 
@@ -1003,6 +996,13 @@ ModuleInitializerClass_Added:
 
         return Array.Empty<string>();
     }
+
+    internal bool IsSupportedMachineMethod()
+        => this.symbol is IMethodSymbol method &&
+        method.MethodKind == MethodKind.Ordinary &&
+        !method.IsStatic &&
+        !method.IsGenericMethod &&
+        method.Parameters.All(x => x.RefKind == RefKind.None && !x.Type.IsRefLikeType && x.Type.TypeKind != TypeKind.Pointer && x.Type.TypeKind != TypeKind.FunctionPointer);
 
     internal bool HasExplicitDefaultConstructor()
         => this.GetMembers(VisceralTarget.Method).Any(a => a.Method_IsConstructor && a.Method_Parameters.Length == 0 && a.ContainingObject == this && a.symbol?.IsImplicitlyDeclared == false);

@@ -67,7 +67,7 @@ public sealed class AddMachineAttribute<TMachine> : Attribute
     }
 
     /// <summary>
-    /// Gets or sets the name to identify the machine.
+    /// Gets or sets the generated control property name. An empty value uses the machine type name.
     /// </summary>
     public string Name { get; set; } = string.Empty;
 
@@ -108,6 +108,7 @@ public sealed class MachineObjectAttribute : Attribute
     /// <summary>
     /// Gets or sets the number of dedicated workers for a sequential control.
     /// </summary>
+    /// <remarks>Zero uses the root timer to process the queue. Positive values run that many workers.</remarks>
     public int WorkerCount { get; set; } = 0;
 
     /// <summary>
@@ -128,21 +129,16 @@ public sealed class StateMethodAttribute : Attribute
     /// <summary>
     /// Initializes a new instance of the <see cref="StateMethodAttribute"/> class.
     /// </summary>
-    /// <param name="stateId">The identifier for the state method.<br/>
-    /// State method with an id of 0 is the default (first to be executed) state method and is required to be present in every machine.<br/>
-    /// You can set a random number, but it needs to be unique.<br/>
-    /// If you specify <see cref="uint.MaxValue"/>, the hash of the method name is used.</param>
+    /// <param name="stateId">A unique state identifier. Zero is the initial state; <see cref="uint.MaxValue"/> uses a hash of the method name.</param>
     public StateMethodAttribute(uint stateId = uint.MaxValue)
     {
         this.StateId = stateId;
     }
 
     /// <summary>
-    /// Gets the identifier for the state method.<br/>
-    /// State method with an id of 0 is the default (first to be executed) state method and is required to be present in every machine.<br/>
-    /// You can set a random number, but it needs to be unique.<br/>
-    /// If you specify <see cref="uint.MaxValue"/>, the hash of the method name is used.
+    /// Gets the state identifier, or <see cref="uint.MaxValue"/> to use a hash of the method name.
     /// </summary>
+    /// <remarks>A machine with state methods must define state zero. Explicit identifiers remain stable when methods are renamed.</remarks>
     public uint StateId { get; }
 }
 
@@ -173,11 +169,13 @@ public sealed class CommandMethodAttribute : Attribute
     /// <summary>
     /// Gets or sets a value indicating whether the command holds the machine semaphore while executing.
     /// </summary>
+    /// <remarks>The default is <see langword="true"/>. Unlocked commands must synchronize access to shared state.</remarks>
     public bool WithLock { get; set; } = true;
 
     /// <summary>
-    /// Gets or sets a value indicating whether to generate an extension that invokes the command on all matching machines.
+    /// Gets or sets a value indicating whether to generate an extension that invokes the command on a multi-machine control's handle snapshot.
     /// </summary>
+    /// <remarks>Commands run sequentially in snapshot order.</remarks>
     public bool GenerateAllCommand { get; set; } = false;
 }
 
@@ -224,18 +222,30 @@ public enum CommandStatus
 /// <typeparam name="TResponse">The response type.</typeparam>
 public readonly struct CommandResult<TResponse>
 {
+    /// <summary>
+    /// Initializes a new instance of the <see cref="CommandResult{TResponse}"/> struct.
+    /// </summary>
+    /// <param name="status">The command status.</param>
+    /// <param name="response">The command response.</param>
     public CommandResult(CommandStatus status, TResponse response)
     {
         this.Status = status;
         this.Response = response;
     }
 
+    /// <summary>
+    /// Initializes a new instance of the <see cref="CommandResult{TResponse}"/> struct with a successful status.
+    /// </summary>
+    /// <param name="response">The command response.</param>
     public CommandResult(TResponse response)
     {
         this.Status = CommandStatus.Success;
         this.Response = response;
     }
 
+    /// <summary>
+    /// The command status.
+    /// </summary>
     public readonly CommandStatus Status;
 
     /// <summary>
@@ -352,7 +362,7 @@ public struct StateParameter
     /// <summary>
     /// Initializes a new instance of the <see cref="StateParameter"/> struct.
     /// </summary>
-    /// <param name="type">RunType.</param>
+    /// <param name="type">The execution trigger.</param>
     public StateParameter(RunType type)
     {
         this.RunType = type;
@@ -408,12 +418,25 @@ public enum ChangeStateResult
 [AttributeUsage(AttributeTargets.Class | AttributeTargets.Struct, AllowMultiple = false, Inherited = true)]
 public sealed class BigMachinesGeneratorOptionAttribute : Attribute
 {
+    /// <summary>
+    /// Gets or sets a value indicating whether to launch a debugger during generation.
+    /// </summary>
     public bool AttachDebugger { get; set; } = false;
 
+    /// <summary>
+    /// Gets or sets a value indicating whether to write source to an existing Generated directory beside the option's source file instead of adding it to the compilation.
+    /// </summary>
     public bool GenerateToFile { get; set; } = false;
 
+    /// <summary>
+    /// Gets or sets the namespace for generated registration and command extensions. Machine and root namespaces are unchanged.
+    /// </summary>
     public string? CustomNamespace { get; set; }
 
+    /// <summary>
+    /// Gets or sets a value indicating whether generated machine registration runs automatically when the assembly loads.
+    /// </summary>
+    /// <remarks>If disabled, call the generated BigMachinesModule.Initialize method before creating machines.</remarks>
     public bool UseModuleInitializer { get; set; } = true;
 
     public BigMachinesGeneratorOptionAttribute()

@@ -1,4 +1,4 @@
-﻿// Copyright (c) All contributors. All rights reserved. Licensed under the MIT license.
+// Copyright (c) All contributors. All rights reserved. Licensed under the MIT license.
 
 using System;
 using System.Diagnostics.CodeAnalysis;
@@ -55,7 +55,7 @@ public sealed partial class UnorderedMachineControl<TIdentifier, TMachine, THand
         using (this.items.LockObject.EnterScope())
         {
             ((IStructuralObject)this.items).SetupStructure(this);
-            foreach (var item in this.items)
+            foreach (var item in this.items.IdentifierChain)
             {
                 item.RestoreStructure();
             }
@@ -126,7 +126,7 @@ public sealed partial class UnorderedMachineControl<TIdentifier, TMachine, THand
         {
             var result = this.items.Count == 0 ? Array.Empty<TIdentifier>() : new TIdentifier[this.items.Count];
             var index = 0;
-            foreach (var item in this.items)
+            foreach (var item in this.items.IdentifierChain)
             {
                 result[index++] = item.Identifier;
             }
@@ -139,7 +139,7 @@ public sealed partial class UnorderedMachineControl<TIdentifier, TMachine, THand
     {
         using (this.items.LockObject.EnterScope())
         {
-            foreach (var x in this.items)
+            foreach (var x in this.items.IdentifierChain)
             {
                 if (x.Machine.IsActive)
                 {
@@ -157,7 +157,7 @@ public sealed partial class UnorderedMachineControl<TIdentifier, TMachine, THand
         {
             var result = this.items.Count == 0 ? Array.Empty<THandle>() : new THandle[this.items.Count];
             var index = 0;
-            foreach (var item in this.items)
+            foreach (var item in this.items.IdentifierChain)
             {
                 result[index++] = (THandle)item.Machine.HandleInstance;
             }
@@ -172,7 +172,7 @@ public sealed partial class UnorderedMachineControl<TIdentifier, TMachine, THand
         {
             var result = this.items.Count == 0 ? Array.Empty<TMachine>() : new TMachine[this.items.Count];
             var index = 0;
-            foreach (var item in this.items)
+            foreach (var item in this.items.IdentifierChain)
             {
                 result[index++] = item.Machine;
             }
@@ -206,7 +206,7 @@ public sealed partial class UnorderedMachineControl<TIdentifier, TMachine, THand
     {
         using (this.items.LockObject.EnterScope())
         {
-            foreach (var x in this.items)
+            foreach (var x in this.items.IdentifierChain)
             {
                 runner.Add(x.Machine);
             }
@@ -347,7 +347,7 @@ Loop:
 
         value ??= new();
         var restored = TinyhandSerializer.DeserializeObject<Item.GoshujinClass>(ref reader, options) ?? new();
-        foreach (var x in restored)
+        foreach (var x in restored.IdentifierChain)
         {
             if (x.Machine is null || !System.Collections.Generic.EqualityComparer<TIdentifier>.Default.Equals(x.Identifier, x.Machine.Identifier))
             {
@@ -355,7 +355,7 @@ Loop:
             }
         }
 
-        foreach (var item in restored)
+        foreach (var item in restored.IdentifierChain)
         {
             item.Machine.PrepareStart(value);
         }
@@ -387,7 +387,7 @@ Loop:
                 return false;
             }
 
-            foreach (var item in this.items)
+            foreach (var item in this.items.IdentifierChain)
             {
                 if (!item.Machine.IsPreparedFor(this))
                 {

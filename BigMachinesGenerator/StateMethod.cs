@@ -27,7 +27,7 @@ public class StateMethod
             return null;
         }
 
-        var flag = false;
+        var flag = !method.IsSupportedMachineMethod();
         if (method.Method_Parameters.Length == 1 &&
             method.Method_Parameters[0] == BigMachinesBody.StateParameterFullName)
         {
@@ -81,7 +81,8 @@ public class StateMethod
 
         foreach (var x in machine.GetMembers(VisceralTarget.Method))
         {
-            if (x.Method_Parameters.Length == 0 &&
+            if (x.IsSupportedMachineMethod() &&
+                x.Method_Parameters.Length == 0 &&
                 x.Method_ReturnObject?.FullName == "bool")
             {
                 if (x.SimpleName == stateMethod.Name + CanEnterName)
@@ -111,4 +112,6 @@ public class StateMethod
     public bool DuplicateId { get; internal set; }
 
     public bool ReturnTask { get; internal set; }
+
+    internal string EscapedName => "@" + this.Name;
 }

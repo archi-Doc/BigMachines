@@ -1,4 +1,4 @@
-﻿// Copyright (c) All contributors. All rights reserved. Licensed under the MIT license.
+// Copyright (c) All contributors. All rights reserved. Licensed under the MIT license.
 
 using System.Runtime.CompilerServices;
 
@@ -26,7 +26,7 @@ public partial class Machine
         /// <see langword="true"/>: the state is successfully retrieved; otherwise <see langword="false"/> (the machine is terminated).</returns>
         public bool TryGetState(out TState state)
         {
-            if (this.Machine.__operationalState__.HasFlag(OperationalFlags.Terminated))
+            if (this.Machine.IsTerminated)
             {
                 state = default;
                 return false;
@@ -48,7 +48,7 @@ public partial class Machine
 
             using (this.Machine.Semaphore.EnterScope())
             {
-                if (this.Machine.__operationalState__.HasFlag(OperationalFlags.Terminated))
+                if (this.Machine.IsTerminated)
                 {// Terminated
                     result = ChangeStateResult.Terminated;
                 }

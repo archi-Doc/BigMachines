@@ -1,4 +1,4 @@
-﻿// Copyright (c) All contributors. All rights reserved. Licensed under the MIT license.
+// Copyright (c) All contributors. All rights reserved. Licensed under the MIT license.
 
 using System;
 using System.Threading;
@@ -37,7 +37,7 @@ public partial class Machine
         {
             using (this.Machine.Semaphore.EnterScope())
             {
-                if (this.Machine.__operationalState__.HasFlag(OperationalFlags.Terminated))
+                if (this.Machine.IsTerminated)
                 {
                     return false;
                 }
@@ -56,7 +56,7 @@ public partial class Machine
         {
             using (this.Machine.Semaphore.EnterScope())
             {
-                if (this.Machine.__operationalState__.HasFlag(OperationalFlags.Terminated))
+                if (this.Machine.IsTerminated)
                 {
                     return false;
                 }
@@ -75,7 +75,7 @@ public partial class Machine
         {
             using (this.Machine.Semaphore.EnterScope())
             {
-                if (this.Machine.__operationalState__.HasFlag(OperationalFlags.Terminated))
+                if (this.Machine.IsTerminated)
                 {
                     return false;
                 }
@@ -129,7 +129,7 @@ public partial class Machine
             => this.Machine.LastRunTime;
 
         /// <summary>
-        /// Gets the next scheduled execution time.
+        /// Gets the next scheduled UTC execution time. The default value disables this timer.
         /// </summary>
         /// <returns>The next scheduled execution time.</returns>
         public DateTime GetNextRunTime()
@@ -138,7 +138,7 @@ public partial class Machine
         /// <summary>
         /// Sets the next UTC execution time while holding the machine semaphore.
         /// </summary>
-        /// <param name="nextRunTime">The next scheduled execution time.</param>
+        /// <param name="nextRunTime">The next UTC execution time, or the default value to disable this timer.</param>
         public void SetNextRunTime(DateTime nextRunTime)
         {
             using (this.Machine.Semaphore.EnterScope())
@@ -155,17 +155,16 @@ public partial class Machine
             => this.SetNextRunTime(DateTime.UtcNow + timeFromNow);
 
         /// <summary>
-        /// Gets the remaining lifespan of the machine.<br/>
-        /// When it reaches 0, the machine will terminate.
+        /// Gets the remaining lifespan. <see cref="TimeSpan.MaxValue"/> disables lifespan expiration.
         /// </summary>
         /// <returns>The remaining lifespan of the machine.</returns>
         public TimeSpan GetLifespan()
             => this.Machine.Lifespan;
 
         /// <summary>
-        /// Sets the remaining lifespan of the machine.
+        /// Sets the remaining lifespan. Expired machines terminate when the timer loop can acquire their semaphore.
         /// </summary>
-        /// <param name="lifespan">The remaining lifespan of the machine.</param>
+        /// <param name="lifespan">The remaining lifespan, or <see cref="TimeSpan.MaxValue"/> to disable lifespan expiration.</param>
         public void SetLifespan(TimeSpan lifespan)
         {
             using (this.Machine.Semaphore.EnterScope())
@@ -175,16 +174,16 @@ public partial class Machine
         }
 
         /// <summary>
-        /// Gets the time for the machine to shut down automatically.
+        /// Gets the automatic termination time in UTC. <see cref="DateTime.MaxValue"/> disables this deadline.
         /// </summary>
         /// <returns>The time for the machine to shut down automatically.</returns>
         public DateTime GetTerminationTime()
             => this.Machine.TerminationTime;
 
         /// <summary>
-        /// Sets the time at which the machine terminates automatically.
+        /// Sets the automatic termination time in UTC. Expired machines terminate when the timer loop can acquire their semaphore.
         /// </summary>
-        /// <param name="terminationTime">The time for the machine to shut down automatically.</param>
+        /// <param name="terminationTime">The UTC deadline, or <see cref="DateTime.MaxValue"/> to disable this deadline.</param>
         public void SetTerminationTime(DateTime terminationTime)
         {
             using (this.Machine.Semaphore.EnterScope())
@@ -214,11 +213,6 @@ public partial class Machine
         /// <remarks>Do not call this method from a handler that already holds the same machine semaphore.</remarks>
         public async Task RunAsync()
         {
-            if (CheckCircularCommand(1))
-            {// Recursive command
-                return;
-            }
-
             await this.Machine.Semaphore.EnterAsync().ConfigureAwait(false);
             try
             {
@@ -231,40 +225,35 @@ public partial class Machine
             {
                 this.Machine.Semaphore.Exit();
 
-                if (this.Machine.__operationalState__.HasFlag(OperationalFlags.Terminated))
+                if (this.Machine.IsTerminated)
                 {
                     this.Machine.RemoveFromControl();
                 }
             }
 
-            bool CheckCircularCommand(ulong run)
+            /*if (command.LoopChecker is { } checker)
             {
-                /*if (command.LoopChecker is { } checker)
+                const uint MachineNumberMask = ~(1u << 31);
+                var id = (run << 63) | (ulong)(this.machine.machineNumber & MachineNumberMask) << 32 | this.TypeId; // Not a perfect solution, though it works in most cases.
+                if (checker.FindId(id))
                 {
-                    const uint MachineNumberMask = ~(1u << 31);
-                    var id = (run << 63) | (ulong)(this.machine.machineNumber & MachineNumberMask) << 32 | this.TypeId; // Not a perfect solution, though it works in most cases.
-                    if (checker.FindId(id))
+                    if (this.machine.Control.BigMachine.LoopCheckerMode != LoopCheckerMode.EnabledAndThrowException)
                     {
-                        if (this.machine.Control.BigMachine.LoopCheckerMode != LoopCheckerMode.EnabledAndThrowException)
-                        {
-                            return true;
-                        }
-
-                        var s = string.Join('-', checker.EnumerateId().Select(x => this.BigMachine.GetMachineInfoFromTypeId((uint)x)?.MachineType.Name + "." + IdToString(x)));
-                        throw new CircularCommandException($"Circular commands detected ({s})");
+                        return true;
                     }
 
-                    checker = checker.Clone();
-                    checker.AddId(id);
-                    LoopChecker.AsyncLocalInstance.Value = checker;
+                    var s = string.Join('-', checker.EnumerateId().Select(x => this.BigMachine.GetMachineInfoFromTypeId((uint)x)?.MachineType.Name + "." + IdToString(x)));
+                    throw new CircularCommandException($"Circular commands detected ({s})");
                 }
 
-                return false;
-
-                static string IdToString(ulong id) => (id & (1ul << 63)) == 0 ? "Command" : "Run";*/
-
-                return false;
+                checker = checker.Clone();
+                checker.AddId(id);
+                LoopChecker.AsyncLocalInstance.Value = checker;
             }
+
+            return false;
+
+            static string IdToString(ulong id) => (id & (1ul << 63)) == 0 ? "Command" : "Run";*/
         }
     }
 }
