@@ -27,11 +27,11 @@
   </ItemGroup>
 
   <ItemGroup>
-    <PackageReference Include="Arc.Collections" Version="2.1.0" />
+    <PackageReference Include="Arc.Collections" Version="2.1.1" />
     <PackageReference Include="Arc.Threading" Version="0.55.0" />
     <PackageReference Include="Microsoft.Extensions.DependencyInjection.Abstractions" Version="10.0.12" />
-    <PackageReference Include="Tinyhand" Version="0.147.0" />
-    <PackageReference Include="ValueLink" Version="0.121.0" />
+    <PackageReference Include="Tinyhand" Version="0.148.1" />
+    <PackageReference Include="ValueLink" Version="0.122.1" />
     <PackageReference Include="StyleCop.Analyzers" Version="1.2.0-beta.556">
       <PrivateAssets>all</PrivateAssets>
       <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
